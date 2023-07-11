@@ -44,22 +44,22 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-        $waiting = Project::select('devPortal_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
-                ->leftJoin('users','devPortal_project.user_id','users.id')
-                ->leftJoin('devPortal_toAssignment','devPortal_project.id','devPortal_toAssignment.req_id')
-                ->leftJoin('tbl_developer','devPortal_toAssignment.developer_id','tbl_developer.id')
+        $waiting = Project::select('request_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
+                ->leftJoin('users','request_project.user_id','users.id')
+                ->leftJoin('tbl_assignment','request_project.id','tbl_assignment.req_id')
+                ->leftJoin('tbl_developer','tbl_assignment.developer_id','tbl_developer.id')
                 ->where('projectStatus','Waiting')
                 ->get();
-        $progress = Project::select('devPortal_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
-                ->leftJoin('users','devPortal_project.user_id','users.id')
-                ->leftJoin('devPortal_toAssignment','devPortal_project.id','devPortal_toAssignment.req_id')
-                ->leftJoin('tbl_developer','devPortal_toAssignment.developer_id','tbl_developer.id')
+        $progress = Project::select('request_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
+                ->leftJoin('users','request_project.user_id','users.id')
+                ->leftJoin('tbl_assignment','request_project.id','tbl_assignment.req_id')
+                ->leftJoin('tbl_developer','tbl_assignment.developer_id','tbl_developer.id')
                 ->where('projectStatus','Progress')
                 ->get();
-        $Completed = Project::select('devPortal_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
-                ->leftJoin('users','devPortal_project.user_id','users.id')
-                ->leftJoin('devPortal_toAssignment','devPortal_project.id','devPortal_toAssignment.req_id')
-                ->leftJoin('tbl_developer','devPortal_toAssignment.developer_id','tbl_developer.id')
+        $Completed = Project::select('request_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
+                ->leftJoin('users','request_project.user_id','users.id')
+                ->leftJoin('tbl_assignment','request_project.id','tbl_assignment.req_id')
+                ->leftJoin('tbl_developer','tbl_assignment.developer_id','tbl_developer.id')
                 ->where('projectStatus','Completed')
                 ->get();
         

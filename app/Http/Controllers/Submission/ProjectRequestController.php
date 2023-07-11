@@ -38,31 +38,31 @@ class ProjectRequestController extends Controller
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.ApprovalAction='1' and l.req_id = devPortal_project.id and l.module_id = '".$module_id."' and devPortal_project.requestStatus='1'
+            where l.ApprovalAction='1' and l.req_id = request_project.id and l.module_id = '".$module_id."' and request_project.requestStatus='1'
             order by a.sequence)";
 
             $data = $this->model
-                ->selectRaw("devPortal_project.*,codes.code,
-                    CASE WHEN devPortal_project.user_id='".$user_id."' then 1 else 0 end as isMine,
+                ->selectRaw("request_project.*,codes.code,
+                    CASE WHEN request_project.user_id='".$user_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe
                 ")
-                ->leftJoin('codes','devPortal_project.code_id','codes.id')
+                ->leftJoin('codes','request_project.code_id','codes.id')
                 ->with(['user','approverlist'])
                 ->where(function ($query) use ($subquery, $user_id) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id) {
                             if ($this->getAuth()->isAdmin) {
-                                $query->where("devPortal_project.user_id", "!=", $user_id)
-                                    ->whereIn("devPortal_project.requestStatus", [1,3,4]);
+                                $query->where("request_project.user_id", "!=", $user_id)
+                                    ->whereIn("request_project.requestStatus", [1,3,4]);
                             } else {
-                                $query->where("devPortal_project.user_id", "!=", $user_id)
-                                    ->whereIn("devPortal_project.requestStatus", [3,4]);
+                                $query->where("request_project.user_id", "!=", $user_id)
+                                    ->whereIn("request_project.requestStatus", [3,4]);
                             }
                         })
-                        ->orWhere("devPortal_project.user_id", $user_id);
+                        ->orWhere("request_project.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN devPortal_project.user_id = '".$user_id."' THEN 0 ELSE 1 END, devPortal_project.created_at desc")
+                ->orderByRaw("CASE WHEN request_project.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_project.created_at desc")
                 ->get();
 
             return response()->json([
@@ -111,9 +111,9 @@ class ProjectRequestController extends Controller
     {
         try {
 
-            $data = $this->model->select('devPortal_project.*','codes.code')
-            ->leftJoin('codes','devPortal_project.code_id','codes.id')
-            ->where('devPortal_project.id',$id)
+            $data = $this->model->select('request_project.*','codes.code')
+            ->leftJoin('codes','request_project.code_id','codes.id')
+            ->where('request_project.id',$id)
             ->first();
 
             if($data->code_id == null) {

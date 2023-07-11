@@ -91,7 +91,7 @@ class HomeController extends Controller
         // dashboard section
 
         $tables = [
-            'devPortal_project' => 36,
+            'request_project' => 36,
         ]; // masukan nama table dan module_id dari table tersebut
         
         $user_id = $this->getAuth()->id;
@@ -202,8 +202,9 @@ class HomeController extends Controller
 
         // Update the path of the uploaded file to the avatar field of the currently authenticated user
         $user = Auth::user();
-        $user->avatar = $filename;
-        $user->save();
+        $changeimage = User::findOrFail($user->id);
+        $changeimage->avatar = $filename;
+        $changeimage->save();
 
         return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
     }

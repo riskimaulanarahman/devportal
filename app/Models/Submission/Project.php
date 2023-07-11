@@ -13,7 +13,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $table = 'devPortal_project';
+    protected $table = 'request_project';
 
     protected $guarded = ['id'];
 

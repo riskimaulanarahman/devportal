@@ -425,6 +425,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
                                 }
                             }
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGrid1.refresh();
                         }
                     })
                 } 
@@ -494,6 +501,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             })
                         },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (2):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridAttachment.refresh();
+                        }
                     })
 
                     var downloadButton = $("<button>")
@@ -666,6 +680,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             })
                         },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (3):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridApproverList.refresh();
+                        }
                     })
 
                 }
@@ -753,6 +774,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             })
                         },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (4):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridApproverHistory.refresh();
+                        }
                     })
                 }
                 else if(data.ID == 5) {
@@ -818,6 +846,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             })
                         },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (5):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridAssignmentto.refresh();
+                        }
                     })
                 }
             }
@@ -916,7 +951,7 @@ function runpopup() {
 
 
 function cellTemplate(container, options) {
-    container.append('<a href="upload/'+options.value+'" target="_blank"><img src="/assets/images/showfile.png" height="50" width="70"></a>');
+    container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
 }
 
 function editCellTemplate(cellElement, cellInfo) {

@@ -147,7 +147,7 @@ class ListController extends Controller
 
     public function listProject() {
         $progress = Project::select('users.fullname','nameSystem','progress')
-                ->leftJoin('users','devPortal_project.user_id','users.id')
+                ->leftJoin('users','request_project.user_id','users.id')
                 ->where('projectStatus','Progress')
                 ->get();
         

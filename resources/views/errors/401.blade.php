@@ -19,7 +19,7 @@
                                 <h4 class="text-uppercase">Unauthorized</h4>
                                 <p class="font-size-15 mx-auto text-muted w-50 mt-4">You does not have permissions for the requested operation</p>
                                 <div class="mt-5 text-center">
-                                    <a class="btn btn-primary waves-effect waves-light" href="/">Back to
+                                    <a class="btn btn-primary waves-effect waves-light" href="{{ url('/') }}">Back to
                                         Dashboard</a>
                                 </div>
                             </div>

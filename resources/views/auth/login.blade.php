@@ -20,7 +20,7 @@
                                                             <a href="{{ url('/') }}" class="d-block auth-logo">
                                                                 {{-- <img src="{{ URL::asset('assets/images/oaslogo.png')}}" alt="" height="250" class="auth-logo-dark me-start"> --}}
                                                                 {{-- <img src="{{ URL::asset('assets/images/logo-light.png')}}" alt="" height="22" class="auth-logo-light me-start"> --}}
-                                                                <center><b style="font-size: 30px;">DevPortal</b></center>
+                                                                <center><b style="font-size: 30px;">{{ env('APP_NAME') }}</b></center>
                                                             </a>
                                                         </div>
                                                         <div class="auth-content my-auto">
@@ -70,7 +70,7 @@
                                                             </form>
                                                         </div>
                                                         <div class="mt-4 text-center">
-                                                            <p class="mb-0"><b>© <script>document.write(new Date().getFullYear())</script> DevPortal </b>. Crafted with <i class="mdi mdi-heart text-danger"></i><br>by <b>KF Planning</b></p>
+                                                            <p class="mb-0"><b>© <script>document.write(new Date().getFullYear())</script> {{ env('APP_NAME') }} </b>. Crafted with <i class="mdi mdi-heart text-danger"></i><br>by <b>{{ env('APP_AUTHOR') }}</b></p>
                                                         </div>
                                                     </div>
                                                 </div>

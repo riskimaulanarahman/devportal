@@ -38,6 +38,7 @@ class GeneratemenuController extends Controller
                     'icon' => $icon->name,
                     'module' => $sequence->title,
                     'title' => $sidemenu->title,
+                    'active' => $sidemenu->is_active,
                     'menu' => array()
                 );
                 
@@ -60,7 +61,7 @@ class GeneratemenuController extends Controller
                     ));
 
                     // submenus queries
-                    $submenu = Sidemenu::select(['id', 'icon_id', 'title', 'route'])->whereRaw('parent_id like ? and is_secondary_menu like 1', [$item_menu->id])->get();
+                    $submenu = Sidemenu::select(['id', 'icon_id', 'title', 'route', 'is_active'])->whereRaw('parent_id like ? and is_secondary_menu like 1', [$item_menu->id])->get();
                     // check have submenu item
                     if (count($submenu) > 0) {
                         // get submenu
@@ -73,6 +74,7 @@ class GeneratemenuController extends Controller
                                     'icon' => $icon_submenu->name,
                                     'title' => $item_submenu->title,
                                     'route' => $item_submenu->route,
+                                    'active' => $item_submenu->is_active,
                                     'data' => null
 
                                 )
@@ -86,36 +88,38 @@ class GeneratemenuController extends Controller
             // if($menu['title'] == 'api')
             // return false;
             // dd($menu);
+           
+            
             // return view
             $viewGrid = view('grid.index')->with('data', $menu);
-            if(isset($this->getAuth()->isAdmin)) {
-                if($this->getAuth()->isAdmin == 1) {
-                    return $viewGrid;
-                } else if ($this->getAuth()->isAdmin == 0) {
-                    if($sidemenu->is_admin == 0){
-                        return $viewGrid;
-                    } else {
-                        $checkaccess = Useraccess::join('side_menus','tbl_useraccess.module_id','side_menus.modules')
-                        ->where('employee_id',$this->getAuth()->id)
-                        ->where('allowView',true)
-                        ->get();
-                        if($checkaccess) {
-                            foreach ($checkaccess as $key) {
-                                if($key->route == $route) {
-                                    return $viewGrid;
+            if($menu != null) {
+                if(isset($this->getAuth()->isAdmin)) {
+                        if($this->getAuth()->isAdmin == 1) {
+                            return $viewGrid;
+                        } else if ($this->getAuth()->isAdmin == 0) {
+                            if($sidemenu->is_admin == 0){
+                                return $viewGrid;
+                            } else {
+                                $checkaccess = Useraccess::join('side_menus','tbl_useraccess.module_id','side_menus.modules')
+                                ->where('employee_id',$this->getAuth()->id)
+                                ->where('allowView',true)
+                                ->get();
+                                if($checkaccess) {
+                                    foreach ($checkaccess as $key) {
+                                        if($key->route == $route) {
+                                            return $viewGrid;
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
-                    return view('errors.401');
-
-                } 
+                            return view('errors.401');
+                        } 
+                } else {
+                    return redirect('/');
+                }
             } else {
-                return redirect('/');
+                return view('errors.404');
             }
-
-        // }
-
 
     }
 }

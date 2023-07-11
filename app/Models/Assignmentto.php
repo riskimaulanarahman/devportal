@@ -9,13 +9,8 @@ class Assignmentto extends Model
 {
     use HasFactory;
 
-    protected $table = 'devPortal_toAssignment';
+    protected $table = 'tbl_assignment';
 
     protected $guarded = ['id'];
-
-    public function developer()
-    {
-        return $this->belongsTo('App\Models\Developer','developer_id');
-    }
     
 }

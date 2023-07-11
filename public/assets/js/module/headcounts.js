@@ -26,7 +26,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     editing: {
         useIcons:true,
-        mode: "batch",
+        mode: "popup",
         allowAdding: true,
         allowUpdating: true,
         allowDeleting: true,
@@ -60,10 +60,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             
             }
         },
-        {
-            dataField: "oldsap",
-            dataType: "string",
-        },
+        // {
+        //     dataField: "oldsap",
+        //     dataType: "string",
+        // },
         {
             dataField: "SAPID",
             dataType: "string",

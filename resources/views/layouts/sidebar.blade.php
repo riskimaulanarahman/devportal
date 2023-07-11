@@ -6,22 +6,22 @@
         <a href="{{ url('/') }}" class="logo logo-dark">
             <span class="logo-sm">
                 {{-- <img src="{{ URL::asset('assets/images/logo-dark-sm.png') }}" alt="" height="22"> --}}
-                <b style="font-size: 22px;">DP</b>
+                <b style="font-size: 22px;">{{ env('APP_SHORTNAME') }}</b>
             </span>
             <span class="logo-lg">
                 {{-- <img src="{{ URL::asset('assets/images/logo-dark.png') }}" alt="" height="22"> --}}
-                <b style="font-size: 30px;">DevPortal</b>
+                <b style="font-size: 30px;">{{ env('APP_NAME') }}</b>
             </span>
         </a>
 
         <a href="{{ url('/') }}" class="logo logo-light">
             <span class="logo-lg">
                 {{-- <img src="{{ URL::asset('assets/images/logo-light.png') }}" alt="" height="22"> --}}
-                <b style="font-size: 30px; color:white !important;">DevPortal</b>
+                <b style="font-size: 30px; color:white !important;">{{ env('APP_NAME') }}</b>
             </span>
             <span class="logo-sm">
                 {{-- <img src="{{ URL::asset('assets/images/logo-light-sm.png') }}" alt="" height="22"> --}}
-                <b style="font-size: 22px; color:white !important;">DP</b>
+                <b style="font-size: 22px; color:white !important;">{{ env('APP_SHORTNAME') }}</b>
             </span>
         </a>
     </div>
@@ -144,9 +144,9 @@
             <p class="mb-1 main-title">
                 <script>
                     document.write(new Date().getFullYear())
-                </script> &copy; DevPortal
+                </script> &copy; {{ env('APP_NAME') }}
             </p>
-            <p class="mb-0">Design & Develop by KF Planning</p>
+            <p class="mb-0">Design & Develop by {{ env('APP_AUTHOR') }}</p>
         </div>
     </div>
 </div>

@@ -4,6 +4,7 @@
 <script>
     // Riski Maulana Rahman
     admin = $('#isadmin').val();
+    baseurl = window.location.origin+'/devportal';
     apiurl = window.location.origin+'/devportal/api';
     // valusername = $('#valusername').val();
     usersid = parseInt($('#usersid').val());

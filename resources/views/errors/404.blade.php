@@ -18,7 +18,7 @@
                         <h4 class="text-uppercase mt-5">Sorry, page not found</h4>
                         <p class="font-size-15 mx-auto text-muted w-50 mt-4">The requested resource could not be found but may be available in the future</p>
                         <div class="mt-5 text-center">
-                            <a class="btn btn-primary waves-effect waves-light" href="/">Back to Dashboard</a>
+                            <a class="btn btn-primary waves-effect waves-light" href="{{ url('/') }}">Back to Dashboard</a>
                         </div>
                     </div>
                 </div>

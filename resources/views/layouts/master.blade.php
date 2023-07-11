@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="utf-8" />
-    <title> @yield('title') | DevPortal</title>
+    <title> @yield('title') | {{ env('APP_NAME') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="DevPortal at Itci Hutani Manunggal" name="DevPortal" />
-    <meta content="Planning KF" name="Planning KF" />
+    <meta content="{{ env('APP_NAME') }}" name="{{ env('APP_NAME') }}" />
+    <meta content="{{ env('APP_AUTHOR') }}" name="{{ env('APP_AUTHOR') }}" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('assets/images/favicon.ico') }}">
     @include('layouts.head-css')

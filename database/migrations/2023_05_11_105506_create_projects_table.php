@@ -13,7 +13,7 @@ class CreateProjectsTable extends Migration
      */
     public function up()
     {
-        Schema::create('devPortal_project', function (Blueprint $table) {
+        Schema::create('request_project', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('devPortal_user');
             $table->integer('requestStatus')->nullable();
