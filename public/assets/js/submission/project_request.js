@@ -95,15 +95,18 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Code",
             dataField: 'code',
+            width: 180
         },
         {
 			dataField: "created_at",
             dataType: "date",
             format: "dd-MM-yyyy",
+            width: 140
         },
         { 
 			dataField: "user.fullname",
             caption: 'Creator Name',
+            width: 180
         },
         {
             dataField: 'nameSystem',
@@ -122,7 +125,23 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     "<span class='btn btn-danger btn-xs'>Rejected</span>",
                 ];
                 return arrText[e.value];
-            }
+            },
+            width: 110
+        },
+        {
+            dataField: 'projectStatus',
+            encodeHtml: false,
+            customizeText: function (e) {
+                console.log(e.value)
+                if(e.value == 'Completed') {
+                    return "<span class='btn btn-success btn-xs'>Completed</span>"
+                } else if(e.value == 'Progress') {
+                    return "<span class='btn btn-warning btn-xs'>Progress</span>"
+                } else {
+                    return "<span class='btn btn-primary btn-xs'>Waiting</span>"
+                }
+            },
+            width: 110
         },
       
     ],
@@ -968,7 +987,7 @@ function editCellTemplate(cellElement, cellInfo) {
         fileUploader.upload();
       }
     }).dxButton("instance");
-  
+
     $path = "";
     $adafile = "";
     let fileUploaderElement = document.createElement("div");

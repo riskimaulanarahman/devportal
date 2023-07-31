@@ -1,12 +1,13 @@
 <input type="hidden" name="empid" id="empid" value="{{ ($employee) ? $employee->id : null; }}">
 <input type="hidden" name="usersid" id="usersid" value="{{ Auth::user()->id }}">
 <input type="hidden" name="isadmin" id="isadmin" value="{{ Auth::user()->isAdmin }}">
+<input type="hidden" name="isusername" id="isusername" value="{{ Auth::user()->username }}">
 <script>
     // Riski Maulana Rahman
     admin = $('#isadmin').val();
     baseurl = window.location.origin+'/devportal';
     apiurl = window.location.origin+'/devportal/api';
-    // valusername = $('#valusername').val();
+    valusername = $('#isusername').val();
     usersid = parseInt($('#usersid').val());
     empid = parseInt($('#empid').val());
 
@@ -100,11 +101,11 @@
             text = result.message;
             time = (result.status == "success" ? 2000 : 10000)
     
-            // if(method !== "GET" && result.status == "success") {
-            //     logSuccess(valusername, method, url, data);
-            // } else if(method !== "GET" && result.status == "error") {
-            //     logError(valusername, method, url, text);
-            // }
+            if(method !== "GET" && result.status == "success") {
+                logSuccess(valusername, method, url, data);
+            } else if(method !== "GET" && result.status == "error") {
+                logError(valusername, method, url, text);
+            }
 
             if(result.status == "show" || result.status == 'prompt') {
             
@@ -141,11 +142,11 @@
             text = result.message;
             time = (result.status == "success" ? 2000 : 5000)
     
-            // if(method !== "GET" && result.status == "success") {
-            //     logSuccess(valusername, method, url, data);
-            // } else if(method !== "GET" && result.status == "error") {
-            //     logError(valusername, method, url, text);
-            // }
+            if(method !== "GET" && result.status == "success") {
+                logSuccess(valusername, method, url, data);
+            } else if(method !== "GET" && result.status == "error") {
+                logError(valusername, method, url, text);
+            }
             
             if(result.status == "show" || result.status == 'prompt') {
             
@@ -193,9 +194,9 @@
     function logSuccess(valusername, method, url, data, token) {
         var d = $.Deferred();
     
-        var logUrl = window.location.origin+'/api';
+        // var logUrl = window.location.origin+'/api';
     
-        $.ajax(logUrl+"/logsuccess", 
+        $.ajax(apiurl+"/logsuccess", 
         {
             method: "POST",
             data: {user:valusername,url:url,action:method,values:JSON.stringify(data)},
@@ -210,9 +211,9 @@
     function logError(valusername, method, url, text, token) {
         var d = $.Deferred();
     
-        var logUrl = window.location.origin+'/api';
+        // var logUrl = window.location.origin+'/api';
     
-        $.ajax(logUrl+"/logerror", 
+        $.ajax(apiurl+"/logerror", 
         {
             method: "POST",
             data: {user:valusername,url:url,action:method,values:JSON.stringify(text)},

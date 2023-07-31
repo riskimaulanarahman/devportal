@@ -148,7 +148,7 @@
                                                                                             <div class="avatar-group-item">
                                                                                                 <a href="javascript: void(0);" class="d-inline-block">
                                                                                                     <div class="avatar-sm">
-                                                                                                        <span class="avatar-title rounded-circle bg-secondary text-white font-size-16">
+                                                                                                        <span class="avatar-title rounded-circle text-white font-size-16" style="background-color: orange">
                                                                                                             {{ $initial }}
                                                                                                         </span>
                                                                                                     </div>
@@ -167,7 +167,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="testi-contain text-center">
-                                                        <h5 class="font-size-20 mt-4 badge bg-secondary">Project - On Progress</h5>
+                                                        <h5 class="font-size-20 mt-4 badge" style="background-color: orange">Project - On Progress</h5>
                                                         <p class="font-size-15 text-muted mt-3 mb-0">
                                                             Sustaining Efforts to Complete.
                                                         </p>
@@ -386,7 +386,7 @@
                                     title: 'Error!',
                                     text: 'User Not Found.',
                                     icon: 'error',
-                                    showCancelButton: false,
+                                    showCancelButton: false, 
                                     confirmButtonColor: '#3b76e1',
                                 }
                             )

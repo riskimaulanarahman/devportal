@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LogError extends Model
 {
-    protected $table = "_log_error";
+    protected $table = "_logerror";
 
     protected $guarded = ['id'];
 }

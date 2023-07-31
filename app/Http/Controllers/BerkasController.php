@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Models\LogSuccess;
+use App\Models\LogError;
+
 class BerkasController extends Controller
 {
 
@@ -28,11 +31,21 @@ class BerkasController extends Controller
             $module = $modname;
             $file = $request->file('myFile');
             $nama_file = $module."_".time()."_".$file->getClientOriginalName();
-            $tujuan_upload = 'upload';
+            $tujuan_upload = 'public/upload';
             $file->move($tujuan_upload,$nama_file);
+
+            // Log success
+            $username = $request->ip();
+            $url = $request->url();
+            $this->logsuccess($username, $url, $nama_file);
         
             return $nama_file;
         } catch (\Exception $e){
+
+            // Log error
+            $username = $request->ip();
+            $url = $request->url();
+            $this->logerror($username, $url, $e->getMessage());
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
@@ -42,5 +55,25 @@ class BerkasController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    function logsuccess($username,$url,$values) {
+        $requestData = [
+            "user" => $username,
+            "url" => $url,
+            "action" => 'Attachment',
+            "values" => $values
+        ];
+        LogSuccess::create($requestData);
+    }
+    
+    function logerror($message) {
+        $requestData = [
+            "user" => $username,
+            "url" => $url,
+            "action" => 'Attachment',
+            "values" => $values
+        ];
+        LogError::create($requestData);
     }
 }

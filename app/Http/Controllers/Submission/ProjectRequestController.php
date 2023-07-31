@@ -11,6 +11,7 @@ use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Models\Approvaluser;
 use App\Models\Module;
+use App\Models\Attachment;
 use DB;
 
 class ProjectRequestController extends Controller
@@ -86,6 +87,7 @@ class ProjectRequestController extends Controller
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
             $requestData['requestStatus'] = 0;
+            $requestData['projectStatus'] = 'Waiting';
 
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
@@ -174,6 +176,15 @@ class ProjectRequestController extends Controller
                     ApproverListHistory::where('req_id', $id)
                         ->where('module_id', $module->id)
                         ->delete();
+                    $attachments = Attachment::where('req_id', $id)
+                        ->where('module_id', $module->id)
+                        ->get();
+                        Attachment::where('req_id', $id)
+                        ->where('module_id', $module->id)
+                        ->delete();
+                        foreach ($attachments as $attachment) {
+                            unlink(public_path() . '/upload/' .$attachment->path);
+                        }
 
                     // Hapus data pada tabel utama
                     
