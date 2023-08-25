@@ -1,16 +1,7 @@
-<input type="hidden" name="empid" id="empid" value="{{ ($employee) ? $employee->id : null; }}">
-<input type="hidden" name="usersid" id="usersid" value="{{ Auth::user()->id }}">
-<input type="hidden" name="isadmin" id="isadmin" value="{{ Auth::user()->isAdmin }}">
-<input type="hidden" name="isusername" id="isusername" value="{{ Auth::user()->username }}">
+
 <script>
     // Riski Maulana Rahman
-    admin = $('#isadmin').val();
-    baseurl = window.location.origin+'/devportal';
-    apiurl = window.location.origin+'/devportal/api';
-    valusername = $('#isusername').val();
-    usersid = parseInt($('#usersid').val());
-    empid = parseInt($('#empid').val());
-
+    
     function store(module) {
         var store = new DevExpress.data.CustomStore({
             key: "id",

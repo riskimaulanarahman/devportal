@@ -1,4 +1,22 @@
+<input type="hidden" name="appenv" id="appenv" value="{{ env('APP_ENV') }}">
+<input type="hidden" name="empid" id="empid" value="{{ ($employee) ? $employee->id : null; }}">
+<input type="hidden" name="usersid" id="usersid" value="{{ Auth::user()->id }}">
+<input type="hidden" name="isadmin" id="isadmin" value="{{ Auth::user()->isAdmin }}">
+<input type="hidden" name="isusername" id="isusername" value="{{ Auth::user()->username }}">
 <script>
+    appenv = $('#appenv').val();
+    admin = $('#isadmin').val();
+    valusername = $('#isusername').val();
+    usersid = parseInt($('#usersid').val());
+    empid = parseInt($('#empid').val());
+
+    if(appenv == 'local') {
+        baseurl = window.location.origin+'/';
+        apiurl = window.location.origin+'/api';
+    } else {
+        baseurl = window.location.origin+'/devportal';
+        apiurl = window.location.origin+'/devportal/api';
+    }
 
     const layoutModeInput = $("input[name=layout-mode]:radio");
     const layoutWidthInput = $("input[name=layout-width]:radio");
@@ -113,7 +131,11 @@
     var result = /[^/]*$/.exec(pathname)[0];
     const scriptPath = jsFiles['/'+result];
     if(scriptPath) {
-        $.getScript(`/devportal/public/assets/js/${scriptPath}`);
+        if(appenv == 'local') {
+            $.getScript(`/assets/js/${scriptPath}`);
+        } else {
+            $.getScript(`/devportal/public/assets/js/${scriptPath}`);
+        }
     }
 
 </script>

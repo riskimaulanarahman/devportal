@@ -163,4 +163,8 @@ class ListController extends Controller
 
     }
 
+    public function listParentProject() {
+        return Project::select('id','nameSystem')->where('isParent',1)->get();
+    }
+
 }

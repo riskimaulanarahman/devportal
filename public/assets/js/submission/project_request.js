@@ -10,18 +10,31 @@ function moveEditColumnToLeft(dataGrid) {
 }
 
 
-var dataGrid = $("#gridContainer").dxDataGrid({    
+var dataGrid = $("#gridContainer").dxTreeList({    
     dataSource: store(modname),
+    keyExpr: 'id',
+    parentIdExpr: 'parentID',
     allowColumnReordering: true,
     allowColumnResizing: true,
     // columnsAutoWidth: true,
     columnHidingEnabled: true,
-    rowAlternationEnabled: true,
+    rowAlternationEnabled: false,
     wordWrapEnabled: true,
+    // focusedRowEnabled: true,
+    autoExpandAll: true,
     showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
+    selection: {
+        mode: 'multiple',
+        recursive: true,
+    },
+    // stateStoring: {
+    //     enabled: true,
+    //     type: 'sessionStorage',
+    //     storageKey: 'treeListStorage',
+    // },
     searchPanel: {
         visible: true,
         width: 240,
@@ -37,7 +50,20 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     scrolling: {
         mode: "virtual"
     },
+    pager: {
+        visible: false,
+        // allowedPageSizes: [5, 10, 'all'],
+        // showPageSizeSelector: true,
+        showInfo: true,
+        // showNavigationButtons: true,
+    },
     columns: [
+        {
+            dataField: 'nameSystem',
+            width: 350,
+            sortOrder: "asc",
+
+        },
         {
             caption: 'Action',
             width: 140,
@@ -97,19 +123,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'code',
             width: 180
         },
-        {
-			dataField: "created_at",
-            dataType: "date",
-            format: "dd-MM-yyyy",
-            width: 140
-        },
         { 
 			dataField: "user.fullname",
             caption: 'Creator Name',
             width: 180
-        },
-        {
-            dataField: 'nameSystem',
         },
         {
             dataField: 'requestStatus',
@@ -126,13 +143,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 ];
                 return arrText[e.value];
             },
-            width: 110
+            // width: 110
         },
         {
             dataField: 'projectStatus',
             encodeHtml: false,
+            sortOrder: "desc",
             customizeText: function (e) {
-                console.log(e.value)
                 if(e.value == 'Completed') {
                     return "<span class='btn btn-success btn-xs'>Completed</span>"
                 } else if(e.value == 'Progress') {
@@ -141,7 +158,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     return "<span class='btn btn-primary btn-xs'>Waiting</span>"
                 }
             },
-            width: 110
+            // width: 110
         },
       
     ],
@@ -154,6 +171,20 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();
+    },
+    onCellPrepared: function (e) {
+        if (e.rowType == "data") {
+            if(e.data.isParent === 1) {
+                e.cellElement.css('background','rgba(128, 128, 0,0.1)')
+            }
+        }
+        // if (e.column.index == 0 && e.rowType == "data") {
+        //     if(e.data.requestStatus == 3) {
+        //         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
+        //         $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
+        //         $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
+        //     }
+        // }
     },
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
@@ -170,7 +201,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         })
     },
-}).dxDataGrid("instance");
+}).dxTreeList("instance");
 
 $('#btnadd').on('click',function(){
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
@@ -273,7 +304,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 '</div>' +
                 '<div class="card-body" style="border-bottom-color: darkseagreen !important;border-left-color: darkseagreen;">' +
                   approvalOptions +
-                  '<button id="btn-submit" type="button" onClick="btnreqsubmit('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Submit</button>'+
+                  '<button id="btn-submit" type="button" onClick="btnreqsubmit('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Submit Submission</button>'+
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -341,6 +372,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
+                                caption: 'Parent System',
+                                dataField: 'parentID',
+                                lookup: {
+                                    dataSource: listOption('/list-parentproject','id','nameSystem'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'nameSystem',
+                                },
+                                width: 200,
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
                                 dataField: 'nameSystem',
                                 dataType: 'string',
                                 validationRules: [{ type: "required" }]
@@ -398,6 +440,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 lookup: {
                                     dataSource: ['Waiting','Progress','Completed'],  
                                 },
+                            },
+                            {
+                                dataField: "created_at",
+                                dataType: "date",
+                                format: "dd-MM-yyyy",
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                         ],
                         export: {

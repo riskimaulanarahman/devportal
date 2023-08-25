@@ -18,6 +18,7 @@ class Project extends Model
     protected $guarded = ['id'];
 
     protected $fillable = [
+        'parentID',
         'nameSystem',
         'description',
         'descOldSystem',

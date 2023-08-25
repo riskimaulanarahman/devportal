@@ -26,7 +26,7 @@
                                                         <div class="auth-content my-auto">
                                                             <div class="text-center">
                                                                 {{-- <h5 class="mb-0">Online Approval System</h5> --}}
-                                                                <p class="text-muted mt-2">Sign in to continue</p>
+                                                                <p class="text-muted mt-2">Application Management & Ticketing System</p>
                                                             </div>
                                                             <form class="mt-4 pt-2" id="loginForm" action="{{ route('login') }}" method="POST">
                                                                 @csrf
