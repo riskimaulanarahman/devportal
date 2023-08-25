@@ -11,8 +11,8 @@
     empid = parseInt($('#empid').val());
 
     if(appenv == 'local') {
-        baseurl = window.location.origin+'/';
-        apiurl = window.location.origin+'/api';
+        baseurl = window.location.origin+'/devportal';
+        apiurl = window.location.origin+'/devportal/api';
     } else {
         baseurl = window.location.origin+'/devportal';
         apiurl = window.location.origin+'/devportal/api';
@@ -132,7 +132,7 @@
     const scriptPath = jsFiles['/'+result];
     if(scriptPath) {
         if(appenv == 'local') {
-            $.getScript(`/assets/js/${scriptPath}`);
+            $.getScript(`/devportal/public/assets/js/${scriptPath}`);
         } else {
             $.getScript(`/devportal/public/assets/js/${scriptPath}`);
         }

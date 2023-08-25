@@ -380,7 +380,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     displayExpr: 'nameSystem',
                                 },
                                 width: 200,
-                                validationRules: [{ type: "required" }]
+                                // validationRules: [{ type: "required" }]
                             },
                             {
                                 dataField: 'nameSystem',
