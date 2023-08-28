@@ -31,9 +31,9 @@ class BerkasController extends Controller
             $module = $modname;
             $file = $request->file('myFile');
             $nama_file = $module."_".time()."_".$file->getClientOriginalName();
-            $tujuan_upload = 'public/upload';
+            $tujuan_upload = 'public\\upload';
             $file->move($tujuan_upload,$nama_file);
-            $source_file = $tujuan_upload.'/'. $nama_file;
+            $source_file = $tujuan_upload.'\\'. $nama_file;
 
             // Log success
             $username = $request->ip();
