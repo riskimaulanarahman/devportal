@@ -10,7 +10,8 @@ trait CopytoserverTrait {
 		$user = '.\\admin_temp';
 		$password = 'KFPl4nn1ng$3rv3r';
 
-		exec('net use "\\\\172.18.83.38\\www" /user:"'.$user.'" "'.$password.'" /persistent:no');
+		exec('net use "\\\\172.18.83.38\\www" /persistent:no');
+		// exec('net use "\\\\172.18.83.38\\www" /user:"'.$user.'" "'.$password.'" /persistent:no');
 		$remote_directory = "\\\\172.18.83.38\\www\\devportal\\".$s1;
 			
 		$path = pathinfo($remote_directory);
