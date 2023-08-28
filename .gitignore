@@ -1,5 +1,6 @@
 .env
 .vscode
+.htaccess
 storage
 upload/*
 public/upload/*
