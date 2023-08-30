@@ -7,14 +7,17 @@ trait CopytoserverTrait {
  
     public function mycopy($s1) {
 
-		$user = '.\\admin_temp';
-		$password = 'KFPl4nn1ng$3rv3r';
+		// $user = '.\\admin_temp';
+		// $password = 'KFPl4nn1ng$3rv3r';
+		$user = 'd1\\planning_admin';
+		$password = 'Password1';
 
-		exec('net use "\\\\172.18.83.38\\www" /persistent:no');
-		// exec('net use "\\\\172.18.83.38\\www" /user:"'.$user.'" "'.$password.'" /persistent:no');
+		// exec('net use "\\\\172.18.83.38\\www" /persistent:no');
+		exec('net use "\\\\172.18.83.38\\www" /user:"'.$user.'" "'.$password.'" /persistent:no');
 		$remote_directory = "\\\\172.18.83.38\\www\\devportal\\".$s1;
 			
 		$path = pathinfo($remote_directory);
+		print_r($path);
 		if (!file_exists($path['dirname'])) {
 			mkdir($path['dirname'], 0777, true);
 		}

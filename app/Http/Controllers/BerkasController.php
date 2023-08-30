@@ -27,7 +27,7 @@ class BerkasController extends Controller
 
     public function update(Request $request,$modname)
     {
-        try {
+        // try {
             $module = $modname;
             $file = $request->file('myFile');
             $nama_file = $module."_".time()."_".$file->getClientOriginalName();
@@ -44,15 +44,15 @@ class BerkasController extends Controller
             $this->processcopy($source_file);
 
             return $nama_file;
-        } catch (\Exception $e){
+        // } catch (\Exception $e){
 
-            // Log error
-            $username = $request->ip();
-            $url = $request->url();
-            $this->logerror($username, $url, $e->getMessage());
+        //     // Log error
+        //     $username = $request->ip();
+        //     $url = $request->url();
+        //     $this->logerror($username, $url, $e->getMessage());
 
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-        }
+        //     return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        // }
  
     }
 
