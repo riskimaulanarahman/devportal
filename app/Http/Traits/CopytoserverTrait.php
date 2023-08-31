@@ -10,7 +10,7 @@ trait CopytoserverTrait {
 		$remote_directory = "\\\\172.18.83.38\\www\\devportal\\".$s1;
 			
 		$path = pathinfo($remote_directory);
-		print_r($path);
+		
 		if (!file_exists($path['dirname'])) {
 			mkdir($path['dirname'], 0777, true);
 		}
