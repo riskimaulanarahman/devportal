@@ -7,10 +7,6 @@ trait CopytoserverTrait {
  
     public function mycopy($s1) {
 
-		$user = 'd1\\planning_admin';
-		$password = 'Password1';
-
-		exec('net use "\\\\172.18.83.38\\www" /user:"'.$user.'" "'.$password.'" /persistent:no');
 		$remote_directory = "\\\\172.18.83.38\\www\\devportal\\".$s1;
 			
 		$path = pathinfo($remote_directory);
@@ -30,8 +26,6 @@ trait CopytoserverTrait {
 		}catch (Exception $e){
 			return $e->getMessage(); 
 		}
-
-		exec('net use "\\\\172.18.83.38\\www" /delete /yes');
 
 	}
 
