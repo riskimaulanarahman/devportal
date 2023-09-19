@@ -121,6 +121,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: "department_id",
             caption: "Department",
+            width: 450,
             lookup: {
                 dataSource: listOption('/list-department','id','DepartmentName'),
                 displayExpr: "DepartmentName",
@@ -131,6 +132,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         { 
             dataField: "designation_id",
             caption: "Position",
+            width: 450,
             lookup: {
                 dataSource: listOption('/list-designation','id','DesignationName'),  
                 valueExpr: 'id',
@@ -326,6 +328,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         dataSource: args.component.option("dataSource"),
                         keyExpr: "id",
                         columns: ["DepartmentName","DepartmentGroup"],
+                        // columns: [{dataField:"DepartmentName",width:450},{dataField:"DepartmentGroup",width:100}],
                         hoverStateEnabled: true,
                         paging: { enabled: true, pageSize: 10 },
                         filterRow: { visible: true },
@@ -381,7 +384,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         width: '100%',
                         dataSource: args.component.option("dataSource"),
                         keyExpr: "id",
-                        columns: ["SAPCode","DesignationName"],
+                        columns: ["DesignationName"],
+                        // columns: ["SAPCode","DesignationName"],
                         hoverStateEnabled: true,
                         paging: { enabled: true, pageSize: 10 },
                         filterRow: { visible: true },
