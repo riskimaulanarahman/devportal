@@ -117,11 +117,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180,
             sortOrder: "asc"
         },
-        {
-            caption: "Module",
-            dataField: 'module',
-            width: 180
-        },
+        // {
+        //     caption: "Module",
+        //     dataField: 'module',
+        //     width: 180
+        // },
         {
             dataField: 'category',
             dataType: 'string',
@@ -378,11 +378,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 width: 200,
                             },
-                            {
-                                dataField: 'module',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
+                            // {
+                            //     dataField: 'module',
+                            //     dataType: 'string',
+                            //     validationRules: [{ type: "required" }]
+                            // },
                             {
                                 dataField: 'category',
                                 dataType: 'string',
@@ -392,14 +392,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                             },
                             {
-                                caption: 'CodeNo (if available)',
-                                dataField: 'codeno',
-                                dataType: 'string',
-                            },
-                            {
                                 dataField: 'description',
                                 dataType: 'string',
                                 validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'CodeNo (if available)',
+                                dataField: 'codeno',
+                                dataType: 'string',
                             },
                             {
                                 dataField: 'priority',
