@@ -1,5 +1,5 @@
-var modname = 'projectrequest';
-var modelclass = 'Project';
+var modname = 'ticketrequest';
+var modelclass = 'Ticket';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -10,30 +10,23 @@ function moveEditColumnToLeft(dataGrid) {
 }
 
 
-var dataGrid = $("#gridContainer").dxTreeList({    
+var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
-    keyExpr: 'id',
-    parentIdExpr: 'parentID',
+    // keyExpr: 'id',
+    // parentIdExpr: 'parentID',
     allowColumnReordering: true,
     allowColumnResizing: true,
-    // columnsAutoWidth: true,
     columnHidingEnabled: true,
     rowAlternationEnabled: false,
     wordWrapEnabled: true,
-    // focusedRowEnabled: true,
     autoExpandAll: true,
     showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    selection: {
-        mode: 'multiple',
-        recursive: true,
-    },
-    // stateStoring: {
-    //     enabled: true,
-    //     type: 'sessionStorage',
-    //     storageKey: 'treeListStorage',
+    // selection: {
+    //     mode: 'multiple',
+    //     recursive: true,
     // },
     searchPanel: {
         visible: true,
@@ -52,16 +45,17 @@ var dataGrid = $("#gridContainer").dxTreeList({
     },
     pager: {
         visible: false,
-        // allowedPageSizes: [5, 10, 'all'],
-        // showPageSizeSelector: true,
         showInfo: true,
-        // showNavigationButtons: true,
     },
     columns: [
         {
             dataField: 'nameSystem',
-            width: 350,
-            sortOrder: "asc",
+            width: 200,
+            lookup: {
+                dataSource: listOption('/list-parentproject','id','nameSystem'),  
+                valueExpr: 'id',
+                displayExpr: 'nameSystem',
+            },
         },
         {
             caption: 'Action',
@@ -120,7 +114,21 @@ var dataGrid = $("#gridContainer").dxTreeList({
         {
             caption: "Code",
             dataField: 'code',
+            width: 180,
+            sortOrder: "asc"
+        },
+        {
+            caption: "Module",
+            dataField: 'module',
             width: 180
+        },
+        {
+            dataField: 'category',
+            dataType: 'string',
+            width: 180,
+            lookup: {
+                dataSource: ['Error/Bug','Modified','Additional'],  
+            },
         },
         { 
 			dataField: "user.fullname",
@@ -142,22 +150,20 @@ var dataGrid = $("#gridContainer").dxTreeList({
                 ];
                 return arrText[e.value];
             },
-            // width: 110
         },
         {
-            dataField: 'projectStatus',
+            dataField: 'ticketStatus',
             encodeHtml: false,
-            sortOrder: "desc",
+            // sortOrder: "desc",
             customizeText: function (e) {
                 if(e.value == 'Completed') {
                     return "<span class='btn btn-success btn-xs'>Completed</span>"
-                } else if(e.value == 'Progress') {
-                    return "<span class='btn btn-warning btn-xs'>Progress</span>"
+                } else if(e.value == 'Immediately') {
+                    return "<span class='btn btn-warning btn-xs'>Immediately</span>"
                 } else {
-                    return "<span class='btn btn-primary btn-xs'>Waiting</span>"
+                    return "<span class='btn btn-primary btn-xs'>On Queue</span>"
                 }
             },
-            // width: 110
         },
       
     ],
@@ -177,13 +183,6 @@ var dataGrid = $("#gridContainer").dxTreeList({
                 e.cellElement.css('background','rgba(128, 128, 0,0.1)')
             }
         }
-        // if (e.column.index == 0 && e.rowType == "data") {
-        //     if(e.data.requestStatus == 3) {
-        //         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
-        //     }
-        // }
     },
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
@@ -200,14 +199,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
             }
         })
     },
-    onDataErrorOccurred: function(e) {
-        // Menampilkan pesan kesalahan
-        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-        // Memuat ulang DataGrid
-        dataGrid.refresh();
-    }
-}).dxTreeList("instance");
+}).dxDataGrid("instance");
 
 $('#btnadd').on('click',function(){
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
@@ -231,11 +223,6 @@ const accordionItems = [
         ID: 5,
         Title: '<i class="fas fa-users"> Assignment To </i>',
         visible: false
-    },
-    {
-        ID: 6,
-        Title: '<i class="fas fa-list-ul"> Stakeholders </i>',
-        visible: true
     },
     {
         ID: 2,
@@ -322,19 +309,11 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    if(options.data.requestStatus == 3) {
+    if(options.data.requestStatus == 3 || isPendingOnMe) {
         updateVisibleById(5, true);
     } else {
         updateVisibleById(5, false);
     }
-
-    const syncTreeViewSelection = function (treeViewInstance, value) {
-        if (!value) {
-          treeViewInstance.unselectAll();
-        } else {
-          treeViewInstance.selectItem(value);
-        }
-    };
 
     scrollView.append("<hr>"),
 
@@ -374,7 +353,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -391,48 +370,35 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                caption: 'Parent System',
-                                dataField: 'parentID',
+                                dataField: 'nameSystem',
                                 lookup: {
                                     dataSource: listOption('/list-parentproject','id','nameSystem'),  
                                     valueExpr: 'id',
                                     displayExpr: 'nameSystem',
                                 },
                                 width: 200,
-                                // validationRules: [{ type: "required" }]
                             },
                             {
-                                dataField: 'nameSystem',
+                                dataField: 'module',
                                 dataType: 'string',
                                 validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'category',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['Error/Bug','Modified','Additional'],  
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'CodeNo (if available)',
+                                dataField: 'codeno',
+                                dataType: 'string',
                             },
                             {
                                 dataField: 'description',
                                 dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'Old System Desc',
-                                dataField: 'descOldSystem',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'New System Desc',
-                                dataField: 'descNewSystem',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                dataField: 'purpose',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'Expected Date',
-                                dataField: 'expecteddate',
-                                dataType: 'date',
-                                format: "yyyy-MM-dd",
                                 validationRules: [{ type: "required" }]
                             },
                             {
@@ -444,20 +410,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                             },
                             {
-                                dataField: 'progress',
-                                caption: 'Progress %',
-                                dataType: 'string',
+                                caption: 'Completed Date',
+                                dataField: 'completeddate',
+                                dataType: 'date',
+                                format: "yyyy-MM-dd",
                                 visible: false,
-                                lookup: {
-                                    dataSource: [0,10,20,30,40,50,60,70,80,90,100],  
-                                },
                             },
                             {
-                                dataField: 'projectStatus',
+                                dataField: 'ticketStatus',
                                 dataType: 'string',
                                 visible: false,
                                 lookup: {
-                                    dataSource: ['Waiting','Progress','Completed'],  
+                                    dataSource: ['On Queue','Immediately','Completed'],  
                                 },
                             },
                             {
@@ -497,7 +461,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onEditorPreparing: function (e) {
-                            if (e.dataField == "parentID" && e.parentType == "dataRow") {
+                            if (e.dataField == "nameSystem" && e.parentType == "dataRow") {
                                 e.editorName = "dxDropDownBox";                
                                 e.editorOptions.dropDownOptions = {        
                                     height: 500,
@@ -546,10 +510,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             }
                             if (e.column.index == 0 && e.rowType == "data") {
-                                if(e.data.requestStatus == 3) {
-                                    $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-                                    $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
-                                    $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
+                                if(e.data.requestStatus == 3 || admin == 1) {
+                                    // $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
+                                    // $("#formdata").dxDataGrid('columnOption','completeddate', 'visible', true);
+                                    $("#formdata").dxDataGrid('columnOption','ticketStatus', 'visible', true);
                                 }
                             }
                         },
@@ -589,7 +553,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
                             { 
-                                caption: 'Proposal File',
+                                caption: 'Attachment',
                                 dataField: "path",
                                 allowFiltering: false,
                                 allowSorting: false,
@@ -637,18 +601,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                         }
                     })
 
-                    var downloadButton = $("<button>")
-                        .text("Download Proposal Guide Template")
-                        .addClass("btn btn-danger btn-xs")
-                        .appendTo(supporting);
+                    // var downloadButton = $("<button>")
+                    //     .text("Download Proposal Guide Template")
+                    //     .addClass("btn btn-danger btn-xs")
+                    //     .appendTo(supporting);
 
-                    downloadButton.click(function() {
-                        var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
-                        var link = document.createElement("a");
-                        link.href = fileUrl;
-                        link.download = "Proposal Pengajuan System.pptx";
-                        link.click();
-                    });
+                    // downloadButton.click(function() {
+                    //     var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
+                    //     var link = document.createElement("a");
+                    //     link.href = fileUrl;
+                    //     link.download = "Proposal Pengajuan System.pptx";
+                    //     link.click();
+                    // });
 
                     return supporting;
                 }
@@ -930,9 +894,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "cell",
-                            allowAdding: (admin == 1 || developer ) ? true : false,
-                            allowUpdating: (admin == 1 || developer ) ? true : false,
-                            allowDeleting: (admin == 1 || developer ) ? true : false,
+                            allowAdding: (admin == 1) ? true : false,
+                            allowUpdating: (admin == 1) ? true : false,
+                            allowDeleting: (admin == 1) ? true : false,
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
@@ -982,171 +946,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGridAssignmentto.refresh();
                         }
                     })
-                }
-                else if(data.ID == 6) {
-                    return $("<div id='formstackholders'>").dxDataGrid({    
-                        dataSource: storewithmodule('stackholders',modelclass,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: true,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "batch",
-                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                        },
-                        scrolling: {
-                            mode: "virtual"
-                        },
-                        columns: [
-                            {
-                                caption: "Fullname",
-                                dataField: "employee_id",
-                                lookup: {
-                                    dataSource: listOptionWeb('/list-getemployee/','id','fullname'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'fullname',
-                                },
-                                validationRules: [
-                                    { 
-                                        type: "required" 
-                                    }
-                                ]
-                            },
-                            // {
-                            //     dataField: "ApprovalType",
-                            //     editorOptions: { 
-                            //         readOnly: true
-                            //     }
-                            // },
-                            // {
-                            //     dataField: "approvalDate",
-                            //     dataType: "date",
-                            // },
-                            // {
-                            //     dataField: "approvalStatus",
-                            //     encodeHtml: false,
-                            //     allowFiltering: false,
-                            //     allowHeaderFiltering: true,
-                            //     customizeText: function (e) {
-                            //         var arrText = [
-                            //             "<span class='btn btn-secondary btn-xs'>Draft</span>",
-                            //             "<span class='btn btn-primary btn-xs'>Waiting Approval</span>",
-                            //             "<span class='btn btn-warning btn-xs'>Rework</span>",
-                            //             "<span class='btn btn-success btn-xs'>Approved</span>",
-                            //             "<span class='btn btn-danger btn-xs'>Rejected</span>",
-                            //         ];
-                            //         return arrText[e.value];
-                            //     }
-                            // },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGridStackholders = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
-                        },
-                        onEditorPreparing: function (e) {
-                            if (e.dataField == "employee_id" && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";                
-                                e.editorOptions.dropDownOptions = {                
-                                    height: 500,
-                                    width: 600
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
-                    
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
-                                            dataSource: args.component.option("dataSource"),
-                                            keyExpr: "id",
-                                            columns: ["companycode","fullname","departmentname"],
-                                            hoverStateEnabled: true,
-                                            paging: { enabled: true, pageSize: 10 },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: args.component.option("value"),
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const hasSelection = keys.length;
-                                                args.component.option('value', hasSelection ? keys[0] : null);
-                                                // console.log(keys)
-                                                // args.component.close();
-                                            }
-                                        });
-                    
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
-                    
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
-                    
-                                        dataGrid.selectRows(value, false);
-                                    });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
-                    
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
-                    
-                                };
-                            }
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGridStackholders.refresh();
-                                    }
-                                }
-                            })
-                        },
-                        // onDataErrorOccurred: function(e) {
-                        //     // Menampilkan pesan kesalahan
-                        //     console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
-                    
-                        //     // Memuat ulang DataGrid
-                        //     dataGridStackholders.refresh();
-                        // }
-                    })
-
                 }
             }
         })

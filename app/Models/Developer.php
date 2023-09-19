@@ -12,6 +12,7 @@ class Developer extends Model
     protected $table = 'tbl_developer';
 
     protected $fillable = [
+        'user_id',
         'developerName',
         'role',
     ];

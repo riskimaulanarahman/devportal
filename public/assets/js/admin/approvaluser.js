@@ -33,7 +33,7 @@ function moveEditColumnToLeft(dataGrid) {
 // })
 
 function getData() {
-    return sendRequest('/api/list-approvaltype','POST','');
+    return sendRequest(apiurl+'/list-approvaltype','POST','');
   }
 
 getData().then(function(getTypeData) {
@@ -115,7 +115,6 @@ function processData(itemsData) {
                     }
                 ]
             },
-            // 
             {
                 dataField: "sequence"
             },

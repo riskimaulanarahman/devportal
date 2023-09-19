@@ -1,32 +1,36 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Module;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-use App\Models\Module;
-use App\Models\Assignmentto;
+use App\Models\Employee;
+use App\Models\Company;
 
-class AssignmenttoController extends Controller
+class EmployeedataController extends Controller
 {
-
     private $model;
-    public $module;
+    public $company;
 
     public function __construct()
     {
-        $this->model = new Assignmentto();
-        $this->module = new Module();
+        $this->model = new Employee();
+        $this->company = new Company();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
 
-            $data = $this->model->all();
+            $getcompany = $this->company->where('isUsed',1)->pluck('CompanyCode');
 
-            return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
+            $data = $this->model
+                    ->where('isActive',1)
+                    ->whereIn('companycode',$getcompany)
+                    ->get(); // show index data by employee
+
+            return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
 
@@ -39,7 +43,7 @@ class AssignmenttoController extends Controller
         try {
 
             $requestData = $request->all();
-            $requestData['module_id'] = $this->getModuleId($request->modulename);
+
             $this->model->create($requestData);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
@@ -53,25 +57,6 @@ class AssignmenttoController extends Controller
     public function show($id)
     {
         //
-    }
-
-    public function getList($id,$modulename)
-    {
-        try {
-            $module = $this->module->select('id','module')->where('module',$modulename)->first();
-            if($module) {
-                $data = $this->model->where('req_id',$id)
-                ->where('module_id',$module->id)
-                ->get();
-                return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
-            } else {
-                return response()->json(["status" => "show", "message" => $this->getMessage()['errornotfound']]);
-            }
-
-        } catch (\Exception $e) {
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-        }
     }
 
     public function update(Request $request, $id)
@@ -96,7 +81,9 @@ class AssignmenttoController extends Controller
         try {
 
             $data = $this->model->findOrFail($id);
-            $data->delete();
+            $data->update([
+                'isActive' => 0
+            ]);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
 

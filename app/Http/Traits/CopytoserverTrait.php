@@ -4,6 +4,12 @@ namespace App\Http\Traits;
 use Illuminate\Support\Facades\Auth;
 
 trait CopytoserverTrait {
+
+	public function copyuploadpath() {
+		$path = '\\\\172.18.83.38\\www\\devportal\\public\\upload\\';
+
+		return $path;
+	}
  
     public function mycopy($s1) {
 

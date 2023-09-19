@@ -7,40 +7,39 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
+use App\Models\Project;
 use App\Models\ApproverListReq;
 
-class Project extends Model
+class Ticket extends Model
 {
     use HasFactory;
 
-    protected $table = 'request_project';
+    protected $table = 'request_ticket';
 
     protected $guarded = ['id'];
 
     protected $fillable = [
-        'parentID',
-        'nameSystem',
-        'description',
-        'descOldSystem',
-        'descNewSystem',
-        'purpose',
-        'expecteddate',
-        'requestStatus',
         'user_id',
+        'requestStatus',
+        'nameSystem',
+        'module',
+        'category',
+        'codeno',
+        'description',
         'priority',
-        'progress',
-        'projectStatus'
+        'completeddate',
+        'ticketStatus'
     ];
 
     protected $casts = [
-        'expecteddate' => 'date',
+        'completeddate' => 'date',
     ];
 
     public static function getFillableColumns()
     {
         // return (new static)->fillable;
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['parentID','priority','progress','projectStatus']);
+        $fillable = array_diff($fillable, ['priority','completeddate','ticketStatus','codeno','nameSystem']);
         return $fillable;
     }
 
@@ -62,6 +61,11 @@ class Project extends Model
     public function code()
     {
         return $this->belongsTo(Code::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class,'nameSystem');
     }
 
 }

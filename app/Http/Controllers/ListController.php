@@ -45,6 +45,10 @@ class ListController extends Controller
     public function listEmployee() {
         return Employee::select('tbl_employee.id', 'sapid', 'fullname', 'companycode', 'tbl_department.departmentname', 'tbl_department.departmentgroup')
                 ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
+                ->where(function($query) {
+                    $query->whereNotNull('LoginName')
+                        ->where('LoginName', '<>', '');
+                })
                 ->get();
     }
 
@@ -164,7 +168,7 @@ class ListController extends Controller
     }
 
     public function listParentProject() {
-        return Project::select('id','nameSystem')->where('isParent',1)->get();
+        return Project::where('requestStatus',3)->get();
     }
 
 }

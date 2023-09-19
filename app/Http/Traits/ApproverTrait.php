@@ -17,7 +17,7 @@ trait ApproverTrait {
     {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
         if ($module) {
-            $getApprover = Approvaluser::where('module', $moduleName)->get();
+            $getApprover = Approvaluser::where('module', $moduleName)->where('isActive',1)->get();
 
             foreach ($getApprover as $approver) {
                 $approverList = new ApproverListReq();

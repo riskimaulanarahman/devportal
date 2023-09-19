@@ -60,6 +60,13 @@ class SubmissionController extends Controller
                             ->where('req_id',$id)
                             ->where('module_id',$this->getModuleId($modulename))
                             ->get();
+
+            if($modulename == 'Ticket') {
+                $assignment = DB::table('tbl_assignment')
+                ->where('req_id',$id)
+                ->where('module_id',$this->getModuleId($modulename))
+                ->get();
+            }
             
             if (count($nullColumns) > 0) {
                 $nullColumnsStr = implode(', ', $nullColumns);
@@ -172,6 +179,11 @@ class SubmissionController extends Controller
                 if($request->approvalAction == 3 && $getappr->approvalAction == 3) { // approved pengajuan
                     
                     if($final == 1) {
+                        if($modulename == 'Ticket') {
+                            if (count($assignment) < 1) {
+                                return response()->json(["status" => "error", "message" => "Error: Developer not found. Please add to assignment."]);
+                            }
+                        }
                         $mailData = [
                             "id" => 30,
                             "action_id" => 0,
@@ -179,6 +191,7 @@ class SubmissionController extends Controller
                             "email" => $getCreator->email, // kirim kepada creator
                             "fullname" => $getCreator->fullname,
                             "message" => $this->mailMessage()['approved'],
+                            "remarks" => $request->remarks
                         ];
                         break;
                     } else {
@@ -217,7 +230,7 @@ class SubmissionController extends Controller
             }
 
             if(count($mailData) > 0) {
-                Mail::to($mailData['email'])->send(new SubmissionMail($mailData));
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
             }
  
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);

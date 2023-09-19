@@ -21,7 +21,8 @@ trait HasMessage {
             'errordestroysubmission' => 'This data has a relation with others or data does not belong to you, that is still being used. You are not allowed to delete it.',
             'erroruploadimages' => 'Invalid file. Please upload a valid image file.',
             'errornotfound' => 'Data Not Found.',
-            'modulenotfound' => 'Module Not Found.'
+            'modulenotfound' => 'Module Not Found.',
+            'usernotregistered' => 'User Not Registered.'
         ];
 
         return $message;

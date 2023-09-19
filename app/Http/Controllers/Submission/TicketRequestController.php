@@ -6,16 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-use App\Models\Submission\Project;
+use App\Models\Submission\Ticket;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
-use App\Models\Stackholders;
 use DB;
 
-class ProjectRequestController extends Controller
+class TicketRequestController extends Controller
 {
     public $model;
     public $modulename;
@@ -23,8 +22,8 @@ class ProjectRequestController extends Controller
 
     public function __construct()
     {
-        $this->model = new Project();
-        $this->modulename = 'Project';
+        $this->model = new Ticket();
+        $this->modulename = 'Ticket';
         $this->module = new Module();
     }
 
@@ -35,36 +34,48 @@ class ProjectRequestController extends Controller
             $id = $request->id;
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
+            $isAdmin = $this->getAuth()->isAdmin;
+
+            $dataquery = $this->model->query();
 
             $subquery = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.ApprovalAction='1' and l.req_id = request_project.id and l.module_id = '".$module_id."' and request_project.requestStatus='1'
+            where l.ApprovalAction='1' and l.req_id = request_ticket.id and l.module_id = '".$module_id."' and request_ticket.requestStatus='1'
             order by a.sequence)";
 
-            $data = $this->model
-                ->selectRaw("request_project.*,codes.code,
-                    CASE WHEN request_project.user_id='".$user_id."' then 1 else 0 end as isMine,
+            if(!$isAdmin) {
+                $dataquery->leftJoin('tbl_assignment',function($join) use ($module_id){
+                    $join->on('request_ticket.id','=','tbl_assignment.req_id')
+                         ->where('tbl_assignment.module_id',$module_id);
+                });
+                $dataquery->leftJoin('tbl_developer','tbl_assignment.developer_id','=','tbl_developer.id');
+            }
+
+            $data = $dataquery
+                ->selectRaw("request_ticket.*,codes.code,
+                    CASE WHEN request_ticket.user_id='".$user_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe
                 ")
-                ->leftJoin('codes','request_project.code_id','codes.id')
+                ->leftJoin('codes','request_ticket.code_id','codes.id')
                 ->with(['user','approverlist'])
-                ->where(function ($query) use ($subquery, $user_id) {
+                ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
                     $query->whereRaw($subquery . " = 1")
-                        ->orWhere(function ($query) use ($user_id) {
-                            if ($this->getAuth()->isAdmin) {
-                                $query->where("request_project.user_id", "!=", $user_id)
-                                    ->whereIn("request_project.requestStatus", [1,3,4]);
-                            } else {
-                                $query->where("request_project.user_id", "!=", $user_id)
-                                    ->whereIn("request_project.requestStatus", [3,4]);
+                        ->orWhere(function ($query) use ($user_id, $isAdmin) {
+                            if ($isAdmin) {
+                                $query->where("request_ticket.user_id", "!=", $user_id)
+                                    ->whereIn("request_ticket.requestStatus", [1,3,4]);
+                            } 
+                            else {
+                                $query->where("tbl_developer.user_id",$user_id)
+                                    ->whereIn("request_ticket.requestStatus", [3]);
                             }
                         })
-                        ->orWhere("request_project.user_id", $user_id);
+                        ->orWhere("request_ticket.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN request_project.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_project.created_at desc")
+                ->orderByRaw("CASE WHEN request_ticket.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_ticket.created_at desc")
                 ->get();
 
             return response()->json([
@@ -114,9 +125,9 @@ class ProjectRequestController extends Controller
     {
         try {
 
-            $data = $this->model->select('request_project.*','codes.code')
-            ->leftJoin('codes','request_project.code_id','codes.id')
-            ->where('request_project.id',$id)
+            $data = $this->model->select('request_ticket.*','codes.code')
+            ->leftJoin('codes','request_ticket.code_id','codes.id')
+            ->where('request_ticket.id',$id)
             ->first();
 
             if($data->code_id == null) {
@@ -184,11 +195,8 @@ class ProjectRequestController extends Controller
                         ->where('module_id', $module->id)
                         ->delete();
                         foreach ($attachments as $attachment) {
-                            unlink(public_path() . '/upload/' .$attachment->path);
+                            unlink($this->copyuploadpath() .$attachment->path);
                         }
-                    Stackholders::where('req_id', $id)
-                        ->where('module_id', $module->id)
-                        ->delete();
 
                     // Hapus data pada tabel utama
                     

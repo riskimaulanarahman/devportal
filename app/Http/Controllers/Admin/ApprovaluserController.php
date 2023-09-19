@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\Approvaluser;
+use App\Models\User;
+use App\Models\Employee;
 
 class ApprovaluserController extends Controller
 {
@@ -15,6 +17,8 @@ class ApprovaluserController extends Controller
     public function __construct()
     {
         $this->model = new Approvaluser();
+        $this->user = new User();
+        $this->employee = new Employee();
     }
 
     public function index()
@@ -37,9 +41,16 @@ class ApprovaluserController extends Controller
 
             $requestData = $request->all();
 
-            $this->model->create($requestData);
+            $getEmployee =  $this->employee->find($request->employee_id);
+            $getUser = $this->user->where('username',$getEmployee->LoginName)->first();
 
-            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+            if($getUser) {
+                $requestData['user_id'] = $getUser->id;
+                $this->model->create($requestData);
+                return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+            } else {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['errornotfound']]);
+            }
 
         } catch (\Exception $e) {
 

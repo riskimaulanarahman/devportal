@@ -20,7 +20,7 @@
             margin-bottom: 20px;
         }
 
-        .message {
+        .message, .developer {
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 20px;
@@ -67,6 +67,17 @@
         <div class="message">
             {{ $mailData['message'] }}
         </div>
+        <div class="developer">
+            <p>Ticket Status : <strong>{{ $mailData['submission']->ticketStatus }}</strong></p>
+            @if ($final == 1 )
+                <p>Handled by :</p>
+                <ul>
+                    @foreach ($developer as $dev)
+                        <li>{{ $dev->developerName }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
         <table>
             <tbody>
                 <tr>
@@ -75,7 +86,15 @@
                 </tr>
                 <tr>
                     <th>Name System</th>
-                    <td>{{ $mailData['submission']->nameSystem }}</td>
+                    <td>{{ $projectName }}</td>
+                </tr>
+                <tr>
+                    <th>Module</th>
+                    <td>{{ $mailData['submission']->module }}</td>
+                </tr>
+                <tr>
+                    <th>Category</th>
+                    <td>{{ $mailData['submission']->category }}</td>
                 </tr>
                 <tr>
                     <th>Description</th>
@@ -88,12 +107,6 @@
                 Remarks : {{ ucfirst(strtolower($mailData['remarks'])) }}
             </div>
         @endif
-        <p>Attachment :</p>
-        <ol>
-            @foreach ($attachment as $attach)
-                <li><a href="{{ env('APP_URL') }}/public/upload/{{ $attach->path }}">{{ $attach->path }}</a></li>
-            @endforeach
-        </ol>
         <hr>
         <p class="footer">Go To DevPortal Click <a href="{{ env('APP_URL') }}">Here</a></p>
         <p class="footer">If you require any further information, please feel free to get in touch with us.</p>

@@ -3,20 +3,22 @@
 <input type="hidden" name="usersid" id="usersid" value="{{ Auth::user()->id }}">
 <input type="hidden" name="isadmin" id="isadmin" value="{{ Auth::user()->isAdmin }}">
 <input type="hidden" name="isusername" id="isusername" value="{{ Auth::user()->username }}">
+<input type="hidden" name="isdeveloper" id="isdeveloper" value="{{ ($developer) ? true : null; }}">
 <script>
     appenv = $('#appenv').val();
     admin = $('#isadmin').val();
+    developer = $('#isdeveloper').val();
     valusername = $('#isusername').val();
     usersid = parseInt($('#usersid').val());
     empid = parseInt($('#empid').val());
 
-    if(appenv == 'local') {
+    // if(appenv == 'local') {
+    //     baseurl = window.location.origin+'/devportal';
+    //     apiurl = window.location.origin+'/devportal/api';
+    // } else {
         baseurl = window.location.origin+'/devportal';
         apiurl = window.location.origin+'/devportal/api';
-    } else {
-        baseurl = window.location.origin+'/devportal';
-        apiurl = window.location.origin+'/devportal/api';
-    }
+    // }
 
     const layoutModeInput = $("input[name=layout-mode]:radio");
     const layoutWidthInput = $("input[name=layout-width]:radio");
@@ -122,20 +124,22 @@
         '/developer': 'admin/developer.js',
         //module
         '/headcounts': 'module/headcounts.js',
+        '/employeedata': 'module/employeedata.js',
         //submission
         '/travel_request': 'submission/travel_request.js',
         '/project_request': 'submission/project_request.js',
+        '/ticket_request': 'submission/ticket_request.js',
     }
     
     const pathname = window.location.pathname;
     var result = /[^/]*$/.exec(pathname)[0];
     const scriptPath = jsFiles['/'+result];
     if(scriptPath) {
-        if(appenv == 'local') {
+        // if(appenv == 'local') {
             $.getScript(`/devportal/public/assets/js/${scriptPath}`);
-        } else {
-            $.getScript(`/devportal/public/assets/js/${scriptPath}`);
-        }
+        // } else {
+        //     $.getScript(`/devportal/public/assets/js/${scriptPath}`);
+        // }
     }
 
 </script>
