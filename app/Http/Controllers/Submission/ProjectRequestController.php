@@ -184,7 +184,7 @@ class ProjectRequestController extends Controller
                         ->where('module_id', $module->id)
                         ->delete();
                         foreach ($attachments as $attachment) {
-                            unlink(public_path() . '/upload/' .$attachment->path);
+                            unlink($this->copyuploadpath().$attachment->path);
                         }
                     Stackholders::where('req_id', $id)
                         ->where('module_id', $module->id)
