@@ -546,9 +546,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' || mode == 'view' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' || mode == 'view' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' || mode == 'view' ) ? true : (admin == 1 ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
