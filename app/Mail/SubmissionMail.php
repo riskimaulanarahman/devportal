@@ -74,6 +74,11 @@ class SubmissionMail extends Mailable
                 foreach ($stackholders as $stacks){
                     $this->cc($stacks->email);
                 }
+                foreach ($Mailrecipient as $cc){
+                    if($cc->company_list == null) {
+                        $this->cc($cc->email);
+                    } 
+                }
             }
         }
 

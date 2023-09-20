@@ -27,7 +27,7 @@ class MainController extends Controller
     {
         $username = $request->username;
         $user = $this->user->where('username',$username)->first();
-        $checklinkedemployee = $this->employee->where('LoginName',$username)->count();
+        $checklinkedemployee = $this->employee->where('LoginName',$username)->where('isActive',1)->count();
         if($user !== null) {
             // $existauth = $this->session->where('user_id',$user->id)->get();
 
