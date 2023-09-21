@@ -29,7 +29,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         useIcons:true,
         mode: "batch",
         allowAdding: false,
-        allowUpdating: false,
+        allowUpdating: (admin == 1 || developer) ? true : false,
         allowDeleting: false,
     },
     scrolling: {
