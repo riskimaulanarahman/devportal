@@ -28,9 +28,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     editing: {
         useIcons:true,
         mode: "batch",
-        allowAdding: true,
-        allowUpdating: true,
-        allowDeleting: true,
+        allowAdding: false,
+        allowUpdating: false,
+        allowDeleting: false,
     },
     scrolling: {
         mode: "virtual"
@@ -387,8 +387,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         width: '100%',
                         dataSource: args.component.option("dataSource"),
                         keyExpr: "id",
-                        // columns: ["DesignationName"],
-                        columns: ["DesignationName","SAPCode"],
+                        columns: ["DesignationName"],
+                        // columns: ["DesignationName","SAPCode"],
                         hoverStateEnabled: true,
                         paging: { enabled: true, pageSize: 10 },
                         filterRow: { visible: true },
