@@ -11,11 +11,12 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     dataSource: store(modname),
     allowColumnReordering: true,
     allowColumnResizing: true,
-    // columnsAutoWidth: true,
+    columnsAutoWidth: true,
     columnHidingEnabled: false,
     rowAlternationEnabled: true,
     wordWrapEnabled: true,
     showBorders: true,
+    columnWidth: 150,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
@@ -83,6 +84,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 valueExpr: 'id',
                 displayExpr: 'companycode',
             },
+            width: 100,
             validationRules: [{ type: "required" }]
         },
         {
@@ -97,27 +99,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "string",
             validationRules: [{ type: "required" }]
         },
-        {
-            dataField: 'LoginName',
-            visible: (admin == 1 || developer ) ? true : false,
-        },
-        {
-            dataField: 'level_id',
-            caption: "Level",
-            lookup: {
-                dataSource: listOption('/list-level','id','level'),  
-                valueExpr: 'id',
-                displayExpr: 'level',
-            },
-            validationRules: [{ type: "required" }]
-        },
-        {
-            dataField: "JoinDate",
-            caption: "Join Date",
-            dataType: "date",
-            format: "dd-MM-yyyy",
-            validationRules: [{ type: "required" }]
-        },
+        
         {
             dataField: "department_id",
             caption: "Department",
@@ -138,7 +120,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 valueExpr: 'id',
                 displayExpr: 'DesignationName',
             },
-            validationRules: [{ type: "required" }]
+            // validationRules: [{ type: "required" }]
         },
         { 
             dataField: "location_id",
@@ -149,6 +131,27 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 displayExpr: 'location',
             },
             validationRules: [{ type: "required" }]
+        },
+        {
+            dataField: 'level_id',
+            caption: "Level",
+            lookup: {
+                dataSource: listOption('/list-level','id','level'),  
+                valueExpr: 'id',
+                displayExpr: 'level',
+            },
+            validationRules: [{ type: "required" }]
+        },
+        {
+            dataField: "JoinDate",
+            caption: "Join Date",
+            dataType: "date",
+            format: "dd-MM-yyyy",
+            // validationRules: [{ type: "required" }]
+        },
+        {
+            dataField: 'LoginName',
+            visible: (admin == 1 || developer ) ? true : false,
         },
         {
             dataField: 'CostCenter',
@@ -349,7 +352,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                             const hasSelection = keys.length;
                             args.component.option('value', hasSelection ? keys[0] : null);
                             console.log(hasSelection)
-                            args.component.close();
+                            // args.component.close();
                         }
                     });
 
@@ -384,8 +387,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         width: '100%',
                         dataSource: args.component.option("dataSource"),
                         keyExpr: "id",
-                        columns: ["DesignationName"],
-                        // columns: ["SAPCode","DesignationName"],
+                        // columns: ["DesignationName"],
+                        columns: ["DesignationName","SAPCode"],
                         hoverStateEnabled: true,
                         paging: { enabled: true, pageSize: 10 },
                         filterRow: { visible: true },
@@ -406,7 +409,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                             const hasSelection = keys.length;
                             args.component.option('value', hasSelection ? keys[0] : null);
                             console.log(hasSelection)
-                            args.component.close();
+                            // args.component.close();
                         }
                     });
 
