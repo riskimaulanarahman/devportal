@@ -95,7 +95,7 @@ class ListController extends Controller
     }
 
     public function listLocation() {
-        return Location::select('id','location')->orderBy('location','asc')->get();
+        return Location::select('id','location')->orderBy('location','asc')->where('isUsed',1)->get();
     }
 
     public function listDesignation() {
