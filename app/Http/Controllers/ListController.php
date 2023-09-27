@@ -168,7 +168,7 @@ class ListController extends Controller
     }
 
     public function listParentProject() {
-        return Project::where('requestStatus',3)->get();
+        return Project::where('requestStatus',3)->where('projectStatus','Completed')->get();
     }
 
 }

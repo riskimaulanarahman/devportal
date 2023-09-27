@@ -28,7 +28,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     editing: {
         useIcons:true,
         mode: "batch",
-        allowAdding: false,                    
+        allowAdding: false,
         allowUpdating: (admin == 1 || developer) ? true : false,
         allowDeleting: false,
     },
