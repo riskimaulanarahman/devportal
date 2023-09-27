@@ -22,7 +22,6 @@ class Ticket extends Model
         'user_id',
         'requestStatus',
         'nameSystem',
-        'module',
         'category',
         'codeno',
         'description',
