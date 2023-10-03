@@ -89,10 +89,6 @@
                     <td>{{ $projectName }}</td>
                 </tr>
                 <tr>
-                    <th>Module</th>
-                    <td>{{ $mailData['submission']->module }}</td>
-                </tr>
-                <tr>
                     <th>Category</th>
                     <td>{{ $mailData['submission']->category }}</td>
                 </tr>

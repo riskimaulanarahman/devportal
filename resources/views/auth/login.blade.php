@@ -68,6 +68,9 @@
                                                                     </div>
                                                                 @endif
                                                             </form>
+                                                            <div>
+                                                                <a href="{{ env('APP_URL') }}/public/upload/DevPortal Panduan.pdf" target="_blank"><button class="btn btn-danger"><i class="fa fa-download"></i> Panduan DevPortal</button></a>
+                                                            </div>
                                                         </div>
                                                         <div class="mt-4 text-center">
                                                             <p class="mb-0"><b>© <script>document.write(new Date().getFullYear())</script> {{ env('APP_NAME') }} </b>. Crafted with <i class="mdi mdi-heart text-danger"></i><br>by <b>{{ env('APP_AUTHOR') }}</b></p>
