@@ -115,7 +115,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Code",
             dataField: 'code',
             width: 180,
-            sortOrder: "asc"
+            sortOrder: "desc"
         },
         // {
         //     caption: "Module",
