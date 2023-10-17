@@ -1,22 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Submission;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\Module;
-use App\Models\ApproverListReq;
+use App\Models\Submission\UavMissionDetail;
 
-class ApproverListController extends Controller
+class UavMissionRequestDetailController extends Controller
 {
 
-    public $model;
+    private $model;
+    public $modulename;
     public $module;
 
     public function __construct()
     {
-        $this->model = new ApproverListReq();
+        $this->model = new UavMissionDetail();
+        $this->modulename = 'UavMission';
         $this->module = new Module();
     }
 
@@ -40,7 +42,9 @@ class ApproverListController extends Controller
 
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $requestData['approvalAction'] = 1;
+
+            $this->addOneDayToDate($requestData);
+
             $this->model->create($requestData);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
@@ -61,11 +65,7 @@ class ApproverListController extends Controller
         try {
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
-                $data = $this->model->select('tbl_approverListReq.id','tbl_approverListReq.approver_id','users.fullname','tbl_approvaltype.ApprovalType','approvalDate','approvalAction')
-                ->leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
-                ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
-                ->leftJoin('users','tbl_approver.user_id','users.id')
-                ->where('req_id',$id)
+                $data = $this->model->where('req_id',$id)
                 ->where('module_id',$module->id)
                 ->get();
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
@@ -85,8 +85,22 @@ class ApproverListController extends Controller
             
             $requestData = $request->all();
 
+            $this->addOneDayToDate($requestData);
+
             $data = $this->model->findOrFail($id);
             $data->update($requestData);
+
+            //start save history perubahan
+            $fields = [
+                'DetailStatus' => $request->status,
+            ];
+            
+            foreach ($fields as $key => $value) {
+                if ($value) {
+                    $this->approverAction($this->modulename, $data->req_id, $key, 1, $value);
+                }
+            }
+            //end save history perubahan
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 

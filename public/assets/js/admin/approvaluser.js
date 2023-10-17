@@ -59,6 +59,10 @@ function processData(itemsData) {
             width: 240,
             placeholder: 'Search...',
         },
+        selection: {
+            mode: 'multiple',
+            recursive: true,
+        },
         editing: {
             useIcons:true,
             mode: "batch",
@@ -116,16 +120,32 @@ function processData(itemsData) {
                 ]
             },
             {
-                dataField: "sequence"
-            },
-            { 
-                dataField: "isFinal",
-                dataType: "boolean"
+                dataField: "sequence",
+                validationRules: [
+                    { 
+                        type: "required" 
+                    }
+                ]
             },
             {
                 dataField: "companylist",
                 caption: "Company"
-            },  
+            }, 
+            {
+                caption: "Category",
+                dataField: "category_id",
+                width: 300,
+                // editorType: "dxDropDownBox",
+                // lookup: {
+                //     dataSource: listOption('/list-categoryform','id','nameCategory'),  
+                //     valueExpr: 'id',
+                //     displayExpr: 'nameCategory',
+                // },
+            },
+            { 
+                dataField: "isFinal",
+                dataType: "boolean"
+            }, 
             { 
                 dataField: "isActive",
                 dataType: "boolean"
@@ -157,7 +177,7 @@ function processData(itemsData) {
         },
         onEditorPreparing: function (e) {
             if (e.dataField == "employee_id" && e.parentType == "dataRow") {
-                e.editorName = "dxDropDownBox";                
+                e.editorName = "dxDropDownBox";            
                 e.editorOptions.dropDownOptions = {                
                     height: 500,
                     width: 600
@@ -199,6 +219,69 @@ function processData(itemsData) {
                     args.component.on("valueChanged", function (args) {
                         var value = args.value;
     
+                        dataGrid.selectRows(value, false);
+                    });
+                    container.append($dataGrid);
+                    $("<div>").dxButton({
+                        text: "Close",
+    
+                        onClick: function (ev) {
+                            args.component.close();
+                        }
+                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                    return container;
+    
+                };
+            }
+            if (e.dataField == "category_id" && e.parentType == "dataRow") {
+                e.editorName = "dxDropDownBox";                
+                e.editorType = "dxDropDownBox";                
+                e.editorOptions.dropDownOptions = {                
+                    height: 500,
+                    width: 600
+                };
+                e.editorOptions.dataSource = listOption('/list-categoryform','id','nameCategory');
+                e.editorOptions.valueExpr = 'id',
+                e.editorOptions.displayExpr = 'nameCategory',
+                e.editorOptions.searchEnabled = true,
+                e.editorOptions.contentTemplate = function (args, container) {
+    
+                    var value = args.component.option("value"),
+                        $dataGrid = $("<div>").dxDataGrid({
+                            width: '100%',
+                            dataSource: args.component.option("dataSource"),
+                            keyExpr: "id",
+                            columns: ["module.module","nameCategory"],
+                            // hoverStateEnabled: true,
+                            paging: { enabled: true, pageSize: 10 },
+                            filterRow: { visible: true },
+                            height: '90%',
+                            showRowLines: true,
+                            showBorders: true,
+                            selection: { mode: "multiple" },
+                            // selectedRowKeys: value,
+                            selectedRowKeys: [value],
+                            focusedRowEnabled: true,
+                            focusedRowKey: args.component.option("value"),
+                            searchPanel: {
+                                visible: true,
+                                width: 265,
+                                placeholder: "Search..."
+                            },
+                            onSelectionChanged: function (selectedItems) {
+                                const keys = selectedItems.selectedRowKeys;
+                                const hasSelection = keys.length;
+                                args.component.option('value', hasSelection ? keys : null);
+                                // args.component.option('value',keys);
+                                console.log(keys)
+                                // args.component.close();
+                            }
+                        });
+    
+                    var dataGrid = $dataGrid.dxDataGrid("instance");
+    
+                    args.component.on("valueChanged", function (args) {
+                        var value = args.value;
                         dataGrid.selectRows(value, false);
                     });
                     container.append($dataGrid);

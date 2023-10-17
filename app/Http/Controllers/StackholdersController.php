@@ -46,31 +46,11 @@ class StackholdersController extends Controller
     {
         try {
 
-
-            //     $user = LdapUser::findBy('samaccountname','riski_maulana');
-            //     if ($user) {
-            //         // The user is an immediate member of the 'Accounting' group.
-            //         echo 'oke';
-            //     } else {
-            //         echo 'nok';
-            //     }
-          
-            // return false;
-
-
-            // return $user->getDiagnosticMessage();
-           
-            
-
-            // $username = 'riski_maulana';
-            // $users = User::where('username', '=', $username)->get();
-            // foreach ($users as $user) {
-            // }
-
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
             $getemployee = $this->employee->find($request->employee_id);
             $getuser = $this->user->where('username',$getemployee->LoginName)->get();
+            
             if(count($getuser) > 0) {
                 $this->model->create($requestData);
             } else {
@@ -105,15 +85,10 @@ class StackholdersController extends Controller
     public function getList($id,$modulename)
     {
         try {
-            // $module = $this->module->select('id','module')->where('module',$modulename)->first();
-            // if($module) {
-                $data = $this->model->where('req_id',$id)
-                // ->where('module_id',$module->id)
-                ->get();
+
+                $data = $this->model->where('req_id',$id)->get();
+
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
-            // } else {
-            //     return response()->json(["status" => "show", "message" => $this->getMessage()['errornotfound']]);
-            // }
 
         } catch (\Exception $e) {
 
@@ -128,7 +103,32 @@ class StackholdersController extends Controller
             $requestData = $request->all();
 
             $data = $this->model->findOrFail($id);
-            $data->update($requestData);
+
+            if($request->employee_id) {
+                $getEmployee =  $this->employee->find($request->employee_id);
+                $getUser = $this->user->where('username',$getEmployee->LoginName)->get();
+
+
+                if(count($getUser) > 0) {
+                    $data->update($requestData);
+                } else {
+                    $getldap = LdapUser::findBy('samaccountname',$getEmployee->LoginName);
+
+                    if ($getldap) {
+                        $this->user->create([
+                            "username" => $getldap['samaccountname'][0],
+                            "fullname" => $getldap['name'][0],
+                            "email" => $getldap['mail'][0]
+                        ]);
+                        $data->update($requestData);
+                    } else {
+                        return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                    }
+
+                }
+            } else {
+                $data->update($requestData);
+            }
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 

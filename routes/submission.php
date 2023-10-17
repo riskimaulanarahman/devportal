@@ -10,6 +10,8 @@ Route::group(['prefix' => 'api'], function () {
         'travelrequest' => App\Http\Controllers\Submission\TravelRequestController::class,
         'projectrequest' => App\Http\Controllers\Submission\ProjectRequestController::class,
         'ticketrequest' => App\Http\Controllers\Submission\TicketRequestController::class,
+        'missionrequest' => App\Http\Controllers\Submission\UavMissionRequestController::class,
+        'missionrequestdetail' => App\Http\Controllers\Submission\UavMissionRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -23,6 +25,7 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('approverlisthistory/{id}/{modulename}',[App\Http\Controllers\ApproverHistoryController::class, 'getList']); //get list approver history by req_id of module
     Route::get('assignmentto/{id}/{modulename}',[App\Http\Controllers\AssignmenttoController::class, 'getList']); //get list developer by req_id of module
     Route::get('stackholders/{id}/{modulename}',[App\Http\Controllers\StackholdersController::class, 'getList']); //get list stackholders by req_id of module
+    Route::get('missionrequestdetail/{id}/{modulename}',[App\Http\Controllers\Submission\UavMissionRequestDetailController::class, 'getList']); //get list stackholders by req_id of module
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request

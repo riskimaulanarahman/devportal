@@ -24,6 +24,7 @@ use App\Models\Code;
 use App\Models\Approvaltype;
 use App\Models\Developer;
 use App\Models\Approvaluser;
+use App\Models\CategoryForm;
 use App\Models\Submission\Project;
 use Auth;
 
@@ -49,6 +50,14 @@ class ListController extends Controller
                     $query->whereNotNull('LoginName')
                         ->where('LoginName', '<>', '');
                 })
+                ->where('tbl_employee.isActive',1)
+                ->get();
+    }
+
+    public function listEmployeeAll() {
+        return Employee::select('tbl_employee.id', 'sapid', 'fullname', 'companycode', 'tbl_department.departmentname', 'tbl_department.departmentgroup')
+                ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
+                ->where('tbl_employee.isActive',1)
                 ->get();
     }
 
@@ -66,6 +75,7 @@ class ListController extends Controller
                         ->where('tbl_department.departmentgroup', $departmentGroup);
                 })
                 ->orWhere('tbl_employee.loginname', $loginName)
+                ->where('tbl_employee.isActive',1)
                 ->get();
 
         $employee->makeHidden(['department', 'designation']);
@@ -169,6 +179,10 @@ class ListController extends Controller
 
     public function listParentProject() {
         return Project::where('requestStatus',3)->where('projectStatus','Completed')->get();
+    }
+
+    public function listCategoryForm() {
+        return CategoryForm::with('module')->select('*')->get();
     }
 
 }

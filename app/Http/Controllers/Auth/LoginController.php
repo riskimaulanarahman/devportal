@@ -49,6 +49,7 @@ class LoginController extends Controller
                 ->leftJoin('tbl_assignment','request_project.id','tbl_assignment.req_id')
                 ->leftJoin('tbl_developer','tbl_assignment.developer_id','tbl_developer.id')
                 ->where('requestStatus',3)
+                ->where('tbl_assignment.module_id',36)
                 ->where('projectStatus','Waiting')
                 ->get();
         $progress = Project::select('request_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
@@ -56,6 +57,7 @@ class LoginController extends Controller
                 ->leftJoin('tbl_assignment','request_project.id','tbl_assignment.req_id')
                 ->leftJoin('tbl_developer','tbl_assignment.developer_id','tbl_developer.id')
                 ->where('requestStatus',3)
+                ->where('tbl_assignment.module_id',36)
                 ->where('projectStatus','Progress')
                 ->get();
         $Completed = Project::select('request_project.id','users.fullname','nameSystem','progress','projectStatus','tbl_developer.initials')
@@ -63,6 +65,7 @@ class LoginController extends Controller
                 ->leftJoin('tbl_assignment','request_project.id','tbl_assignment.req_id')
                 ->leftJoin('tbl_developer','tbl_assignment.developer_id','tbl_developer.id')
                 ->where('requestStatus',3)
+                ->where('tbl_assignment.module_id',36)
                 ->where('projectStatus','Completed')
                 ->get();
         

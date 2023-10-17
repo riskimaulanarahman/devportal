@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-use App\Models\Submission\Ticket;
+use App\Models\Submission\UavMission;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Models\Approvaluser;
@@ -14,7 +14,7 @@ use App\Models\Module;
 use App\Models\Attachment;
 use DB;
 
-class TicketRequestController extends Controller
+class UavMissionRequestController extends Controller
 {
     public $model;
     public $modulename;
@@ -22,8 +22,8 @@ class TicketRequestController extends Controller
 
     public function __construct()
     {
-        $this->model = new Ticket();
-        $this->modulename = 'Ticket';
+        $this->model = new UavMission();
+        $this->modulename = 'UavMission';
         $this->module = new Module();
     }
 
@@ -42,40 +42,37 @@ class TicketRequestController extends Controller
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.ApprovalAction='1' and l.req_id = request_ticket.id and l.module_id = '".$module_id."' and request_ticket.requestStatus='1'
+            where l.ApprovalAction='1' and l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and request_uavmission.requestStatus='1'
             order by a.sequence)";
 
-            if(!$isAdmin) {
-                $dataquery->leftJoin('tbl_assignment',function($join) use ($module_id){
-                    $join->on('request_ticket.id','=','tbl_assignment.req_id')
-                         ->where('tbl_assignment.module_id',$module_id);
-                });
-                $dataquery->leftJoin('tbl_developer','tbl_assignment.developer_id','=','tbl_developer.id');
-            }
-
+            $getwp = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+            from tbl_approverListReq l
+            left join tbl_approver a on l.approver_id=a.id
+            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            where l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and r.ApprovalType='Workshop PIC' and r.isactive='1'
+            order by a.sequence)";
+            // where l.ApprovalAction='1' and l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and request_uavmission.requestStatus='1' and r.ApprovalType='Workshop PIC' and r.isactive='1'
+            
             $data = $dataquery
-                ->selectRaw("request_ticket.*,codes.code,
-                    CASE WHEN request_ticket.user_id='".$user_id."' then 1 else 0 end as isMine,
-                    ".$subquery." as isPendingOnMe
+                ->selectRaw("request_uavmission.*,codes.code,
+                    CASE WHEN request_uavmission.user_id='".$user_id."' then 1 else 0 end as isMine,
+                    ".$subquery." as isPendingOnMe,
+                    ".$getwp." as isWP
                 ")
-                ->leftJoin('codes','request_ticket.code_id','codes.id')
+                ->leftJoin('codes','request_uavmission.code_id','codes.id')
                 ->with(['user','approverlist'])
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id, $isAdmin) {
-                            if ($isAdmin) {
-                                $query->where("request_ticket.user_id", "!=", $user_id)
-                                    ->whereIn("request_ticket.requestStatus", [1,3,4]);
-                            } 
-                            else {
-                                $query->where("tbl_developer.user_id",$user_id)
-                                    ->whereIn("request_ticket.requestStatus", [3]);
-                            }
+                            // if ($isAdmin) {
+                                $query->where("request_uavmission.user_id", "!=", $user_id)
+                                    ->whereIn("request_uavmission.requestStatus", [1,3,4]);
+                            // } 
                         })
-                        ->orWhere("request_ticket.user_id", $user_id);
+                        ->orWhere("request_uavmission.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN request_ticket.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_ticket.created_at desc")
+                ->orderByRaw("CASE WHEN request_uavmission.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_uavmission.created_at desc")
                 ->get();
 
             return response()->json([
@@ -107,7 +104,7 @@ class TicketRequestController extends Controller
             // Simpan id dari data baru
             $req_id = $newData->id;
 
-            $this->createApproverList($this->modulename, $req_id);
+            $this->createApproverListCategory($this->modulename, $req_id, $cat_id = null);
             
             return response()->json([
                 "status" => "success",
@@ -125,15 +122,17 @@ class TicketRequestController extends Controller
     {
         try {
 
-            $data = $this->model->select('request_ticket.*','codes.code')
-            ->leftJoin('codes','request_ticket.code_id','codes.id')
-            ->where('request_ticket.id',$id)
+            $data = $this->model->select('request_uavmission.*','codes.code')
+            ->leftJoin('codes','request_uavmission.code_id','codes.id')
+            ->where('request_uavmission.id',$id)
             ->first();
 
             if($data->code_id == null) {
                 $data->code_id = $this->generateCode($this->modulename);
                 $data->save();
             }
+
+            // $this->createApproverListCategory($this->modulename, $req_id, $cat_id);
 
             return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
@@ -151,17 +150,16 @@ class TicketRequestController extends Controller
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
 
-            
             // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
-            ($data->ticketStatus == null) ? $requestData['ticketStatus'] = 'On Queue' : $request->ticketStatus;
+            ($data->missionStatus == null) ? $requestData['missionStatus'] = 'Waiting' : $request->missionStatus;
             $data->update($requestData);
-
+            
             //start save history perubahan
             $fields = [
-                'ticketStatus' => $request->ticketStatus,
+                'missionStatus' => $request->missionStatus,
             ];
             
             foreach ($fields as $key => $value) {
@@ -170,7 +168,7 @@ class TicketRequestController extends Controller
                 }
             }
             //end save history perubahan
-
+            
             // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([
                 'status' => "success",

@@ -31,6 +31,8 @@ class SubmissionMail extends Mailable
     public $final;
     public $module;
     public $attachment;
+    public $category;
+    public $assignment;
     // public $details;
     // public $text;
     // public $final;
@@ -56,6 +58,10 @@ class SubmissionMail extends Mailable
         ->where('isActive',1)
         ->get();
 
+        if (!empty($mailData['submission']->category_id)) {
+            $category = DB::table('tbl_categoryform')->select('nameCategory')->where('id',$mailData['submission']->category_id)->first();
+            $this->category = $category->nameCategory;
+        }
         // PROJECT MODULE
         if($modulename == 'Project') {
             $attachments = Attachment::where('req_id',$mailData['submission']->id)
@@ -130,6 +136,23 @@ class SubmissionMail extends Mailable
 
         }
 
+        if($modulename == 'UavMission') {
+
+            if($final == 1) {
+                $assignmentdata = Assignmentto::leftJoin('tbl_employee','tbl_assignment.employee_id','=','tbl_employee.id')
+                                        ->leftJoin('users','tbl_employee.LoginName','=','users.username')
+                                        ->select('tbl_employee.*','users.email')
+                                        ->where('req_id',$mailData['submission']->id)
+                                        ->where('module_id',$this->getModuleId($modulename))
+                                        ->get();
+                $this->assignment=$assignmentdata;
+                foreach ($assignmentdata as $email){
+                    $this->cc($email->email);
+                }
+            }
+
+        }
+
         // $this->details=$details;
         // $this->text=$text;
         // $this->final=$final;
@@ -152,11 +175,23 @@ class SubmissionMail extends Mailable
     public function build()
     {  
         $subject = 'Submission - '.$this->code;
-        if($this->modulename == 'Project') {
-            $viewblade = 'emails.projectrequestmail';
-        } else if($this->modulename == 'Ticket') {
-            $viewblade = 'emails.ticketrequestmail';
+        $viewblade = '';
+
+        switch ($this->modulename) {
+            case 'Project':
+                $viewblade = 'emails.projectrequestmail';
+                break;
+            case 'Ticket':
+                $viewblade = 'emails.ticketrequestmail';
+                break;
+            case 'UavMission':
+                $viewblade = 'emails.uavmissionrequestmail';
+                break;
+            default:
+                $viewblade = 'emails.defaultmail';
+                break;
         }
+
         return $this->subject($subject)->view($viewblade);
     }
 }

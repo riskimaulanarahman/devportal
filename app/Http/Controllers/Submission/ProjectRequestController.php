@@ -147,6 +147,19 @@ class ProjectRequestController extends Controller
             $data = $this->model->findOrFail($id);
             $data->update($requestData);
 
+            //start save history perubahan
+            $fields = [
+                'projectStatus' => $request->projectStatus,
+                'progress' => strval($request->progress),
+            ];
+            
+            foreach ($fields as $key => $value) {
+                if ($value) {
+                    $this->approverAction($this->modulename, $id, $key, 1, $value);
+                }
+            }
+            //end save history perubahan
+
             // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([
                 'status' => "success",

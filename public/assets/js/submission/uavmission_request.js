@@ -26,10 +26,10 @@ var dataGrid = $("#gridContainer").dxTreeList({
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    selection: {
-        mode: 'multiple',
-        recursive: true,
-    },
+    // selection: {
+    //     mode: 'single',
+    //     recursive: true,
+    // },
     searchPanel: {
         visible: true,
         width: 240,
@@ -50,10 +50,16 @@ var dataGrid = $("#gridContainer").dxTreeList({
         showInfo: true,
     },
     columns: [
+
         {
-            dataField: 'nameSystem',
-            width: 350,
-            sortOrder: "asc",
+            caption: 'Mission Category',
+            dataField: 'category_id',
+            width: 220,
+            lookup: {
+                dataSource: listOption('/list-categoryform','id','nameCategory'),  
+                valueExpr: 'id',
+                displayExpr: 'nameCategory',
+            },
         },
         {
             caption: 'Action',
@@ -112,11 +118,20 @@ var dataGrid = $("#gridContainer").dxTreeList({
         {
             caption: "Code",
             dataField: 'code',
-            width: 180
+            // width: 180
         },
         { 
 			dataField: "user.fullname",
             caption: 'Creator Name',
+            width: 180
+        },
+        {
+            dataField: 'missionName',
+            // width: 250,
+            // sortOrder: "asc",
+        },
+        { 
+			dataField: "remarks",
             width: 180
         },
         {
@@ -134,10 +149,10 @@ var dataGrid = $("#gridContainer").dxTreeList({
                 ];
                 return arrText[e.value];
             },
-            // width: 110
+            width: 180
         },
         {
-            dataField: 'projectStatus',
+            dataField: 'missionStatus',
             encodeHtml: false,
             sortOrder: "desc",
             customizeText: function (e) {
@@ -149,7 +164,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
                     return "<span class='btn btn-primary btn-xs'>Waiting</span>"
                 }
             },
-            // width: 110
+            width: 180
         },
       
     ],
@@ -197,7 +212,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang DataGrid
-        dataGrid.refresh();
+        // dataGrid.refresh();
     }
 }).dxTreeList("instance");
 
@@ -220,15 +235,20 @@ const accordionItems = [
         visible: true
     },
     {
+        ID: 7,
+        Title: '<i class="fas fa-newspaper"> Mission Detail </i>',
+        visible: true
+    },
+    {
         ID: 5,
         Title: '<i class="fas fa-users"> Assignment To </i>',
         visible: false
     },
-    {
-        ID: 6,
-        Title: '<i class="fas fa-list-ul"> Stakeholders </i>',
-        visible: true
-    },
+    // {
+    //     ID: 6,
+    //     Title: '<i class="fas fa-list-ul"> Stakeholders </i>',
+    //     visible: true
+    // },
     {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
@@ -241,7 +261,7 @@ const accordionItems = [
     },
     {
         ID: 4,
-        Title: '<i class="fas fa-history"> Approver History </i>',
+        Title: '<i class="fas fa-history"> History </i>',
         visible: true
     },
 ];
@@ -258,6 +278,11 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     var isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
+    var isWP = options.data.isWP;
+
+    // console.log(options)
+    // console.log(isPendingOnMe)
+    // console.log(isWP)
 
     popupid = reqid;
 
@@ -314,11 +339,11 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    if(options.data.requestStatus == 3) {
+    // if(options.data.requestStatus == 3 || isWP) {
         updateVisibleById(5, true);
-    } else {
-        updateVisibleById(5, false);
-    }
+    // } else {
+    //     updateVisibleById(5, false);
+    // }
 
     const syncTreeViewSelection = function (treeViewInstance, value) {
         if (!value) {
@@ -339,7 +364,12 @@ const popupContentTemplate = function (reqid,mode,options) {
             collapsible: true,
             multiple: true,
             itemTitleTemplate: function (data) {
-                return '<small style="margin-bottom:10px !important ;">'+data.Title+'</small>'
+                if(data.ID == 5) {
+                    color = 'red';
+                } else {
+                    color = 'black';
+                }
+                return '<small style="margin-bottom:10px !important; color:'+color+'">'+data.Title+'</small>'
             },
             itemTemplate: function (data) {
                 if(data.ID == 1) {
@@ -366,7 +396,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -383,48 +413,23 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                caption: 'Parent System',
-                                dataField: 'parentID',
+                                caption: 'Mission Category',
+                                dataField: 'category_id',
                                 lookup: {
-                                    dataSource: listOption('/list-parentproject','id','nameSystem'),  
+                                    dataSource: listOption('/list-categoryform','id','nameCategory'),  
                                     valueExpr: 'id',
-                                    displayExpr: 'nameSystem',
+                                    displayExpr: 'nameCategory',
                                 },
-                                width: 200,
-                                // validationRules: [{ type: "required" }]
+                                validationRules: [{ type: "required" }]
                             },
                             {
-                                dataField: 'nameSystem',
+                                dataField: 'missionName',
                                 dataType: 'string',
                                 validationRules: [{ type: "required" }]
                             },
                             {
-                                dataField: 'description',
+                                dataField: 'remarks',
                                 dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'Old System Desc',
-                                dataField: 'descOldSystem',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'New System Desc',
-                                dataField: 'descNewSystem',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                dataField: 'purpose',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'Expected Date',
-                                dataField: 'expecteddate',
-                                dataType: 'date',
-                                format: "yyyy-MM-dd",
                                 validationRules: [{ type: "required" }]
                             },
                             {
@@ -436,16 +441,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                             },
                             {
-                                dataField: 'progress',
-                                caption: 'Progress %',
-                                dataType: 'string',
-                                visible: false,
-                                lookup: {
-                                    dataSource: [0,10,20,30,40,50,60,70,80,90,100],  
-                                },
-                            },
-                            {
-                                dataField: 'projectStatus',
+                                dataField: 'missionStatus',
                                 dataType: 'string',
                                 visible: false,
                                 lookup: {
@@ -489,45 +485,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onEditorPreparing: function (e) {
-                            if (e.dataField == "parentID" && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";                
-                                e.editorOptions.dropDownOptions = {        
-                                    height: 500,
-                                    width: 600
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
-
-                                        const $dataGrid = $("<div>").dxTreeView({
-                                            dataSource: args.component.option("dataSource"),
-                                            dataStructure: 'plain',
-                                            keyExpr: "id",
-                                            parentIdExpr: 'parentID',
-                                            selectionMode: 'single',
-                                            displayExpr: 'nameSystem',
-                                            selectByClick: true,
-                                            selectNodesRecursive: false,
-                                            onItemSelectionChanged(selectedItems) {
-                                                const selectedKeys = selectedItems.component.getSelectedNodeKeys();
-                                                const hasSelection = selectedKeys.length;
-
-                                                args.component.option('value', hasSelection ? selectedKeys[0] : null);
-                                                args.component.close();
-                                            },
-                                        });
-                    
-                                    var dataGrid = $dataGrid.dxTreeView("instance");
-                    
-                                    args.component.on("valueChanged", function (e) {
-                                        
-                                        var value = e.value;
-                                        dataGrid.selectItem(value);
-                                        e.component.close();
-                                    });
-                                    
-                                    return $dataGrid;
-                    
-                                };
-                            }
                         },
                         onCellPrepared: function (e) {
                             if (e.column.index == 0 && e.rowType == "data") {
@@ -538,10 +495,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             }
                             if (e.column.index == 0 && e.rowType == "data") {
-                                if(e.data.requestStatus == 3) {
+                                if(e.data.requestStatus == 3 || isWP) {
                                     $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-                                    $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
-                                    $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
+                                    $("#formdata").dxDataGrid('columnOption','missionStatus', 'visible', true);
                                 }
                             }
                         },
@@ -551,6 +507,234 @@ const popupContentTemplate = function (reqid,mode,options) {
                     
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
+                        }
+                    })
+                } 
+                else if(data.ID == 7) {
+                    return formData = $("<div id='formdetail'>").dxDataGrid({    
+                        dataSource: storewithmodule('missionrequestdetail',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "batch",
+                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                        },
+                        scrolling: {
+                            mode: "virtual"
+                        },
+                        columns: [
+                            {
+                                dataField: 'mission_type',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['Lidar','RGB','Photo','Video'],  
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'Expected Date',
+                                dataField: 'missiondate',
+                                dataType: 'date',
+                                format: "dd-MM-yyyy",
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'location_type',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['Compartment','External'],  
+                                },
+                                validationRules: [{ type: "required" }],
+                                // editorOptions: {
+                                //     onValueChanged: function(e) {
+                                //         if (e.value === "Compartment") {
+                                //             dataGridMissionDetail.columnOption('location_sector', 'visible', true);
+                                //         } else {
+                                //             dataGridMissionDetail.columnOption('location_sector', 'visible', false);
+                                //         }
+                                //     }
+                                // }
+                            },
+                            {
+                                caption: 'Sector/Location',
+                                dataField: 'location_sector',
+                                dataType: 'string',
+                                visible: true,
+                            },
+                            {
+                                caption: 'No Compt (if Available)',
+                                dataField: 'location_nocompt',
+                                dataType: 'string',
+                                visible: true,
+                            },
+                            {
+                                dataField: 'location_others',
+                                dataType: 'string',
+                                visible: false,
+                            },
+                            {
+                                caption: 'PIC Requester',
+                                dataField: 'mission_pic',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: listOption('/list-employeeall','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'fullname',
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'plan_start',
+                                dataType: 'date',
+                                format: "dd-MM-yyyy",
+                                visible: false,
+                            },
+                            {
+                                dataField: 'plan_end',
+                                dataType: 'date',
+                                format: "dd-MM-yyyy",
+                                visible: false,
+                            },
+                            {
+                                dataField: 'completed_date',
+                                dataType: 'date',
+                                format: "dd-MM-yyyy",
+                                visible: false,
+                            },
+                            {
+                                dataField: 'status',
+                                dataType: 'string',
+                                visible: false,
+                                lookup: {
+                                    dataSource: ['Waiting','Acquicition','Processing','Completed'],  
+                                },
+                            },
+                            {
+                                dataField: 'remarks',
+                                dataType: 'string',
+                                visible: false,
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridMissionDetail = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridMissionDetail.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPreparing: function (e) {
+                            if (e.dataField == "mission_pic" && e.parentType == "dataRow") {
+                                e.editorName = "dxDropDownBox";                
+                                e.editorOptions.dropDownOptions = {                
+                                    height: 500,
+                                    width: 600
+                                };
+                                e.editorOptions.contentTemplate = function (args, container) {
+                    
+                                    var value = args.component.option("value"),
+                                        $dataGrid = $("<div>").dxDataGrid({
+                                            width: '100%',
+                                            dataSource: args.component.option("dataSource"),
+                                            keyExpr: "id",
+                                            columns: ["sapid","fullname","companycode","departmentname"],
+                                            hoverStateEnabled: true,
+                                            paging: { enabled: true, pageSize: 10 },
+                                            filterRow: { visible: true },
+                                            height: '90%',
+                                            showRowLines: true,
+                                            showBorders: true,
+                                            selection: { mode: "single" },
+                                            selectedRowKeys: [value],
+                                            focusedRowEnabled: true,
+                                            focusedRowKey: args.component.option("value"),
+                                            searchPanel: {
+                                                visible: true,
+                                                width: 265,
+                                                placeholder: "Search..."
+                                            },
+                                            onSelectionChanged: function (selectedItems) {
+                                                const keys = selectedItems.selectedRowKeys;
+                                                const hasSelection = keys.length;
+                                                args.component.option('value', hasSelection ? keys[0] : null);
+                                                // args.component.close();
+                                            }
+                                        });
+                    
+                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                    
+                                    args.component.on("valueChanged", function (args) {
+                                        var value = args.value;
+                    
+                                        dataGrid.selectRows(value, false);
+                                    });
+                                    container.append($dataGrid);
+                                    $("<div>").dxButton({
+                                        text: "Close",
+                    
+                                        onClick: function (ev) {
+                                            args.component.close();
+                                        }
+                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                                    return container;
+                    
+                                };
+                            }
+                        },
+                        onCellPrepared: function (e) {
+                            if (e.column.index == 0 && e.rowType == "data") {
+                                if(options.data.requestStatus == 3 || isWP || admin == 1) {
+                                    $("#formdetail").dxDataGrid('columnOption','status', 'visible', true);
+                                    $("#formdetail").dxDataGrid('columnOption','plan_start', 'visible', true);
+                                    $("#formdetail").dxDataGrid('columnOption','plan_end', 'visible', true);
+                                    $("#formdetail").dxDataGrid('columnOption','completed_date', 'visible', true);
+                                    $("#formdetail").dxDataGrid('columnOption','remarks', 'visible', true);
+                                }
+                            }
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (7):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridMissionDetail.refresh();
                         }
                     })
                 } 
@@ -629,19 +813,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                         }
                     })
 
-                    var downloadButton = $("<button>")
-                        .text("Download Proposal Guide Template")
-                        .addClass("btn btn-danger btn-xs")
-                        .appendTo(supporting);
-
-                    downloadButton.click(function() {
-                        var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
-                        var link = document.createElement("a");
-                        link.href = fileUrl;
-                        link.download = "Proposal Pengajuan System.pptx";
-                        link.click();
-                    });
-
                     return supporting;
                 }
                 else if(data.ID == 3) {
@@ -697,7 +868,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: "date",
                             },
                             {
-                                dataField: "approvalStatus",
+                                caption: "Approval Status",
+                                dataField: "approvalAction",
                                 encodeHtml: false,
                                 allowFiltering: false,
                                 allowHeaderFiltering: true,
@@ -761,7 +933,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // console.log(keys)
                                                 args.component.close();
                                             }
                                         });
@@ -839,13 +1010,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: "fullname"
                             },
                             {
+                                caption: "Type",
                                 dataField: "approvalType"
                             },
                             {
+                                caption: "Date",
                                 dataField: "approvalDate",
                                 dataType: "date",
                             },
                             {
+                                caption: "Action",
                                 dataField: "approvalAction",
                                 encodeHtml: false,
                                 allowFiltering: false,
@@ -922,21 +1096,28 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "cell",
-                            allowAdding: (admin == 1 || developer ) ? true : false,
-                            allowUpdating: (admin == 1 || developer ) ? true : false,
-                            allowDeleting: (admin == 1 || developer ) ? true : false,
+                            allowAdding: (admin == 1 || isWP ) ? true : false,
+                            allowUpdating: (admin == 1 || isWP ) ? true : false,
+                            allowDeleting: (admin == 1 || isWP ) ? true : false,
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
                             {
-                                caption: "Developer Name",
-                                dataField: "developer_id",
+                                caption: "PIC Name",
+                                dataField: "employee_id",
                                 lookup: {
-                                    dataSource: listOption('/list-developer','id','developerName'),
-                                    displayExpr: "developerName",
-                                    valueExpr: "id",
+                                    dataSource: listOption('/list-employeeall','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'fullname',
                                 },
                                 validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'role',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['Acquicitor','Data Processor'],  
+                                },
                             },
                         ],
                         export: {
@@ -952,6 +1133,64 @@ const popupContentTemplate = function (reqid,mode,options) {
                             moveEditColumnToLeft(e.component);
                         },
                         onInitNewRow : function(e) {
+                        },
+                        onEditorPreparing: function (e) {
+                            if (e.dataField == "employee_id" && e.parentType == "dataRow") {
+                                e.editorName = "dxDropDownBox";                
+                                e.editorOptions.dropDownOptions = {                
+                                    height: 500,
+                                    width: 600
+                                };
+                                e.editorOptions.contentTemplate = function (args, container) {
+                    
+                                    var value = args.component.option("value"),
+                                        $dataGrid = $("<div>").dxDataGrid({
+                                            width: '100%',
+                                            dataSource: args.component.option("dataSource"),
+                                            keyExpr: "id",
+                                            columns: ["sapid","fullname","companycode","departmentname"],
+                                            hoverStateEnabled: true,
+                                            paging: { enabled: true, pageSize: 10 },
+                                            filterRow: { visible: true },
+                                            height: '90%',
+                                            showRowLines: true,
+                                            showBorders: true,
+                                            selection: { mode: "single" },
+                                            selectedRowKeys: [value],
+                                            focusedRowEnabled: true,
+                                            focusedRowKey: args.component.option("value"),
+                                            searchPanel: {
+                                                visible: true,
+                                                width: 265,
+                                                placeholder: "Search..."
+                                            },
+                                            onSelectionChanged: function (selectedItems) {
+                                                const keys = selectedItems.selectedRowKeys;
+                                                const hasSelection = keys.length;
+                                                args.component.option('value', hasSelection ? keys[0] : null);
+                                                // args.component.close();
+                                            }
+                                        });
+                    
+                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                    
+                                    args.component.on("valueChanged", function (args) {
+                                        var value = args.value;
+                    
+                                        dataGrid.selectRows(value, false);
+                                    });
+                                    container.append($dataGrid);
+                                    $("<div>").dxButton({
+                                        text: "Close",
+                    
+                                        onClick: function (ev) {
+                                            args.component.close();
+                                        }
+                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                                    return container;
+                    
+                                };
+                            }
                         },
                         onToolbarPreparing: function(e) {
                             e.toolbarOptions.items.unshift({						
@@ -1092,7 +1331,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // console.log(keys)
                                                 // args.component.close();
                                             }
                                         });
@@ -1210,7 +1448,7 @@ function runpopup() {
         dragEnabled: false,
         hideOnOutsideClick: false,
         showCloseButton: true,
-        fullScreen : false,
+        fullScreen : true,
         onShowing: function(e) {
         },
         onShown: function(e) {
@@ -1259,7 +1497,7 @@ function editCellTemplate(cellElement, cellInfo) {
     let fileUploaderElement = document.createElement("div");
     let fileUploader = $(fileUploaderElement).dxFileUploader({
       multiple: false,
-      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg",
+      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
       uploadMode: "instantly",
       name: "myFile",
       uploadUrl: apiurl + "/upload-berkas/"+modname,

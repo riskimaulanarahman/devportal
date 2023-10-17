@@ -249,7 +249,7 @@ const accordionItems = [
     },
     {
         ID: 4,
-        Title: '<i class="fas fa-history"> Approver History </i>',
+        Title: '<i class="fas fa-history"> History </i>',
         visible: true
     },
 ];
@@ -705,7 +705,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: "date",
                             },
                             {
-                                dataField: "approvalStatus",
+                                caption: "Approval Status",
+                                dataField: "approvalAction",
                                 encodeHtml: false,
                                 allowFiltering: false,
                                 allowHeaderFiltering: true,
@@ -847,13 +848,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: "fullname"
                             },
                             {
+                                caption: "Type",
                                 dataField: "approvalType"
                             },
                             {
+                                caption: "Date",
                                 dataField: "approvalDate",
                                 dataType: "date",
                             },
                             {
+                                caption: "Action",
                                 dataField: "approvalAction",
                                 encodeHtml: false,
                                 allowFiltering: false,
@@ -1267,7 +1271,7 @@ function editCellTemplate(cellElement, cellInfo) {
     let fileUploaderElement = document.createElement("div");
     let fileUploader = $(fileUploaderElement).dxFileUploader({
       multiple: false,
-      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg",
+      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
       uploadMode: "instantly",
       name: "myFile",
       uploadUrl: apiurl + "/upload-berkas/"+modname,

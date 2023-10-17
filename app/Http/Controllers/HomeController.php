@@ -91,7 +91,9 @@ class HomeController extends Controller
         // dashboard section
 
         $tables = [
-            'request_project' => 36,
+            'request_project' => 36, 
+            // 'request_uavmission' => 37,
+            'request_ticket' => 38,
         ]; // masukan nama table dan module_id dari table tersebut
         
         $user_id = $this->getAuth()->id;

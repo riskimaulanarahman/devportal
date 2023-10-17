@@ -70,11 +70,22 @@ class SubmissionController extends Controller
             
             if (count($nullColumns) > 0) {
                 $nullColumnsStr = implode(', ', $nullColumns);
-                return response()->json(["status" => "error", "message" => "Error: Column $nullColumnsStr is required"]);
+                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Column $nullColumnsStr is required"]);
+            }
+
+            if($modulename == 'UavMission') {
+                $uavmissiondetail = DB::table('request_uavmissiondetail')
+                ->where('req_id',$id)
+                ->where('module_id',$this->getModuleId($modulename))
+                ->get();
+
+                if (count($uavmissiondetail) < 1) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Detail not found. Please input the correct information."]);
+                }
             }
 
             if (count($attachement) < 1) {
-                return response()->json(["status" => "error", "message" => "Error: Supporting document not found. Please attach it."]);
+                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
             }
 
             $final = 0;
@@ -93,6 +104,11 @@ class SubmissionController extends Controller
                 })
                 ->with('approvaluser')
                 ->get();
+            
+            $getapproverlist = ApproverListReq::where('req_id',$id)
+                ->where('module_id',$this->getModuleId($modulename))
+                ->where('approvalAction',1)
+                ->count();
 
             if ($request->requestStatus == 0) {
                 $statusappr = 0;
@@ -100,10 +116,15 @@ class SubmissionController extends Controller
                 $this->approverAction($modulename, $id, 'Cancelled', 5 , null);
             } else if ($request->requestStatus == 1) {
                 if($request->action == 'submission') {
+
+                    if (in_array("category_id", $columns)) { // jika ada kolom category_id maka jalankan generate approver
+                        $this->createApproverListCategory($modulename, $id, $getSubmissionData->category_id);
+                    }
+                    
                     $statusappr = 1;
                     $requeststatus = $request->requestStatus;
                     $this->approverAction($modulename, $id, 'Submitted', 1, null);
-                    
+
                 } else if($request->action == 'approval') {
                     if($request->approvalAction == 4) {
                         $statusappr = 4;
@@ -112,31 +133,35 @@ class SubmissionController extends Controller
                         $statusappr = 2;
                         $requeststatus = 2;
                     } else if($request->approvalAction == 3) {
+
                         foreach($approverlist as $data) {
+                            
                             if($data->isFinal == 0) {
-                               $statusappr = 3;
-                               $requeststatus = 1;
+                                if ($getapproverlist == 1) {
+                                    $final = 1;
+                                    $statusappr = 3;
+                                    $requeststatus = 3;
+                                } else {
+                                    $statusappr = 3;
+                                    $requeststatus = 1;
+                                }
                             } else if($data->isFinal == 1) {
                                 $final = 1;
                                 $statusappr = 3;
                                 $requeststatus = 3;
                             }
+                            
                         }
+
                     }
                     $this->approverAction($modulename, $id, 'Approver', $request->approvalAction, $request->remarks);
                 }
             }
-
             foreach($approverlist as $appr) {
                 $appr->approvalAction = $statusappr;
+                $appr->approvalDate = Carbon::now();
                 $appr->update();
             }
-
-            DB::table($tableName)
-                ->where('id', $id)
-                ->update([
-                    "requestStatus" => $requeststatus
-                ]);
 
             foreach($approverlist as $getappr) {
                 $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
@@ -228,6 +253,12 @@ class SubmissionController extends Controller
                     break;
                 }
             }
+
+            DB::table($tableName)
+                ->where('id', $id)
+                ->update([
+                    "requestStatus" => $requeststatus
+                ]);
 
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
