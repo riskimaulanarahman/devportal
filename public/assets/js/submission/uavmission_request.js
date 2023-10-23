@@ -1,6 +1,7 @@
 var modname = 'missionrequest';
 var modelclass = 'UavMission';
 var popupmode;
+var d = new Date();
 
 function moveEditColumnToLeft(dataGrid) {
     dataGrid.columnOption("command:edit", { 
@@ -130,6 +131,16 @@ var dataGrid = $("#gridContainer").dxTreeList({
             // width: 250,
             // sortOrder: "asc",
         },
+        {
+            dataField: 'priority',
+            dataType: 'string',
+            lookup: {
+                dataSource: ['Low','Middle','High'],  
+            },
+        },
+        {
+            dataField: 'priorityLevel',
+        },
         { 
 			dataField: "remarks",
             width: 180
@@ -239,11 +250,6 @@ const accordionItems = [
         Title: '<i class="fas fa-newspaper"> Mission Detail </i>',
         visible: true
     },
-    {
-        ID: 5,
-        Title: '<i class="fas fa-users"> Assignment To </i>',
-        visible: false
-    },
     // {
     //     ID: 6,
     //     Title: '<i class="fas fa-list-ul"> Stakeholders </i>',
@@ -253,6 +259,11 @@ const accordionItems = [
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
         visible: true
+    },
+    {
+        ID: 5,
+        Title: '<i class="fas fa-users"> Assignment To </i>',
+        visible: false
     },
     {
         ID: 3,
@@ -279,6 +290,7 @@ const popupContentTemplate = function (reqid,mode,options) {
     var isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
     var isWP = options.data.isWP;
+    var isManager = options.data.isManager;
 
     // console.log(options)
     // console.log(isPendingOnMe)
@@ -396,7 +408,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP || isManager ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -441,6 +453,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                             },
                             {
+                                dataField: 'priorityLevel',
+                                dataType: 'number',
+                                visible: false,
+                            },
+                            {
                                 dataField: 'missionStatus',
                                 dataType: 'string',
                                 visible: false,
@@ -451,7 +468,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: "created_at",
                                 dataType: "date",
-                                format: "dd-MM-yyyy",
+                                format: "dd-MM-yyyy", 
                                 editorOptions: { 
                                     readOnly: true
                                 }
@@ -495,9 +512,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             }
                             if (e.column.index == 0 && e.rowType == "data") {
-                                if(e.data.requestStatus == 3 || isWP) {
-                                    $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
+                                if(e.data.requestStatus == 3) {
                                     $("#formdata").dxDataGrid('columnOption','missionStatus', 'visible', true);
+                                    $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
+                                    $("#formdata").dxDataGrid('columnOption','priorityLevel', 'visible', true);
+                                } else if(e.data.requestStatus == 1) {
+                                    if(isWP) {
+                                        $("#formdata").dxDataGrid('columnOption','missionStatus', 'visible', true);
+                                    } else if(isManager) {
+                                        $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
+                                        $("#formdata").dxDataGrid('columnOption','priorityLevel', 'visible', true);
+                                    }
                                 }
                             }
                         },
@@ -554,6 +579,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'missiondate',
                                 dataType: 'date',
                                 format: "dd-MM-yyyy",
+                                editorOptions: {
+                                    min: new Date(),
+                                },
                                 validationRules: [{ type: "required" }]
                             },
                             {
@@ -586,11 +614,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 visible: true,
                             },
                             {
-                                dataField: 'location_others',
-                                dataType: 'string',
-                                visible: false,
-                            },
-                            {
                                 caption: 'PIC Requester',
                                 dataField: 'mission_pic',
                                 dataType: 'string',
@@ -602,15 +625,32 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                             },
                             {
+                                caption: 'Device',
+                                dataField: 'device_id',
+                                dataType: 'string',
+                                visible: false,
+                                lookup: {
+                                    dataSource: listOption('/list-uavasset','id','listName'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'listName',
+                                },
+                            },
+                            {
                                 dataField: 'plan_start',
                                 dataType: 'date',
                                 format: "dd-MM-yyyy",
+                                editorOptions: {
+                                    min: new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7),
+                                },
                                 visible: false,
                             },
                             {
                                 dataField: 'plan_end',
                                 dataType: 'date',
                                 format: "dd-MM-yyyy",
+                                editorOptions: {
+                                    min: new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7),
+                                },
                                 visible: false,
                             },
                             {
@@ -717,10 +757,67 @@ const popupContentTemplate = function (reqid,mode,options) {
                     
                                 };
                             }
+                            if (e.dataField == "device_id" && e.parentType == "dataRow") {
+                                e.editorName = "dxDropDownBox";                
+                                e.editorOptions.dropDownOptions = {                
+                                    height: 500,
+                                    width: 600
+                                };
+                                e.editorOptions.contentTemplate = function (args, container) {
+                    
+                                    var value = args.component.option("value"),
+                                        $dataGrid = $("<div>").dxDataGrid({
+                                            width: '100%',
+                                            dataSource: args.component.option("dataSource"),
+                                            keyExpr: "id",
+                                            columns: ["bu","sector","tools","brand"],
+                                            hoverStateEnabled: true,
+                                            paging: { enabled: true, pageSize: 10 },
+                                            filterRow: { visible: true },
+                                            height: '90%',
+                                            showRowLines: true,
+                                            showBorders: true,
+                                            selection: { mode: "single" },
+                                            selectedRowKeys: [value],
+                                            focusedRowEnabled: true,
+                                            focusedRowKey: args.component.option("value"),
+                                            searchPanel: {
+                                                visible: true,
+                                                width: 265,
+                                                placeholder: "Search..."
+                                            },
+                                            onSelectionChanged: function (selectedItems) {
+                                                const keys = selectedItems.selectedRowKeys;
+                                                const hasSelection = keys.length;
+                                                args.component.option('value', hasSelection ? keys[0] : null);
+                                                // args.component.close();
+                                            }
+                                        });
+                    
+                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                    
+                                    args.component.on("valueChanged", function (args) {
+                                        var value = args.value;
+                    
+                                        dataGrid.selectRows(value, false);
+                                    });
+                                    container.append($dataGrid);
+                                    $("<div>").dxButton({
+                                        text: "Close",
+                    
+                                        onClick: function (ev) {
+                                            args.component.close();
+                                        }
+                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                                    return container;
+                    
+                                };
+                            }
                         },
                         onCellPrepared: function (e) {
                             if (e.column.index == 0 && e.rowType == "data") {
-                                if(options.data.requestStatus == 3 || isWP || admin == 1) {
+                                if(options.data.requestStatus == 1 || options.data.requestStatus == 3) {
+                                    $("#formdetail").dxDataGrid('columnOption','device_id', 'visible', true);
                                     $("#formdetail").dxDataGrid('columnOption','status', 'visible', true);
                                     $("#formdetail").dxDataGrid('columnOption','plan_start', 'visible', true);
                                     $("#formdetail").dxDataGrid('columnOption','plan_end', 'visible', true);
@@ -758,9 +855,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
@@ -865,7 +962,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 dataField: "approvalDate",
-                                dataType: "date",
+                                dataType: "datetime",
+                                format: "dd-MM-yyyy hh:mm:ss",
                             },
                             {
                                 caption: "Approval Status",
@@ -1016,7 +1114,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: "Date",
                                 dataField: "approvalDate",
-                                dataType: "date",
+                                dataType: "datetime",
+                                format: "dd-MM-yyyy hh:mm:ss",
                             },
                             {
                                 caption: "Action",

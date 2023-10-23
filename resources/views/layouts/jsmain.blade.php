@@ -122,6 +122,7 @@
         '/approvaltype': 'admin/approvaltype.js',
         '/approvaluser': 'admin/approvaluser.js',
         '/developer': 'admin/developer.js',
+        '/uavasset': 'admin/uavasset.js',
         //module
         '/headcounts': 'module/headcounts.js',
         '/employeedata': 'module/employeedata.js',

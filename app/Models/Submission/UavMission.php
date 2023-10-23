@@ -26,6 +26,7 @@ class UavMission extends Model
         'missionName',
         'remarks',
         'priority',
+        'priorityLevel',
         'missionStatus'
     ];
 
@@ -37,7 +38,7 @@ class UavMission extends Model
     {
         // return (new static)->fillable;
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['codeno','priority','missionStatus']);
+        $fillable = array_diff($fillable, ['codeno','priority','missionStatus','priorityLevel']);
         return $fillable;
     }
 

@@ -42,6 +42,7 @@ class SubmissionController extends Controller
         try {
 
             $getSubmissionData = DB::table($tableName)->where('id', $id)->first();
+            $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
 
             $nullColumns = [];
 
@@ -61,7 +62,7 @@ class SubmissionController extends Controller
                             ->where('module_id',$this->getModuleId($modulename))
                             ->get();
 
-            if($modulename == 'Ticket') {
+            if($modulename == 'Ticket' || $modulename == 'UavMission') {
                 $assignment = DB::table('tbl_assignment')
                 ->where('req_id',$id)
                 ->where('module_id',$this->getModuleId($modulename))
@@ -125,6 +126,19 @@ class SubmissionController extends Controller
                     $requeststatus = $request->requestStatus;
                     $this->approverAction($modulename, $id, 'Submitted', 1, null);
 
+                    foreach($approverlist as $getappr) {
+                        $getUser = User::findOrFail($getappr->approvaluser->user_id); // get approver
+                        $mailData = [
+                            "id" => 1,
+                            "action_id" => 1,
+                            "submission" => $getSubmissionData,
+                            "email" => $getUser->email, // kirim kepada approver
+                            "fullname" => $getUser->fullname,
+                            "creator" => $getCreator->fullname,
+                            "message" => $this->mailMessage()['waitingapproval'],
+                        ];
+                    }
+
                 } else if($request->action == 'approval') {
                     if($request->approvalAction == 4) {
                         $statusappr = 4;
@@ -157,14 +171,20 @@ class SubmissionController extends Controller
                     $this->approverAction($modulename, $id, 'Approver', $request->approvalAction, $request->remarks);
                 }
             }
+
             foreach($approverlist as $appr) {
                 $appr->approvalAction = $statusappr;
                 $appr->approvalDate = Carbon::now();
                 $appr->update();
             }
 
+            DB::table($tableName)
+                ->where('id', $id)
+                ->update([
+                    "requestStatus" => $requeststatus
+                ]);
+
             foreach($approverlist as $getappr) {
-                $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
                 if($request->approvalAction == 0 && $getappr->approvalAction == 0) { // cancel pengajuan
                     $mailData = [
                         "id" => 0,
@@ -253,12 +273,6 @@ class SubmissionController extends Controller
                     break;
                 }
             }
-
-            DB::table($tableName)
-                ->where('id', $id)
-                ->update([
-                    "requestStatus" => $requeststatus
-                ]);
 
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));

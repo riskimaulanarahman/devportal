@@ -51,13 +51,21 @@ class UavMissionRequestController extends Controller
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
             where l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and r.ApprovalType='Workshop PIC' and r.isactive='1'
             order by a.sequence)";
+
+            $getmanager = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+            from tbl_approverListReq l
+            left join tbl_approver a on l.approver_id=a.id
+            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            where l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and r.ApprovalType='Manager' and r.isactive='1'
+            order by a.sequence)";
             // where l.ApprovalAction='1' and l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and request_uavmission.requestStatus='1' and r.ApprovalType='Workshop PIC' and r.isactive='1'
             
             $data = $dataquery
                 ->selectRaw("request_uavmission.*,codes.code,
                     CASE WHEN request_uavmission.user_id='".$user_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe,
-                    ".$getwp." as isWP
+                    ".$getwp." as isWP,
+                    ".$getmanager." as isManager
                 ")
                 ->leftJoin('codes','request_uavmission.code_id','codes.id')
                 ->with(['user','approverlist'])

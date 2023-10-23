@@ -26,3 +26,4 @@ Route::post('list-approver/{modulename}',[App\Http\Controllers\ListController::c
 Route::post('list-project',[App\Http\Controllers\ListController::class, 'listProject']);
 Route::post('list-parentproject',[App\Http\Controllers\ListController::class, 'listParentProject']);
 Route::post('list-categoryform',[App\Http\Controllers\ListController::class, 'listCategoryForm']);
+Route::post('list-uavasset',[App\Http\Controllers\ListController::class, 'listUavAsset']);

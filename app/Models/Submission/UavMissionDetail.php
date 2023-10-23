@@ -27,10 +27,11 @@ class UavMissionDetail extends Model
         'location_sector',
         'location_nocompt',
         'mission_pic',
-        'status',
+        'device_id',
         'plan_start',
         'plan_end',
         'completed_date',
+        'status',
         'remarks',
     ];
 
@@ -42,7 +43,7 @@ class UavMissionDetail extends Model
     {
         // return (new static)->fillable;
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['location_others','status','plan_start','plan_end','completed_date','remarks']);
+        $fillable = array_diff($fillable, ['device_id','plan_start','plan_end','completed_date','status','remarks']);
         return $fillable;
     }
 

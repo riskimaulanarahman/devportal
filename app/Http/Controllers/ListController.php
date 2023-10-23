@@ -26,6 +26,7 @@ use App\Models\Developer;
 use App\Models\Approvaluser;
 use App\Models\CategoryForm;
 use App\Models\Submission\Project;
+use App\Models\UavAsset;
 use Auth;
 
 class ListController extends Controller
@@ -183,6 +184,10 @@ class ListController extends Controller
 
     public function listCategoryForm() {
         return CategoryForm::with('module')->select('*')->get();
+    }
+
+    public function listUavAsset() {
+        return UavAsset::select('id','bu','sector','tools','brand','listName')->get();
     }
 
 }

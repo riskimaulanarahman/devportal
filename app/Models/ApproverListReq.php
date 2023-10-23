@@ -18,7 +18,7 @@ class ApproverListReq extends Model
         'approvalAction' => 'integer',
         'module_id' => 'integer',
         'req_id' => 'integer',
-        'approvalDate' => 'date',
+        'approvalDate' => 'datetime',
     ];
 
     public function approvaluser()

@@ -5,18 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ApproverListHistory extends Model
+class UavAsset extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_approverListHistory';
+    protected $table = 'request_uavasset';
     
     protected $guarded = ['id'];
     
+    public $timestamps = false;
+
     protected $casts = [
-        'module_id' => 'integer',
-        'req_id' => 'integer',
-        'approvalDate' => 'datetime',
+        'isActive' => 'boolean',
     ];
-    
 }
