@@ -702,7 +702,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 dataField: "approvalDate",
-                                dataType: "date",
+                                dataType: "datetime",
+                                format: "dd-MM-yyyy hh:mm:ss",
                             },
                             {
                                 caption: "Approval Status",
@@ -854,7 +855,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: "Date",
                                 dataField: "approvalDate",
-                                dataType: "date",
+                                dataType: "datetime",
+                                format: "dd-MM-yyyy hh:mm:ss",
                             },
                             {
                                 caption: "Action",
