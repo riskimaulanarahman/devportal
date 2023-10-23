@@ -1031,32 +1031,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }
                                 ]
                             },
-                            // {
-                            //     dataField: "ApprovalType",
-                            //     editorOptions: { 
-                            //         readOnly: true
-                            //     }
-                            // },
-                            // {
-                            //     dataField: "approvalDate",
-                            //     dataType: "date",
-                            // },
-                            // {
-                            //     dataField: "approvalStatus",
-                            //     encodeHtml: false,
-                            //     allowFiltering: false,
-                            //     allowHeaderFiltering: true,
-                            //     customizeText: function (e) {
-                            //         var arrText = [
-                            //             "<span class='btn btn-secondary btn-xs'>Draft</span>",
-                            //             "<span class='btn btn-primary btn-xs'>Waiting Approval</span>",
-                            //             "<span class='btn btn-warning btn-xs'>Rework</span>",
-                            //             "<span class='btn btn-success btn-xs'>Approved</span>",
-                            //             "<span class='btn btn-danger btn-xs'>Rejected</span>",
-                            //         ];
-                            //         return arrText[e.value];
-                            //     }
-                            // },
                         ],
                         export: {
                             enabled: false,
