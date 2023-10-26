@@ -92,6 +92,10 @@ class SubmissionController extends Controller
             $final = 0;
             $mailData = [];
 
+            if (in_array("category_id", $columns)) { // jika ada kolom category_id maka jalankan generate approver
+                $this->createApproverListCategory($modulename, $id, $getSubmissionData->category_id);
+            }
+
             $approverlist = ApproverListReq::where('req_id',$id)
                 ->when($request->action == 'submission', function ($query) use ($modulename) {
                     return $query->select('tbl_approverListReq.*')
@@ -117,10 +121,6 @@ class SubmissionController extends Controller
                 $this->approverAction($modulename, $id, 'Cancelled', 5 , null);
             } else if ($request->requestStatus == 1) {
                 if($request->action == 'submission') {
-
-                    if (in_array("category_id", $columns)) { // jika ada kolom category_id maka jalankan generate approver
-                        $this->createApproverListCategory($modulename, $id, $getSubmissionData->category_id);
-                    }
                     
                     $statusappr = 1;
                     $requeststatus = $request->requestStatus;
