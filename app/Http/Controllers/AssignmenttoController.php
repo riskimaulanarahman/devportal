@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 
 use App\Models\Module;
 use App\Models\Assignmentto;
+use App\Models\Employee;
+use App\Models\User;
+
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
 class AssignmenttoController extends Controller
 {
@@ -18,6 +22,8 @@ class AssignmenttoController extends Controller
     {
         $this->model = new Assignmentto();
         $this->module = new Module();
+        $this->employee = new Employee();
+        $this->user = new User();
     }
 
     public function index()
@@ -40,7 +46,26 @@ class AssignmenttoController extends Controller
 
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $this->model->create($requestData);
+            $getemployee = $this->employee->find($request->employee_id);
+            $getuser = $this->user->where('username',$getemployee->LoginName)->get();
+            
+            if(count($getuser) > 0) {
+                $this->model->create($requestData);
+            } else {
+                $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+
+                if ($getldap) {
+                    $this->user->create([
+                        "username" => $getldap['samaccountname'][0],
+                        "fullname" => $getldap['name'][0],
+                        "email" => $getldap['mail'][0]
+                    ]);
+                    $this->model->create($requestData);
+                } else {
+                    return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                }
+
+            }
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 
@@ -81,7 +106,32 @@ class AssignmenttoController extends Controller
             $requestData = $request->all();
 
             $data = $this->model->findOrFail($id);
-            $data->update($requestData);
+
+            if($request->employee_id) {
+                $getEmployee =  $this->employee->find($request->employee_id);
+                $getUser = $this->user->where('username',$getEmployee->LoginName)->get();
+
+
+                if(count($getUser) > 0) {
+                    $data->update($requestData);
+                } else {
+                    $getldap = LdapUser::findBy('samaccountname',$getEmployee->LoginName);
+
+                    if ($getldap) {
+                        $this->user->create([
+                            "username" => $getldap['samaccountname'][0],
+                            "fullname" => $getldap['name'][0],
+                            "email" => $getldap['mail'][0]
+                        ]);
+                        $data->update($requestData);
+                    } else {
+                        return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                    }
+
+                }
+            } else {
+                $data->update($requestData);
+            }
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 

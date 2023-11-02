@@ -92,7 +92,7 @@ class HomeController extends Controller
 
         $tables = [
             'request_project' => 36, 
-            // 'request_uavmission' => 37,
+            'request_uavmission' => 37,
             'request_ticket' => 38,
         ]; // masukan nama table dan module_id dari table tersebut
         
