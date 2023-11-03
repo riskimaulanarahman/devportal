@@ -48,6 +48,7 @@ trait ApproverTrait {
                 $getApprover = Approvaluser::where('module', $moduleName)
                 ->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id])
                 ->where('isActive',1)
+                ->orderBy('sequence')
                 ->get();
 
                 // Hapus data yang bersangkutan di tabel ApproverListReq
