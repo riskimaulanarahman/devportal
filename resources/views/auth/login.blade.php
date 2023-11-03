@@ -26,7 +26,7 @@
                                                         <div class="auth-content my-auto">
                                                             <div class="text-center">
                                                                 {{-- <h5 class="mb-0">Online Approval System</h5> --}}
-                                                                <p class="text-muted mt-2">Application Management & Ticketing System</p>
+                                                                {{-- <p class="text-muted mt-2">Application Management & Ticketing System</p> --}}
                                                             </div>
                                                             <form class="mt-4 pt-2" id="loginForm" action="{{ route('login') }}" method="POST">
                                                                 @csrf
@@ -69,11 +69,15 @@
                                                                 @endif
                                                             </form>
                                                             <div>
-                                                                <a href="{{ env('APP_URL') }}/public/upload/DevPortal Panduan.pdf" target="_blank"><button class="btn btn-danger"><i class="fa fa-download"></i> Panduan DevPortal</button></a>
+                                                                {{-- <a href="{{ env('APP_URL') }}/public/upload/DevPortal Panduan.pdf" target="_blank"> --}}
+                                                                    {{-- </a> --}}
+                                                                    
                                                             </div>
                                                         </div>
-                                                        <div class="mt-4 text-center">
-                                                            <p class="mb-0"><b>© <script>document.write(new Date().getFullYear())</script> {{ env('APP_NAME') }} </b>. Crafted with <i class="mdi mdi-heart text-danger"></i><br>by <b>{{ env('APP_AUTHOR') }}</b></p>
+                                                        <div class="mt-1 text-center">
+                                                            <button id="downloadBtn" class="btn btn-danger" data-bs-toggle="modal"
+                                                                    data-bs-target=".bs-modal-panduan"><i class="fa fa-download"></i> Download Panduan <i class="fa fa-download"></i></button>
+                                                            <p class="mb-0 mt-4"><b>© <script>document.write(new Date().getFullYear())</script> {{ env('APP_NAME') }} </b>. Crafted with <i class="mdi mdi-heart text-danger"></i><br>by <b>{{ env('APP_AUTHOR') }}</b></p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -342,12 +346,30 @@
             <!-- end container fluid -->
         </div>
 
+        <div class="modal fade bs-modal-panduan" tabindex="-1" role="dialog"
+            aria-labelledby="mySmallModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="mySmallModalLabel">Panduan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul>
+                            <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/DevPortal Panduan.pdf', '_blank')">Project Management & Ticket Request</button></li>
+                            <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/SKYMAP System.pdf', '_blank')">SKYMAP</button></li>
+                        </ul>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
         @endsection
         @section('script')
             <script src="{{ URL::asset('assets/js/pages/pass-addon.init.js') }}"></script>
             <script src="{{ URL::asset('assets/js/pages/eva-icon.init.js') }}"></script>
             <script>
-
                 $('#input-username, #password-input').on('keypress', function(e) {
                     if (e.which == 13) { // 13 adalah kode tombol enter
                         formSubmit(); // Panggil fungsi formSubmit di sini

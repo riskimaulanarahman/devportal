@@ -33,8 +33,7 @@ class MainController extends Controller
 
             if ($checklinkedemployee > 0) {
                     $this->user->where('username',$username)->update([
-                        'password' => Hash::make($request->password),
-                        'passtxt' => $request->password
+                        'password' => Hash::make($request->password)
                     ]);
                     $data['code'] = 200; // success
                 // }

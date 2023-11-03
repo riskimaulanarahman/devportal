@@ -77,4 +77,7 @@
     .dx-accordion-item-title {
         padding: 6px 11px !important;
     }
+    .btn-status:hover {
+        cursor: default;
+    }
 </style>

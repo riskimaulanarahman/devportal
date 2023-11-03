@@ -38,7 +38,7 @@ class User extends Authenticatable implements LdapAuthenticatable
      * @var array
      */
     protected $hidden = [
-        'password','passtxt'
+        'password'
     ];
 
     /**

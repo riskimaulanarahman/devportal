@@ -142,11 +142,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             allowHeaderFiltering: true,
             customizeText: function (e) {
                 var arrText = [
-                    "<span class='btn btn-secondary btn-xs'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs'>Rework</span>",
-                    "<span class='btn btn-success btn-xs'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs'>Rejected</span>",
+                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
                 ];
                 return arrText[e.value];
             },
@@ -157,11 +157,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             // sortOrder: "desc",
             customizeText: function (e) {
                 if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs'>Completed</span>"
+                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
                 } else if(e.value == 'Immediately') {
-                    return "<span class='btn btn-warning btn-xs'>Immediately</span>"
+                    return "<span class='btn btn-warning btn-xs btn-status'>Immediately</span>"
                 } else {
-                    return "<span class='btn btn-primary btn-xs'>On Queue</span>"
+                    return "<span class='btn btn-primary btn-xs btn-status'>On Queue</span>"
                 }
             },
         },
@@ -677,11 +677,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 allowHeaderFiltering: true,
                                 customizeText: function (e) {
                                     var arrText = [
-                                        "<span class='btn btn-secondary btn-xs'>Draft</span>",
-                                        "<span class='btn btn-primary btn-xs'>Waiting Approval</span>",
-                                        "<span class='btn btn-warning btn-xs'>Rework</span>",
-                                        "<span class='btn btn-success btn-xs'>Approved</span>",
-                                        "<span class='btn btn-danger btn-xs'>Rejected</span>",
+                                        "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                                        "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                                        "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                                        "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                                        "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
                                     ];
                                     return arrText[e.value];
                                 }
@@ -830,12 +830,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 allowHeaderFiltering: true,
                                 customizeText: function (e) {
                                     var arrText = [
-                                        "<span class='btn btn-secondary btn-xs'>Draft</span>",
-                                        "<span class='btn btn-primary btn-xs'>Submitted</span>",
-                                        "<span class='btn btn-warning btn-xs'>Rework</span>",
-                                        "<span class='btn btn-success btn-xs'>Approved</span>",
-                                        "<span class='btn btn-danger btn-xs'>Rejected</span>",
-                                        "<span class='btn btn-secondary btn-xs'>Cancelled</span>",
+                                        "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                                        "<span class='btn btn-primary btn-xs btn-status'>Submitted</span>",
+                                        "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                                        "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                                        "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                                        "<span class='btn btn-secondary btn-xs btn-status'>Cancelled</span>",
                                     ];
                                     return arrText[e.value];
                                 }
