@@ -46,7 +46,8 @@ class AssignmenttoController extends Controller
 
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $getemployee = $this->employee->find($request->employee_id);
+            $asign_id = ($request->modulename=='Ticket' || $request->modulename=='Project')?$request->developer_id:$request->employee_id;
+            $getemployee = $this->employee->find( $asign_id);
             $getuser = $this->user->where('username',$getemployee->LoginName)->get();
             
             if(count($getuser) > 0) {
