@@ -46,26 +46,29 @@ class AssignmenttoController extends Controller
 
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $asign_id = ($request->modulename=='Ticket' || $request->modulename=='Project')?$request->developer_id:$request->employee_id;
-            $getemployee = $this->employee->find( $asign_id);
-            $getuser = $this->user->where('username',$getemployee->LoginName)->get();
-            
-            if(count($getuser) > 0) {
-                $this->model->create($requestData);
-            } else {
-                $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
-
-                if ($getldap) {
-                    $this->user->create([
-                        "username" => $getldap['samaccountname'][0],
-                        "fullname" => $getldap['name'][0],
-                        "email" => $getldap['mail'][0]
-                    ]);
+            if($request->employee_id) {
+                $getemployee = $this->employee->find( $request->employee_id);
+                $getuser = $this->user->where('username',$getemployee->LoginName)->get();
+                
+                if(count($getuser) > 0) {
                     $this->model->create($requestData);
                 } else {
-                    return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
-                }
+                    $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
 
+                    if ($getldap) {
+                        $this->user->create([
+                            "username" => $getldap['samaccountname'][0],
+                            "fullname" => $getldap['name'][0],
+                            "email" => $getldap['mail'][0]
+                        ]);
+                        $this->model->create($requestData);
+                    } else {
+                        return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                    }
+
+                }
+            }else{
+                $this->model->create($requestData);
             }
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
