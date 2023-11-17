@@ -13,10 +13,13 @@ use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Stackholders;
+use App\Http\Traits\ProcessProjectTrait;
 use DB;
 
 class ProjectRequestController extends Controller
 {
+    use ProcessProjectTrait;
+    
     public $model;
     public $modulename;
     public $module;
@@ -225,5 +228,13 @@ class ProjectRequestController extends Controller
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
+    }
+
+    public function dashboard() {
+        $data = [
+            'name' => 'John Doe',
+            'email' => 'johndoe@example.com'
+        ];
+        return view('dashboard.dashboardproject')->with('project', $this->processProjects());
     }
 }

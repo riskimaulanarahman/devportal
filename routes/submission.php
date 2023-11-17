@@ -33,4 +33,5 @@ Route::group(['prefix' => 'api'], function () {
     //list
     Route::get('list-getemployee',[App\Http\Controllers\ListController::class, 'listEmployee']); //get list employee
     Route::get('list-employeesamedept',[App\Http\Controllers\ListController::class, 'listEmployeeSameDept']); //get list employee same department
+
 });

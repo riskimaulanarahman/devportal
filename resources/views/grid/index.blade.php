@@ -69,7 +69,7 @@
                 </div>
                 <div class="flex-grow-1">
                     <p class="text-muted mb-1">{{ $data['module'] }}</p>
-                    <h4 class="mb-0">List {{ $data['title'] }}</h4>
+                    <h4 class="mb-0"> List {{ $data['title'] }}</h4>
                 </div>
                 @if ($data['module'] == 'SubmissionRequest')
                     <div class="flex-shrink-0 align-self-end ms-2">

@@ -8,6 +8,9 @@ Auth::routes();
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
 
+// dashboard
+Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestController::class, 'dashboard'])->name('dashboardproject'); //Dashboard project
+
 Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
 Route::middleware(['session.check'])->group(function () {
@@ -18,5 +21,7 @@ Route::middleware(['session.check'])->group(function () {
                 Route::get('{menu_item}', [App\Http\Controllers\GeneratemenuController::class, 'index'])->name('index');
             }
     }
-    
+
+//dashboard
+
 });

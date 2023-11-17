@@ -71,7 +71,7 @@ class BerkasController extends Controller
         LogSuccess::create($requestData);
     }
     
-    function logerror($message) {
+    function logerror($username,$url,$values) {
         $requestData = [
             "user" => $username,
             "url" => $url,

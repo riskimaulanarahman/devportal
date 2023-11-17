@@ -112,7 +112,6 @@
                                             <div class="carousel-inner w-75 mx-auto">
                                                 <div class="carousel-item active">
                                                     <div class="mt-4">
-                                                        {{-- <img src="{{ URL::asset('./assets/images/login-img.png')}}" class="img-fluid" alt=""> --}}
                                                         <div class="row">
                                                             <div class="col-lg-12">
                                                                 <div class="card" style="height: 450px">
@@ -183,7 +182,6 @@
 
                                                 <div class="carousel-item">
                                                     <div class="mt-4">
-                                                        {{-- <img src="{{ URL::asset('./assets/images/login-img.png')}}" class="img-fluid" alt=""> --}}
                                                         <div class="row">
                                                             <div class="col-lg-12">
                                                                 <div class="card" style="height: 450px">
@@ -260,7 +258,6 @@
 
                                                 <div class="carousel-item">
                                                     <div class="mt-4">
-                                                        {{-- <img src="{{ URL::asset('./assets/images/login-img.png')}}" class="img-fluid" alt=""> --}}
                                                         <div class="row">
                                                             <div class="col-lg-12">
                                                                 <div class="card" style="height: 450px">

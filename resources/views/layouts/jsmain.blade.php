@@ -12,13 +12,8 @@
     usersid = parseInt($('#usersid').val());
     empid = parseInt($('#empid').val());
 
-    // if(appenv == 'local') {
-    //     baseurl = window.location.origin+'/devportal';
-    //     apiurl = window.location.origin+'/devportal/api';
-    // } else {
-        baseurl = window.location.origin+'/devportal';
-        apiurl = window.location.origin+'/devportal/api';
-    // }
+    baseurl = window.location.origin+'/devportal';
+    apiurl = window.location.origin+'/devportal/api';
 
     const layoutModeInput = $("input[name=layout-mode]:radio");
     const layoutWidthInput = $("input[name=layout-width]:radio");
@@ -96,9 +91,6 @@
             }
 
         });
-        
-        
-
     }
     // end change profile picture
 
@@ -137,11 +129,7 @@
     var result = /[^/]*$/.exec(pathname)[0];
     const scriptPath = jsFiles['/'+result];
     if(scriptPath) {
-        // if(appenv == 'local') {
-            $.getScript(`/devportal/public/assets/js/${scriptPath}`);
-        // } else {
-        //     $.getScript(`/devportal/public/assets/js/${scriptPath}`);
-        // }
+        $.getScript(`/devportal/public/assets/js/${scriptPath}`);
     }
 
 </script>
