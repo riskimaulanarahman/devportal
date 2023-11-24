@@ -67,6 +67,14 @@
 
     function sendRequest(url, method, data) {
         var d = $.Deferred();
+
+        $.getJSON(baseurl+'/check-session',function(item){
+            if (item.status == 'expired') {
+                // Redirect ke halaman login jika session expired
+                window.location.href = baseurl+'/login';
+                return;
+            }
+        })
     
         method = method || "GET";
 
@@ -86,14 +94,6 @@
             cache: false,
             xhrFields: { withCredentials: true }
         }).done(function(result) {
-            $.getJSON(baseurl+'/check-session',function(item){
-                if (item.status == 'expired') {
-                    // Redirect ke halaman login jika session expired
-                    console.log(item.status)
-                    window.location.href = baseurl+'/login';
-                    return;
-                }
-            })
 
             d.resolve(method === "GET" ? result.data : result);
     
