@@ -94,7 +94,8 @@ class HomeController extends Controller
             'request_project' => 36, 
             'request_uavmission' => 37,
             'request_ticket' => 38,
-        ]; // masukan nama table dan module_id dari table tersebut
+        ]; 
+        // masukan nama table dan module_id dari table tersebut
         
         $user_id = $this->getAuth()->id;
         $totalPendingSubmission = 0;
@@ -124,9 +125,31 @@ class HomeController extends Controller
             if ($count > 0) {
                 foreach ($results as $result) {
 
+                    $url = '';
+                    if ($table) {
+                        switch ($table) {
+                            case 'request_project':
+                                $url = 'project_request';
+                                break;
+                            case 'request_uavmission':
+                                $url = 'uavmission_request';
+                                break;
+                            case 'request_ticket':
+                                $url = 'ticket_request';
+                                break;
+                            // Tambahkan case sesuai dengan url module
+                        }
+                    }
+
+                    // Menambahkan URL pada response JSON
+                    // $codeIds->url = $url;
+
                     $listPendingSubmission[$table][$result->code_id]['code_id'] = $result->code_id;
                     $listPendingSubmission[$table][$result->code_id]['code'] = $result->code;
                     $listPendingSubmission[$table][$result->code_id]['waitingapprover'][0]['fullname'] = $result->fullname;
+                    $listPendingSubmission[$table][$result->code_id]['url'] = $url;
+                    // dd($listPendingSubmission);
+
 
                     if (!in_array($result->code, $codeIds)) {
                         $totalPendingSubmission++;
@@ -160,13 +183,32 @@ class HomeController extends Controller
                 ->get();
                 
                 foreach ($results2 as $result2) {
-                    // return $result2;
+                    
+                    $url = '';
+                    if ($table) {
+                        switch ($table) {
+                            case 'request_project':
+                                $url = 'project_request';
+                                break;
+                            case 'request_uavmission':
+                                $url = 'uavmission_request';
+                                break;
+                            case 'request_ticket':
+                                $url = 'ticket_request';
+                                break;
+                            // Tambahkan case sesuai dengan url module
+                        }
+                    }
+
+                    // Menambahkan URL pada response JSON
+                    $result2->url = $url;
+
                     if ($result2->isPendingOnMe == 1) {
                         $totalPendingApproval++;
                         $listPendingApproval[] = $result2;
                     }
                 }
-        }
+            }
 
         // return view and data
         return view('dashboard.index',compact(

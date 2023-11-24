@@ -48,19 +48,19 @@ class LoginController extends Controller
         return view('auth.login')->with('project', $this->processProjects());
     }
 
-    // public function logout(Request $request)
-    // {
-    //     // Clear session data from the database
-    //     DB::table('sessions')->where('user_id', auth()->id())->delete();
+    public function logout(Request $request)
+    {
+        // Clear session data from the database
+        DB::table('sessions')->where('user_id', auth()->id())->delete();
 
-    //     // Log out the user
-    //     $this->guard()->logout();
+        // Log out the user
+        $this->guard()->logout();
 
-    //     $request->session()->invalidate();
+        $request->session()->invalidate();
 
-    //     return redirect()->intended($this->redirectTo);
+        return redirect()->intended($this->redirectTo);
 
-    // }
+    }
 
     public function __construct()
     {

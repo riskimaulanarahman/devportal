@@ -86,6 +86,15 @@
             cache: false,
             xhrFields: { withCredentials: true }
         }).done(function(result) {
+            $.getJSON(baseurl+'/check-session',function(item){
+                if (item.status == 'expired') {
+                    // Redirect ke halaman login jika session expired
+                    console.log(item.status)
+                    window.location.href = baseurl+'/login';
+                    return;
+                }
+            })
+
             d.resolve(method === "GET" ? result.data : result);
     
             var type = (result.status == "success" ? "success" : "error"),

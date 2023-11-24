@@ -87,9 +87,11 @@
                                                     <div class="fw-semibold font-size-15">{{ $record['waitingapprover'][0]['fullname'] }}</div>
                                                 </div>
                                                 <div class="flex-shrink-0">
-                                                    <h5 class="font-size-14 mb-0 text-truncate w-xs bg-info p-2 rounded text-center">
-                                                        {{ $record['code'] }}
-                                                    </h5>
+                                                    <a class="btn" href="{{ url($record['url']) }}">
+                                                        <h5 class="font-size-14 mb-0 text-truncate w-xs bg-info p-2 rounded text-center">
+                                                            {{ $record['code'] }}
+                                                        </h5>
+                                                    </a>
                                                 </div>
                                             </div>
                                         </li>
@@ -135,9 +137,11 @@
                                                 <div class="fw-semibold font-size-15">{{ $records->creator }}</div>
                                             </div>
                                             <div class="flex-shrink-0">
-                                                <h5
-                                                    class="font-size-14 mb-0 text-truncate w-xs bg-soft-success p-2 rounded text-center">
-                                                    {{ $records->code }}</h5>
+                                                <a class="btn" href="{{ url($records->url) }}">
+                                                    <h5 class="font-size-14 mb-0 text-truncate w-xs bg-soft-success p-2 rounded text-center">
+                                                        {{ $records->code }}
+                                                    </h5>
+                                                </a>
                                             </div>
                                         </div>
                                     </li>
