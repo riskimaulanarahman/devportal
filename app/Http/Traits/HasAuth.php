@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Auth;
 
 use App\Models\Employee;
+use App\Models\Developer;
 
 trait HasAuth {
 
@@ -26,6 +27,19 @@ trait HasAuth {
             $result = Employee::where('LoginName',$this->getAuth()->username)->first();
         } else {
             $result = Employee::where('LoginName','planning_admin')->first();
+        }
+
+        return $result;
+    }
+
+    public function isDeveloper() {
+        if($this->getAuth()) {
+            $data = Developer::where('user_id',$this->getAuth()->id)->count();
+        }
+        if($data > 0) {
+            $result = true;
+        } else {
+            $result = false;
         }
 
         return $result;

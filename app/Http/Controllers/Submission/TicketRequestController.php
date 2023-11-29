@@ -35,6 +35,7 @@ class TicketRequestController extends Controller
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
             $isAdmin = $this->getAuth()->isAdmin;
+            $isDeveloper = $this->isDeveloper();
 
             $dataquery = $this->model->query();
 
@@ -45,7 +46,7 @@ class TicketRequestController extends Controller
             where l.ApprovalAction='1' and l.req_id = request_ticket.id and l.module_id = '".$module_id."' and request_ticket.requestStatus='1'
             order by a.sequence)";
 
-            if(!$isAdmin) {
+            if($isDeveloper) {
                 $dataquery->leftJoin('tbl_assignment',function($join) use ($module_id){
                     $join->on('request_ticket.id','=','tbl_assignment.req_id')
                          ->where('tbl_assignment.module_id',$module_id);
@@ -60,18 +61,18 @@ class TicketRequestController extends Controller
                 ")
                 ->leftJoin('codes','request_ticket.code_id','codes.id')
                 ->with(['user','approverlist'])
-                ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
+                ->where(function ($query) use ($subquery, $user_id, $isAdmin, $isDeveloper) {
                     $query->whereRaw($subquery . " = 1")
-                        ->orWhere(function ($query) use ($user_id, $isAdmin) {
+                        ->orWhere(function ($query) use ($user_id, $isAdmin, $isDeveloper) {
                             if ($isAdmin) {
                                 $query->where("request_ticket.user_id", "!=", $user_id)
                                     ->whereIn("request_ticket.requestStatus", [1,3,4]);
                             } 
-                            else {
+                            if($isDeveloper) {
                                 $query->where("tbl_developer.user_id",$user_id)
                                     ->whereIn("request_ticket.requestStatus", [3]);
                             }
-                        })
+                        })             
                         ->orWhere("request_ticket.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
