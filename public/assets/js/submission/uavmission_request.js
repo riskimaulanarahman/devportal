@@ -117,6 +117,21 @@ var dataGrid = $("#gridContainer").dxTreeList({
             }
         },
         {
+            dataField: 'missionStatus',
+            encodeHtml: false,
+            sortOrder: "desc",
+            customizeText: function (e) {
+                if(e.value == 'Completed') {
+                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
+                } else if(e.value == 'Progress') {
+                    return "<span class='btn btn-warning btn-xs btn-status'>Progress</span>"
+                } else {
+                    return "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>"
+                }
+            },
+            width: 180
+        },
+        {
             caption: "Code",
             dataField: 'code',
             // width: 180
@@ -159,21 +174,6 @@ var dataGrid = $("#gridContainer").dxTreeList({
                     "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
                 ];
                 return arrText[e.value];
-            },
-            width: 180
-        },
-        {
-            dataField: 'missionStatus',
-            encodeHtml: false,
-            sortOrder: "desc",
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Progress') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Progress</span>"
-                } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>"
-                }
             },
             width: 180
         },
