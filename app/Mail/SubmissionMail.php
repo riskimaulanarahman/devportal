@@ -14,6 +14,7 @@ use App\Models\Assignmentto;
 use App\Models\Stackholders;
 use App\Models\Module;
 use App\Models\Attachment;
+use App\Models\Categoryhrsc;
 
 use Storage;
 use DB;
@@ -136,7 +137,12 @@ class SubmissionMail extends Mailable
 
         }
 
-        if($modulename == 'UavMission') {
+        if($modulename == 'Hrsc') {
+            $Categoryhrsc = Categoryhrsc::findOrFail($mailData['submission']->hrsc_category_id);
+            $this->category = $Categoryhrsc->name;
+        }
+        // UAV Mission || HRSC MODULE
+        if($modulename == 'UavMission' || $modulename == 'Hrsc') {
 
             if($final == 1) {
                 $assignmentdata = Assignmentto::leftJoin('tbl_employee','tbl_assignment.employee_id','=','tbl_employee.id')
@@ -152,6 +158,8 @@ class SubmissionMail extends Mailable
             }
 
         }
+
+        
 
         // $this->details=$details;
         // $this->text=$text;
@@ -186,6 +194,9 @@ class SubmissionMail extends Mailable
                 break;
             case 'UavMission':
                 $viewblade = 'emails.uavmissionrequestmail';
+                break;
+            case 'Hrsc':
+                $viewblade = 'emails.hrscrequestmail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';

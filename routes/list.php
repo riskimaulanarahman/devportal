@@ -27,3 +27,4 @@ Route::post('list-project',[App\Http\Controllers\ListController::class, 'listPro
 Route::post('list-parentproject',[App\Http\Controllers\ListController::class, 'listParentProject']);
 Route::post('list-categoryform',[App\Http\Controllers\ListController::class, 'listCategoryForm']);
 Route::post('list-uavasset',[App\Http\Controllers\ListController::class, 'listUavAsset']);
+Route::post('list-categoryhrsc',[App\Http\Controllers\ListController::class, 'listCategoryHrsc']);

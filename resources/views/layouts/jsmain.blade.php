@@ -115,6 +115,7 @@
         '/approvaluser': 'admin/approvaluser.js',
         '/developer': 'admin/developer.js',
         '/uavasset': 'admin/uavasset.js',
+        '/categoryhrsc': 'admin/category_hrsc.js',
         //module
         '/headcounts': 'module/headcounts.js',
         '/employeedata': 'module/employeedata.js',
@@ -123,6 +124,7 @@
         '/project_request': 'submission/project_request.js',
         '/ticket_request': 'submission/ticket_request.js',
         '/uavmission_request': 'submission/uavmission_request.js',
+        '/hrsc_request': 'submission/hrsc_request.js',
     }
     
     const pathname = window.location.pathname;

@@ -7,23 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
-use App\Models\Project;
 use App\Models\ApproverListReq;
+use App\Models\Categoryhrsc;
 
-class Ticket extends Model
+class Hrsc extends Model
 {
     use HasFactory;
 
-    protected $table = 'request_ticket';
+    protected $table = 'request_hrsc';
 
     protected $guarded = ['id'];
 
     protected $fillable = [
         'user_id',
         'requestStatus',
-        'nameSystem',
-        'category',
-        'codeno',
+        'hrsc_category_id',
         'description',
         'priority',
         'completeddate',
@@ -36,7 +34,6 @@ class Ticket extends Model
 
     public static function getFillableColumns()
     {
-        // return (new static)->fillable;
         $fillable = (new static)->fillable;
         $fillable = array_diff($fillable, ['priority','completeddate','ticketStatus','codeno']);
         return $fillable;
@@ -62,9 +59,9 @@ class Ticket extends Model
         return $this->belongsTo(Code::class);
     }
 
-    public function project()
+    public function category()
     {
-        return $this->belongsTo(Project::class,'nameSystem');
+        return $this->belongsTo(Categoryhrsc::class,'hrsc_category_id');
     }
 
 }

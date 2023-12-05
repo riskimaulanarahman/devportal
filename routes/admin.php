@@ -27,6 +27,7 @@ Route::group(['prefix' => 'api'], function () {
         'approvaluser' => App\Http\Controllers\Admin\ApprovaluserController::class,
         'developer' => App\Http\Controllers\Admin\DeveloperController::class,
         'uavasset' => App\Http\Controllers\Admin\UavAssetController::class,
+        'categoryhrsc' => App\Http\Controllers\Admin\CategoryhrscController::class,
     ]);
     Route::post('/update-profilepicture', [App\Http\Controllers\HomeController::class, 'updateProfilePicture']);
     

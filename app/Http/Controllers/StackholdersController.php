@@ -58,6 +58,8 @@ class StackholdersController extends Controller
 
                 if ($getldap) {
                     $this->user->create([
+                        "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                        "domain" => "default",
                         "username" => $getldap['samaccountname'][0],
                         "fullname" => $getldap['name'][0],
                         "email" => $getldap['mail'][0]
@@ -116,6 +118,8 @@ class StackholdersController extends Controller
 
                     if ($getldap) {
                         $this->user->create([
+                            "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                            "domain" => "default",
                             "username" => $getldap['samaccountname'][0],
                             "fullname" => $getldap['name'][0],
                             "email" => $getldap['mail'][0]

@@ -27,6 +27,7 @@ use App\Models\Approvaluser;
 use App\Models\CategoryForm;
 use App\Models\Submission\Project;
 use App\Models\UavAsset;
+use App\Models\Categoryhrsc;
 use Auth;
 
 class ListController extends Controller
@@ -188,6 +189,10 @@ class ListController extends Controller
 
     public function listUavAsset() {
         return UavAsset::select('id','bu','sector','tools','brand','listName')->get();
+    }
+
+    public function listCategoryHrsc() {
+        return Categoryhrsc::select('id','name')->get();
     }
 
 }

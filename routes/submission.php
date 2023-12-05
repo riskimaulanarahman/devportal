@@ -12,6 +12,7 @@ Route::group(['prefix' => 'api'], function () {
         'ticketrequest' => App\Http\Controllers\Submission\TicketRequestController::class,
         'missionrequest' => App\Http\Controllers\Submission\UavMissionRequestController::class,
         'missionrequestdetail' => App\Http\Controllers\Submission\UavMissionRequestDetailController::class,
+        'hrscrequest' => App\Http\Controllers\Submission\HrscRequestController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,

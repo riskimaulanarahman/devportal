@@ -9,6 +9,7 @@ use App\Models\Module;
 use App\Models\Assignmentto;
 use App\Models\Employee;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -57,6 +58,9 @@ class AssignmenttoController extends Controller
 
                     if ($getldap) {
                         $this->user->create([
+                            // "guid" => Str::uuid(), // Add UUID here
+                            "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                            "domain" => "default",
                             "username" => $getldap['samaccountname'][0],
                             "fullname" => $getldap['name'][0],
                             "email" => $getldap['mail'][0]
@@ -123,6 +127,9 @@ class AssignmenttoController extends Controller
 
                     if ($getldap) {
                         $this->user->create([
+                            // "guid" => Str::uuid(), // Add UUID here
+                            "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                            "domain" => "default",
                             "username" => $getldap['samaccountname'][0],
                             "fullname" => $getldap['name'][0],
                             "email" => $getldap['mail'][0]

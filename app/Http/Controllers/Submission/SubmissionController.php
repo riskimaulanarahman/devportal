@@ -93,7 +93,9 @@ class SubmissionController extends Controller
             $mailData = [];
 
             if (in_array("category_id", $columns)) { // jika ada kolom category_id maka jalankan generate approver
-                $this->createApproverListCategory($modulename, $id, $getSubmissionData->category_id);
+                if($getSubmissionData->requestStatus == 0) {
+                    $this->createApproverListCategory($modulename, $id, $getSubmissionData->category_id);
+                }
             }
 
             $approverlist = ApproverListReq::where('req_id',$id)
