@@ -35,6 +35,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         { 
+            dataField: "id",
+            validationRules: [
+                { 
+                    type: "required" 
+                }
+            ]
+        },
+        { 
             dataField: "module",
             sortOrder: "asc",
             validationRules: [

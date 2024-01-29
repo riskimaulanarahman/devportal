@@ -209,8 +209,9 @@ function processData(itemsData) {
                                 const keys = selectedItems.selectedRowKeys;
                                 const hasSelection = keys.length;
                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                console.log(keys)
-                                // args.component.close();
+                                if(hasSelection !== 0) {
+                                    args.component.close();
+                                }
                             }
                         });
     
@@ -272,9 +273,9 @@ function processData(itemsData) {
                                 const keys = selectedItems.selectedRowKeys;
                                 const hasSelection = keys.length;
                                 args.component.option('value', hasSelection ? keys : null);
-                                // args.component.option('value',keys);
-                                console.log(keys)
-                                // args.component.close();
+                                if(hasSelection !== 0) {
+                                    args.component.close();
+                                }
                             }
                         });
     

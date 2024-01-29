@@ -62,7 +62,7 @@ class SubmissionController extends Controller
                             ->where('module_id',$this->getModuleId($modulename))
                             ->get();
 
-            if($modulename == 'Ticket' || $modulename == 'UavMission') {
+            if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
                 $assignment = DB::table('tbl_assignment')
                 ->where('req_id',$id)
                 ->where('module_id',$this->getModuleId($modulename))
@@ -174,6 +174,14 @@ class SubmissionController extends Controller
                 }
             }
 
+            if($final == 1) {
+                if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
+                    if (count($assignment) < 1) {
+                        return response()->json(["status" => "error", "message" => $this->getMessage()['assignmentnotfound']]);
+                    }
+                }
+            }
+
             foreach($approverlist as $appr) {
                 $appr->approvalAction = $statusappr;
                 $appr->approvalDate = Carbon::now();
@@ -201,7 +209,7 @@ class SubmissionController extends Controller
                 if($request->approvalAction == 1 && $getappr->approvalAction == 1) { // submit pengajuan
                     $getUser = User::findOrFail($getappr->approvaluser->user_id); // get approver
                     $mailData = [
-                        "id" => 1,
+                        "id" => 1, // first approval
                         "action_id" => 1,
                         "submission" => $getSubmissionData,
                         "email" => $getUser->email, // kirim kepada approver
@@ -213,7 +221,7 @@ class SubmissionController extends Controller
                 }
                 if($request->approvalAction == 2 && $getappr->approvalAction == 2) { // rework pengajuan
                     $mailData = [
-                        "id" => 2,
+                        "id" => 2, // reworked approval
                         "action_id" => 0,
                         "submission" => $getSubmissionData,
                         "email" => $getCreator->email, // kirim kepada creator
@@ -226,13 +234,8 @@ class SubmissionController extends Controller
                 if($request->approvalAction == 3 && $getappr->approvalAction == 3) { // approved pengajuan
                     
                     if($final == 1) {
-                        if($modulename == 'Ticket') {
-                            if (count($assignment) < 1) {
-                                return response()->json(["status" => "error", "message" => "Error: Developer not found. Please add to assignment."]);
-                            }
-                        }
                         $mailData = [
-                            "id" => 30,
+                            "id" => 30, // final approved
                             "action_id" => 0,
                             "submission" => $getSubmissionData,
                             "email" => $getCreator->email, // kirim kepada creator
@@ -249,7 +252,7 @@ class SubmissionController extends Controller
                             ->first(); // get next approver
                         $getUser = User::findOrFail($getNextApprover->user_id); 
                         $mailData = [
-                            "id" => 31,
+                            "id" => 31, // next approved
                             "action_id" => 1,
                             "submission" => $getSubmissionData,
                             "email" => $getUser->email, // kirim kepada approver
@@ -264,7 +267,7 @@ class SubmissionController extends Controller
                 }
                 if($request->approvalAction == 4 && $getappr->approvalAction == 4) { // rejected pengajuan
                     $mailData = [
-                        "id" => 4,
+                        "id" => 4, // reject
                         "action_id" => 0,
                         "submission" => $getSubmissionData,
                         "email" => $getCreator->email, // kirim kepada creator

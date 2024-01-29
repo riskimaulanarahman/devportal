@@ -94,7 +94,7 @@ class HomeController extends Controller
             'request_project' => 36, 
             'request_uavmission' => 37,
             'request_ticket' => 38,
-            // 'request_hrsc' => 39,
+            'request_hrsc' => 39,
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -138,9 +138,9 @@ class HomeController extends Controller
                             case 'request_ticket':
                                 $url = 'ticket_request';
                                 break;
-                            // case 'request_hrsc':
-                            //     $url = 'hrsc_request';
-                            //     break;
+                            case 'request_hrsc':
+                                $url = 'hrsc_request';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -196,9 +196,9 @@ class HomeController extends Controller
                             case 'request_ticket':
                                 $url = 'ticket_request';
                                 break;
-                            // case 'request_hrsc':
-                            //     $url = 'hrsc_request';
-                            //     break;
+                            case 'request_hrsc':
+                                $url = 'hrsc_request';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }

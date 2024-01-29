@@ -517,9 +517,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
                                     $("#formdata").dxDataGrid('columnOption','priorityLevel', 'visible', true);
                                 } else if(e.data.requestStatus == 1) {
-                                    if(isWP) {
+                                    if(isWP || isManager || admin == 1) {
                                         $("#formdata").dxDataGrid('columnOption','missionStatus', 'visible', true);
-                                    } else if(isManager) {
                                         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
                                         $("#formdata").dxDataGrid('columnOption','priorityLevel', 'visible', true);
                                     }
@@ -734,7 +733,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             }
                                         });
                     
@@ -1031,7 +1032,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             }
                                         });
                     
@@ -1267,7 +1270,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             }
                                         });
                     
@@ -1430,7 +1435,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             }
                                         });
                     

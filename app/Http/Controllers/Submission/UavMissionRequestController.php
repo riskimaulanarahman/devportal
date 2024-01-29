@@ -12,6 +12,7 @@ use App\Models\ApproverListHistory;
 use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
+use App\Models\Assignmentto;
 use DB;
 
 class UavMissionRequestController extends Controller
@@ -213,12 +214,15 @@ class UavMissionRequestController extends Controller
                     $attachments = Attachment::where('req_id', $id)
                         ->where('module_id', $module->id)
                         ->get();
-                        Attachment::where('req_id', $id)
+                    Attachment::where('req_id', $id)
                         ->where('module_id', $module->id)
                         ->delete();
                         foreach ($attachments as $attachment) {
                             unlink($this->copyuploadpath() .$attachment->path);
                         }
+                    Assignmentto::where('req_id', $id)
+                        ->where('module_id', $module->id)
+                        ->delete();
 
                     // Hapus data pada tabel utama
                     

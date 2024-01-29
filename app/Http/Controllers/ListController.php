@@ -192,7 +192,7 @@ class ListController extends Controller
     }
 
     public function listCategoryHrsc() {
-        return Categoryhrsc::select('id','name')->get();
+        return Categoryhrsc::all();
     }
 
 }

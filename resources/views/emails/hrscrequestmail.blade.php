@@ -91,11 +91,7 @@
                     <th>Description</th>
                     <td>{{ $mailData['submission']->description }}</td>
                 </tr>
-                @if ($final == 1 )
-                    <tr>
-                        <th>priority</th>
-                        <td>{{ $mailData['submission']->priority }}</td>
-                    </tr>
+                @if ($final == 1)
                     <tr>
                         <th>Ticket Status</th>
                         <td>{{ $mailData['submission']->ticketStatus }}</td>

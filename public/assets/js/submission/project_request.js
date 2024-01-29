@@ -519,7 +519,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const hasSelection = selectedKeys.length;
 
                                                 args.component.option('value', hasSelection ? selectedKeys[0] : null);
-                                                args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             },
                                         });
                     
@@ -771,8 +773,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // console.log(keys)
-                                                args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             }
                                         });
                     
@@ -1080,8 +1083,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // console.log(keys)
-                                                // args.component.close();
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
                                             }
                                         });
                     

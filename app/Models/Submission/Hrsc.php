@@ -25,7 +25,12 @@ class Hrsc extends Model
         'description',
         'priority',
         'completeddate',
-        'ticketStatus'
+        'ticketStatus',
+        'confirmationStatus',
+        'confirmationRemarks',
+        'bu',
+        'sector',
+        'location',
     ];
 
     protected $casts = [
@@ -35,7 +40,7 @@ class Hrsc extends Model
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['priority','completeddate','ticketStatus','codeno']);
+        $fillable = array_diff($fillable, ['priority','completeddate','ticketStatus','codeno','confirmationStatus','confirmationRemarks']);
         return $fillable;
     }
 

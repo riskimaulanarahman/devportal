@@ -315,8 +315,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                             const keys = selectedItems.selectedRowKeys;
                             const hasSelection = keys.length;
                             args.component.option('value', hasSelection ? keys[0] : null);
-                            console.log(hasSelection)
-                            args.component.close();
+                            if(hasSelection !== 0) {
+                                args.component.close();
+                            }
                         }
                     });
 
