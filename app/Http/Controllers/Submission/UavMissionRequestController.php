@@ -116,7 +116,7 @@ class UavMissionRequestController extends Controller
             // Simpan id dari data baru
             $req_id = $newData->id;
 
-            $this->createApproverListCategory($this->modulename, $req_id, $cat_id = null);
+            // $this->createApproverListCategory($this->modulename, $req_id, $cat_id = null);
             
             return response()->json([
                 "status" => "success",

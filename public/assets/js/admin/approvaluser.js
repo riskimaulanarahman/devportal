@@ -128,7 +128,7 @@ function processData(itemsData) {
                 ]
             },
             {
-                dataField: "companylist",
+                dataField: "companyList",
                 caption: "Company"
             }, 
             {

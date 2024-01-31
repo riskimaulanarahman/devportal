@@ -92,10 +92,32 @@ class SubmissionController extends Controller
             $final = 0;
             $mailData = [];
 
-            if (in_array("category_id", $columns)) { // jika ada kolom category_id maka jalankan generate approver
-                if($getSubmissionData->requestStatus == 0) {
-                    $this->createApproverListCategory($modulename, $id, $getSubmissionData->category_id);
+            // get and update approver list
+            if($getSubmissionData->requestStatus == 0 || $getSubmissionData->requestStatus == 2) {
+                $company = null;
+                $category = null;
+
+                if (in_array("category_id", $columns)) {
+                    $category = $getSubmissionData->category_id;
                 }
+
+                if (in_array("bu", $columns) || in_array("sector", $columns)) {
+                    $bu = $getSubmissionData->bu;
+                    $sector = $getSubmissionData->sector;
+
+                    if($sector !== null) {
+                        if($sector == 'HO') {
+                            $company = $bu.'-'.$sector;
+                        } else {
+                            $company = $sector;
+                        }
+                    } else {
+                        $company = $bu;
+                    }
+                }
+            
+                    $this->createApprover($modulename, $id, $company, $category);
+
             }
 
             $approverlist = ApproverListReq::where('req_id',$id)

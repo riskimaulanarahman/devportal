@@ -66,6 +66,55 @@ trait ApproverTrait {
                 }
             }
 
+            // add creator
+            $history = new ApproverListHistory();
+            $history->req_id = $req_id;
+            $history->module_id = $module->id;
+            $history->fullName = Auth::user()->fullname;
+            $history->approvalType = 'Originator';
+            $history->approvalAction = 0;
+            $history->approvalDate = Carbon::now();
+            $history->save();
+
+        }
+    }
+
+    public function createApprover($moduleName, $req_id, $company, $cat_id)
+    {
+        $module = Module::select('id', 'module')->where('module', $moduleName)->first();
+        if ($module) {
+            // $getApprover = Approvaluser::where('module', $moduleName)
+            // ->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
+            // ->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id])
+            // ->where('isActive',1)
+            // ->get();
+
+            $getApprover = Approvaluser::where('module', $moduleName)
+                ->where('isActive', 1);
+
+            if ($company !== null && $cat_id === null) {
+                $getApprover->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company]);
+            } elseif ($company === null && $cat_id !== null) {
+                $getApprover->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id]);
+            } elseif ($company !== null && $cat_id !== null) {
+                $getApprover->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
+                            ->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id]);
+            }
+
+            $results = $getApprover->get();
+
+            // Hapus data yang bersangkutan di tabel ApproverListReq
+            ApproverListReq::where('module_id', $module->id)
+            ->where('req_id', $req_id)
+            ->delete();
+
+            foreach ($results as $approver) {
+                $approverList = new ApproverListReq();
+                $approverList->req_id = $req_id;
+                $approverList->module_id = $module->id;
+                $approverList->approver_id = $approver->id;
+                $approverList->save();
+            }
 
             // add creator
             $history = new ApproverListHistory();

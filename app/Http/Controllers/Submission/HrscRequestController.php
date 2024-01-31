@@ -111,7 +111,7 @@ class HrscRequestController extends Controller
             // Simpan id dari data baru
             $req_id = $newData->id;
 
-            $this->createApproverList($this->modulename, $req_id);
+            // $this->createApprover($this->modulename, $req_id, null, null);
             
             return response()->json([
                 "status" => "success",

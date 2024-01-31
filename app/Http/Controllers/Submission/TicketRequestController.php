@@ -109,7 +109,7 @@ class TicketRequestController extends Controller
             // Simpan id dari data baru
             $req_id = $newData->id;
 
-            $this->createApproverList($this->modulename, $req_id);
+            // $this->createApproverList($this->modulename, $req_id);
             
             return response()->json([
                 "status" => "success",

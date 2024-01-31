@@ -36,6 +36,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     columns: [
         { 
             dataField: "id",
+            width: 120,
             validationRules: [
                 { 
                     type: "required" 
