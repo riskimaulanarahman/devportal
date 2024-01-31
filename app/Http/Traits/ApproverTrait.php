@@ -13,7 +13,7 @@ use Auth;
 
 trait ApproverTrait {
 
-    public function createApproverList($moduleName, $req_id)
+    public function createApproverList($moduleName, $req_id) // tidak di gunakan
     {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
         if ($module) {
@@ -40,7 +40,7 @@ trait ApproverTrait {
         }
     }
 
-    public function createApproverListCategory($moduleName, $req_id, $cat_id)
+    public function createApproverListCategory($moduleName, $req_id, $cat_id) // tidak di gunakan
     {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
         if ($module) {
@@ -83,11 +83,6 @@ trait ApproverTrait {
     {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
         if ($module) {
-            // $getApprover = Approvaluser::where('module', $moduleName)
-            // ->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
-            // ->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id])
-            // ->where('isActive',1)
-            // ->get();
 
             $getApprover = Approvaluser::where('module', $moduleName)
                 ->where('isActive', 1);
