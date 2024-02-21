@@ -38,7 +38,6 @@ class Project extends Model
 
     public static function getFillableColumns()
     {
-        // return (new static)->fillable;
         $fillable = (new static)->fillable;
         $fillable = array_diff($fillable, ['parentID','priority','progress','projectStatus']);
         return $fillable;

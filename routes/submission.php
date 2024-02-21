@@ -13,11 +13,13 @@ Route::group(['prefix' => 'api'], function () {
         'missionrequest' => App\Http\Controllers\Submission\UavMissionRequestController::class,
         'missionrequestdetail' => App\Http\Controllers\Submission\UavMissionRequestDetailController::class,
         'hrscrequest' => App\Http\Controllers\Submission\HrscRequestController::class,
+        'momrequest' => App\Http\Controllers\Submission\MomRequestController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
         'assignmentto' => App\Http\Controllers\AssignmenttoController::class,
         'stackholders' => App\Http\Controllers\StackholdersController::class,
+        'categorysubmission' => App\Http\Controllers\CategoryController::class,
     ]);
 
     //get detail request
@@ -26,7 +28,8 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('approverlisthistory/{id}/{modulename}',[App\Http\Controllers\ApproverHistoryController::class, 'getList']); //get list approver history by req_id of module
     Route::get('assignmentto/{id}/{modulename}',[App\Http\Controllers\AssignmenttoController::class, 'getList']); //get list developer by req_id of module
     Route::get('stackholders/{id}/{modulename}',[App\Http\Controllers\StackholdersController::class, 'getList']); //get list stackholders by req_id of module
-    Route::get('missionrequestdetail/{id}/{modulename}',[App\Http\Controllers\Submission\UavMissionRequestDetailController::class, 'getList']); //get list stackholders by req_id of module
+    Route::get('missionrequestdetail/{id}/{modulename}',[App\Http\Controllers\Submission\UavMissionRequestDetailController::class, 'getList']); //get list missionrequestdetail by req_id of module
+    Route::get('categorysubmission/{id}/{modulename}',[App\Http\Controllers\CategoryController::class, 'getList']); //get list categorysubmission by req_id of module
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request

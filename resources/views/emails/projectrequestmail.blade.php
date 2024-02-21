@@ -85,7 +85,7 @@
         </table>
         @if (!empty($mailData['remarks']))
             <div class="remarks">
-                Remarks : {{ ucfirst(strtolower($mailData['remarks'])) }}
+                Remarks : {{ ucfirst($mailData['remarks']) }}
             </div>
         @endif
         <p>Attachment :</p>

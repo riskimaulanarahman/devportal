@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
-// use App\Models\Project;
 use App\Models\ApproverListReq;
 
 class UavMissionDetail extends Model
@@ -41,7 +40,6 @@ class UavMissionDetail extends Model
 
     public static function getFillableColumns()
     {
-        // return (new static)->fillable;
         $fillable = (new static)->fillable;
         $fillable = array_diff($fillable, ['device_id','plan_start','plan_end','completed_date','status','remarks']);
         return $fillable;

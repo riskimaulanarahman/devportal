@@ -125,6 +125,7 @@
         '/ticket_request': 'submission/ticket_request.js',
         '/uavmission_request': 'submission/uavmission_request.js',
         '/hrsc_request': 'submission/hrsc_request.js',
+        '/mom_request': 'submission/mom_request.js',
     }
     
     const pathname = window.location.pathname;

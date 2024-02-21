@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
-// use App\Models\Project;
 use App\Models\ApproverListReq;
 use App\Models\CategoryForm;
 
@@ -30,13 +29,8 @@ class UavMission extends Model
         'missionStatus'
     ];
 
-    // protected $casts = [
-    //     'completeddate' => 'date',
-    // ];
-
     public static function getFillableColumns()
     {
-        // return (new static)->fillable;
         $fillable = (new static)->fillable;
         $fillable = array_diff($fillable, ['codeno','priority','missionStatus','priorityLevel']);
         return $fillable;
