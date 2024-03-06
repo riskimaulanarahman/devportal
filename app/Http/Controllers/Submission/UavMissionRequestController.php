@@ -43,7 +43,7 @@ class UavMissionRequestController extends Controller
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.ApprovalAction='1' and l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and request_uavmission.requestStatus='1'
+            where l.ApprovalAction='1' and l.req_id = request_uavmission.id and l.module_id = '".$module_id."' and request_uavmission.requestStatus='1' and a.isActive='1'
             order by a.sequence)";
 
             $getwp = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
