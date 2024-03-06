@@ -67,6 +67,7 @@ class ApproverListController extends Controller
                 ->leftJoin('users','tbl_approver.user_id','users.id')
                 ->where('req_id',$id)
                 ->where('module_id',$module->id)
+                ->orderBy('tbl_approver.sequence')
                 ->get();
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
             } else {
