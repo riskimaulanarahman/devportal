@@ -82,6 +82,7 @@
         <div class="card-body" style="padding: 10px; !important">
             <div id="gridContainer" style="height: 600px;"></div>
             <div id="popup"></div>
+            <div id="popupdetails"></div>
         </div>
 
     </div>

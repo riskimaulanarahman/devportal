@@ -123,6 +123,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
             dataField: 'chairman',
         },
         {
+            caption: "Meeting Date",
             dataField: "date",
             dataType: "date",
             format: "dd-MM-yyyy",
@@ -162,6 +163,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
     onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();
+        runpopupdetails();
     },
     onCellPrepared: function (e) {
         if (e.rowType == "data") {
@@ -169,13 +171,6 @@ var dataGrid = $("#gridContainer").dxTreeList({
                 e.cellElement.css('background','rgba(128, 128, 0,0.1)')
             }
         }
-        // if (e.column.index == 0 && e.rowType == "data") {
-        //     if(e.data.requestStatus == 3) {
-        //         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
-        //     }
-        // }
     },
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
@@ -197,7 +192,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang DataGrid
-        // dataGrid.refresh();
+        dataGrid.refresh();
     }
 }).dxTreeList("instance");
 
@@ -234,19 +229,27 @@ const accordionItems = [
         Title: '<i class="fas fa-file"> Supporting Document </i>',
         visible: true
     },
+    // {
+    //     ID: 5,
+    //     Title: '<i class="fas fa-users"> Assignment To </i>',
+    //     visible: false
+    // },
+    // {
+    //     ID: 3,
+    //     Title: '<i class="fas fa-list-ul"> Approver List </i>',
+    //     visible: true
+    // },
+    // {
+    //     ID: 4,
+    //     Title: '<i class="fas fa-history"> History </i>',
+    //     visible: true
+    // },
+];
+
+const accordionItemsDetails = [
     {
-        ID: 5,
-        Title: '<i class="fas fa-users"> Assignment To </i>',
-        visible: false
-    },
-    {
-        ID: 3,
-        Title: '<i class="fas fa-list-ul"> Approver List </i>',
-        visible: true
-    },
-    {
-        ID: 4,
-        Title: '<i class="fas fa-history"> History </i>',
+        ID: 1,
+        Title: '<i class="far fa-newspaper"> Data </i>',
         visible: true
     },
 ];
@@ -261,14 +264,9 @@ const updateVisibleById = (itemId, visible) => {
 
 const popupContentTemplate = function (reqid,mode,options) {
 
-    var isMine = options.data.isMine;
+    isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
-    var isWP = options.data.isWP;
     var isManager = options.data.isManager;
-
-    // console.log(options)
-    // console.log(isPendingOnMe)
-    // console.log(isWP)
 
     popupid = reqid;
 
@@ -325,19 +323,7 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    // if(options.data.requestStatus == 3 || isWP) {
-        updateVisibleById(5, true);
-    // } else {
-    //     updateVisibleById(5, false);
-    // }
-
-    const syncTreeViewSelection = function (treeViewInstance, value) {
-        if (!value) {
-          treeViewInstance.unselectAll();
-        } else {
-          treeViewInstance.selectItem(value);
-        }
-    };
+    updateVisibleById(5, true);
 
     scrollView.append("<hr>"),
 
@@ -382,7 +368,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP || isManager ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isManager ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -404,6 +390,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                             },
                             {
+                                caption: "Meeting Date",
                                 dataField: "date",
                                 dataType: "date",
                                 format: "dd-MM-yyyy", 
@@ -468,19 +455,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if (e.column.index == 0 && e.rowType == "data") {
-                                if(e.data.requestStatus == 3) {
-                                    $("#formdata").dxDataGrid('columnOption','missionStatus', 'visible', true);
-                                    $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-                                    $("#formdata").dxDataGrid('columnOption','priorityLevel', 'visible', true);
-                                } else if(e.data.requestStatus == 1) {
-                                    if(isWP || isManager || admin == 1) {
-                                        $("#formdata").dxDataGrid('columnOption','missionStatus', 'visible', true);
-                                        $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-                                        $("#formdata").dxDataGrid('columnOption','priorityLevel', 'visible', true);
-                                    }
-                                }
-                            }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -513,10 +487,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         editing: {
                             useIcons:true,
-                            mode: "batch",
-                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
-                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            mode: "cell",
+                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                         },
                         scrolling: {
                             mode: "virtual"
@@ -526,6 +500,23 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'category',
                                 dataType: 'string',
                                 validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'Action',
+                                width: 140,
+                                cellTemplate: function(container, options) {
+
+                                    var taskID = options.data.id;
+                    
+                                    $('<button class="btn btn-primary"><i class="fa fa-search"></i></button>').on('dxclick', function(evt) {
+                                        evt.stopPropagation();
+                                            popupdetails.option({
+                                                contentTemplate: () => popupContentTemplateDetails(reqid,mode,options),
+                                            });
+                                            popupdetails.show();
+                                            console.log(taskID)
+                                    }).appendTo(container);
+                                }
                             },
                         ],
                         export: {
@@ -588,9 +579,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
-                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
-                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isWP ? true : false),
+                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
@@ -645,411 +636,411 @@ const popupContentTemplate = function (reqid,mode,options) {
 
                     return supporting;
                 }
-                else if(data.ID == 3) {
-                    return $("<div id='formapproverlist'>").dxDataGrid({    
-                        dataSource: storewithmodule('approverlistrequest',modelclass,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: true,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "cell",
-                            allowAdding: (admin == 1) ? true : false,
-                            allowUpdating: (admin == 1) ? true : false,
-                            allowDeleting: (admin == 1) ? true : false,
-                        },
-                        scrolling: {
-                            mode: "virtual"
-                        },
-                        columns: [
-                            {
-                                caption: "Fullname",
-                                dataField: "approver_id",
-                                lookup: {
-                                    dataSource: listOption('/list-approver/'+modelclass,'id','fullname'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'fullname',
-                                },
-                                validationRules: [
-                                    { 
-                                        type: "required" 
-                                    }
-                                ]
-                            },
-                            {
-                                dataField: "ApprovalType",
-                                editorOptions: { 
-                                    readOnly: true
-                                }
-                            },
-                            {
-                                dataField: "approvalDate",
-                                dataType: "datetime",
-                                format: "dd-MM-yyyy hh:mm:ss",
-                            },
-                            {
-                                caption: "Approval Status",
-                                dataField: "approvalAction",
-                                encodeHtml: false,
-                                allowFiltering: false,
-                                allowHeaderFiltering: true,
-                                customizeText: function (e) {
-                                    var arrText = [
-                                        "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                                        "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                                        "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                                        "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                                        "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                                    ];
-                                    return arrText[e.value];
-                                }
-                            },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGridApproverList = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
-                        },
-                        onEditorPreparing: function (e) {
-                            if (e.dataField == "approver_id" && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";                
-                                e.editorOptions.dropDownOptions = {                
-                                    height: 500,
-                                    width: 600
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
+                // else if(data.ID == 3) {
+                //     return $("<div id='formapproverlist'>").dxDataGrid({    
+                //         dataSource: storewithmodule('approverlistrequest',modelclass,reqid),
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: true,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         editing: {
+                //             useIcons:true,
+                //             mode: "cell",
+                //             allowAdding: (admin == 1) ? true : false,
+                //             allowUpdating: (admin == 1) ? true : false,
+                //             allowDeleting: (admin == 1) ? true : false,
+                //         },
+                //         scrolling: {
+                //             mode: "virtual"
+                //         },
+                //         columns: [
+                //             {
+                //                 caption: "Fullname",
+                //                 dataField: "approver_id",
+                //                 lookup: {
+                //                     dataSource: listOption('/list-approver/'+modelclass,'id','fullname'),  
+                //                     valueExpr: 'id',
+                //                     displayExpr: 'fullname',
+                //                 },
+                //                 validationRules: [
+                //                     { 
+                //                         type: "required" 
+                //                     }
+                //                 ]
+                //             },
+                //             {
+                //                 dataField: "ApprovalType",
+                //                 editorOptions: { 
+                //                     readOnly: true
+                //                 }
+                //             },
+                //             {
+                //                 dataField: "approvalDate",
+                //                 dataType: "datetime",
+                //                 format: "dd-MM-yyyy hh:mm:ss",
+                //             },
+                //             {
+                //                 caption: "Approval Status",
+                //                 dataField: "approvalAction",
+                //                 encodeHtml: false,
+                //                 allowFiltering: false,
+                //                 allowHeaderFiltering: true,
+                //                 customizeText: function (e) {
+                //                     var arrText = [
+                //                         "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                //                         "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                //                         "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                //                         "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                //                         "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                //                     ];
+                //                     return arrText[e.value];
+                //                 }
+                //             },
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGridApproverList = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //         },
+                //         onInitNewRow : function(e) {
+                //         },
+                //         onEditorPreparing: function (e) {
+                //             if (e.dataField == "approver_id" && e.parentType == "dataRow") {
+                //                 e.editorName = "dxDropDownBox";                
+                //                 e.editorOptions.dropDownOptions = {                
+                //                     height: 500,
+                //                     width: 600
+                //                 };
+                //                 e.editorOptions.contentTemplate = function (args, container) {
                     
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
-                                            dataSource: args.component.option("dataSource"),
-                                            keyExpr: "id",
-                                            columns: ["fullname","ApprovalType"],
-                                            hoverStateEnabled: true,
-                                            paging: { enabled: true, pageSize: 10 },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: args.component.option("value"),
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const hasSelection = keys.length;
-                                                args.component.option('value', hasSelection ? keys[0] : null);
-                                                if(hasSelection !== 0) {
-                                                    args.component.close();
-                                                }
-                                            }
-                                        });
+                //                     var value = args.component.option("value"),
+                //                         $dataGrid = $("<div>").dxDataGrid({
+                //                             width: '100%',
+                //                             dataSource: args.component.option("dataSource"),
+                //                             keyExpr: "id",
+                //                             columns: ["fullname","ApprovalType"],
+                //                             hoverStateEnabled: true,
+                //                             paging: { enabled: true, pageSize: 10 },
+                //                             filterRow: { visible: true },
+                //                             height: '90%',
+                //                             showRowLines: true,
+                //                             showBorders: true,
+                //                             selection: { mode: "single" },
+                //                             selectedRowKeys: [value],
+                //                             focusedRowEnabled: true,
+                //                             focusedRowKey: args.component.option("value"),
+                //                             searchPanel: {
+                //                                 visible: true,
+                //                                 width: 265,
+                //                                 placeholder: "Search..."
+                //                             },
+                //                             onSelectionChanged: function (selectedItems) {
+                //                                 const keys = selectedItems.selectedRowKeys;
+                //                                 const hasSelection = keys.length;
+                //                                 args.component.option('value', hasSelection ? keys[0] : null);
+                //                                 if(hasSelection !== 0) {
+                //                                     args.component.close();
+                //                                 }
+                //                             }
+                //                         });
                     
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                //                     var dataGrid = $dataGrid.dxDataGrid("instance");
                     
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
+                //                     args.component.on("valueChanged", function (args) {
+                //                         var value = args.value;
                     
-                                        dataGrid.selectRows(value, false);
-                                    });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
+                //                         dataGrid.selectRows(value, false);
+                //                     });
+                //                     container.append($dataGrid);
+                //                     $("<div>").dxButton({
+                //                         text: "Close",
                     
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
+                //                         onClick: function (ev) {
+                //                             args.component.close();
+                //                         }
+                //                     }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                //                     return container;
                     
-                                };
-                            }
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGridApproverList.refresh();
-                                    }
-                                }
-                            })
-                        },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (3):", e.error.message);
+                //                 };
+                //             }
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGridApproverList.refresh();
+                //                     }
+                //                 }
+                //             })
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //             // Menampilkan pesan kesalahan
+                //             console.log("Terjadi kesalahan saat memuat data (3):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGridApproverList.refresh();
-                        }
-                    })
+                //             // Memuat ulang DataGrid
+                //             dataGridApproverList.refresh();
+                //         }
+                //     })
 
-                }
-                else if(data.ID == 4) {
-                    return $("<div id='formhistorylist'>").dxDataGrid({    
-                        dataSource: storewithmodule('approverlisthistory',modelclass,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: true,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "cell",
-                            allowAdding: false,
-                            allowUpdating: false,
-                            allowDeleting: false,
-                        },
-                        paging: { enabled: true, pageSize: 10 },
-                        columns: [
-                            {
-                                dataField: "fullname"
-                            },
-                            {
-                                caption: "Type",
-                                dataField: "approvalType"
-                            },
-                            {
-                                caption: "Date",
-                                dataField: "approvalDate",
-                                dataType: "datetime",
-                                format: "dd-MM-yyyy hh:mm:ss",
-                            },
-                            {
-                                caption: "Action",
-                                dataField: "approvalAction",
-                                encodeHtml: false,
-                                allowFiltering: false,
-                                allowHeaderFiltering: true,
-                                customizeText: function (e) {
-                                    var arrText = [
-                                        "<span class='btn btn-secondary btn-xs'>Draft</span>",
-                                        "<span class='btn btn-primary btn-xs'>Submitted</span>",
-                                        "<span class='btn btn-warning btn-xs'>Rework</span>",
-                                        "<span class='btn btn-success btn-xs'>Approved</span>",
-                                        "<span class='btn btn-danger btn-xs'>Rejected</span>",
-                                        "<span class='btn btn-secondary btn-xs'>Cancelled</span>",
-                                    ];
-                                    return arrText[e.value];
-                                }
-                            },
-                            {
-                                dataField: "remarks"
-                            },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGridApproverHistory = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGridApproverHistory.refresh();
-                                    }
-                                }
-                            })
-                        },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (4):", e.error.message);
+                // }
+                // else if(data.ID == 4) {
+                //     return $("<div id='formhistorylist'>").dxDataGrid({    
+                //         dataSource: storewithmodule('approverlisthistory',modelclass,reqid),
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: true,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         editing: {
+                //             useIcons:true,
+                //             mode: "cell",
+                //             allowAdding: false,
+                //             allowUpdating: false,
+                //             allowDeleting: false,
+                //         },
+                //         paging: { enabled: true, pageSize: 10 },
+                //         columns: [
+                //             {
+                //                 dataField: "fullname"
+                //             },
+                //             {
+                //                 caption: "Type",
+                //                 dataField: "approvalType"
+                //             },
+                //             {
+                //                 caption: "Date",
+                //                 dataField: "approvalDate",
+                //                 dataType: "datetime",
+                //                 format: "dd-MM-yyyy hh:mm:ss",
+                //             },
+                //             {
+                //                 caption: "Action",
+                //                 dataField: "approvalAction",
+                //                 encodeHtml: false,
+                //                 allowFiltering: false,
+                //                 allowHeaderFiltering: true,
+                //                 customizeText: function (e) {
+                //                     var arrText = [
+                //                         "<span class='btn btn-secondary btn-xs'>Draft</span>",
+                //                         "<span class='btn btn-primary btn-xs'>Submitted</span>",
+                //                         "<span class='btn btn-warning btn-xs'>Rework</span>",
+                //                         "<span class='btn btn-success btn-xs'>Approved</span>",
+                //                         "<span class='btn btn-danger btn-xs'>Rejected</span>",
+                //                         "<span class='btn btn-secondary btn-xs'>Cancelled</span>",
+                //                     ];
+                //                     return arrText[e.value];
+                //                 }
+                //             },
+                //             {
+                //                 dataField: "remarks"
+                //             },
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGridApproverHistory = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //         },
+                //         onInitNewRow : function(e) {
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGridApproverHistory.refresh();
+                //                     }
+                //                 }
+                //             })
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //             // Menampilkan pesan kesalahan
+                //             console.log("Terjadi kesalahan saat memuat data (4):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGridApproverHistory.refresh();
-                        }
-                    })
-                }
-                else if(data.ID == 5) {
-                    return $("<div id='formassignmentto'>").dxDataGrid({    
-                        dataSource: storewithmodule('assignmentto',modelclass,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: true,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "cell",
-                            allowAdding: (admin == 1 || isWP ) ? true : false,
-                            allowUpdating: (admin == 1 || isWP ) ? true : false,
-                            allowDeleting: (admin == 1 || isWP ) ? true : false,
-                        },
-                        paging: { enabled: true, pageSize: 10 },
-                        columns: [
-                            {
-                                caption: "PIC Name",
-                                dataField: "employee_id",
-                                lookup: {
-                                    dataSource: listOption('/list-employeeall','id','fullname'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'fullname',
-                                },
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                dataField: 'role',
-                                dataType: 'string',
-                                lookup: {
-                                    dataSource: ['Acquicitor','Data Processor'],  
-                                },
-                            },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGridAssignmentto = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
-                        },
-                        onEditorPreparing: function (e) {
-                            if (e.dataField == "employee_id" && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";                
-                                e.editorOptions.dropDownOptions = {                
-                                    height: 500,
-                                    width: 600
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
+                //             // Memuat ulang DataGrid
+                //             dataGridApproverHistory.refresh();
+                //         }
+                //     })
+                // }
+                // else if(data.ID == 5) {
+                //     return $("<div id='formassignmentto'>").dxDataGrid({    
+                //         dataSource: storewithmodule('assignmentto',modelclass,reqid),
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: true,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         editing: {
+                //             useIcons:true,
+                //             mode: "cell",
+                //             allowAdding: (admin == 1) ? true : false,
+                //             allowUpdating: (admin == 1) ? true : false,
+                //             allowDeleting: (admin == 1) ? true : false,
+                //         },
+                //         paging: { enabled: true, pageSize: 10 },
+                //         columns: [
+                //             {
+                //                 caption: "PIC Name",
+                //                 dataField: "employee_id",
+                //                 lookup: {
+                //                     dataSource: listOption('/list-employeeall','id','fullname'),  
+                //                     valueExpr: 'id',
+                //                     displayExpr: 'fullname',
+                //                 },
+                //                 validationRules: [{ type: "required" }]
+                //             },
+                //             {
+                //                 dataField: 'role',
+                //                 dataType: 'string',
+                //                 lookup: {
+                //                     dataSource: ['Acquicitor','Data Processor'],  
+                //                 },
+                //             },
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGridAssignmentto = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //         },
+                //         onInitNewRow : function(e) {
+                //         },
+                //         onEditorPreparing: function (e) {
+                //             if (e.dataField == "employee_id" && e.parentType == "dataRow") {
+                //                 e.editorName = "dxDropDownBox";                
+                //                 e.editorOptions.dropDownOptions = {                
+                //                     height: 500,
+                //                     width: 600
+                //                 };
+                //                 e.editorOptions.contentTemplate = function (args, container) {
                     
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
-                                            dataSource: args.component.option("dataSource"),
-                                            keyExpr: "id",
-                                            columns: ["sapid","fullname","companycode","departmentname"],
-                                            hoverStateEnabled: true,
-                                            paging: { enabled: true, pageSize: 10 },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: args.component.option("value"),
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const hasSelection = keys.length;
-                                                args.component.option('value', hasSelection ? keys[0] : null);
-                                                if(hasSelection !== 0) {
-                                                    args.component.close();
-                                                }
-                                            }
-                                        });
+                //                     var value = args.component.option("value"),
+                //                         $dataGrid = $("<div>").dxDataGrid({
+                //                             width: '100%',
+                //                             dataSource: args.component.option("dataSource"),
+                //                             keyExpr: "id",
+                //                             columns: ["sapid","fullname","companycode","departmentname"],
+                //                             hoverStateEnabled: true,
+                //                             paging: { enabled: true, pageSize: 10 },
+                //                             filterRow: { visible: true },
+                //                             height: '90%',
+                //                             showRowLines: true,
+                //                             showBorders: true,
+                //                             selection: { mode: "single" },
+                //                             selectedRowKeys: [value],
+                //                             focusedRowEnabled: true,
+                //                             focusedRowKey: args.component.option("value"),
+                //                             searchPanel: {
+                //                                 visible: true,
+                //                                 width: 265,
+                //                                 placeholder: "Search..."
+                //                             },
+                //                             onSelectionChanged: function (selectedItems) {
+                //                                 const keys = selectedItems.selectedRowKeys;
+                //                                 const hasSelection = keys.length;
+                //                                 args.component.option('value', hasSelection ? keys[0] : null);
+                //                                 if(hasSelection !== 0) {
+                //                                     args.component.close();
+                //                                 }
+                //                             }
+                //                         });
                     
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                //                     var dataGrid = $dataGrid.dxDataGrid("instance");
                     
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
+                //                     args.component.on("valueChanged", function (args) {
+                //                         var value = args.value;
                     
-                                        dataGrid.selectRows(value, false);
-                                    });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
+                //                         dataGrid.selectRows(value, false);
+                //                     });
+                //                     container.append($dataGrid);
+                //                     $("<div>").dxButton({
+                //                         text: "Close",
                     
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
+                //                         onClick: function (ev) {
+                //                             args.component.close();
+                //                         }
+                //                     }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                //                     return container;
                     
-                                };
-                            }
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGridAssignmentto.refresh();
-                                    }
-                                }
-                            })
-                        },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (5):", e.error.message);
+                //                 };
+                //             }
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGridAssignmentto.refresh();
+                //                     }
+                //                 }
+                //             })
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //             // Menampilkan pesan kesalahan
+                //             console.log("Terjadi kesalahan saat memuat data (5):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGridAssignmentto.refresh();
-                        }
-                    })
-                }
+                //             // Memuat ulang DataGrid
+                //             dataGridAssignmentto.refresh();
+                //         }
+                //     })
+                // }
                 else if(data.ID == 6) {
                     return $("<div id='formstackholders'>").dxDataGrid({    
                         dataSource: storewithmodule('stackholders',modelclass,reqid),
@@ -1091,6 +1082,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         type: "required" 
                                     }
                                 ]
+                            },
+                            {
+                                dataField: "role",
+                                lookup: {
+                                    dataSource: ['User','Chairman'],
+                                    searchEnabled: false
+                                },
                             },
                         ],
                         export: {
@@ -1180,13 +1178,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             })
                         },
-                        // onDataErrorOccurred: function(e) {
-                        //     // Menampilkan pesan kesalahan
-                        //     console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                     
-                        //     // Memuat ulang DataGrid
-                        //     dataGridStackholders.refresh();
-                        // }
+                            // Memuat ulang DataGrid
+                            dataGridStackholders.refresh();
+                        }
                     })
 
                 }
@@ -1203,6 +1201,557 @@ const popupContentTemplate = function (reqid,mode,options) {
     return scrollView;
 
 };
+
+const popupContentTemplateDetails = function (reqid,mode,options) {
+
+    // var isMine = options.data.isMine;
+    // var isPendingOnMe = options.data.isPendingOnMe;
+    // var isWP = options.data.isWP;
+    // var isManager = options.data.isManager;
+    var taskID = options.data.id;
+    console.log(mode)
+    console.log(options)
+    console.log(isMine)
+    // popupid = reqid;
+
+    const scrollView = $('<div />');
+
+    scrollView.append("<hr>"),
+
+    scrollView.append(
+
+        $("<div>").dxAccordion({
+            dataSource: accordionItemsDetails,
+            animationDuration: 600,
+            selectedItems: [accordionItemsDetails[0]],
+            collapsible: true,
+            multiple: true,
+            itemTitleTemplate: function (data) {
+                color = 'black';
+                return '<small style="margin-bottom:10px !important; color:'+color+'">'+data.Title+'</small>'
+            },
+            itemTemplate: function (data) {
+                if(data.ID == 1) {
+                    return formData = $("<div id='formdata'>").dxDataGrid({    
+                        dataSource: storewithmodule('momtaskdetail',modelclass,taskID),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "batch",
+                            allowAdding: true,
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: true,
+                        },
+                        scrolling: {
+                            mode: "virtual"
+                        },
+                        columns: [
+                            {
+                                dataField: 'description',
+                                dataType: 'string',
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'section',
+                                dataType: 'string',
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'status',
+                                lookup: {
+                                    dataSource: ['Open','Progress','Done'],
+                                    searchEnabled: false
+                                },
+                                validationRules: [{ type: "required" }]
+
+                            },
+                            {
+                                dataField: "deadline_date",
+                                dataType: "date",
+                                format: "dd-MM-yyyy", 
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'aging',
+                                dataType: 'string',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
+                            },
+                            {
+                                dataField: 'time_category',
+                                dataType: 'string',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
+                            },
+                        ],
+                        masterDetail: {
+                            enabled: true,
+                            template: masterDetailTemplate,
+                        },
+                        export: {
+                            enabled: false,
+                            fileName: modname+'_taskdetail',
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridtaskdetail = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridtaskdetail.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPreparing: function (e) {
+                        },
+                        onCellPrepared: function (e) {
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            // dataGridtaskdetail.refresh();
+                        }
+                    })
+                } 
+            }
+        })
+    
+    );
+
+    scrollView.dxScrollView({
+        width: '100%',
+        height: '100%',
+    })
+
+    return scrollView;
+
+};
+
+
+function masterDetailTemplate(_, masterDetailOptions) {
+    return $('<div>').dxTabPanel({
+      items: [{
+        title: 'Update',
+        template: createUpdateTabTemplate(masterDetailOptions.data),
+      }, {
+        title: 'PIC',
+        template: createPICTabTemplate(masterDetailOptions.data),
+      }],
+    });
+}
+
+function createUpdateTabTemplate(masterDetailData) {
+    return function () {
+        return formData = $("<div>").dxDataGrid({    
+            dataSource: storewithmodule('momtaskupdate',modelclass,masterDetailData.id),
+            allowColumnReordering: true,
+            allowColumnResizing: true,
+            columnsAutoWidth: true,
+            rowAlternationEnabled: true,
+            wordWrapEnabled: true,
+            showBorders: true,
+            filterRow: { visible: false },
+            filterPanel: { visible: false },
+            headerFilter: { visible: false },
+            searchPanel: {
+                visible: false,
+                width: 240,
+                placeholder: 'Search...',
+            },
+            sorting: {
+                mode: "none" // or "multiple" | "none"
+            },
+            editing: {
+                useIcons:true,
+                mode: "form",
+                allowAdding: true,
+                allowUpdating: true,
+                allowDeleting: true,
+                popup: {
+                    title: "Update Task",
+                    showTitle: true,
+                    width: 700,
+                    height: 525,
+                    position: {
+                        my: "center",
+                        at: "center",
+                        of: window
+                    },
+                    toolbarItems: [
+                        {
+                            toolbar: 'bottom',
+                            location: 'after',
+                            widget: 'dxButton',
+                            options: {
+                                onClick: function(e) {
+                                    if($adafile) {
+                                        DevExpress.ui.notify("Harap selesaikan unggahan Anda sebelum menyimpan data","error");
+                                        e.cancel = true;
+                                    } else {
+                                        dataGridTaskUpdate.saveEditData();
+                                    }
+                                },
+                                text: 'Simpan'
+                            }
+                        },
+                        {
+                            toolbar: 'bottom',
+                            location: 'after',
+                            widget: 'dxButton',
+                            options: {
+                                onClick: function(e) {
+                                    dataGridTaskUpdate.cancelEditData();
+                                },text: 'Batal'
+                            }
+                        }
+                    ]
+                },
+                form: {
+                    items: [{
+                        itemType: "group",
+                        colCount: 2,
+                        colSpan: 2,
+                        items: [
+                            {
+                                dataField: "description",
+                            },
+                            {
+                                dataField: "date",
+                            },
+                        ]
+                    },
+                    {
+                        itemType: "group",
+                        colCount: 2,
+                        colSpan: 2,
+                        caption: "Supporting Document",
+                        items: [{
+                          dataField: "filename",
+                          colSpan: 2
+                        }]
+                    }
+                ]},
+            },
+            scrolling: {
+                mode: "virtual"
+            },
+            columns: [
+                {
+                    dataField: 'description',
+                    validationRules: [{ type: "required" }]
+
+                },
+                {
+                    dataField: "date",
+                    dataType: "date",
+                    format: "dd-MM-yyyy",
+                    sortOrder: "asc",
+                    width: 140,
+                    validationRules: [{ type: "required" }]
+                },
+                {
+                    caption: "Supporting Document",
+                    dataField: "filename",
+                    width: 240,
+                    allowFiltering: false,
+                    allowSorting: false,
+                    cellTemplate: cellTemplate,
+                    editCellTemplate: editCellTemplate,
+                    validationRules: [{ type: "required" }]
+                },
+                {
+                    dataField: 'updated_by',
+                    width: 140,
+                    lookup: {
+                        dataSource: listOption('/list-employee','id','fullname'),  
+                        valueExpr: 'id',
+                        displayExpr: 'fullname',
+                    },
+                    editorOptions: { 
+                        readOnly: true
+                    }
+                },
+            ],
+            export: {
+                enabled: false,
+                fileName: modname,
+                excelFilterEnabled: true,
+                allowExportSelectedData: true
+            },
+            onInitialized: function(e) {
+                dataGridTaskUpdate = e.component;
+            },
+            onContentReady: function(e){
+                moveEditColumnToLeft(e.component);
+            },
+            onInitNewRow : function(e) {
+            },
+            onToolbarPreparing: function(e) {
+               
+            },
+            onEditorPreparing: function (e) {
+            },
+            onCellPrepared: function (e) {
+            },
+            onDataErrorOccurred: function(e) {
+                // Menampilkan pesan kesalahan
+                console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+        
+                // Memuat ulang DataGrid
+                dataGridtaskdetail.refresh();
+            }
+        })
+    };
+}
+
+function createPICTabTemplate(masterDetailData) {
+    return function () {
+        return formData = $("<div>").dxDataGrid({    
+            dataSource: storewithmodule('momtaskbound',modelclass,masterDetailData.id),
+            allowColumnReordering: true,
+            allowColumnResizing: true,
+            columnsAutoWidth: true,
+            rowAlternationEnabled: true,
+            wordWrapEnabled: true,
+            showBorders: true,
+            filterRow: { visible: false },
+            filterPanel: { visible: false },
+            headerFilter: { visible: false },
+            searchPanel: {
+                visible: false,
+                width: 240,
+                placeholder: 'Search...',
+            },
+            sorting: {
+                mode: "none" // or "multiple" | "none"
+            },
+            editing: {
+                useIcons:true,
+                mode: "batch",
+                allowAdding: true,
+                allowUpdating: true,
+                allowDeleting: true,
+            },
+            scrolling: {
+                mode: "virtual"
+            },
+            columns: [
+                {
+                    caption: 'Role',
+                    dataField: 'content',
+                    lookup: {
+                        dataSource: ['PIC','SPV','Support'],
+                        searchEnabled: false
+                    },
+                    sortOrder: "asc",
+                    validationRules: [{ type: "required" }]
+
+                },
+                {
+                    caption: "Employee",
+                    dataField: "employee_id",
+                    lookup: {
+                        dataSource: listOption('/list-employee','id','fullname'),  
+                        valueExpr: 'id',
+                        displayExpr: 'fullname',
+                    },
+                    validationRules: [
+                        { 
+                            type: "required" 
+                        }
+                    ]
+                },
+            ],
+            export: {
+                enabled: false,
+                fileName: modname,
+                excelFilterEnabled: true,
+                allowExportSelectedData: true
+            },
+            onInitialized: function(e) {
+                dataGridTaskBound = e.component;
+            },
+            onContentReady: function(e){
+                moveEditColumnToLeft(e.component);
+            },
+            onInitNewRow : function(e) {
+            },
+            onToolbarPreparing: function(e) {
+               
+            },
+            onEditorPreparing: function (e) {
+                if (e.dataField == "employee_id" && e.parentType == "dataRow") {
+                    e.editorName = "dxDropDownBox";            
+                    e.editorOptions.dropDownOptions = {                
+                        height: 500,
+                        width: 600
+                    };
+                    e.editorOptions.contentTemplate = function (args, container) {
+        
+                        var value = args.component.option("value"),
+                            $dataGrid = $("<div>").dxDataGrid({
+                                width: '100%',
+                                dataSource: args.component.option("dataSource"),
+                                keyExpr: "id",
+                                columns: ["sapid","fullname","companycode","departmentname"],
+                                hoverStateEnabled: true,
+                                paging: { enabled: true, pageSize: 10 },
+                                filterRow: { visible: true },
+                                height: '90%',
+                                showRowLines: true,
+                                showBorders: true,
+                                selection: { mode: "single" },
+                                selectedRowKeys: [value],
+                                focusedRowEnabled: true,
+                                focusedRowKey: args.component.option("value"),
+                                searchPanel: {
+                                    visible: true,
+                                    width: 265,
+                                    placeholder: "Search..."
+                                },
+                                onSelectionChanged: function (selectedItems) {
+                                    const keys = selectedItems.selectedRowKeys;
+                                    const hasSelection = keys.length;
+                                    args.component.option('value', hasSelection ? keys[0] : null);
+                                    if(hasSelection !== 0) {
+                                        args.component.close();
+                                    }
+                                }
+                            });
+        
+                        var dataGrid = $dataGrid.dxDataGrid("instance");
+        
+                        args.component.on("valueChanged", function (args) {
+                            var value = args.value;
+        
+                            dataGrid.selectRows(value, false);
+                        });
+                        container.append($dataGrid);
+                        $("<div>").dxButton({
+                            text: "Close",
+        
+                            onClick: function (ev) {
+                                args.component.close();
+                            }
+                        }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                        return container;
+        
+                    };
+                }
+            },
+            onCellPrepared: function (e) {
+            },
+            onDataErrorOccurred: function(e) {
+                // Menampilkan pesan kesalahan
+                console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+        
+                // Memuat ulang DataGrid
+                dataGridtaskdetail.refresh();
+            }
+        })
+    };
+}
+
+function runpopup() {
+    popup = $('#popup').dxPopup({
+        contentTemplate: popupContentTemplate,
+        container: '.content',
+        showTitle: true,
+        title: 'Submission Detail',
+        visible: false,
+        dragEnabled: false,
+        hideOnOutsideClick: false,
+        showCloseButton: true,
+        fullScreen : true,
+        onShowing: function(e) {
+        },
+        onShown: function(e) {
+        },
+        onHidden: function(e) {
+            dataGrid.refresh();
+        },
+        toolbarItems: [
+        {
+            widget: 'dxButton',
+            toolbar: 'bottom',
+            location: 'after',
+            options: {
+            text: 'Close',
+            onClick() {
+                popup.hide();
+            },
+            },
+        }]
+
+    }).dxPopup('instance');
+}
+
+function runpopupdetails() {
+    popupdetails = $('#popupdetails').dxPopup({
+        contentTemplate: popupContentTemplateDetails,
+        container: '.content',
+        showTitle: true,
+        title: 'Task Detail',
+        visible: false,
+        dragEnabled: false,
+        hideOnOutsideClick: false,
+        showCloseButton: true,
+        fullScreen : false,
+        onShowing: function(e) {
+        },
+        onShown: function(e) {
+        },
+        onHidden: function(e) {
+            // dataGrid.refresh();
+        },
+        toolbarItems: [
+        {
+            widget: 'dxButton',
+            toolbar: 'bottom',
+            location: 'after',
+            options: {
+            text: 'Close',
+            onClick() {
+                popupdetails.hide();
+            },
+            },
+        }]
+
+    }).dxPopup('instance');
+}
 
 function btnreqsubmit(reqid,mode) {
 
@@ -1249,41 +1798,6 @@ function btnreqsubmit(reqid,mode) {
     }
 
 }
-
-function runpopup() {
-    popup = $('#popup').dxPopup({
-        contentTemplate: popupContentTemplate,
-        container: '.content',
-        showTitle: true,
-        title: 'Submission Detail',
-        visible: false,
-        dragEnabled: false,
-        hideOnOutsideClick: false,
-        showCloseButton: true,
-        fullScreen : true,
-        onShowing: function(e) {
-        },
-        onShown: function(e) {
-        },
-        onHidden: function(e) {
-            dataGrid.refresh();
-        },
-        toolbarItems: [
-        {
-            widget: 'dxButton',
-            toolbar: 'bottom',
-            location: 'after',
-            options: {
-            text: 'Close',
-            onClick() {
-                popup.hide();
-            },
-            },
-        }]
-
-    }).dxPopup('instance');
-}
-
 
 function cellTemplate(container, options) {
     container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');

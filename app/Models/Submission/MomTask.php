@@ -13,6 +13,11 @@ class MomTask extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'deadline_date' => 'date',
+        'category_id' => 'integer',
+    ];
+
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;

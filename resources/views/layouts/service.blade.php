@@ -52,6 +52,12 @@
             insert: function(values) {
                 values.req_id = param;
                 values.modulename = modulename;
+
+                if(modulename == 'Mom') {
+                    values.category_id = param;
+                    values.task_id = param;
+                }
+                
                 return sendRequest(apiurl + "/"+module, "POST", values);
             },
             update: function(key, values) {

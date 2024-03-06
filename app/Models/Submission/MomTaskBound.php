@@ -5,13 +5,18 @@ namespace App\Models\Submission;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MomTask extends Model
+class MomTaskBound extends Model
 {
     use HasFactory;
 
     protected $table = 'request_momTaskBound';
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'task_id' => 'integer',
+        'employee_id' => 'integer',
+    ];
 
     public static function getFillableColumns()
     {

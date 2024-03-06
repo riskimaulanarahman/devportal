@@ -78,7 +78,7 @@ class UavMissionRequestController extends Controller
                                     ->whereIn("request_uavmission.requestStatus", [1,3,4]);
                             } else {
                                 $query->where("request_uavmission.user_id", "!=", $user_id)
-                                    ->whereIn("request_uavmission.requestStatus", [3,4]);
+                                    ->whereIn("request_uavmission.requestStatus", [1,3,4]);
                             }
                         })
                         ->orWhere("request_uavmission.user_id", $user_id);
