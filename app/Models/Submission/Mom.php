@@ -24,18 +24,21 @@ class Mom extends Model
         'date',
         'chairman',
         'venue',
-        'isZoom'
+        'isZoom',
+        'chairman_userid',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'user_id' => 'integer',
+        'chairman_userid' => 'integer',
     ];
 
     public static function getFillableColumns()
     {
         // return (new static)->fillable;
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, []);
+        $fillable = array_diff($fillable, ['isZoom','chairman_userid']);
         return $fillable;
     }
 

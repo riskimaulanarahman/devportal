@@ -91,22 +91,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
                     $('<button class="btn btn-danger" id="btnreqid'+reqid+' m-l-3" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
-                            
-                        // var result = confirm('Are you sure you want to cancel this submission ?');
-
-                        // if (result) {
-                        //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                        //         requestStatus:0,
-                        //         action:'submission',
-                        //         approvalAction: 0
-                        //     }).then(function(response){
-                        //         if(response.status != 'error') {
-                        //             dataGrid.refresh();
-                        //         }
-                        //     });
-                        // } else {
-                        //     alert('Cancelled.');
-                        // }
 
                         Swal.fire({
                             title: 'Are you sure?',
@@ -235,6 +219,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         })
     },
+    onDataErrorOccurred: function(e) {
+        // Menampilkan pesan kesalahan
+        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+
+        // Memuat ulang Page
+        location.reload();
+    }
 }).dxDataGrid("instance");
 
 $('#btnadd').on('click',function(){

@@ -204,8 +204,8 @@ var dataGrid = $("#gridContainer").dxTreeList({
         // Menampilkan pesan kesalahan
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
-        // Memuat ulang DataGrid
-        dataGrid.refresh();
+        // Memuat ulang Page
+        location.reload();
     }
 }).dxTreeList("instance");
 

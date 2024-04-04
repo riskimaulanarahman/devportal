@@ -62,8 +62,16 @@ class CategoryController extends Controller
         try {
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
-                $data = $this->model->where('req_id',$id)
+                $data = $this->model
+                ->select('tbl_category.id','tbl_category.category')
+                ->selectRaw("COUNT(CASE WHEN request_momTask.status = 'Done' THEN 1 END) AS done_count")
+                ->selectRaw("COUNT(CASE WHEN request_momTask.status = 'Open' THEN 1 END) AS open_count")
+                ->selectRaw("COUNT(CASE WHEN request_momTask.status = 'Progress' THEN 1 END) AS progress_count")
+                ->selectRaw("CONCAT('Open : ', SUM(CASE WHEN request_momTask.status = 'Open' THEN 1 ELSE 0 END), ' | Progress : ', SUM(CASE WHEN request_momTask.status = 'Progress' THEN 1 ELSE 0 END), ' | Done : ', SUM(CASE WHEN request_momTask.status = 'Done' THEN 1 ELSE 0 END), ' | Total : ', SUM(CASE WHEN request_momTask.status = 'Open' THEN 1 ELSE 0 END) + SUM(CASE WHEN request_momTask.status = 'Progress' THEN 1 ELSE 0 END) + SUM(CASE WHEN request_momTask.status = 'Done' THEN 1 ELSE 0 END) ) AS status_summary")
+                ->leftJoin('request_momTask', 'tbl_category.id', '=', 'request_momTask.category_id')
+                ->where('req_id',$id)
                 ->where('module_id',$module->id)
+                ->groupBy('tbl_category.id','tbl_category.category')
                 ->get();
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
             } else {

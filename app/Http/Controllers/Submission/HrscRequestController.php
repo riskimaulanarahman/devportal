@@ -213,7 +213,7 @@ class HrscRequestController extends Controller
         }
     }
 
-    function generateNotificationMessage($data, $modulename, $id, $ticketStatus, $confirmationStatus) {
+    private function generateNotificationMessage($data, $modulename, $id, $ticketStatus, $confirmationStatus) {
         $locModel = "App\Models\Submission\\".$modulename;
         $model = new $locModel;
         $tableName = $model->getTableName();

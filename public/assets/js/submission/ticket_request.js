@@ -199,6 +199,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         })
     },
+    onDataErrorOccurred: function(e) {
+        // Menampilkan pesan kesalahan
+        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+
+        // Memuat ulang Page
+        location.reload();
+    }
 }).dxDataGrid("instance");
 
 $('#btnadd').on('click',function(){

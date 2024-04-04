@@ -25,4 +25,8 @@ Route::middleware(['session.check'])->group(function () {
 
 //dashboard
 
+// Scheduler
+Route::get('/mom-reminder/{mode}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'reminderNotificationMessage'])->name('mom-reminder');
+
+
 });

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Module;
 use App\Models\Submission\MomTask;
+use DB;
 
 class MomTaskDetailController extends Controller
 {
@@ -65,7 +66,7 @@ class MomTaskDetailController extends Controller
         try {
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
-                $data = $this->model->where('category_id',$id)
+                $data = DB::table('momTaskDetail')->where('category_id',$id)
                 ->get();
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
             } else {
@@ -87,16 +88,23 @@ class MomTaskDetailController extends Controller
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
+            
+            if($request->status == 'Done') {
+                $requestData['completion_date'] = date('Y-m-d');
+            }
+
             $data->update($requestData);
+
+            $getCategoryReqID = DB::table('tbl_category')->where('id',$data->category_id)->first();
 
             //start save history perubahan
             $fields = [
-                'status' => $request->status,
+                'status' => $request->status.' | Task Description : '.$data->description,
             ];
             
             foreach ($fields as $key => $value) {
                 if ($value) {
-                    $this->approverAction($this->modulename, $data->req_id, $key, 1, $value);
+                    $this->approverAction($this->modulename, $getCategoryReqID->req_id, $key, 1, $value);
                 }
             }
             //end save history perubahan

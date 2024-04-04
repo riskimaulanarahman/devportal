@@ -7,9 +7,15 @@ use Carbon\Carbon;
 
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
+use App\Models\Approvaltype;
 use App\Models\Approvaluser;
 use App\Models\Module;
+use App\Models\Employee;
 use Auth;
+use DB;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+
+use App\Models\Submission\Mom;
 
 trait ApproverTrait {
 
@@ -82,7 +88,7 @@ trait ApproverTrait {
     public function createApprover($moduleName, $req_id, $company, $cat_id)
     {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
-        if ($module) {
+        if ($module->module !== 'Mom') {
 
             $getApprover = Approvaluser::where('module', $moduleName)
                 ->where('isActive', 1);
@@ -138,6 +144,90 @@ trait ApproverTrait {
             $history->remarks = $remarks;
             $history->save();
         }
+    }
+
+    public function createApprChairman($employeeID, $moduleName, $reqID) {
+        if($moduleName == 'Mom') {
+
+            $getemployee = Employee::find($employeeID);
+            $getuser = $this->user->where('username',$getemployee->LoginName)->get();
+
+            //START approver for Chairman
+            $getIDapprTypeChairman = Approvaltype::where('Module','Mom')->where('ApprovalType','Chairman')->first();
+            $checkExistApprChairman = Approvaluser::where('module','Mom')
+                                        ->where('employee_id',$employeeID)
+                                        ->where('approvaltype_id',$getIDapprTypeChairman->id)
+                                        ->where('isActive',1)
+                                        ->get();
+
+            if(count($getuser) > 0) {
+                $userID = $this->getUser($getemployee->LoginName)->id;
+            } else {
+                $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+
+                if ($getldap) {
+                    $newUser = $this->user->create([
+                        "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                        "domain" => "default",
+                        "username" => $getldap['samaccountname'][0],
+                        "fullname" => $getldap['name'][0],
+                        "email" => $getldap['mail'][0]
+                    ]);
+
+                    $userID = $newUser->id;
+                } else {
+                    return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                }
+
+            }
+
+            if(count($checkExistApprChairman) < 1) {
+                $approver = new Approvaluser();
+                $approver->module = $moduleName;
+                $approver->user_id = $userID;
+                $approver->employee_id = $employeeID;
+                $approver->sequence = 1;
+                $approver->approvaltype_id = $getIDapprTypeChairman->id;
+                $approver->save();
+
+                // Mengambil ID dari $approver yang baru disimpan
+                $newApproverId = $approver->id;
+            } else {
+                foreach($checkExistApprChairman as $item) {
+                    $newApproverId = $item->id;
+                }
+            }
+
+            // Hapus data yang bersangkutan di tabel ApproverListReq
+            ApproverListReq::where('module_id', $this->getModuleId($moduleName))
+            ->where('req_id', $reqID)
+            ->delete();
+
+            $approverList = new ApproverListReq();
+            $approverList->req_id = $reqID;
+            $approverList->module_id = $this->getModuleId($moduleName);
+            $approverList->approver_id = $newApproverId;
+            $approverList->save();
+
+            $this->updateMomColumnChairmanUserID($userID, $reqID);
+            //END create approver for Chairman
+        }
+    }
+
+    public function deleteApprChairman($moduleName, $reqID) {
+
+        // Hapus data yang bersangkutan di tabel ApproverListReq
+        ApproverListReq::where('module_id', $this->getModuleId($moduleName))
+        ->where('req_id', $reqID)
+        ->delete();
+
+    }
+
+    private function updateMomColumnChairmanUserID($userID, $reqID) {
+        $MomReq = Mom::find($reqID);
+        $MomReq->update([
+            'chairman_userid' => $userID
+        ]);
     }
 
 }

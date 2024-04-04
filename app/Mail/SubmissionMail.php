@@ -34,7 +34,7 @@ class SubmissionMail extends Mailable
     public $attachment;
     public $category;
     public $assignment;
-    // public $details;
+    public $detailmomtask;
     // public $text;
     // public $final;
     // public $file;
@@ -88,6 +88,74 @@ class SubmissionMail extends Mailable
                 }
             }
         }
+
+        // START MOM
+
+        if($modulename == 'Mom') {
+            if($final == 1) {
+                $stackholders = Stackholders::leftJoin('tbl_employee','tbl_stackholders.employee_id','=','tbl_employee.id')
+                                ->leftJoin('users','tbl_employee.LoginName','=','users.username')
+                                ->select('tbl_stackholders.*','users.email','tbl_employee.FullName')
+                                ->where('req_id',$mailData['submission']->id)
+                                ->where('module_id',$this->getModuleId($modulename))
+                                ->get();
+
+                $getTaskBound = DB::table('tbl_category')
+                ->select('tbl_addressbook.email')
+                ->where('req_id',$mailData['submission']->id)
+                ->leftJoin('request_momTask','tbl_category.id','request_momTask.category_id')
+                ->leftJoin('request_momTaskBound','request_momTask.id','request_momTaskBound.task_id')
+                ->leftJoin('tbl_employee','request_momTaskBound.employee_id','tbl_employee.id')
+                ->leftJoin('tbl_addressbook','tbl_employee.LoginName','tbl_addressbook.username')
+                ->get();
+
+                $datadetailtask = DB::table('tbl_category')
+                ->select('tbl_category.category',
+                'momTaskDetail.description',
+                'momTaskDetail.section',
+                'momTaskDetail.status',
+                'momTaskDetail.deadline_date',
+                'momTaskDetail.agings',
+                'momTaskDetail.time_categorys',
+                'request_momTaskBound.content',
+                'tbl_employee.FullName'
+                )
+                ->where('req_id',$mailData['submission']->id)
+                ->leftJoin('momTaskDetail','tbl_category.id','momTaskDetail.category_id')
+                ->leftJoin('request_momTaskBound','momTaskDetail.id','request_momTaskBound.task_id')
+                ->leftJoin('tbl_employee','request_momTaskBound.employee_id','tbl_employee.id')
+                ->get();
+
+                $this->assignment = $stackholders;
+                $this->detailmomtask = $datadetailtask;
+
+
+                // Initialize an array to collect emails
+                $allEmails = [];
+
+                // Add emails from $stackholders to the array
+                foreach ($stackholders as $stacks) {
+                    $allEmails[] = $stacks->email;
+                }
+
+                // Add emails from $getTaskBound to the array
+                foreach ($getTaskBound as $taskBound) {
+                    $allEmails[] = $taskBound->email;
+                }
+
+                // Remove duplicate emails
+                $lowercaseEmails = array_map('strtolower', $allEmails);
+                $uniqueEmails = array_unique($lowercaseEmails);
+
+                // Loop through the unique emails and apply the cc function
+                foreach ($uniqueEmails as $email) {
+                    $this->cc($email);
+                }
+
+            }
+        }
+
+        // END MOM
 
         // TICKET MODULE
         if($modulename == 'Ticket') {
@@ -197,6 +265,9 @@ class SubmissionMail extends Mailable
                 break;
             case 'Hrsc':
                 $viewblade = 'emails.hrscrequestmail';
+                break;
+            case 'Mom':
+                $viewblade = 'emails.momrequestmail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';

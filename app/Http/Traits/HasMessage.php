@@ -24,6 +24,9 @@ trait HasMessage {
             'modulenotfound' => 'Module Not Found.',
             'usernotregistered' => 'User Not Registered.',
             'assignmentnotfound' => 'Error: Assignment not found, Please add it to continue.',
+            'userexist' => 'User already exist.',
+            'chairmanexist' => 'Chairman already exist.',
+            'nothaveaccess' => 'Error: Unauthorized Access - You do not have the necessary permissions to perform this action.',
         ];
 
         return $message;
@@ -41,6 +44,8 @@ trait HasMessage {
             'hrscTicketCompleted' => 'The ticket status is Completed, but the confirmation status is waiting your response. Please review.',
             'hrscConfirmStatusCompleted' => 'The confirmation status is Completed. This ticket was resolved successfully.',
             'hrscConfirmStatusReworked' => 'The confirmation status is Reworked. Please review this ticket again.',
+            'newActivity' => 'This Submission has new activity. Please check it.',
+            'deadlineTaskReminder' => 'This Submission has a task with an approaching deadline. Please check it.',
         ];
 
         return $message;

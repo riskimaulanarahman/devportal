@@ -18,17 +18,11 @@ use DB;
 
 class SubmissionController extends Controller
 {
-    // private $model;
-    // public $modulename;
     public $module;
-    // public $sendmail;
 
     public function __construct()
     {
-        // $this->model = new Project();
-        // $this->modulename = 'Project';
         $this->module = new Module();
-        // $this->sendmail = new SubmissionMail();
     }
 
     public function submit(Request $request, $id, $modulename)
@@ -61,6 +55,11 @@ class SubmissionController extends Controller
                             ->where('req_id',$id)
                             ->where('module_id',$this->getModuleId($modulename))
                             ->get();
+            
+            $checkAppr = DB::table('tbl_approverListReq')
+                ->where('req_id',$id)
+                ->where('module_id',$this->getModuleId($modulename))
+                ->get();
 
             if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
                 $assignment = DB::table('tbl_assignment')
@@ -85,8 +84,24 @@ class SubmissionController extends Controller
                 }
             }
 
+            if($modulename == 'Mom') {
+                $checkTaskMom = DB::table('request_momTask')
+                ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
+                ->where('tbl_category.req_id',$id)
+                ->where('tbl_category.module_id',$this->getModuleId($modulename))
+                ->get();
+
+                if (count($checkTaskMom) < 1) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Task Detail not found. Please input the correct information."]);
+                }
+            }
+
             if (count($attachement) < 1) {
                 return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
+            }
+
+            if (count($checkAppr) < 1) {
+                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: ApproverList not found. Please ". ($modulename == 'Mom') ? "Select Chairman From Participant" : "add approver."]);
             }
 
             $final = 0;

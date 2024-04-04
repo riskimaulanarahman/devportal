@@ -12,7 +12,8 @@ use App\Models\ApproverListHistory;
 use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
-use App\Models\Assignmentto;
+use App\Models\Stackholders;
+use App\Models\Category;
 use DB;
 
 class MomRequestController extends Controller
@@ -46,26 +47,18 @@ class MomRequestController extends Controller
             where l.ApprovalAction='1' and l.req_id = request_mom.id and l.module_id = '".$module_id."' and request_mom.requestStatus='1'
             order by a.sequence)";
 
-            $getwp = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+            $getChairman = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.req_id = request_mom.id and l.module_id = '".$module_id."' and r.ApprovalType='Workshop PIC' and r.isactive='1'
-            order by a.sequence)";
-
-            $getmanager = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
-            from tbl_approverListReq l
-            left join tbl_approver a on l.approver_id=a.id
-            left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.req_id = request_mom.id and l.module_id = '".$module_id."' and r.ApprovalType='Manager' and r.isactive='1'
+            where l.req_id = request_mom.id and l.module_id = '".$module_id."' and r.ApprovalType='Chairman' and r.isactive='1'
             order by a.sequence)";
             
             $data = $dataquery
                 ->selectRaw("request_mom.*,codes.code,
                     CASE WHEN request_mom.user_id='".$user_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe,
-                    ".$getwp." as isWP,
-                    ".$getmanager." as isManager
+                    ".$getChairman." as isChairman
                 ")
                 ->leftJoin('codes','request_mom.code_id','codes.id')
                 ->with(['user','approverlist'])
@@ -218,7 +211,10 @@ class MomRequestController extends Controller
                         foreach ($attachments as $attachment) {
                             unlink($this->copyuploadpath() .$attachment->path);
                         }
-                    Assignmentto::where('req_id', $id)
+                    Stackholders::where('req_id', $id)
+                        ->where('module_id', $module->id)
+                        ->delete();
+                    Category::where('req_id', $id)
                         ->where('module_id', $module->id)
                         ->delete();
 

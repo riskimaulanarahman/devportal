@@ -7,6 +7,7 @@ use Auth;
 
 use App\Models\Employee;
 use App\Models\Developer;
+use App\Models\User;
 
 trait HasAuth {
 
@@ -30,6 +31,13 @@ trait HasAuth {
         }
 
         return $result;
+    }
+
+    public function getUser($loginName) {
+
+        $data = User::where('username',$loginName)->first();
+
+        return $data;
     }
 
     public function isDeveloper() {

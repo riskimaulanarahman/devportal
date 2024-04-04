@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 
 use App\Models\Module;
 use App\Models\Submission\MomTaskBound;
+use App\Models\Submission\Mom;
+use App\Models\Submission\MomTask;
+use App\Models\Category;
 
 class MomTaskBoundController extends Controller
 {
@@ -14,12 +17,14 @@ class MomTaskBoundController extends Controller
     private $model;
     public $modulename;
     public $module;
+    public $momtask;
 
     public function __construct()
     {
         $this->model = new MomTaskBound();
         $this->modulename = 'Mom';
         $this->module = new Module();
+        $this->momtask = new MomTask();
     }
 
     public function index()
@@ -40,14 +45,22 @@ class MomTaskBoundController extends Controller
     {
         try {
 
+            $getMom = $this->momtask->select('request_mom.*')
+            ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
+            ->leftJoin('request_mom','tbl_category.req_id','request_mom.id')
+            ->where('request_momTask.id',$request->req_id)
+            ->first();
+            
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
-
+            
             $this->addOneDayToDate($requestData);
-
-            $this->model->create($requestData);
-
-            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+            if($this->getAuth()->id == $getMom->user_id || $this->getAuth()->id == $getMom->chairman_userid) {
+                $this->model->create($requestData);
+                return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+            } else {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
+            }
 
         } catch (\Exception $e) {
 
@@ -87,7 +100,17 @@ class MomTaskBoundController extends Controller
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
-            $data->update($requestData);
+
+            $getMom = $this->momtask->select('request_mom.*')
+            ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
+            ->leftJoin('request_mom','tbl_category.req_id','request_mom.id')
+            ->where('request_momTask.id',$data->task_id)
+            ->first();
+            if($this->getAuth()->id == $getMom->user_id || $this->getAuth()->id == $getMom->chairman_userid) {
+                $data->update($requestData);
+            } else {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
+            }
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 
@@ -102,7 +125,17 @@ class MomTaskBoundController extends Controller
         try {
 
             $data = $this->model->findOrFail($id);
-            $data->delete();
+
+            $getMom = $this->momtask->select('request_mom.*')
+            ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
+            ->leftJoin('request_mom','tbl_category.req_id','request_mom.id')
+            ->where('request_momTask.id',$data->task_id)
+            ->first();
+            if($this->getAuth()->id == $getMom->user_id || $this->getAuth()->id == $getMom->chairman_userid) {
+                $data->delete();
+            } else {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
+            }
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
 
