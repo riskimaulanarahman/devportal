@@ -84,6 +84,10 @@ class SubmissionController extends Controller
                 }
             }
 
+            if (count($attachement) < 1) {
+                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
+            }
+
             if($modulename == 'Mom') {
                 $checkTaskMom = DB::table('request_momTask')
                 ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
@@ -94,14 +98,10 @@ class SubmissionController extends Controller
                 if (count($checkTaskMom) < 1) {
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Task Detail not found. Please input the correct information."]);
                 }
-            }
 
-            if (count($attachement) < 1) {
-                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
-            }
-
-            if (count($checkAppr) < 1) {
-                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: ApproverList not found. Please ". ($modulename == 'Mom') ? "Select Chairman From Participant" : "add approver."]);
+                if (count($checkAppr) < 1) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: ApproverList not found. Please ". ($modulename == 'Mom') ? "Select Chairman From Participant" : "add approver."]);
+                }
             }
 
             $final = 0;

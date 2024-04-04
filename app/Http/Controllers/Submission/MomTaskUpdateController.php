@@ -159,14 +159,8 @@ class MomTaskUpdateController extends Controller
             }
             $uniqueReminders = array_unique($reminders);
 
-            // return $uniqueReminders;
-
             foreach($uniqueReminders as $g) {
 
-                // $getMomID = DB::table('request_momTask')->select('tbl_category.req_id')
-                //                 ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
-                //                 ->where('request_momTask.id',$g)
-                //                 ->first();
                 $getSubmissionData = DB::table('request_mom')->where('id', $g)->first();
 
                 $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
