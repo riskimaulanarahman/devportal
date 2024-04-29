@@ -57,8 +57,9 @@ class ListController extends Controller
     }
 
     public function listEmployeeAll() {
-        return Employee::select('tbl_employee.id', 'sapid', 'fullname', 'companycode', 'tbl_department.departmentname', 'tbl_department.departmentgroup')
-                ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
+        return Employee::selectRaw('tbl_employee.id, sapid, fullname, companycode, tbl_department.departmentname, tbl_department.departmentgroup, tbl_level.remarks as levels')
+            ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
+            ->leftJoin('tbl_level', 'tbl_employee.level_id', '=', 'tbl_level.id')
                 ->where('tbl_employee.isActive',1)
                 ->get();
     }
@@ -103,7 +104,7 @@ class ListController extends Controller
     }
 
     public function listDepartment() {
-        return Department::select('*')->orderBy('departmentname','asc')->get();
+        return Department::select('*')->orderBy('departmentname','asc')->where('isUsed',1)->get();
     }
 
     public function listLocation() {
@@ -183,8 +184,8 @@ class ListController extends Controller
         return Project::where('requestStatus',3)->where('projectStatus','Completed')->get();
     }
 
-    public function listCategoryForm() {
-        return CategoryForm::with('module')->select('*')->get();
+    public function listCategoryForm($modulename) {
+        return CategoryForm::with('module')->select('*')->where('module_id',$this->getModuleId($modulename))->get();
     }
 
     public function listUavAsset() {

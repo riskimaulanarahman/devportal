@@ -57,7 +57,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
             dataField: 'category_id',
             width: 220,
             lookup: {
-                dataSource: listOption('/list-categoryform','id','nameCategory'),  
+                dataSource: listOption('/list-categoryform/'+modelclass,'id','nameCategory'),  
                 valueExpr: 'id',
                 displayExpr: 'nameCategory',
             },
@@ -428,7 +428,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Mission Category',
                                 dataField: 'category_id',
                                 lookup: {
-                                    dataSource: listOption('/list-categoryform','id','nameCategory'),  
+                                    dataSource: listOption('/list-categoryform/'+modelclass,'id','nameCategory'),  
                                     valueExpr: 'id',
                                     displayExpr: 'nameCategory',
                                 },

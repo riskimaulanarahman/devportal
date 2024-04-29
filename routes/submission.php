@@ -17,6 +17,7 @@ Route::group(['prefix' => 'api'], function () {
         'momtaskdetail' => App\Http\Controllers\Submission\MomTaskDetailController::class,
         'momtaskbound' => App\Http\Controllers\Submission\MomTaskBoundController::class,
         'momtaskupdate' => App\Http\Controllers\Submission\MomTaskUpdateController::class,
+        'jdirequest' => App\Http\Controllers\Submission\JdiRequestController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
