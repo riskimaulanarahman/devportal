@@ -168,13 +168,16 @@ class HrscRequestController extends Controller
                 $requestData['confirmationStatus'] = null;
             } else if ($data->ticketStatus == 'On Queue' || $data->ticketStatus == 'Immediately') {
                 $requestData['confirmationStatus'] = 'Waiting';
-            } else {
-                if($request->confirmationStatus !== null) {
-                    $requestData['confirmationStatus'] = $data->confirmationStatus;
-                    $requestData['ticketStatus'] = $request->ticketStatus;
-                } else {
-                    $requestData['ticketStatus'] = $request->ticketStatus;
-                    $requestData['confirmationStatus'] = null;
+            } else if ($data->ticketStatus == 'Completed') {
+                if($request->confirmationStatus == null || $request->confirmationStatus == 'Waiting') {
+                    $requestData['confirmationStatus'] = 'Waiting';
+                    $requestData['ticketStatus'] = $data->ticketStatus;
+                } else if($request->confirmationStatus == 'Reworked') {
+                    $requestData['ticketStatus'] = 'On Queue';
+                    $requestData['confirmationStatus'] = $request->confirmationStatus;
+                } else if($request->confirmationStatus == 'Completed') {
+                    $requestData['ticketStatus'] = $data->ticketStatus;
+                    $requestData['confirmationStatus'] = $request->confirmationStatus;
                 }
             }
             // ($data->ticketStatus == 'On Queue' || $data->ticketStatus == 'Immediately') ? $requestData['confirmationStatus'] = 'Waiting' : $requestData['confirmationStatus'];
