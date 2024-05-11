@@ -695,10 +695,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             }
                             if ( e.rowType == "data" && (e.column.index>0 && e.column.index<6)) {
-                                e.cellElement.css({
-                                    "backgroundColor": "#ffe6e6",
-                                    "border": "0.5px solid #f56e6e"
-                                })
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
                             }
                         },
                         onDataErrorOccurred: function(e) {
