@@ -51,20 +51,31 @@ class SubmissionController extends Controller
                 }
             }
 
-            $attachement = DB::table('tbl_attachment')
-                            ->where('req_id',$id)
-                            ->where('module_id',$this->getModuleId($modulename))
-                            ->get();
+            $module_id = $this->getModuleId($modulename);
+
+            // attachment
+            $queryAttachement = DB::table('tbl_attachment')
+                                ->where('req_id',$id)
+                                ->where('module_id',$module_id);
+
+            if ($modulename == 'Jdi') {
+                $queryAttachement->where(function($query) {
+                    $query->where('remarks', 'like', 'before')
+                          ->orWhere('remarks', 'like', 'after');
+                });
+            }
+            $attachement = $queryAttachement->get();
+            // end attachment
             
             $checkAppr = DB::table('tbl_approverListReq')
                 ->where('req_id',$id)
-                ->where('module_id',$this->getModuleId($modulename))
+                ->where('module_id',$module_id)
                 ->get();
 
             if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
                 $assignment = DB::table('tbl_assignment')
                 ->where('req_id',$id)
-                ->where('module_id',$this->getModuleId($modulename))
+                ->where('module_id',$module_id)
                 ->get();
             }
             
@@ -76,23 +87,44 @@ class SubmissionController extends Controller
             if($modulename == 'UavMission') {
                 $uavmissiondetail = DB::table('request_uavmissiondetail')
                 ->where('req_id',$id)
-                ->where('module_id',$this->getModuleId($modulename))
+                ->where('module_id',$module_id)
                 ->get();
 
                 if (count($uavmissiondetail) < 1) {
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Detail not found. Please input the correct information."]);
                 }
             }
+            if ($modulename == 'Jdi') {
+                $hasBefore = false;
+                $hasAfter = false;
 
-            if (count($attachement) < 1) {
-                return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
+                foreach ($attachement as $attc) {
+                    if ($attc->remarks === 'Before') {
+                        $hasBefore = true;
+                    }
+                    if ($attc->remarks === 'After') {
+                        $hasAfter = true;
+                    }
+                }
+
+                if (!$hasBefore) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Before' is required. Please attach it."]);
+                }
+
+                if (!$hasAfter) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'After' is required. Please attach it."]);
+                }
+            } else {
+                if (count($attachement) < 1) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
+                }
             }
 
             if($modulename == 'Mom') {
                 $checkTaskMom = DB::table('request_momTask')
                 ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
                 ->where('tbl_category.req_id',$id)
-                ->where('tbl_category.module_id',$this->getModuleId($modulename))
+                ->where('tbl_category.module_id',$module_id)
                 ->get();
 
                 if (count($checkTaskMom) < 1) {
@@ -150,7 +182,7 @@ class SubmissionController extends Controller
                 ->get();
             
             $getapproverlist = ApproverListReq::where('req_id',$id)
-                ->where('module_id',$this->getModuleId($modulename))
+                ->where('module_id',$module_id)
                 ->where('approvalAction',1)
                 ->count();
 
@@ -232,11 +264,19 @@ class SubmissionController extends Controller
                 $appr->update();
             }
 
+            // Data untuk update
+            $dataToUpdate = [
+                // "requestStatus" => $requeststatus
+            ];
+
+            // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate
+            if ($modulename == 'Jdi' && $request->action == 'submission') {
+                $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+            }
+
             DB::table($tableName)
                 ->where('id', $id)
-                ->update([
-                    "requestStatus" => $requeststatus
-                ]);
+                ->update($dataToUpdate);
 
             foreach($approverlist as $getappr) {
                 if($request->approvalAction == 0 && $getappr->approvalAction == 0) { // cancel pengajuan

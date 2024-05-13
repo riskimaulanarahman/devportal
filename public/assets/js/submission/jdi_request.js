@@ -229,7 +229,7 @@ const accordionItems = [
     {
         ID: 6,
         Title: '<i class="far fa-newspaper"> To be filled by Estate/ Dept CI Facilitator &  BCID Facilitator </i>',
-        visible: true
+        visible: false
     },
     {
         ID: 2,
@@ -274,7 +274,8 @@ const popupContentTemplate = function (reqid,mode,options) {
     var isPendingOnMe = options.data.isPendingOnMe;
     isBCIDv = options.data.isBCIDv;
 
-    console.log(options.data)
+    var validationRules = [];
+    var validationRules2 = [];
 
     popupid = reqid;
 
@@ -336,11 +337,11 @@ const popupContentTemplate = function (reqid,mode,options) {
     } else {
         updateVisibleById(7, false);
     }
-    if(options.data.isSaving == 1) {
-        updateVisibleById(6, true);
-    } else {
-        updateVisibleById(6, false);
-    }
+    // if(options.data.isSaving == 1) {
+    //     updateVisibleById(6, true);
+    // } else {
+    //     updateVisibleById(6, false);
+    // }
 
     scrollView.append("<hr>"),
 
@@ -409,15 +410,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     dataSource: [
                                         'Cost',
                                         'Environment',
+                                        'Moral',
                                         'Productivity',
                                         'Quality',
                                         'Safety',
-                                        'Moral',
-                                        'Quality', 
-                                        'Cost',
-                                        'Planning',
-                                        'Lingkungan',
-                                        'Waktu'
                                     ],
                                     searchEnabled: false
                                 },
@@ -533,6 +529,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 dataField: 'title',
+                                validationRules: [{ type: "required" }],
                             },
                             {
                                 caption: 'Pencetus Ide',
@@ -547,12 +544,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'BU',
                                 dataField: 'bu',
-                                validationRules: [{ type: "required" }],
                                 lookup: {
                                     dataSource: [{bu:'IHM'}],
                                     valueExpr: 'bu',
@@ -568,7 +565,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Sector',
@@ -586,10 +584,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     valueExpr: 'sector',
                                     displayExpr: 'sector',
                                 },
-                                validationRules: [{ type: "required" }],
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Department',
@@ -601,7 +599,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Department Head',
@@ -616,7 +615,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Anggota 1',
@@ -708,6 +708,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             },
                                             onSelectionChanged: function (selectedItems) {
                                                 const keys = selectedItems.selectedRowKeys;
+                                                console.log(keys)
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
                                                 if(hasSelection !== 0) {
@@ -764,6 +765,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                     return formData;
                 } 
                 if(data.ID == 5) {
+                      var tagData = [
+                        { id: 1, name: "Defect" },
+                        { id: 2, name: "Inventory" },
+                        { id: 3, name: "Motion" },
+                        { id: 4, name: "Over Processing" },
+                        { id: 5, name: "Over Production" },
+                        { id: 6, name: "Transportation" },
+                        { id: 7, name: "Waiting" }
+                    ];
+
                     let formData2 = $("<div id='formdata2'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
@@ -800,7 +811,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: 'string',
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Perbaikan Yang Dibuat',
@@ -808,15 +820,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: 'string',
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            {
-                                caption: 'isSaving ?',
-                                dataField: "isSaving",
-                                dataType: "boolean",
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval' && isBCIDv) ? false : true
-                                }
+                                },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Adakah ide ini mengurangi pemborosan ?',
@@ -824,15 +829,97 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: "boolean",
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                setCellValue: function (rowData, value) {
+                                    rowData.isNotWasteful = value;
+                                    // console.log(value)
+                                    if (value == true) {
+                                        validationRules2.length = 0;
+                                        validationRules2.push({
+                                            type: "required", 
+                                            message: "This item is required"
+                                        });
+                                    } else {
+                                        validationRules2.length = 0;
+                                    }
+                                },
+                                // validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: '7 Waste',
+                                dataField: 'sevenWaste',
+                                editCellTemplate: function(container, options) {
+                                    $("<div>").dxTagBox({
+                                        dataSource: tagData,  // Array of possible tags
+                                        value: options.value,
+                                        showSelectionControls: true,
+                                        applyValueMode: 'useButtons',
+                                        valueExpr: "name",
+                                        displayExpr: "name",
+                                        onValueChanged: function(e) {
+                                            options.setValue(e.value);
+                                        }
+                                    }).appendTo(container);
+                                },
+                                validationRules: validationRules2,
                             },
                             {
                                 caption: 'Alasan mengurangi pemborosan',
                                 dataField: 'reasonNotWasteful',
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: validationRules2,
+                            },
+                            {
+                                caption: 'is Saving ?',
+                                dataField: "isSaving",
+                                dataType: "boolean",
+                                setCellValue: function (rowData, value) {
+                                    rowData.isSaving = value;
+                                    // console.log(value)
+                                    if (value == true) {
+                                        validationRules.length = 0;
+                                        validationRules.push({
+                                            type: "required", 
+                                            message: "This item is required"
+                                        });
+                                    } else {
+                                        validationRules.length = 0;
+                                    }
+                                },
+                                // cellTemplate: function(container, options) {
+                                //     $(container).css('background-color', '#FFD700')  // Gold color
+                                //                .text(options.value);
+                                // },
+                                headerCellTemplate: function(container, options) {
+                                    $(container).css({
+                                        'background-color': '#4CAF50', // Green background
+                                        'color': '#FFFFFF'  // White text
+                                    }).append($('<span>').text(options.column.caption));
+                                },
+                                editorOptions: { 
+                                    readOnly: ((isMine == 1) && mode == 'edit' || mode == 'add' ) || (mode == 'approval' && isBCIDv) ? false : true,
                                 }
-                            }
+                            },
+                            {
+                                caption: 'Saving Calculation Formula: (Valid/ Original Document)',
+                                dataField: 'savingFormula',
+                                dataType: 'string',
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: validationRules,
+                            },
+                            {
+                                caption: 'Total Saving Realized per Year: (Actual saving for 3 months x 4)',
+                                dataField: 'totalSaving',
+                                dataType: 'string',
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: validationRules,
+                            },
                             
                         ],
                         export: {
@@ -863,12 +950,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onEditorPreparing: function (e) {
-                            // if (e.dataField === "isNotWasteful" && e.parentType === "dataRow") {
-                            //     e.editorOptions.onValueChanged = function(args) {
-                            //         console.log(args.value)
-                            //         e.component.columnOption("reasonNotWasteful", "visible", args.value);
-                            //     };
-                            // }
                         },
                         onCellPrepared: function (e) {
                         },
@@ -883,96 +964,98 @@ const popupContentTemplate = function (reqid,mode,options) {
 
                     return formData2;
                 }
-                if(data.ID == 6) {
-                    let formData3 = $("<div id='formdata3'>").dxDataGrid({    
-                        dataSource: storedetail(modname,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: false,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        sorting: {
-                            mode: "none" // or "multiple" | "none"
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "batch",
-                            allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
-                            allowDeleting: false,
-                        },
-                        scrolling: {
-                            mode: "virtual"
-                        },
-                        columns: [
-                            {
-                                caption: 'Saving Calculation Formula: (Valid/ Original Document)',
-                                dataField: 'savingFormula',
-                                dataType: 'string',
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            {
-                                caption: 'Total Saving Realized per Year: (Actual saving for 3 months x 4)',
-                                dataField: 'totalSaving',
-                                dataType: 'string',
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGrid12 = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGrid12.refresh();
-                                    }
-                                }
-                            });
-                        },
-                        onEditorPreparing: function (e) {
-                        },
-                        onCellPrepared: function (e) {
-                        },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (1.2):", e.error.message);
+                // if(data.ID == 6) {
+                //     let formData3 = $("<div id='formdata3'>").dxDataGrid({    
+                //         dataSource: storedetail(modname,reqid),
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: false,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         sorting: {
+                //             mode: "none" // or "multiple" | "none"
+                //         },
+                //         editing: {
+                //             useIcons:true,
+                //             mode: "batch",
+                //             allowAdding: false,
+                //             allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                //             allowDeleting: false,
+                //         },
+                //         scrolling: {
+                //             mode: "virtual"
+                //         },
+                //         columns: [
+                //             {
+                //                 caption: 'Saving Calculation Formula: (Valid/ Original Document)',
+                //                 dataField: 'savingFormula',
+                //                 dataType: 'string',
+                //                 editorOptions: { 
+                //                     readOnly: (mode == 'approval') ? true : false
+                //                 },
+                //                 validationRules: validationRules,
+                //             },
+                //             {
+                //                 caption: 'Total Saving Realized per Year: (Actual saving for 3 months x 4)',
+                //                 dataField: 'totalSaving',
+                //                 dataType: 'string',
+                //                 editorOptions: { 
+                //                     readOnly: (mode == 'approval') ? true : false
+                //                 },
+                //                 validationRules: validationRules,
+                //             },
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGrid12 = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //         },
+                //         onInitNewRow : function(e) {
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGrid12.refresh();
+                //                     }
+                //                 }
+                //             });
+                //         },
+                //         onEditorPreparing: function (e) {
+                //         },
+                //         onCellPrepared: function (e) {
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //             // Menampilkan pesan kesalahan
+                //             console.log("Terjadi kesalahan saat memuat data (1.2):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGrid12.refresh();
-                        }
-                    })
+                //             // Memuat ulang DataGrid
+                //             dataGrid12.refresh();
+                //         }
+                //     })
 
-                    return formData3;
-                } 
+                //     return formData3;
+                // } 
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
                         dataSource: storewithmodule('attachmentrequest',modelclass,reqid),

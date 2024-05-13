@@ -41,6 +41,7 @@ class Jdi extends Model
         'savingFormula',
         'totalSaving',
         'isRollout',
+        'sevenWaste',
         'savingInfo'
     ];
 
@@ -62,6 +63,8 @@ class Jdi extends Model
             'reasonNotWasteful',
             'savingFormula',
             'totalSaving',
+            'anggota1_id',
+            'anggota2_id',
         ]);
         return $fillable;
     }

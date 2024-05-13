@@ -90,8 +90,9 @@ trait ApproverTrait {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
         if ($module->module !== 'Mom') {
 
-            $getApprover = Approvaluser::where('module', $moduleName)
-                ->where('isActive', 1);
+            $getApprover = Approvaluser::select('tbl_approver.*')
+                ->where('tbl_approver.module', $moduleName)
+                ->where('tbl_approver.isActive', 1);
 
             if ($company !== null && $cat_id === null) {
                 $getApprover->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company]);
@@ -105,9 +106,19 @@ trait ApproverTrait {
             $results = $getApprover->get();
 
             // Hapus data yang bersangkutan di tabel ApproverListReq
-            ApproverListReq::where('module_id', $module->id)
-            ->where('req_id', $req_id)
-            ->delete();
+            $apprList = ApproverListReq::select('tbl_approverListReq.*')
+                                        ->where('tbl_approverListReq.module_id', $module->id)
+                                        ->where('tbl_approverListReq.req_id', $req_id);
+
+            if($moduleName == 'Jdi') {
+                $apprList->leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
+                        ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+                        ->whereNotIn('tbl_approvaltype.ApprovalType',['Department Head','BCID Manager','Finance']);
+            }
+
+            $getApprList = $apprList->get();
+
+            $apprList->delete();
 
             foreach ($results as $approver) {
                 $approverList = new ApproverListReq();
@@ -117,23 +128,26 @@ trait ApproverTrait {
                 $approverList->save();
             }
 
-            // if($company === null && $cat_id === null) {
-                $results2 = Approvaluser::where('module', $moduleName)
-                ->where('isActive', 1)
-                ->whereNull('companyList')
-                ->whereNull('category_id')
-                ->get();
+            $appUserNull = Approvaluser::select('tbl_approver.*')
+            ->where('tbl_approver.module', $moduleName)
+            ->where('tbl_approver.isActive', 1)
+            ->whereNull('companyList')
+            ->whereNull('category_id');
 
-                // dd($results2);
+            if($moduleName == 'Jdi') {
+                $appUserNull->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+                            ->where('tbl_approvaltype.ApprovalType','!=','Department Head');
+            }
 
-                foreach ($results2 as $approver2) {
-                    $approverList2 = new ApproverListReq();
-                    $approverList2->req_id = $req_id;
-                    $approverList2->module_id = $module->id;
-                    $approverList2->approver_id = $approver2->id;
-                    $approverList2->save();
-                }
-            // }
+            $results2 = $appUserNull->get();
+
+            foreach ($results2 as $approver2) {
+                $approverList2 = new ApproverListReq();
+                $approverList2->req_id = $req_id;
+                $approverList2->module_id = $module->id;
+                $approverList2->approver_id = $approver2->id;
+                $approverList2->save();
+            }
 
             // add creator
             $history = new ApproverListHistory();
@@ -258,7 +272,7 @@ trait ApproverTrait {
             $getuser = $this->user->where('username',$getemployee->LoginName)->get();
 
             //START approver for Chairman
-            $getIDapprType = Approvaltype::where('Module','Jdi')->where('ApprovalType','Manager')->first();
+            $getIDapprType = Approvaltype::where('Module','Jdi')->where('ApprovalType','Department Head')->first();
             $checkExistAppr = Approvaluser::where('module','Jdi')
                                         ->where('employee_id',$employeeID)
                                         ->where('approvaltype_id',$getIDapprType->id)
@@ -304,20 +318,24 @@ trait ApproverTrait {
             }
 
             // Hapus data yang bersangkutan di tabel ApproverListReq
-            ApproverListReq::where('module_id', $this->getModuleId($moduleName))
+            ApproverListReq::leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
+            ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+            ->where('tbl_approverListReq.module_id', $this->getModuleId($moduleName))
             ->where('req_id', $reqID)
+            ->where('tbl_approvaltype.ApprovalType','Department Head')
             ->delete();
 
             $approverList = new ApproverListReq();
             $approverList->req_id = $reqID;
             $approverList->module_id = $this->getModuleId($moduleName);
             $approverList->approver_id = $newApproverId;
+            // $approverList->approvalAction = ($reqStatus !== 0) ? 1 : 0;
             $approverList->save();
 
         }
     }
 
-    public function createApprSaving($saving, $moduleName, $reqID) {
+    public function createApprSaving($saving, $moduleName, $reqID, $reqStatus) {
 
         if($moduleName == 'Jdi') {
 
@@ -339,6 +357,7 @@ trait ApproverTrait {
                         $approverList->req_id = $reqID;
                         $approverList->module_id = $this->getModuleId($moduleName);
                         $approverList->approver_id = $appr->id;
+                        $approverList->approvalAction = ($reqStatus !== 0) ? 1 : 0;
                         $approverList->save();
                     } else if ($saving == 0) {
                         // Jika $saving != 1, hapus approver yang ada

@@ -284,12 +284,12 @@ const popupContentTemplate = function (reqid,mode,options) {
     var isPendingOnMe = options.data.isPendingOnMe;
     var completed = (options.data.ticketStatus == 'Completed' && options.data.confirmationStatus == 'Completed') ? 1 : 0;
 
-    console.log(options.data)
-    console.log('isMine :' + isMine)
-    console.log('isMineCompleted :' + isMineCompleted)
-    console.log('isPIC :' + isPIC)
-    console.log('completed :' + completed)
-    console.log(mode)
+    // console.log(options.data)
+    // console.log('isMine :' + isMine)
+    // console.log('isMineCompleted :' + isMineCompleted)
+    // console.log('isPIC :' + isPIC)
+    // console.log('completed :' + completed)
+    // console.log(mode)
 
     var validationRules = [];
 
@@ -510,8 +510,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 setCellValue: function (rowData, value) {
                                     rowData.confirmationStatus = value;
-                                    console.log(value)
-                                    console.log(validationRules)
+                                    // console.log(value)
+                                    // console.log(validationRules)
                                     if (value == "Reworked") {
                                         validationRules.length = 0;
                                         validationRules.push({
@@ -1128,7 +1128,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                console.log(hasSelection)
+                                                // console.log(hasSelection)
                                                 if(hasSelection !== 0) {
                                                     args.component.close();
                                                 }

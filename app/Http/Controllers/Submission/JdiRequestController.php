@@ -77,6 +77,8 @@ class JdiRequestController extends Controller
                 ->orderByRaw("CASE WHEN request_jdi.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_jdi.created_at desc")
                 ->get();
 
+            
+
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
@@ -132,6 +134,15 @@ class JdiRequestController extends Controller
                 $data->save();
             }
 
+            // if($data->depthead_id !== null) {
+            //     $this->createApprManager($data->depthead_id, $this->modulename, $id, $data->requestStatus);
+            // }
+
+            // Transform the 'sevenWaste' field from string "1,2" to array [1,2]
+                if (isset($data->sevenWaste) && is_string($data->sevenWaste)) {
+                    $data->sevenWaste = explode(',', $data->sevenWaste);
+                }
+
             return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
@@ -143,33 +154,34 @@ class JdiRequestController extends Controller
     public function update(Request $request, $id)
     {
         try {
-
+            $data = $this->model->findOrFail($id);
+            $reqStatus = $data->requestStatus;
             // Mengambil semua data dari request
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
-            if($request->isNotWasteful == 1) {
+            if($request->isSaving == 1) {
                 $requestData['category_id'] = 4;
             } else {
                 $requestData['category_id'] = null;
             }
 
             if($request->isSaving == 1) {
-                $this->createApprSaving($request->isSaving, $this->modulename, $id);
+                $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
             } else {
-                $this->createApprSaving($request->isSaving, $this->modulename, $id);
+                $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
             }
 
             if($request->depthead_id) {
                 $this->createApprManager($request->depthead_id, $this->modulename, $id);
             }
-// dd($request->isNotWasteful);
-            // if($request->isNotWasteful) {
-            // }
+
+            if($request->sevenWaste) {
+                $requestData['sevenWaste'] = implode("," ,$request->sevenWaste);
+            }
             
             // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
             $this->addOneDayToDate($requestData);
 
-            $data = $this->model->findOrFail($id);
             $data->update($requestData);
 
             //start save history perubahan
@@ -249,5 +261,9 @@ class JdiRequestController extends Controller
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
+    }
+
+    public function genPdf($id) {
+        $data = DB::table('jdiDetail')->select('*')->where('id',$id)->first();
     }
 }
