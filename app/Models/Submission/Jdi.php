@@ -65,6 +65,7 @@ class Jdi extends Model
             'totalSaving',
             'anggota1_id',
             'anggota2_id',
+            'sevenWaste',
         ]);
         return $fillable;
     }

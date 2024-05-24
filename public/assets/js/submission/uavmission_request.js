@@ -384,8 +384,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                 return '<small style="margin-bottom:10px !important; color:'+color+'">'+data.Title+'</small>'
             },
             itemTemplate: function (data) {
+                var container = $("<div>");
                 if(data.ID == 1) {
-                    return formData = $("<div id='formdata'>").dxDataGrid({    
+                    if (mode == 'add' || mode == 'edit'){
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                    }
+                    var formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -393,6 +397,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         rowAlternationEnabled: true,
                         wordWrapEnabled: true,
                         showBorders: true,
+                        showColumnLines:true,
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
@@ -524,6 +529,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }
                                 }
                             }
+                            if ( e.rowType == "data" && (e.column.index>0 && e.column.index<5)) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -532,7 +545,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
                         }
-                    })
+                    }).appendTo(container)
+                    return container
                 } 
                 else if(data.ID == 7) {
                     return formData = $("<div id='formdetail'>").dxDataGrid({    
@@ -543,6 +557,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         rowAlternationEnabled: true,
                         wordWrapEnabled: true,
                         showBorders: true,
+                        showColumnLines:true,
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },

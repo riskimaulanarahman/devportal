@@ -14,11 +14,12 @@ use App\Http\Traits\DateTrait;
 use App\Http\Traits\HasGetModule;
 use App\Http\Traits\ApproverTrait;
 use App\Http\Traits\CopytoserverTrait;
+use App\Http\Traits\LogTrait;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    use HasAuth, HasMessage, HasGenerateCode, DateTrait, HasGetModule, ApproverTrait, CopytoserverTrait;
+    use HasAuth, HasMessage, HasGenerateCode, DateTrait, HasGetModule, ApproverTrait, CopytoserverTrait, LogTrait;
 
 }

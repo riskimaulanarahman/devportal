@@ -38,7 +38,7 @@ class BerkasController extends Controller
             // Log success
             $username = $request->ip();
             $url = $request->url();
-            $this->logsuccess($username, $url, $nama_file);
+            $this->logsuccessberkas($username, $url, $nama_file);
 
             // echo $source_file;
             $this->processcopy($source_file);
@@ -49,7 +49,7 @@ class BerkasController extends Controller
             // Log error
             $username = $request->ip();
             $url = $request->url();
-            $this->logerror($username, $url, $e->getMessage());
+            $this->logerrorberkas($username, $url, $e->getMessage());
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
@@ -61,7 +61,7 @@ class BerkasController extends Controller
         //
     }
 
-    function logsuccess($username,$url,$values) {
+    function logsuccessberkas($username,$url,$values) {
         $requestData = [
             "user" => $username,
             "url" => $url,
@@ -71,7 +71,7 @@ class BerkasController extends Controller
         LogSuccess::create($requestData);
     }
     
-    function logerror($username,$url,$values) {
+    function logerrorberkas($username,$url,$values) {
         $requestData = [
             "user" => $username,
             "url" => $url,

@@ -70,7 +70,7 @@ class MomRequestController extends Controller
                                     ->whereIn("request_mom.requestStatus", [1,3,4]);
                             } else {
                                 $query->where("request_mom.user_id", "!=", $user_id)
-                                    ->whereIn("request_mom.requestStatus", [3,4]);
+                                    ->whereIn("request_mom.requestStatus", [3]);
                             }
                         })
                         ->orWhere("request_mom.user_id", $user_id);

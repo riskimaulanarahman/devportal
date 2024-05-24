@@ -266,7 +266,7 @@ class SubmissionController extends Controller
 
             // Data untuk update
             $dataToUpdate = [
-                // "requestStatus" => $requeststatus
+                "requestStatus" => $requeststatus
             ];
 
             // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate

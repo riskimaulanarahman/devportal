@@ -140,6 +140,29 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180,
         },
         {
+            dataField: "approveddoc",
+            caption:"Approval Doc",
+            // width: 180,
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: { visible: false},
+            cellTemplate: function (container, options) {
+                if ((options.value!="") && (options.value)){
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        // stylingMode: "contained",
+                        type: "success",
+                        text: "Download",
+                        // target : '_blank',
+                        // width: 100,
+                        onClick: function (e) {
+                            window.open(options.value, '_blank');
+                        }
+                    }).appendTo(container);
+                }
+            }
+        },
+        {
             dataField: 'requestStatus',
             encodeHtml: false,
             allowFiltering: false,
@@ -279,6 +302,8 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     popupid = reqid;
 
+    console.log(mode)
+
     const scrollView = $('<div />');
 
     if ((isMine == 1 || isPendingOnMe == 1) && (mode == 'add' || mode == 'edit' || mode == 'approval')) {
@@ -357,7 +382,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                 return '<small style="margin-bottom:10px !important ;">'+data.Title+'</small>'
             },
             itemTemplate: function (data) {
+                var container = $("<div>");
                 if(data.ID == 7) {
+                    if (mode = 'approval' && (isPendingOnMe && isBCIDv)){
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data BCID </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel. lakukan aksi approval dan klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                    }
                     let formData4 = $("<div id='formdata4'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
@@ -366,6 +395,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         rowAlternationEnabled: true,
                         wordWrapEnabled: true,
                         showBorders: true,
+                        showColumnLines:true,
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
@@ -425,6 +455,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     dataSource: ['Bronze','Silver','Gold'],
                                     searchEnabled: false
                                 },
+                                setCellValue: function (rowData, value) {
+                                    rowData.ranking = value;
+                                    if (value === "Bronze") {
+                                        rowData.savingInfo = null;
+                                    }
+                                },
                                 // validationRules: [{ type: "required" }]
                             },
                             {
@@ -475,6 +511,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPreparing: function (e) {
                         },
                         onCellPrepared: function (e) {
+                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<5)) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -483,11 +527,15 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid13.refresh();
                         }
-                    })
+                    }).appendTo(container)
+                    return container
 
-                    return formData4;
+                    // return formData4;
                 } 
                 if(data.ID == 1) {
+                    if (mode == 'add' || mode == 'edit'){
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                    }
                     let formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
@@ -496,6 +544,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         rowAlternationEnabled: true,
                         wordWrapEnabled: true,
                         showBorders: true,
+                        showColumnLines:true,
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
@@ -745,13 +794,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            // if (e.column.index == 0 && e.rowType == "data") {
-                            //     if(e.data.requestStatus == 3 || admin == 1) {
-                            //         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-                            //         $("#formdata").dxDataGrid('columnOption','completeddate', 'visible', true);
-                            //         $("#formdata").dxDataGrid('columnOption','ticketStatus', 'visible', true);
-                            //     }
-                            // }
+                            if ( e.rowType == "data" && (e.column.index>0 && e.column.index<7)) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -760,9 +810,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
                         }
-                    })
-
-                    return formData;
+                    }).appendTo(container)
+                    return container
                 } 
                 if(data.ID == 5) {
                       var tagData = [
@@ -783,6 +832,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         rowAlternationEnabled: true,
                         wordWrapEnabled: true,
                         showBorders: true,
+                        showColumnLines:true,
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
@@ -888,10 +938,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         validationRules.length = 0;
                                     }
                                 },
-                                // cellTemplate: function(container, options) {
-                                //     $(container).css('background-color', '#FFD700')  // Gold color
-                                //                .text(options.value);
-                                // },
                                 headerCellTemplate: function(container, options) {
                                     $(container).css({
                                         'background-color': '#4CAF50', // Green background
@@ -952,6 +998,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPreparing: function (e) {
                         },
                         onCellPrepared: function (e) {
+                            if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<2)) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan

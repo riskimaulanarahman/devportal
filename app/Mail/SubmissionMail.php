@@ -2,28 +2,33 @@
 
 namespace App\Mail;
 
+use Illuminate\Http\Request;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\User;
 use App\Models\Code;
-use App\Models\Submission\Project;
-use App\Models\Submission\Ticket;
 use App\Models\Assignmentto;
 use App\Models\Stackholders;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Categoryhrsc;
+use App\Http\Controllers\Submission\JdiRequestController;
+
+use App\Models\Submission\Project;
+use App\Models\Submission\Ticket;
+use App\Models\Submission\Jdi;
 
 use Storage;
 use DB;
 use App\Http\Traits\HasGetModule;
+use App\Http\Traits\HasGenerateCode;
 // use Barryvdh\DomPDF\Facade as PDF;
 
 class SubmissionMail extends Mailable
 {
-    use Queueable, SerializesModels, HasGetModule;
+    use Queueable, SerializesModels, HasGetModule, HasGenerateCode;
     public $mailData;
     public $modulename;
     public $code;
@@ -166,8 +171,6 @@ class SubmissionMail extends Mailable
                 $this->projectName = 'Others';
             }
             
-            
-
             if($mailData['email'] == 'kf_developer@d1.lcl') {  
                 if($project->id == 120 || $project->parentID == 120) {
                     foreach ($Mailrecipient as $cc){
@@ -227,7 +230,27 @@ class SubmissionMail extends Mailable
 
         }
 
-        
+        if($modulename == 'Jdi') {
+            $request = new Request();
+            $jdiController = new JdiRequestController();
+            if($final == 1) {
+                // save no registrasi
+                if($mailData['submission']->noRegistration == null || $mailData['submission']->noRegistration == '') {
+                    Jdi::where('id',$mailData['submission']->id)
+                    ->update(
+                        [
+                            "noRegistration" => $this->generateCodeJdiNoreg($mailData['submission']->bu)
+                        ]
+                    );
+                }
+                // end save no registrasi
+                $pdf = $jdiController->genPdfJdi($request,$mailData['submission']->id);
+                $this->attach("http://172.18.83.38/devportal/".$pdf); // add attachment to mail
+                foreach ($Mailrecipient as $cc) {
+                    $this->cc($cc->email); // cc bcid
+                }
+            }
+        }
 
         // $this->details=$details;
         // $this->text=$text;
@@ -268,6 +291,9 @@ class SubmissionMail extends Mailable
                 break;
             case 'Mom':
                 $viewblade = 'emails.momrequestmail';
+                break;
+            case 'Jdi':
+                $viewblade = 'emails.jdirequestmail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';
