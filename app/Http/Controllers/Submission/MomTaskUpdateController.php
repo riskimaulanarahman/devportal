@@ -10,8 +10,11 @@ use App\Mail\SubmissionMail;
 use App\Models\Module;
 use App\Models\Submission\MomTaskUpdate;
 use App\Models\Submission\MomTaskBound;
+use App\Models\Stackholders;
+use App\Models\Code;
 use App\Models\User;
 use DB;
+use PDF;
 
 class MomTaskUpdateController extends Controller
 {
@@ -180,6 +183,68 @@ class MomTaskUpdateController extends Controller
         }
 
 
+    }
+
+    public function genPdfMom($id) {
+
+        $getSubmissionData = DB::table('request_mom')->where('id', $id)->first();
+        $code = Code::findOrFail($getSubmissionData->code_id);
+        $code = $code->code;
+        $final = 1;
+
+        $mailData = [
+            "all" => 1,
+            "pdf" => 1,
+            "action_id" => 0,
+            "submission" => $getSubmissionData,
+            // "email" => $getCreator->email,
+            // "fullname" => $getCreator->fullname,
+            "message" => $this->mailMessage()['momTaskSummary'],
+            "remarks" => null,
+        ];
+        $assignment = Stackholders::leftJoin('tbl_employee','tbl_stackholders.employee_id','=','tbl_employee.id')
+                        ->leftJoin('users','tbl_employee.LoginName','=','users.username')
+                        ->select('tbl_stackholders.*','users.email','tbl_employee.FullName')
+                        ->where('req_id',$id)
+                        ->where('module_id',$this->getModuleId($this->modulename))
+                        ->get();
+
+        $latestUpdates = DB::table('request_momTaskUpdate')
+        ->select('request_momTaskUpdate.*')
+        ->whereIn('request_momTaskUpdate.id', function ($query) {
+            $query->select(DB::raw('MAX(id)'))
+                ->from('request_momTaskUpdate')
+                ->groupBy('request_momTaskUpdate.task_id');
+        });
+
+        $detailmomtask = DB::table('tbl_category')
+        ->select('tbl_category.category',
+        'momTaskDetail.description',
+        'momTaskDetail.section',
+        'momTaskDetail.status',
+        'momTaskDetail.deadline_date',
+        'momTaskDetail.agings',
+        'momTaskDetail.time_categorys',
+        'request_momTaskBound.content',
+        'ea.FullName',
+        'latest_updates.description as UpdateDescription',
+        'latest_updates.date as UpdateDate',
+        'eb.FullName as UpdateName'
+        )
+        ->where('tbl_category.req_id',$id)
+        ->leftJoin('momTaskDetail','tbl_category.id','momTaskDetail.category_id')
+        ->leftJoin('request_momTaskBound','momTaskDetail.id','request_momTaskBound.task_id')
+        ->leftJoinSub($latestUpdates, 'latest_updates', function($join) {
+            $join->on('momTaskDetail.id', '=', 'latest_updates.task_id');
+        })
+        ->leftJoin('tbl_employee as ea','request_momTaskBound.employee_id','ea.id')
+        ->leftJoin('tbl_employee as eb','latest_updates.updated_by','eb.id')
+        ->get();
+
+        // Load view dan passing data
+        $pdf = PDF::loadView('emails.momrequestmail', compact(['detailmomtask','mailData','code','final','assignment']));
+
+        return $pdf->stream('document.pdf');
     }
 
     public function destroy($id)

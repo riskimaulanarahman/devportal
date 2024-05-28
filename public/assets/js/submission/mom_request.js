@@ -107,6 +107,20 @@ var dataGrid = $("#gridContainer").dxTreeList({
     
                     }).appendTo(container); 
                 }
+                if(reqstatus == 3) {
+                    $('<button class="btn btn-info" id="btnpdfid'+reqid+' m-l-3" style="margin-left: 3px;"><i class="fa fa-download"></i></button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
+                            
+                        var result = confirm('Attention ! please wait until the generate process is complete.');
+
+                        if (result) {
+                            window.open('./gen-pdf/mom/'+reqid, '_blank')
+                        } else {
+                            alert('Cancelled.');
+                        }
+    
+                    }).appendTo(container); 
+                }
             
             }
         },
@@ -137,8 +151,8 @@ var dataGrid = $("#gridContainer").dxTreeList({
             dataType: "boolean"
         },
         {
-            caption: "is Cofidential ?",
-			dataField: "isCofidential",
+            caption: "is Confidential ?",
+			dataField: "isConfidential",
             dataType: "boolean"
         },
         {
@@ -415,6 +429,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: 'isZoom',
                                 dataType: 'boolean',
+                            },
+                            {
+                                caption: "is Confidential ?",
+                                dataField: "isConfidential",
+                                dataType: "boolean"
                             },
                             {
                                 dataField: "created_at",
@@ -972,6 +991,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     dataSource: ['User','Chairman'],
                                     searchEnabled: false
                                 },
+                                validationRules: [
+                                    { 
+                                        type: "required" 
+                                    }
+                                ]
                             },
                         ],
                         export: {

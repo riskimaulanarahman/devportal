@@ -53,12 +53,39 @@ class MomRequestController extends Controller
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
             where l.req_id = request_mom.id and l.module_id = '".$module_id."' and r.ApprovalType='Chairman' and r.isactive='1'
             order by a.sequence)";
+
+            $getParticipant = "(select top 1
+            CASE WHEN user_id='".$user_id."' then 1 else 0 end
+            from
+            (select
+            u.id as user_id,
+            u.fullname as nama_users
+            from tbl_stackholders l
+            left join tbl_employee e on l.employee_id = e.id
+            left join users u on e.LoginName = u.username
+            where l.req_id = request_mom.id 
+            and l.module_id = '".$module_id."' 
+            
+            union
+            
+            select
+            u.id as user_id,
+            u.fullname as nama_users
+            from request_momTaskBound l
+            left join request_momTask m on l.task_id = m.id
+            left join tbl_category c on m.category_id = c.id
+            left join tbl_employee e on l.employee_id = e.id
+            left join users u on e.LoginName = u.username
+            where c.req_id = request_mom.id 
+            and c.module_id = '".$module_id."' ) as tab1
+            where user_id = '".$user_id."')";
             
             $data = $dataquery
                 ->selectRaw("request_mom.*,codes.code,
                     CASE WHEN request_mom.user_id='".$user_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe,
-                    ".$getChairman." as isChairman
+                    ".$getChairman." as isChairman,
+                    ".$getParticipant." as isParticipant
                 ")
                 ->leftJoin('codes','request_mom.code_id','codes.id')
                 ->with(['user','approverlist'])
@@ -72,6 +99,13 @@ class MomRequestController extends Controller
                                 $query->where("request_mom.user_id", "!=", $user_id)
                                     ->whereIn("request_mom.requestStatus", [3]);
                             }
+                        })
+                        ->orWhere("request_mom.user_id", $user_id);
+                })
+                ->where(function ($query) use ($user_id,$getParticipant) {
+                    $query->whereRaw($getParticipant . " = 1")
+                        ->orWhere(function ($query) {
+                            $query->where("request_mom.isConfidential", "!=", 1);
                         })
                         ->orWhere("request_mom.user_id", $user_id);
                 })

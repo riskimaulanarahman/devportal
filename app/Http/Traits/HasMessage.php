@@ -46,6 +46,7 @@ trait HasMessage {
             'hrscConfirmStatusReworked' => 'The confirmation status is Reworked. Please review this ticket again.',
             'newActivity' => 'This Submission has new activity. Please check it.',
             'deadlineTaskReminder' => 'This Submission has a task with an approaching deadline. Please check it.',
+            'momTaskSummary' => 'We are proud to inform you regarding this MoM. Please check it.',
         ];
 
         return $message;

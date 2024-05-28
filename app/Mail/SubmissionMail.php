@@ -114,6 +114,14 @@ class SubmissionMail extends Mailable
                 ->leftJoin('tbl_addressbook','tbl_employee.LoginName','tbl_addressbook.username')
                 ->get();
 
+                $latestUpdates = DB::table('request_momTaskUpdate')
+                ->select('request_momTaskUpdate.*')
+                ->whereIn('request_momTaskUpdate.id', function ($query) {
+                    $query->select(DB::raw('MAX(id)'))
+                        ->from('request_momTaskUpdate')
+                        ->groupBy('request_momTaskUpdate.task_id');
+                });
+
                 $datadetailtask = DB::table('tbl_category')
                 ->select('tbl_category.category',
                 'momTaskDetail.description',
@@ -123,12 +131,20 @@ class SubmissionMail extends Mailable
                 'momTaskDetail.agings',
                 'momTaskDetail.time_categorys',
                 'request_momTaskBound.content',
-                'tbl_employee.FullName'
+                'ea.FullName',
+                'latest_updates.description as UpdateDescription',
+                'latest_updates.date as UpdateDate',
+                'eb.FullName as UpdateName'
                 )
-                ->where('req_id',$mailData['submission']->id)
+                ->where('tbl_category.req_id',$mailData['submission']->id)
                 ->leftJoin('momTaskDetail','tbl_category.id','momTaskDetail.category_id')
                 ->leftJoin('request_momTaskBound','momTaskDetail.id','request_momTaskBound.task_id')
-                ->leftJoin('tbl_employee','request_momTaskBound.employee_id','tbl_employee.id')
+                // ->leftJoin('request_momTaskUpdate','momTaskDetail.id','request_momTaskUpdate.task_id')
+                ->leftJoinSub($latestUpdates, 'latest_updates', function($join) {
+                    $join->on('momTaskDetail.id', '=', 'latest_updates.task_id');
+                })
+                ->leftJoin('tbl_employee as ea','request_momTaskBound.employee_id','ea.id')
+                ->leftJoin('tbl_employee as eb','latest_updates.updated_by','eb.id')
                 ->get();
 
                 $this->assignment = $stackholders;

@@ -362,11 +362,6 @@ const popupContentTemplate = function (reqid,mode,options) {
     } else {
         updateVisibleById(7, false);
     }
-    // if(options.data.isSaving == 1) {
-    //     updateVisibleById(6, true);
-    // } else {
-    //     updateVisibleById(6, false);
-    // }
 
     scrollView.append("<hr>"),
 
@@ -382,10 +377,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                 return '<small style="margin-bottom:10px !important ;">'+data.Title+'</small>'
             },
             itemTemplate: function (data) {
-                var container = $("<div>");
+                var infoContent1 = $("<div id='infoContent1'>");
                 if(data.ID == 7) {
-                    if (mode = 'approval' && (isPendingOnMe && isBCIDv)){
-                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data BCID </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel. lakukan aksi approval dan klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                    if (mode == "approval" && (isPendingOnMe && isBCIDv)){
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data BCID </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel. lakukan aksi approval dan klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent1);
                     }
                     let formData4 = $("<div id='formdata4'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
@@ -424,7 +419,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: true
                                 },
-                                // visible: (options.data.requestStatus == 3) ? true : false
                             },
                             {
                                 dataField: "submitDate",
@@ -447,7 +441,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     ],
                                     searchEnabled: false
                                 },
-                                // validationRules: [{ type: "required" }]
                             },
                             {
                                 dataField: 'ranking',
@@ -461,7 +454,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         rowData.savingInfo = null;
                                     }
                                 },
-                                // validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Applicable Roll-Out Other Area/ Estate',
@@ -527,14 +519,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid13.refresh();
                         }
-                    }).appendTo(container)
-                    return container
+                    }).appendTo(infoContent1)
+                    return infoContent1
 
-                    // return formData4;
                 } 
+                var infoContent2 = $("<div id='infoContent2'>");
                 if(data.ID == 1) {
                     if (mode == 'add' || mode == 'edit'){
-                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent2);
                     }
                     let formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
@@ -810,8 +802,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
                         }
-                    }).appendTo(container)
-                    return container
+                    }).appendTo(infoContent2)
+                    return infoContent2
                 } 
                 if(data.ID == 5) {
                       var tagData = [
@@ -1018,98 +1010,6 @@ const popupContentTemplate = function (reqid,mode,options) {
 
                     return formData2;
                 }
-                // if(data.ID == 6) {
-                //     let formData3 = $("<div id='formdata3'>").dxDataGrid({    
-                //         dataSource: storedetail(modname,reqid),
-                //         allowColumnReordering: true,
-                //         allowColumnResizing: true,
-                //         columnsAutoWidth: true,
-                //         rowAlternationEnabled: true,
-                //         wordWrapEnabled: true,
-                //         showBorders: true,
-                //         filterRow: { visible: false },
-                //         filterPanel: { visible: false },
-                //         headerFilter: { visible: false },
-                //         searchPanel: {
-                //             visible: false,
-                //             width: 240,
-                //             placeholder: 'Search...',
-                //         },
-                //         sorting: {
-                //             mode: "none" // or "multiple" | "none"
-                //         },
-                //         editing: {
-                //             useIcons:true,
-                //             mode: "batch",
-                //             allowAdding: false,
-                //             allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
-                //             allowDeleting: false,
-                //         },
-                //         scrolling: {
-                //             mode: "virtual"
-                //         },
-                //         columns: [
-                //             {
-                //                 caption: 'Saving Calculation Formula: (Valid/ Original Document)',
-                //                 dataField: 'savingFormula',
-                //                 dataType: 'string',
-                //                 editorOptions: { 
-                //                     readOnly: (mode == 'approval') ? true : false
-                //                 },
-                //                 validationRules: validationRules,
-                //             },
-                //             {
-                //                 caption: 'Total Saving Realized per Year: (Actual saving for 3 months x 4)',
-                //                 dataField: 'totalSaving',
-                //                 dataType: 'string',
-                //                 editorOptions: { 
-                //                     readOnly: (mode == 'approval') ? true : false
-                //                 },
-                //                 validationRules: validationRules,
-                //             },
-                //         ],
-                //         export: {
-                //             enabled: false,
-                //             fileName: modname,
-                //             excelFilterEnabled: true,
-                //             allowExportSelectedData: true
-                //         },
-                //         onInitialized: function(e) {
-                //             dataGrid12 = e.component;
-                //         },
-                //         onContentReady: function(e){
-                //             moveEditColumnToLeft(e.component);
-                //         },
-                //         onInitNewRow : function(e) {
-                //         },
-                //         onToolbarPreparing: function(e) {
-                //             e.toolbarOptions.items.unshift({						
-                //                 location: "after",
-                //                 widget: "dxButton",
-                //                 options: {
-                //                     hint: "Refresh Data",
-                //                     icon: "refresh",
-                //                     onClick: function() {
-                //                         dataGrid12.refresh();
-                //                     }
-                //                 }
-                //             });
-                //         },
-                //         onEditorPreparing: function (e) {
-                //         },
-                //         onCellPrepared: function (e) {
-                //         },
-                //         onDataErrorOccurred: function(e) {
-                //             // Menampilkan pesan kesalahan
-                //             console.log("Terjadi kesalahan saat memuat data (1.2):", e.error.message);
-                    
-                //             // Memuat ulang DataGrid
-                //             dataGrid12.refresh();
-                //         }
-                //     })
-
-                //     return formData3;
-                // } 
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
                         dataSource: storewithmodule('attachmentrequest',modelclass,reqid),

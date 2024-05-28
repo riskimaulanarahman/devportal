@@ -90,6 +90,8 @@ trait ApproverTrait {
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
         if ($module->module !== 'Mom') {
 
+            $checkApprNull = 1;
+
             $getApprover = Approvaluser::select('tbl_approver.*')
                 ->where('tbl_approver.module', $moduleName)
                 ->where('tbl_approver.isActive', 1);
@@ -101,6 +103,8 @@ trait ApproverTrait {
             } elseif ($company !== null && $cat_id !== null) {
                 $getApprover->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
                             ->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id]);
+            } else {
+                $checkApprNull = 0;
             }
 
             $results = $getApprover->get();
@@ -141,12 +145,14 @@ trait ApproverTrait {
 
             $results2 = $appUserNull->get();
 
-            foreach ($results2 as $approver2) {
-                $approverList2 = new ApproverListReq();
-                $approverList2->req_id = $req_id;
-                $approverList2->module_id = $module->id;
-                $approverList2->approver_id = $approver2->id;
-                $approverList2->save();
+            if($checkApprNull == 1) {
+                foreach ($results2 as $approver2) {
+                    $approverList2 = new ApproverListReq();
+                    $approverList2->req_id = $req_id;
+                    $approverList2->module_id = $module->id;
+                    $approverList2->approver_id = $approver2->id;
+                    $approverList2->save();
+                }
             }
 
             // add creator

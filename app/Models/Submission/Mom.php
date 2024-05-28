@@ -25,6 +25,7 @@ class Mom extends Model
         'chairman',
         'venue',
         'isZoom',
+        'isConfidential',
         'chairman_userid',
     ];
 
