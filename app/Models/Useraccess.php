@@ -9,7 +9,7 @@ class Useraccess extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_useraccess';
+    protected $table = 'employee.tbl_useraccess';
 
     protected $guarded = ['id'];
     

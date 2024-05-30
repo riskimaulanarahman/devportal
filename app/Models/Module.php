@@ -9,7 +9,7 @@ class Module extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_module';
+    protected $table = 'reference.tbl_module';
     
     protected $guarded = ['id'];
     

@@ -52,7 +52,7 @@ class TicketRequestController extends Controller
                     $join->on('request_ticket.id','=','tbl_assignment.req_id')
                          ->where('tbl_assignment.module_id',$module_id);
                 });
-                $dataquery->leftJoin('tbl_developer','tbl_assignment.developer_id','=','tbl_developer.id');
+                $dataquery->leftJoin('reference.tbl_developer','tbl_assignment.developer_id','=','reference.tbl_developer.id');
             }
 
             $data = $dataquery
@@ -70,7 +70,7 @@ class TicketRequestController extends Controller
                                     ->whereIn("request_ticket.requestStatus", [1,3,4]);
                             } 
                             if($isDeveloper) {
-                                $query->where("tbl_developer.user_id",$user_id)
+                                $query->where("reference.tbl_developer.user_id",$user_id)
                                     ->whereIn("request_ticket.requestStatus", [3]);
                             }
                         })             

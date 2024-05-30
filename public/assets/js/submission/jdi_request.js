@@ -110,11 +110,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Code",
             dataField: 'code',
             width: 180,
+            // sortOrder: "desc"
         },
         {
             dataField: 'noRegistration',
             width: 180,
-            sortOrder: "desc"
         },
         { 
             caption: 'Creator Name',
@@ -138,6 +138,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: 'ranking',
             width: 180,
+        },
+        {
+            caption: 'Status JDI',
+            dataField: 'status_jdi',
         },
         {
             dataField: "approveddoc",
@@ -406,7 +410,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer || isBCIDv ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer || isBCIDv == 1 ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -443,6 +447,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                             },
                             {
+                                caption: 'Category',
                                 dataField: 'ranking',
                                 lookup: {
                                     dataSource: ['Bronze','Silver','Gold'],
@@ -456,6 +461,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                             },
                             {
+                                caption: 'Status JDI',
+                                dataField: 'status_jdi',
+                                lookup: {
+                                    dataSource: [
+                                        'Register',
+                                        'Awarded',
+                                    ],
+                                    searchEnabled: false
+                                },
+                            },
+                            {
                                 caption: 'Applicable Roll-Out Other Area/ Estate',
                                 dataField: 'isRollout',
                                 dataType: 'boolean'
@@ -464,6 +480,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'savingInfo',
                                 lookup: {
                                     dataSource: [
+                                        'Saving < 1 mio IDR',
                                         'Saving > 1 mio IDR - 5 mio IDR',
                                         'Saving > 5 mio IDR - 10 mio IDR',
                                         'Saving > 10 mio IDR - 20 mio IDR',
@@ -503,7 +520,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPreparing: function (e) {
                         },
                         onCellPrepared: function (e) {
-                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<5)) {
+                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<6)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",

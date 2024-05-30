@@ -9,7 +9,7 @@ class SideMenu extends Model
 {
     use HasFactory;
 
-    protected $table = 'side_menus';
+    protected $table = 'reference.side_menus';
     
     protected $guarded = ['id'];
 

@@ -9,7 +9,7 @@ class Developer extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_developer';
+    protected $table = 'reference.tbl_developer';
 
     protected $fillable = [
         'user_id',

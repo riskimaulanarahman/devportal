@@ -9,7 +9,7 @@ class Religion extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_religion';
+    protected $table = 'tbl_hc_religion';
     
     protected $guarded = ['id'];
     

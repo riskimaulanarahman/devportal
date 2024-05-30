@@ -9,7 +9,7 @@ class Sequence extends Model
 {
     use HasFactory;
 
-    protected $table = 'sequences';
+    protected $table = 'reference.sequences';
     
     protected $guarded = ['id'];
 

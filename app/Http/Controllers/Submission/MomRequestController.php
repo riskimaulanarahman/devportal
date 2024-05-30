@@ -61,7 +61,7 @@ class MomRequestController extends Controller
             u.id as user_id,
             u.fullname as nama_users
             from tbl_stackholders l
-            left join tbl_employee e on l.employee_id = e.id
+            left join employee.tbl_employee e on l.employee_id = e.id
             left join users u on e.LoginName = u.username
             where l.req_id = request_mom.id 
             and l.module_id = '".$module_id."' 
@@ -74,7 +74,7 @@ class MomRequestController extends Controller
             from request_momTaskBound l
             left join request_momTask m on l.task_id = m.id
             left join tbl_category c on m.category_id = c.id
-            left join tbl_employee e on l.employee_id = e.id
+            left join employee.tbl_employee e on l.employee_id = e.id
             left join users u on e.LoginName = u.username
             where c.req_id = request_mom.id 
             and c.module_id = '".$module_id."' ) as tab1

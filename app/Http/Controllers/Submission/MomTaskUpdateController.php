@@ -202,9 +202,9 @@ class MomTaskUpdateController extends Controller
             "message" => $this->mailMessage()['momTaskSummary'],
             "remarks" => null,
         ];
-        $assignment = Stackholders::leftJoin('tbl_employee','tbl_stackholders.employee_id','=','tbl_employee.id')
-                        ->leftJoin('users','tbl_employee.LoginName','=','users.username')
-                        ->select('tbl_stackholders.*','users.email','tbl_employee.FullName')
+        $assignment = Stackholders::leftJoin('employee.tbl_employee','tbl_stackholders.employee_id','=','employee.tbl_employee.id')
+                        ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
+                        ->select('tbl_stackholders.*','users.email','employee.tbl_employee.FullName')
                         ->where('req_id',$id)
                         ->where('module_id',$this->getModuleId($this->modulename))
                         ->get();
@@ -237,8 +237,8 @@ class MomTaskUpdateController extends Controller
         ->leftJoinSub($latestUpdates, 'latest_updates', function($join) {
             $join->on('momTaskDetail.id', '=', 'latest_updates.task_id');
         })
-        ->leftJoin('tbl_employee as ea','request_momTaskBound.employee_id','ea.id')
-        ->leftJoin('tbl_employee as eb','latest_updates.updated_by','eb.id')
+        ->leftJoin('employee.tbl_employee as ea','request_momTaskBound.employee_id','ea.id')
+        ->leftJoin('employee.tbl_employee as eb','latest_updates.updated_by','eb.id')
         ->get();
 
         // Load view dan passing data

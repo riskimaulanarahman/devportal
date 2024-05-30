@@ -70,15 +70,16 @@ class JdiRequestController extends Controller
                             if ($isAdmin) {
                                 $query->where("request_jdi.user_id", "!=", $user_id)
                                     ->whereIn("request_jdi.requestStatus", [1,3,4]);
-                            } 
+                            } else {
+                                $query->where("request_jdi.user_id", "!=", $user_id)
+                                    ->whereIn("request_jdi.requestStatus", [3]);
+                            }
                         })             
                         ->orWhere("request_jdi.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("CASE WHEN request_jdi.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_jdi.created_at desc")
                 ->get();
-
-            
 
             return response()->json([
                 'status' => "show",
@@ -278,7 +279,8 @@ class JdiRequestController extends Controller
             Jdi::where('id',$id)
             ->update(
                 [
-                    "noRegistration" => $this->generateCodeJdiNoreg($data->bu)
+                    "noRegistration" => $this->generateCodeJdiNoreg($data->bu),
+                    "status_jdi" => "Register"
                 ]
             );
         }

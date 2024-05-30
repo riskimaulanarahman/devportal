@@ -9,7 +9,7 @@ class Location extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_location';
+    protected $table = 'employee.tbl_location';
     
     protected $guarded = ['id'];
     

@@ -9,7 +9,7 @@ class Designation extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_designation';
+    protected $table = 'employee.tbl_designation';
     
     protected $guarded = ['id'];
     

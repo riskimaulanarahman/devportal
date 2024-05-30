@@ -16,10 +16,10 @@ trait HasGenerateCode {
     public static function generateCode($moduleName)
     {   
         // Check if the module name exists
-        $module = DB::table('tbl_module')->where('module', $moduleName)->first();
+        $module = DB::table('reference.tbl_module')->where('module', $moduleName)->first();
         if (!$module) {
             // Create a new module
-            $module = DB::table('tbl_module')->insertGetId([
+            $module = DB::table('reference.tbl_module')->insertGetId([
                 'module' => $moduleName,
             ]);
         }
@@ -68,7 +68,7 @@ trait HasGenerateCode {
     public static function generateCodeJdiNoreg($bu)
     {   
         // Check if the module name exists
-        $module = DB::table('tbl_module')->where('module', 'Jdi')->first();
+        $module = DB::table('reference.tbl_module')->where('module', 'Jdi')->first();
         $moduleName = strtoupper($module->module);
 
         // Get the current year and month

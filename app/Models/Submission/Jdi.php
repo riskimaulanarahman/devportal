@@ -42,6 +42,7 @@ class Jdi extends Model
         'totalSaving',
         'isRollout',
         'sevenWaste',
+        'status_jdi',
         'savingInfo'
     ];
 
@@ -65,6 +66,7 @@ class Jdi extends Model
             'totalSaving',
             'anggota1_id',
             'anggota2_id',
+            'status_jdi',
             'sevenWaste',
         ]);
         return $fillable;

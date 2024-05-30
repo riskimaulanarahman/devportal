@@ -46,21 +46,21 @@ class ListController extends Controller
     }
 
     public function listEmployee() {
-        return Employee::select('tbl_employee.id', 'sapid', 'fullname', 'companycode', 'tbl_department.departmentname', 'tbl_department.departmentgroup')
-                ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
+        return Employee::select('employee.tbl_employee.id', 'sapid', 'fullname', 'companycode', 'employee.tbl_department.departmentname', 'employee.tbl_department.departmentgroup')
+                ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
                 ->where(function($query) {
                     $query->whereNotNull('LoginName')
                         ->where('LoginName', '<>', '');
                 })
-                ->where('tbl_employee.isActive',1)
+                ->where('employee.tbl_employee.isActive',1)
                 ->get();
     }
 
     public function listEmployeeAll() {
-        return Employee::selectRaw('tbl_employee.id, sapid, fullname, companycode, tbl_department.departmentname, tbl_department.departmentgroup, tbl_level.remarks as levels')
-            ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
-            ->leftJoin('tbl_level', 'tbl_employee.level_id', '=', 'tbl_level.id')
-                ->where('tbl_employee.isActive',1)
+        return Employee::selectRaw('employee.tbl_employee.id, sapid, fullname, companycode, employee.tbl_department.departmentname, employee.tbl_department.departmentgroup, employee.tbl_level.remarks as levels')
+            ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+            ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
+                ->where('employee.tbl_employee.isActive',1)
                 ->get();
     }
 
@@ -70,15 +70,15 @@ class ListController extends Controller
         $loginName = $this->getEmployeeID()->LoginName;
 
         $employee = Employee::query()
-                ->select('tbl_employee.id', 'sapid', 'fullname', 'companycode', 'tbl_department.departmentname', 'tbl_department.departmentgroup')
-                ->leftJoin('tbl_department', 'tbl_employee.department_id', '=', 'tbl_department.id')
+                ->select('employee.tbl_employee.id', 'sapid', 'fullname', 'companycode', 'employee.tbl_department.departmentname', 'employee.tbl_department.departmentgroup')
+                ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
                 ->where(function ($query) use ($departmentGroup) {
-                    $query->whereNull('tbl_employee.loginname')
-                        ->orWhere('tbl_employee.loginname', '')
-                        ->where('tbl_department.departmentgroup', $departmentGroup);
+                    $query->whereNull('employee.tbl_employee.loginname')
+                        ->orWhere('employee.tbl_employee.loginname', '')
+                        ->where('employee.tbl_department.departmentgroup', $departmentGroup);
                 })
-                ->orWhere('tbl_employee.loginname', $loginName)
-                ->where('tbl_employee.isActive',1)
+                ->orWhere('employee.tbl_employee.loginname', $loginName)
+                ->where('employee.tbl_employee.isActive',1)
                 ->get();
 
         $employee->makeHidden(['department', 'designation']);

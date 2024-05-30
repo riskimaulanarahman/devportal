@@ -9,7 +9,7 @@ class Nationality extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_nationality';
+    protected $table = 'tbl_hc_nationality';
     
     protected $guarded = ['id'];
     

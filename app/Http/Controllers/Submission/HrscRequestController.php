@@ -226,9 +226,9 @@ class HrscRequestController extends Controller
 
         $getSubmissionData = DB::table($tableName)->where('id', $id)->first();
         $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
-        $assignmentdata = Assignmentto::leftJoin('tbl_employee','tbl_assignment.employee_id','=','tbl_employee.id')
-                        ->leftJoin('users','tbl_employee.LoginName','=','users.username')
-                        ->select('tbl_employee.*','users.email')
+        $assignmentdata = Assignmentto::leftJoin('employee.tbl_employee','tbl_assignment.employee_id','=','employee.tbl_employee.id')
+                        ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
+                        ->select('employee.tbl_employee.*','users.email')
                         ->where('req_id',$getSubmissionData->id)
                         ->where('module_id',$module_id)
                         ->get();

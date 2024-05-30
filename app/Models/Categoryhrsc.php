@@ -9,7 +9,7 @@ class Categoryhrsc extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_hrsc_category';
+    protected $table = 'request_hrsc_category';
     
     protected $guarded = ['id'];
     

@@ -181,11 +181,21 @@ class SubmissionController extends Controller
                 ->with('approvaluser')
                 ->get();
             
-            $getapproverlist = ApproverListReq::where('req_id',$id)
+            $rawgetapproverlist = ApproverListReq::where('req_id',$id)
                 ->where('module_id',$module_id)
-                ->where('approvalAction',1)
-                ->count();
+                ->where('approvalAction',1);
 
+            $getapproverlist = $rawgetapproverlist->count();
+
+            $dataapproversamecount = 0;
+            $dataapproverlist = $rawgetapproverlist->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')->get();
+            if ($dataapproverlist->count() == 2) {
+                
+                if ($dataapproverlist[0]->approvaluser->user_id == $dataapproverlist[1]->approvaluser->user_id) {
+                    $dataapproversamecount = 1;
+                }
+            }
+            
             if ($request->requestStatus == 0) {
                 $statusappr = 0;
                 $requeststatus = $request->requestStatus;
@@ -222,7 +232,7 @@ class SubmissionController extends Controller
                         foreach($approverlist as $data) {
                             
                             if($data->isFinal == 0) {
-                                if ($getapproverlist == 1) {
+                                if ($getapproverlist == 1 || $dataapproversamecount == 1) {
                                     $final = 1;
                                     $statusappr = 3;
                                     $requeststatus = 3;

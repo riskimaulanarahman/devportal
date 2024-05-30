@@ -9,7 +9,7 @@ class Company extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_company';
+    protected $table = 'employee.tbl_company';
     
     protected $guarded = ['id'];
     

@@ -9,7 +9,7 @@ class Grade extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_grade';
+    protected $table = 'tbl_hc_grade';
     
     protected $guarded = ['id'];
     

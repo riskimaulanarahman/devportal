@@ -59,7 +59,7 @@ class SubmissionMail extends Mailable
         $code = Code::findOrFail($mailData['submission']->code_id);
         $this->code = $code->code;
 
-        $Mailrecipient = DB::table('tbl_mailrecipient')
+        $Mailrecipient = DB::table('reference.tbl_mailrecipient')
         ->where('module',$modulename)
         ->where('isActive',1)
         ->get();
@@ -76,8 +76,8 @@ class SubmissionMail extends Mailable
             $this->attachment = $attachments;
             
             if($final == 1) {
-                $stackholders = Stackholders::leftJoin('tbl_employee','tbl_stackholders.employee_id','=','tbl_employee.id')
-                                ->leftJoin('users','tbl_employee.LoginName','=','users.username')
+                $stackholders = Stackholders::leftJoin('employee.tbl_employee','tbl_stackholders.employee_id','=','employee.tbl_employee.id')
+                                ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
                                 ->select('tbl_stackholders.*','users.email')
                                 ->where('req_id',$mailData['submission']->id)
                                 ->where('module_id',$this->getModuleId($modulename))
@@ -98,20 +98,20 @@ class SubmissionMail extends Mailable
 
         if($modulename == 'Mom') {
             if($final == 1) {
-                $stackholders = Stackholders::leftJoin('tbl_employee','tbl_stackholders.employee_id','=','tbl_employee.id')
-                                ->leftJoin('users','tbl_employee.LoginName','=','users.username')
-                                ->select('tbl_stackholders.*','users.email','tbl_employee.FullName')
+                $stackholders = Stackholders::leftJoin('employee.tbl_employee','tbl_stackholders.employee_id','=','employee.tbl_employee.id')
+                                ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
+                                ->select('tbl_stackholders.*','users.email','employee.tbl_employee.FullName')
                                 ->where('req_id',$mailData['submission']->id)
                                 ->where('module_id',$this->getModuleId($modulename))
                                 ->get();
 
                 $getTaskBound = DB::table('tbl_category')
-                ->select('tbl_addressbook.email')
+                ->select('employee.tbl_addressbook.email')
                 ->where('req_id',$mailData['submission']->id)
                 ->leftJoin('request_momTask','tbl_category.id','request_momTask.category_id')
                 ->leftJoin('request_momTaskBound','request_momTask.id','request_momTaskBound.task_id')
-                ->leftJoin('tbl_employee','request_momTaskBound.employee_id','tbl_employee.id')
-                ->leftJoin('tbl_addressbook','tbl_employee.LoginName','tbl_addressbook.username')
+                ->leftJoin('employee.tbl_employee','request_momTaskBound.employee_id','employee.tbl_employee.id')
+                ->leftJoin('employee.tbl_addressbook','employee.tbl_employee.LoginName','employee.tbl_addressbook.username')
                 ->get();
 
                 $latestUpdates = DB::table('request_momTaskUpdate')
@@ -143,8 +143,8 @@ class SubmissionMail extends Mailable
                 ->leftJoinSub($latestUpdates, 'latest_updates', function($join) {
                     $join->on('momTaskDetail.id', '=', 'latest_updates.task_id');
                 })
-                ->leftJoin('tbl_employee as ea','request_momTaskBound.employee_id','ea.id')
-                ->leftJoin('tbl_employee as eb','latest_updates.updated_by','eb.id')
+                ->leftJoin('employee.tbl_employee as ea','request_momTaskBound.employee_id','ea.id')
+                ->leftJoin('employee.tbl_employee as eb','latest_updates.updated_by','eb.id')
                 ->get();
 
                 $this->assignment = $stackholders;
@@ -210,9 +210,9 @@ class SubmissionMail extends Mailable
             }
 
             if($final == 1) {
-                $developerAssignment = Assignmentto::leftJoin('tbl_developer','tbl_assignment.developer_id','=','tbl_developer.id')
-                                        ->leftJoin('users','tbl_developer.user_id','=','users.id')
-                                        ->select('tbl_developer.*','users.email')
+                $developerAssignment = Assignmentto::leftJoin('reference.tbl_developer','tbl_assignment.developer_id','=','reference.tbl_developer.id')
+                                        ->leftJoin('users','reference.tbl_developer.user_id','=','users.id')
+                                        ->select('reference.tbl_developer.*','users.email')
                                         ->where('req_id',$mailData['submission']->id)
                                         ->where('module_id',$this->getModuleId($modulename))
                                         ->get();
@@ -232,9 +232,9 @@ class SubmissionMail extends Mailable
         if($modulename == 'UavMission' || $modulename == 'Hrsc') {
 
             if($final == 1) {
-                $assignmentdata = Assignmentto::leftJoin('tbl_employee','tbl_assignment.employee_id','=','tbl_employee.id')
-                                        ->leftJoin('users','tbl_employee.LoginName','=','users.username')
-                                        ->select('tbl_employee.*','users.email')
+                $assignmentdata = Assignmentto::leftJoin('employee.tbl_employee','tbl_assignment.employee_id','=','employee.tbl_employee.id')
+                                        ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
+                                        ->select('employee.tbl_employee.*','users.email')
                                         ->where('req_id',$mailData['submission']->id)
                                         ->where('module_id',$this->getModuleId($modulename))
                                         ->get();

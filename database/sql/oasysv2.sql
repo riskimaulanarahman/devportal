@@ -244,8 +244,8 @@ INSERT INTO "side_menus" ("id", "title", "route", "modules", "icon_id", "parent_
 	(21, 'IT Request', 'it_activedirectory', NULL, 1, 10, 3, b'0', b'1', b'1', b'0', b'1', '2023-02-09 16:06:13.460', '2023-02-11 03:55:05.270');
 /*!40000 ALTER TABLE "side_menus" ENABLE KEYS */;
 
--- Dumping structure for table oasysv2.tbl_employee
-CREATE TABLE IF NOT EXISTS "tbl_employee" (
+-- Dumping structure for table oasysv2.employee.tbl_employee
+CREATE TABLE IF NOT EXISTS "employee.tbl_employee" (
 	"id" INT NOT NULL,
 	"company_id" INT NULL DEFAULT 'NULL',
 	"department_id" INT NULL DEFAULT 'NULL',
@@ -270,9 +270,9 @@ CREATE TABLE IF NOT EXISTS "tbl_employee" (
 	PRIMARY KEY ("id")
 );
 
--- Dumping data for table oasysv2.tbl_employee: 1.736 rows
-/*!40000 ALTER TABLE "tbl_employee" DISABLE KEYS */;
-INSERT INTO "tbl_employee" ("id", "company_id", "department_id", "division_id", "designation_id", "grade_id", "level_id", "LoginName", "SAPID", "JoinDate", "location_id", "FullName", "Address", "Gender", "religion_id", "MaritalStatus", "isActive", "isInternationalStaff", "companycode", "CostCenter", "Remarks") VALUES
+-- Dumping data for table oasysv2.employee.tbl_employee: 1.736 rows
+/*!40000 ALTER TABLE "employee.tbl_employee" DISABLE KEYS */;
+INSERT INTO "employee.tbl_employee" ("id", "company_id", "department_id", "division_id", "designation_id", "grade_id", "level_id", "LoginName", "SAPID", "JoinDate", "location_id", "FullName", "Address", "Gender", "religion_id", "MaritalStatus", "isActive", "isInternationalStaff", "companycode", "CostCenter", "Remarks") VALUES
 	(1, 2, 1, NULL, 1, NULL, 2, '', '10049945', '2016-11-01', 3, 'Josua Silalahi', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211192001', NULL),
 	(2, 2, 77, NULL, 2, NULL, 1, '', '10054896', '2017-10-21', 3, 'Anton', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211196001', NULL),
 	(3, 2, 149, NULL, 3, NULL, 1, '', '10039906', '2014-07-07', 14, 'Maikel Pamassangan', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211406007', NULL),
@@ -1273,7 +1273,7 @@ INSERT INTO "tbl_employee" ("id", "company_id", "department_id", "division_id", 
 	(1003, 6, 50, NULL, 1003, NULL, 4, 'Eko_Noegroho', '10043153', '2015-06-01', 10, 'Eko Satyo Noegroho', NULL, NULL, NULL, NULL, b'1', b'0', 'NKF-IHM', 'F110306003', NULL),
 	(1004, 2, 112, NULL, 1004, NULL, 2, 'Eka_sirait', '10015967', NULL, 3, 'Eka Tjlm Sirait', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', NULL, NULL),
 	(1005, 2, 149, NULL, 1005, NULL, 2, 'Egi_Prayoga', '10054169', NULL, 6, 'Egi Prayoga', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211106015', NULL);
-INSERT INTO "tbl_employee" ("id", "company_id", "department_id", "division_id", "designation_id", "grade_id", "level_id", "LoginName", "SAPID", "JoinDate", "location_id", "FullName", "Address", "Gender", "religion_id", "MaritalStatus", "isActive", "isInternationalStaff", "companycode", "CostCenter", "Remarks") VALUES
+INSERT INTO "employee.tbl_employee" ("id", "company_id", "department_id", "division_id", "designation_id", "grade_id", "level_id", "LoginName", "SAPID", "JoinDate", "location_id", "FullName", "Address", "Gender", "religion_id", "MaritalStatus", "isActive", "isInternationalStaff", "companycode", "CostCenter", "Remarks") VALUES
 	(1006, 5, 74, NULL, 1006, NULL, 3, 'Efendy_Siagian', '10070311', NULL, 7, 'Efendy HB Siagian', NULL, NULL, NULL, NULL, b'1', b'0', 'BCL', 'C110001001', NULL),
 	(1007, 2, 2, NULL, 1007, NULL, 2, 'Edy_WS', '10040705', '2014-10-01', 3, 'Edy Saputra Williyanto Sibuea', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211195003', NULL),
 	(1008, 2, 114, NULL, 1008, NULL, 1, 'Edy_Loboran', '10028679', NULL, 6, 'Edy Loboran', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211206006', NULL),
@@ -2010,7 +2010,7 @@ INSERT INTO "tbl_employee" ("id", "company_id", "department_id", "division_id", 
 	(1844, 6, 4, NULL, 1624, NULL, 2, 'revi_simanjuntak', '10074097', '2022-12-19', 14, 'Revi Juniar Simanjuntak', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211406003', NULL),
 	(1845, 7, 169, NULL, 1625, NULL, 3, 'cris_nababan', '10074172', '2023-01-03', 6, 'Christoloprizoise Nababan', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211206009', NULL),
 	(1846, 2, 15, NULL, 1147, NULL, 2, 'Dennis_AHL', '10074245', '2022-12-20', 19, 'Dennis', NULL, NULL, NULL, NULL, b'1', b'0', 'AHL', 'F211306007', NULL);
-/*!40000 ALTER TABLE "tbl_employee" ENABLE KEYS */;
+/*!40000 ALTER TABLE "employee.tbl_employee" ENABLE KEYS */;
 
 -- Dumping structure for table oasysv2.tbl_module
 CREATE TABLE IF NOT EXISTS "tbl_module" (
@@ -2061,7 +2061,7 @@ CREATE TABLE IF NOT EXISTS "tbl_useraccess" (
 	FOREIGN KEY INDEX "tbl_useraccess$FKAccessModule" ("module_id"),
 	FOREIGN KEY INDEX "tbl_useraccess$FKEmployeeAccess" ("employee_id"),
 	CONSTRAINT "tbl_useraccess$FKAccessModule" FOREIGN KEY ("module_id") REFERENCES "tbl_module" ("id") ON UPDATE CASCADE ON DELETE NO_ACTION,
-	CONSTRAINT "tbl_useraccess$FKEmployeeAccess" FOREIGN KEY ("employee_id") REFERENCES "tbl_employee" ("id") ON UPDATE CASCADE ON DELETE NO_ACTION
+	CONSTRAINT "tbl_useraccess$FKEmployeeAccess" FOREIGN KEY ("employee_id") REFERENCES "employee.tbl_employee" ("id") ON UPDATE CASCADE ON DELETE NO_ACTION
 );
 
 -- Dumping data for table oasysv2.tbl_useraccess: 195 rows
