@@ -97,6 +97,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             ]
         },
         {
+			dataField: "companyList",
+        },
+        {
 			dataField: "is_active",
             dataType: "boolean"
         },
