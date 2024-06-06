@@ -12,8 +12,6 @@ function moveEditColumnToLeft(dataGrid) {
 
 var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
-    // keyExpr: 'id',
-    // parentIdExpr: 'parentID',
     allowColumnReordering: true,
     allowColumnResizing: true,
     columnHidingEnabled: true,
@@ -24,10 +22,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    // selection: {
-    //     mode: 'multiple',
-    //     recursive: true,
-    // },
     searchPanel: {
         visible: true,
         width: 240,
@@ -110,7 +104,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Code",
             dataField: 'code',
             width: 180,
-            // sortOrder: "desc"
         },
         {
             dataField: 'noRegistration',
@@ -146,7 +139,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: "approveddoc",
             caption:"Approval Doc",
-            // width: 180,
             allowFiltering: false,
             allowSorting: false,
             formItem: { visible: false},
@@ -154,11 +146,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 if ((options.value!="") && (options.value)){
                     $("<div />").dxButton({
                         icon: 'download',
-                        // stylingMode: "contained",
                         type: "success",
                         text: "Download",
-                        // target : '_blank',
-                        // width: 100,
                         onClick: function (e) {
                             window.open(options.value, '_blank');
                         }
@@ -595,7 +584,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 lookup: {
                                     dataSource: listOption('/list-employeeall','id','fullname'),  
                                     valueExpr: 'id',
-                                    // displayExpr: 'fullname',
                                     displayExpr: function(item) {
                                         return item ? item.fullname + " (" + item.sapid + " | " + item.levels + ")" : "";
                                     }
@@ -666,7 +654,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 lookup: {
                                     dataSource: listOption('/list-employeeall','id','fullname'),  
                                     valueExpr: 'id',
-                                    // displayExpr: 'fullname',
                                     displayExpr: function(item) {
                                         return item ? item.fullname + " (" + item.sapid + ")" : "";
                                     }
@@ -682,7 +669,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 lookup: {
                                     dataSource: listOption('/list-employeeall','id','fullname'),  
                                     valueExpr: 'id',
-                                    // displayExpr: 'fullname',
                                     displayExpr: function(item) {
                                         return item ? item.fullname + " (" + item.sapid + ")" : "";
                                     }
@@ -697,7 +683,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 lookup: {
                                     dataSource: listOption('/list-employeeall','id','fullname'),  
                                     valueExpr: 'id',
-                                    // displayExpr: 'fullname',
                                     displayExpr: function(item) {
                                         return item ? item.fullname + " (" + item.sapid + ")" : "";
                                     }
@@ -867,8 +852,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Hambatan/Tantangan/Ketidaksesuaian',
                                 dataField: 'htk',
-                                dataType: 'string',
+                                editorType: 'dxTextArea',
                                 editorOptions: { 
+                                    height: 50,
                                     readOnly: (mode == 'approval') ? true : false
                                 },
                                 validationRules: [{ type: "required" }]
@@ -876,8 +862,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Perbaikan Yang Dibuat',
                                 dataField: 'perbaikan',
-                                dataType: 'string',
+                                editorType: 'dxTextArea',
                                 editorOptions: { 
+                                    height: 50,
                                     readOnly: (mode == 'approval') ? true : false
                                 },
                                 validationRules: [{ type: "required" }]
@@ -902,7 +889,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         validationRules2.length = 0;
                                     }
                                 },
-                                // validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: '7 Waste',
@@ -936,7 +922,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: "boolean",
                                 setCellValue: function (rowData, value) {
                                     rowData.isSaving = value;
-                                    // console.log(value)
                                     if (value == true) {
                                         validationRules.length = 0;
                                         validationRules.push({
@@ -960,8 +945,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Saving Calculation Formula: (Valid/ Original Document)',
                                 dataField: 'savingFormula',
-                                dataType: 'string',
+                                editorType: 'dxTextArea',
                                 editorOptions: { 
+                                    height: 50,
                                     readOnly: (mode == 'approval') ? true : false
                                 },
                                 validationRules: validationRules,
@@ -1528,13 +1514,6 @@ function editCellTemplate(cellElement, cellInfo) {
           DevExpress.ui.notify(e.request.response,"error");
       }
     }).dxFileUploader("instance");
-  
-    // let imageElement = document.createElement("img");
-    //     imageElement.classList.add("uploadedImage");
-    //     imageElement.setAttribute('src', "upload/" +cellInfo.value);
-    //     imageElement.setAttribute('height', "50");
-        
-    //     cellElement.append(imageElement);
         cellElement.append(fileUploaderElement);
         cellElement.append(buttonElement);
   

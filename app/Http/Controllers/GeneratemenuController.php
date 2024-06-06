@@ -14,7 +14,7 @@ class GeneratemenuController extends Controller
     public function index($route)
     {
 
-        $sidemenu = SideMenu::select(['id', 'title', 'icon_id', 'sequence_id', 'parent_id', 'is_active', 'is_admin'])
+        $sidemenu = SideMenu::select(['id', 'title', 'icon_id', 'sequence_id', 'parent_id', 'is_active', 'is_admin', 'companyList'])
         ->where('route', $route)
         ->first();
 
@@ -86,10 +86,21 @@ class GeneratemenuController extends Controller
                         return $viewGrid;
                     } else if ($this->getAuth()->isAdmin == 0) {
                         if($sidemenu->is_admin == 0){
-                            return $viewGrid;
+                            $empBU = $this->getEmployeeID()->companycode;
+                            if($sidemenu->companyList == null || $sidemenu->companyList == "") {
+                                return $viewGrid;
+                            } else {
+                                $buString = $sidemenu->companyList;
+                                $buArray = explode(",", $buString); // Mengubah string menjadi array berdasarkan pemisah koma
+                                if (!in_array($empBU, $buArray)) { // Memeriksa apakah $sidemenu->companyList tidak ada dalam array $buArray
+                                    return view('errors.401');
+                                } else {
+                                    return $viewGrid;
+                                }
+                            }
                         } else {
                             $checkaccess = Useraccess::join('reference.side_menus','authorization.tbl_useraccess.module_id','reference.side_menus.modules')
-                            ->where('employee_id',$this->getAuth()->id)
+                            ->where('employee_id',$this->getAuth()->id) // employee_id disini maksudnya adalah user_id pada table users
                             ->where('allowView',true)
                             ->get();
                             if($checkaccess) {
