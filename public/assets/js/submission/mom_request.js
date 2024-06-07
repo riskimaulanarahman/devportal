@@ -1650,7 +1650,7 @@ function runpopupdetails() {
         dragEnabled: false,
         hideOnOutsideClick: false,
         showCloseButton: true,
-        fullScreen : false,
+        fullScreen : true,
         onShowing: function(e) {
         },
         onShown: function(e) {
