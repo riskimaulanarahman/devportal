@@ -558,7 +558,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             });
                                             popupdetails.show();
                                     }).appendTo(container);
-                                }
+                                },
+                                visible: true
                             },
                         ],
                         export: {
@@ -591,6 +592,15 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPreparing: function (e) {
                         },
                         onCellPrepared: function (e) {
+                        },
+                        onEditingStart: function(e) {
+                            e.component.columnOption('Action', 'visible', true);
+                        },
+                        onInitNewRow: function(e) {
+                            e.component.columnOption('Action', 'visible', false);
+                        },
+                        onSaved: function(e) {
+                            e.component.columnOption('Action', 'visible', true);
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -1136,7 +1146,7 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
+                        rowAlternationEnabled: false,
                         wordWrapEnabled: true,
                         showBorders: true,
                         showColumnLines:true,
@@ -1158,9 +1168,10 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                             allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isChairman == 1 ? true : false),
                             allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isChairman == 1 ? true : false),
                         },
-                        scrolling: {
-                            mode: "virtual"
-                        },
+                        paging: { enabled: true, pageSize: 10 },
+                        // scrolling: {
+                        //     mode: "virtual"
+                        // },
                         columns: [
                             {
                                 dataField: 'description',

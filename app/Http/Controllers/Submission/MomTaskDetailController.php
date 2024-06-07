@@ -44,7 +44,7 @@ class MomTaskDetailController extends Controller
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
 
-            $this->addOneDayToDate($requestData);
+            // $this->addOneDayToDate($requestData);
 
             $this->model->create($requestData);
 
@@ -85,7 +85,7 @@ class MomTaskDetailController extends Controller
             
             $requestData = $request->all();
 
-            $this->addOneDayToDate($requestData);
+            // $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
             
