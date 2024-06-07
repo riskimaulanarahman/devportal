@@ -1239,7 +1239,7 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                         ],
                         masterDetail: {
                             enabled: true,
-                            autoExpandAll: true,
+                            autoExpandAll: false,
                             template: masterDetailTemplate,
                         },
                         export: {
