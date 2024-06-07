@@ -1168,6 +1168,11 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                             allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isChairman == 1 ? true : false),
                             allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isChairman == 1 ? true : false),
                         },
+                        pager: {
+                            showPageSizeSelector: true,
+                            allowedPageSizes: [5, 10],
+                            showInfo: true
+                        },
                         paging: { enabled: true, pageSize: 10 },
                         // scrolling: {
                         //     mode: "virtual"
