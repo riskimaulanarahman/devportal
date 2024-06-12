@@ -657,7 +657,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Department Head',
                                 dataField: 'depthead_id',
                                 lookup: {
-                                    dataSource: listOption('/list-employeeall','id','fullname'),  
+                                    dataSource: listOption('/list-employee','id','fullname'),  
                                     valueExpr: 'id',
                                     displayExpr: function(item) {
                                         return item ? item.fullname + " (" + item.sapid + ")" : "";
