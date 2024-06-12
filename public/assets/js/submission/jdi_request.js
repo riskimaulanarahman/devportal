@@ -115,11 +115,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180
         },
         {
-            dataField: 'submitDate',
-            dataType: 'date',
-            format: "yyyy-MM-dd",
-        },
-        {
             caption: 'Pencetus Ide',
             dataField: 'pencetuside_id',
             lookup: {
@@ -135,6 +130,29 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: 'Status JDI',
             dataField: 'status_jdi',
+            width: 180,
+        },
+        {
+            dataField: 'submitDate',
+            dataType: 'date',
+            format: "yyyy-MM-dd",
+            visible: false,
+        },
+        {
+            dataField: 'requestStatus',
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                ];
+                return arrText[e.value];
+            },
         },
         {
             dataField: "approveddoc",
@@ -155,24 +173,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 }
             }
         },
-        {
-            dataField: 'requestStatus',
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                ];
-                return arrText[e.value];
-            },
-        },
       
     ],
+    columnChooser: {
+      enabled: true,
+    },
     export: {
         enabled: true,
         fileName: modname,
@@ -1051,7 +1056,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: "remarks",
                                 lookup: {
-                                    dataSource: ['Before','After'],
+                                    dataSource: ['Before','After','Supporting Document'],
                                     searchEnabled: false
                                 },
                                 validationRules: [{ type: "required" }]

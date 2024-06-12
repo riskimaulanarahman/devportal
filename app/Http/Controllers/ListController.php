@@ -184,8 +184,12 @@ class ListController extends Controller
         return Project::where('requestStatus',3)->where('projectStatus','Completed')->get();
     }
 
-    public function listCategoryForm($modulename) {
+    public function listCategoryFormWithModule($modulename) {
         return CategoryForm::with('module')->select('*')->where('module_id',$this->getModuleId($modulename))->get();
+    }
+
+    public function listCategoryForm() {
+        return CategoryForm::with('module')->select('*')->get();
     }
 
     public function listUavAsset() {

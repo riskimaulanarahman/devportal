@@ -62,11 +62,11 @@ class MomTaskUpdateController extends Controller
                 return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
             }
 
-            // START NORIFICATION
-            $this->generateNotificationMessage($request->task_id, $mode = 'Add');
-            // END NORIFICATION
-
             $this->model->create($requestData);
+
+             // START NORIFICATION
+             $this->generateNotificationMessage($request->task_id, $mode = 'Add');
+             // END NORIFICATION
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 
@@ -115,12 +115,12 @@ class MomTaskUpdateController extends Controller
             if(count($getTaskBound) < 1) {
                 return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
             }
-            
-            // START NORIFICATION
-                $this->generateNotificationMessage($data->task_id, $mode = 'Update');
-            // END NORIFICATION
 
             $data->update($requestData);
+
+             // START NORIFICATION
+             $this->generateNotificationMessage($data->task_id, $mode = 'Update');
+             // END NORIFICATION
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 
