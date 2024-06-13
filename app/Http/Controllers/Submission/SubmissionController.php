@@ -170,13 +170,16 @@ class SubmissionController extends Controller
             $approverlist = ApproverListReq::where('req_id',$id)
                 ->when($request->action == 'submission', function ($query) use ($modulename) {
                     return $query->select('tbl_approverListReq.*')
-                            ->where('module_id',$this->getModuleId($modulename));
+                            ->where('module_id',$this->getModuleId($modulename))
+                            ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                            ->orderBy('tbl_approver.sequence','asc');
                 })
                 ->when($request->action == 'approval', function ($query) use ($modulename) {
                     return $query->select('tbl_approverListReq.*','tbl_approver.isFinal')
                                  ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
                                  ->where('module_id',$this->getModuleId($modulename))
-                                 ->where('tbl_approver.user_id', $this->getAuth()->id);
+                                 ->where('tbl_approver.user_id', $this->getAuth()->id)
+                                 ->orderBy('tbl_approver.sequence','asc');
                 })
                 ->with('approvaluser')
                 ->get();
