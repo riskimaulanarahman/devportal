@@ -78,7 +78,7 @@ class JdiRequestController extends Controller
                         ->orWhere("request_jdi.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN request_jdi.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_jdi.created_at desc")
+                ->orderByRaw("CASE WHEN request_jdi.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_jdi.submitDate desc")
                 ->get();
 
             return response()->json([
