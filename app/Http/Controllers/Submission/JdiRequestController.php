@@ -348,17 +348,17 @@ class JdiRequestController extends Controller
                 }
                 if($appr->sequence == 2) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("F41")->Value = $appr->apprname;
-                        $Worksheet->Range("F43")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 40, 8, 40, $excel);
+                        $Worksheet->Range("H41")->Value = $appr->apprname;
+                        $Worksheet->Range("H43")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 40, 6, 40, $excel);
 
                     }
                 }
                 if($appr->sequence == 3) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("H41")->Value = $appr->apprname;
-                        $Worksheet->Range("H43")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 40, 6, 40, $excel);
+                        $Worksheet->Range("F41")->Value = $appr->apprname;
+                        $Worksheet->Range("F43")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 40, 8, 40, $excel);
                     }
                 }
                 if($data->isSaving == 'Ya') {
