@@ -102,12 +102,14 @@ class MomRequestController extends Controller
                         })
                         ->orWhere("request_mom.user_id", $user_id);
                 })
-                ->where(function ($query) use ($user_id,$getParticipant) {
-                    $query->whereRaw($getParticipant . " = 1")
-                        ->orWhere(function ($query) {
-                            $query->where("request_mom.isConfidential", "!=", 1);
-                        })
-                        ->orWhere("request_mom.user_id", $user_id);
+                ->where(function ($query) use ($user_id,$getParticipant, $isAdmin) {
+                    if(!$isAdmin) {
+                        $query->whereRaw($getParticipant . " = 1")
+                            ->orWhere(function ($query) {
+                                $query->where("request_mom.isConfidential", "!=", 1);
+                            })
+                            ->orWhere("request_mom.user_id", $user_id);
+                    }
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("CASE WHEN request_mom.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_mom.created_at desc")
