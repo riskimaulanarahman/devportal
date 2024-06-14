@@ -60,36 +60,37 @@ class StackholdersController extends Controller
             $getExistUser = $this->model->where('employee_id',$request->employee_id)->where('req_id',$request->req_id)->where('module_id',$this->getModuleId($request->modulename))->get();
             
             if(count($getExistUser) < 1) {
-                if($request->role && $request->modulename ='Mom') {
+                if($request->role == 'Chairman' && $request->modulename == 'Mom') {
                     $getChairman = $this->model->where('req_id',$request->req_id)->where('module_id',$this->getModuleId($request->modulename))->where('role','Chairman')->get();
                     if(count($getChairman) > 0) {
                         return response()->json(["status" => "error", "message" => $this->getMessage()['chairmanexist']]);
                     } else {
-                        if($request->role == 'Chairman') {
+                        // if($request->role == 'Chairman') {
                             $this->createApprChairman($request->employee_id, $request->modulename, $request->req_id);
-                        }
+                        // }
                     }
-                }
-
-                if(count($getuser) > 0) {
-                    $this->model->create($requestData);
                 } else {
-                    $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
-
-                    if ($getldap) {
-                        $this->user->create([
-                            "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
-                            "domain" => "default",
-                            "username" => $getldap['samaccountname'][0],
-                            "fullname" => $getldap['name'][0],
-                            "email" => $getldap['mail'][0]
-                        ]);
+                    if(count($getuser) > 0) {
                         $this->model->create($requestData);
                     } else {
-                        return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                        $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+    
+                        if ($getldap) {
+                            $this->user->create([
+                                "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                                "domain" => "default",
+                                "username" => $getldap['samaccountname'][0],
+                                "fullname" => $getldap['name'][0],
+                                "email" => $getldap['mail'][0]
+                            ]);
+                            $this->model->create($requestData);
+                        } else {
+                            return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                        }
+    
                     }
-
                 }
+                
             } else {
                 return response()->json(["status" => "error", "message" => $this->getMessage()['userexist']]);
             }

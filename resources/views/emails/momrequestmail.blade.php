@@ -126,11 +126,33 @@
             <div class="assignment">
         @endif
             <h4>Participant :</h4>
-            <ul>
+            {{-- <ul>
                 @foreach ($assignment as $assign)
                     <li>{{ $assign->FullName }}</li>
                 @endforeach
-            </ul>
+            </ul> --}}
+            <table>
+                <tbody>
+                    @php
+                        $counter = 0;
+                    @endphp
+                    @foreach ($assignment as $assign)
+                        @if ($counter % 3 == 0)
+                            <tr>
+                        @endif
+                        <td>{{ $assign->FullName }}</td>
+                        @php
+                            $counter++;
+                        @endphp
+                        @if ($counter % 3 == 0)
+                            </tr>
+                        @endif
+                    @endforeach
+                    @if ($counter % 3 != 0)
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
         </div>
 
         @foreach ($detailmomtask->groupBy('category') as $category => $groupedTasks)
