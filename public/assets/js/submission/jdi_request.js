@@ -167,7 +167,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         type: "success",
                         text: "Download",
                         onClick: function (e) {
-                            window.open(options.value, '_blank');
+                            window.open(baseurl+"/"+options.value, '_blank');
                         }
                     }).appendTo(container);
                 }
