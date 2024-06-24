@@ -43,6 +43,13 @@ class AttachmentController extends Controller
             if($module) {
                 $requestData['module_id'] = $module->id;
             }
+
+            // Validasi file ekstensi for JDI Sementara
+            $errorMessage = $this->validateFileExtension($request->modulename, $request->remarks, $request->path);
+            if ($errorMessage) {
+                return response()->json(["status" => "error", "message" => $errorMessage]);
+            }
+
             $this->model->create($requestData);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
@@ -88,6 +95,16 @@ class AttachmentController extends Controller
                     unlink($path); // hapus file dari direktori
                 }
             }
+
+            // Menggunakan $request jika ada, jika tidak menggunakan $data
+            $remarks = isset($request->remarks) ? $request->remarks : $data->remarks;
+            $path = isset($request->path) ? $request->path : $data->path;
+            // Validasi file ekstensi for JDI Sementara
+            $errorMessage = $this->validateFileExtension($this->getModuleName($data->module_id), $remarks, $path);
+            if ($errorMessage) {
+                return response()->json(["status" => "error", "message" => $errorMessage]);
+            }
+
             $data->update($requestData);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
@@ -115,5 +132,30 @@ class AttachmentController extends Controller
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
+    }
+
+    private function validateFileExtension($modulename, $remarks, $path)
+    {
+        if ($modulename == 'Jdi') {
+            if ($remarks == 'Before' || $remarks == 'After') {
+                $allowedExtensions = ['jpeg', 'jpg', 'png'];
+                $errorMessage = "Error: Please upload a valid image file (e.g., jpeg, jpg, png).";
+            } else {
+                $allowedExtensions = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx'];
+                $errorMessage = "Error: Please upload a valid document file (e.g., doc, docx, pdf, xls, xlsx, ppt, pptx).";
+            }
+
+            // Mendapatkan ekstensi file dari $path
+            $pathInfo = pathinfo($path);
+            $extension = strtolower($pathInfo['extension']);
+
+            if (!in_array($extension, $allowedExtensions)) {
+                // Ekstensi tidak valid, kembalikan pesan error
+                return $errorMessage;
+            }
+        }
+
+        // Ekstensi valid, kembalikan null (tidak ada error)
+        return null;
     }
 }
