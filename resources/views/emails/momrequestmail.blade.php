@@ -74,6 +74,8 @@
             background-color: #f5f5f5;
         }
 
+        .page-break { page-break-after: always; }
+
     </style>
 </head>
 <body>
@@ -158,7 +160,7 @@
         @foreach ($detailmomtask->groupBy('category') as $category => $groupedTasks)
             <h4>Category : {{ $category }}</h4>
             <div class="table-responsive">
-                <table>
+                <table class="page-break">
                     <thead>
                         <tr>
                             {{-- <th rowspan="2">Category</th> --}}
@@ -244,13 +246,13 @@
                 Remarks : {{ ucfirst($mailData['remarks']) }}
             </div>
         @endif
-        @if (!isset($mailData['pdf']))
+        {{-- @if (!isset($mailData['pdf'])) --}}
             <hr>
             <p class="footer">Go To DevPortal Click <a href="{{ env('APP_URL') }}">Here</a></p>
             <p class="footer">If you require any further information, please feel free to get in touch with us.</p>
             <p class="footer">Thank you for your interest in our products/services.</p>
             <p class="footer">Best regards,<br>System Development</p>
-        @endif
+        {{-- @endif --}}
     </div>
 </body>
 </html>

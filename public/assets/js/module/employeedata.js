@@ -16,7 +16,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     rowAlternationEnabled: true,
     wordWrapEnabled: true,
     showBorders: true,
-    columnWidth: 150,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
@@ -28,9 +27,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     editing: {
         useIcons:true,
         mode: "batch",
-        allowAdding: false,
+        allowAdding: true,
         allowUpdating: (admin == 1 || developer) ? true : false,
-        allowDeleting: false,
+        allowDeleting: true,
     },
     scrolling: {
         mode: "virtual"
@@ -75,17 +74,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         //     dataField: "oldsap",
         //     dataType: "string",
         // },
-        { 
-            dataField: "company_id",
-            caption: "BU",
-            sortOrder: "asc",
-            lookup: {
-                dataSource: listOption('/list-company','id','companycode'),  
-                valueExpr: 'id',
-                displayExpr: 'companycode',
-            },
-            width: 100,
-            validationRules: [{ type: "required" }]
+        {
+            dataField: 'LoginName',
+            visible: (admin == 1 || developer ) ? true : false,
         },
         {
             dataField: "SAPID",
@@ -99,11 +90,36 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "string",
             validationRules: [{ type: "required" }]
         },
-        
+        { 
+            dataField: "company_id",
+            caption: "BU",
+            sortOrder: "asc",
+            lookup: {
+                dataSource: listOption('/list-company','id','companycode'),  
+                valueExpr: 'id',
+                displayExpr: 'companycode',
+            },
+            width: 100,
+            validationRules: [{ type: "required" }]
+        },
+        { 
+            dataField: "location_id",
+            caption: "Location",
+            lookup: {
+                dataSource: listOption('/list-location','id','location'),  
+                valueExpr: 'id',
+                displayExpr: 'location',
+            },
+            validationRules: [{ type: "required" }]
+        },
+        {
+            dataField: 'CostCenter',
+            validationRules: [{ type: "required" }]
+        },
         {
             dataField: "department_id",
             caption: "Department",
-            width: 450,
+            width: 250,
             lookup: {
                 dataSource: listOption('/list-department','id','DepartmentName'),
                 displayExpr: "DepartmentName",
@@ -114,21 +130,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         { 
             dataField: "designation_id",
             caption: "Position",
-            width: 450,
+            width: 250,
             lookup: {
                 dataSource: listOption('/list-designation','id','DesignationName'),  
                 valueExpr: 'id',
                 displayExpr: 'DesignationName',
-            },
-            // validationRules: [{ type: "required" }]
-        },
-        { 
-            dataField: "location_id",
-            caption: "Location",
-            lookup: {
-                dataSource: listOption('/list-location','id','location'),  
-                valueExpr: 'id',
-                displayExpr: 'location',
             },
             validationRules: [{ type: "required" }]
         },
@@ -148,15 +154,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "date",
             format: "dd-MM-yyyy",
             // validationRules: [{ type: "required" }]
-        },
-        {
-            dataField: 'LoginName',
-            visible: (admin == 1 || developer ) ? true : false,
-        },
-        {
-            dataField: 'CostCenter',
-            // validationRules: [{ type: "required" }]
-        },
+        },        
         {
             dataField: 'isInternationalStaff',
             caption: "IS ?",

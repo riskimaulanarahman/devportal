@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Module;
 use App\Models\Category;
+use DB;
 
 class CategoryController extends Controller
 {
@@ -62,18 +63,41 @@ class CategoryController extends Controller
         try {
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
-                $data = $this->model
-                ->select('tbl_category.id','tbl_category.category')
-                ->selectRaw("COUNT(CASE WHEN request_momTask.status = 'Done' THEN 1 END) AS done_count")
-                ->selectRaw("COUNT(CASE WHEN request_momTask.status = 'Open' THEN 1 END) AS open_count")
-                ->selectRaw("COUNT(CASE WHEN request_momTask.status = 'Progress' THEN 1 END) AS progress_count")
-                ->selectRaw("CONCAT('Open : ', SUM(CASE WHEN request_momTask.status = 'Open' THEN 1 ELSE 0 END), ' | Progress : ', SUM(CASE WHEN request_momTask.status = 'Progress' THEN 1 ELSE 0 END), ' | Done : ', SUM(CASE WHEN request_momTask.status = 'Done' THEN 1 ELSE 0 END), ' | Total : ', SUM(CASE WHEN request_momTask.status = 'Open' THEN 1 ELSE 0 END) + SUM(CASE WHEN request_momTask.status = 'Progress' THEN 1 ELSE 0 END) + SUM(CASE WHEN request_momTask.status = 'Done' THEN 1 ELSE 0 END) ) AS status_summary")
-                ->leftJoin('request_momTask', 'tbl_category.id', '=', 'request_momTask.category_id')
-                ->where('req_id',$id)
-                ->where('module_id',$module->id)
-                ->groupBy('tbl_category.id','tbl_category.category')
+
+                $rawData = DB::table('tbl_category as c')
+                ->select('c.id', 'c.category','emp.FullName')
+                ->selectRaw("CONCAT('Open : ', SUM(CASE WHEN rt.status = 'Open' THEN 1 ELSE 0 END), ' | Progress : ', SUM(CASE WHEN rt.status = 'Progress' THEN 1 ELSE 0 END), ' | Done : ', SUM(CASE WHEN rt.status = 'Done' THEN 1 ELSE 0 END), ' | Total : ', SUM(CASE WHEN rt.status = 'Open' THEN 1 ELSE 0 END) + SUM(CASE WHEN rt.status = 'Progress' THEN 1 ELSE 0 END) + SUM(CASE WHEN rt.status = 'Done' THEN 1 ELSE 0 END) ) AS status_summary")
+                ->leftJoin('request_mom as rm', 'c.req_id', '=', 'rm.id')
+                ->leftJoin('request_momTask as rt', 'c.id', '=', 'rt.category_id')
+                ->leftJoin('request_momTaskBound as rtb', 'rt.id', '=', 'rtb.task_id')
+                ->leftJoin('employee.tbl_employee as emp', 'rtb.employee_id', '=', 'emp.id')
+                ->where('c.module_id', $module->id)
+                ->where('c.req_id', $id)
+                ->groupBy('c.id', 'c.category', 'emp.FullName')
+                ->orderBy('c.id')
                 ->get();
-                return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
+
+                $groupedData = [];
+
+                foreach ($rawData as $row) {
+                    if (!isset($groupedData[$row->id])) {
+                        $groupedData[$row->id] = [
+                            'id' => $row->id,
+                            'category' => $row->category,
+                            'status_summary' => $row->status_summary,
+                            'FullName' => []
+                        ];
+                    }
+                    if ($row->FullName) {
+                        $groupedData[$row->id]['FullName'][] = $row->FullName;
+                    }
+                }
+
+                foreach ($groupedData as &$data) {
+                    $data['FullName'] = implode(', ', array_unique($data['FullName']));
+                }
+
+                return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => array_values($groupedData)]);
             } else {
                 return response()->json(["status" => "show", "message" => $this->getMessage()['errornotfound']]);
             }

@@ -43,6 +43,7 @@ class EmployeedataController extends Controller
         try {
 
             $requestData = $request->all();
+            $requestData['companycode'] = $this->getCompanyName($request->company_id);
 
             $this->model->create($requestData);
 
@@ -64,6 +65,7 @@ class EmployeedataController extends Controller
         try {
             
             $requestData = $request->all();
+            $requestData['companycode'] = $this->getCompanyName($request->company_id);
 
             $data = $this->model->findOrFail($id);
             $data->update($requestData);

@@ -8,6 +8,7 @@ use Auth;
 use App\Models\Employee;
 use App\Models\Developer;
 use App\Models\User;
+use App\Models\Company;
 
 trait HasAuth {
 
@@ -51,6 +52,15 @@ trait HasAuth {
         }
 
         return $result;
+    }
+
+    public function getCompanyName($id) 
+    {
+        $data = Company::select('id', 'CompanyCode')->where('id', $id)->first();
+        if ($data) {
+            return $data->CompanyCode;
+        }
+        return null;
     }
 
 }

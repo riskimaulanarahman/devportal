@@ -514,7 +514,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
                         searchPanel: {
-                            visible: false,
+                            visible: true,
                             width: 240,
                             placeholder: 'Search...',
                         },
@@ -540,6 +540,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Task Status',
                                 dataField: 'status_summary',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
+                            },
+                            {
+                                caption: 'FullName List',
+                                dataField: 'FullName',
                                 editorOptions: { 
                                     readOnly: true
                                 }
@@ -573,8 +580,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         onContentReady: function(e){
                             moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
+                                // e.component.columnOption('Action', 'visible', true);
                         },
                         onToolbarPreparing: function(e) {
                             e.toolbarOptions.items.unshift({						
@@ -589,18 +595,31 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             });
                         },
-                        onEditorPreparing: function (e) {
+                        onEditorPrepared: function (e) {
+                            e.editorElement.on('keydown', function(event) {
+                                if (event.keyCode === 27) { // 27 is the keycode for the Escape key
+                                    setTimeout(function() {
+                                        e.component.columnOption('Action', 'visible', true);
+                                    }, 0);
+                                }
+                            });
                         },
                         onCellPrepared: function (e) {
                         },
                         onEditingStart: function(e) {
-                            e.component.columnOption('Action', 'visible', true);
+                            setTimeout(function() {
+                                e.component.columnOption('Action', 'visible', false);
+                            }, 0);
                         },
                         onInitNewRow: function(e) {
-                            e.component.columnOption('Action', 'visible', false);
+                            setTimeout(function() {
+                                e.component.columnOption('Action', 'visible', false);
+                            }, 0);
                         },
                         onSaved: function(e) {
-                            e.component.columnOption('Action', 'visible', true);
+                            setTimeout(function() {
+                                e.component.columnOption('Action', 'visible', true);
+                            }, 0);
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -1764,7 +1783,7 @@ function editCellTemplate(cellElement, cellInfo) {
     let fileUploaderElement = document.createElement("div");
     let fileUploader = $(fileUploaderElement).dxFileUploader({
       multiple: false,
-      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
+      accept: ".pptx,.ppt,.doc,.docx,.pdf,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.zip",
       uploadMode: "instantly",
       name: "myFile",
       uploadUrl: apiurl + "/upload-berkas/"+modname,
