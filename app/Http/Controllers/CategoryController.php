@@ -64,9 +64,21 @@ class CategoryController extends Controller
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
 
+                // Subquery untuk menghitung status
+                $statusCounts = DB::table('request_momTask as rt')
+                ->select('rt.category_id')
+                ->selectRaw("SUM(CASE WHEN rt.status = 'Open' THEN 1 ELSE 0 END) as open_count")
+                ->selectRaw("SUM(CASE WHEN rt.status = 'Progress' THEN 1 ELSE 0 END) as progress_count")
+                ->selectRaw("SUM(CASE WHEN rt.status = 'Done' THEN 1 ELSE 0 END) as done_count")
+                ->groupBy('rt.category_id');
+
                 $rawData = DB::table('tbl_category as c')
                 ->select('c.id', 'c.category','emp.FullName')
-                ->selectRaw("CONCAT('Open : ', SUM(CASE WHEN rt.status = 'Open' THEN 1 ELSE 0 END), ' | Progress : ', SUM(CASE WHEN rt.status = 'Progress' THEN 1 ELSE 0 END), ' | Done : ', SUM(CASE WHEN rt.status = 'Done' THEN 1 ELSE 0 END), ' | Total : ', SUM(CASE WHEN rt.status = 'Open' THEN 1 ELSE 0 END) + SUM(CASE WHEN rt.status = 'Progress' THEN 1 ELSE 0 END) + SUM(CASE WHEN rt.status = 'Done' THEN 1 ELSE 0 END) ) AS status_summary")
+                ->selectSub(function ($query) use ($statusCounts) {
+                    $query->fromSub($statusCounts, 'statusCounts')
+                        ->selectRaw("CONCAT('Open : ', open_count, ' | Progress : ', progress_count, ' | Done : ', done_count, ' | Total : ', open_count + progress_count + done_count) as status_summary")
+                        ->whereColumn('c.id', 'statusCounts.category_id');
+                }, 'status_summary')
                 ->leftJoin('request_mom as rm', 'c.req_id', '=', 'rm.id')
                 ->leftJoin('request_momTask as rt', 'c.id', '=', 'rt.category_id')
                 ->leftJoin('request_momTaskBound as rtb', 'rt.id', '=', 'rtb.task_id')
