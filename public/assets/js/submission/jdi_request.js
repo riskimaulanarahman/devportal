@@ -903,7 +903,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         dataSource: tagData,  // Array of possible tags
                                         value: options.value,
                                         showSelectionControls: true,
-                                        applyValueMode: 'useButtons',
+                                        // applyValueMode: 'useButtons',
                                         valueExpr: "name",
                                         displayExpr: "name",
                                         onValueChanged: function(e) {
