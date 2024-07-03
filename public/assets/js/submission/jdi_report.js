@@ -1,4 +1,4 @@
-var modname = 'jdirequest';
+var modname = 'jdireport';
 var modelclass = 'Jdi';
 var popupmode;
 
@@ -14,14 +14,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     dataSource: store(modname),
     allowColumnReordering: true,
     allowColumnResizing: true,
-    columnHidingEnabled: true,
+    columnHidingEnabled: false,
     rowAlternationEnabled: false,
-    wordWrapEnabled: true,
-    autoExpandAll: true,
+    wordWrapEnabled: false,
     showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
+    selection: { mode: "multiple" },
     searchPanel: {
         visible: true,
         width: 240,
@@ -32,7 +32,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         mode: "popup",
         allowAdding: false,
         allowUpdating: false,
-        allowDeleting: true,
+        allowDeleting: false,
     },
     scrolling: {
         mode: "virtual"
@@ -43,64 +43,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         {
-            dataField: 'title',
-            width: 200,
-        },
-        {
-            caption: 'Action',
-            width: 140,
-            cellTemplate: function(container, options) {
-
-                var isMine = options.data.isMine;
-                var isPendingOnMe = options.data.isPendingOnMe;
-                var reqid = options.data.id;
-                var reqstatus = options.data.requestStatus;
-                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-                var arrColor = [
-                    "btn-secondary",
-                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                    "btn-warning",
-                    "btn-success",
-                    "btn-danger",
-                ];
-
-                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
-    
-                $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-                    evt.stopPropagation();
-                
-                            popup.option({
-                                contentTemplate: () => popupContentTemplate(reqid,mode,options),
-                            });
-                            popup.show();
-
-                }).appendTo(container);
-                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                    $('<button class="btn btn-danger" id="btnreqid'+reqid+' m-l-3" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
-                            
-                        var result = confirm('Are you sure you want to cancel this submission ?');
-
-                        if (result) {
-                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                requestStatus:0,
-                                action:'submission',
-                                approvalAction: 0
-                            }).then(function(response){
-                                if(response.status != 'error') {
-                                    dataGrid.refresh();
-                                }
-                            });
-                        } else {
-                            alert('Cancelled.');
-                        }
-    
-                    }).appendTo(container); 
-                }
-            
-            }
-        },
-        {
             caption: "Code",
             dataField: 'code',
             width: 180,
@@ -109,51 +51,90 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'noRegistration',
             width: 180,
         },
-        { 
-            caption: 'Creator Name',
-			dataField: "user.fullname",
-            width: 180
+        {
+            dataField: 'registerDate',
+            dataType: 'date',
+            format: "yyyy-MM-dd",
+            width: 150,
         },
         {
-            caption: 'Pencetus Ide',
+            dataField: 'year',
+            width: 120,
+        },
+        {
+            dataField: 'month',
+            width: 80,
+        },
+        {
+            dataField: 'department',
+            width: 180,
+        },
+        {
+            dataField: 'title',
+            width: 200,
+        },
+        {
+            dataField: 'bu',
+            width: 120,
+        },
+        {
+            dataField: 'sector',
+            width: 120,
+        },
+        {
+            dataField: 'sapid',
+            width: 120,
+        },
+        {
+            caption: 'Originator',
             dataField: 'pencetuside_id',
             lookup: {
                 dataSource: listOption('/list-employeeall','id','fullname'),  
                 valueExpr: 'id',
                 displayExpr: 'fullname',
             },
+            width: 200,
+        },
+        {
+            dataField: 'level',
+            width: 120,
+        },
+        {
+            dataField: 'anggota1',
+            width: 120,
+        },
+        {
+            caption: 'Level Anggota 1',
+            dataField: 'anggota1level',
+            width: 120,
+        },
+        {
+            dataField: 'anggota2',
+            width: 120,
+        },
+        {
+            caption: 'Level Anggota 2',
+            dataField: 'anggota2level',
+            width: 120,
+        },
+        {
+            dataField: 'objective',
+            width: 120,
         },
         {
             caption: 'Category',
             dataField: 'ranking',
-            width: 180,
+            width: 120,
         },
         {
             caption: 'Status JDI',
             dataField: 'status_jdi',
+            width: 120,
+        },
+        {
+            caption: 'Saving(IDR)',
+            dataField: 'totalSaving',
             width: 180,
-        },
-        {
-            dataField: 'submitDate',
-            dataType: 'date',
-            format: "yyyy-MM-dd",
-            visible: false,
-        },
-        {
-            dataField: 'requestStatus',
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                ];
-                return arrText[e.value];
-            },
         },
         {
             dataField: "approveddoc",
@@ -172,7 +153,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         }
                     }).appendTo(container);
                 }
-            }
+            },
+            width: 150,
         },
       
     ],
@@ -216,7 +198,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        location.reload();
+        // location.reload();
     }
 }).dxDataGrid("instance");
 
@@ -393,6 +375,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
+                        selection: { mode: "multiple" },
                         searchPanel: {
                             visible: false,
                             width: 240,
@@ -552,6 +535,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         filterRow: { visible: false },
                         filterPanel: { visible: false },
                         headerFilter: { visible: false },
+                        selection: { mode: "multiple" },
                         searchPanel: {
                             visible: false,
                             width: 240,
