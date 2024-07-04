@@ -154,7 +154,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "date",
             format: "dd-MM-yyyy",
             // validationRules: [{ type: "required" }]
-        },        
+        },
+        {
+            dataField: "BirthOfDate",
+            dataType: "date",
+            format: "dd-MM-yyyy",
+            // validationRules: [{ type: "required" }]
+        },         
         {
             dataField: 'isInternationalStaff',
             caption: "IS ?",

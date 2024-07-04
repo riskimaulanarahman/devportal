@@ -37,11 +37,6 @@ class JdiReportController extends Controller
             
             $dataquery = $this->model->query();
 
-            $maxApprovalDates = DB::table('tbl_approverListHistory')
-            ->select('req_id', DB::raw('MAX(approvalDate) as max_approval_date'))
-            ->where('module_id', 41)
-            ->groupBy('req_id');
-
             $data = $dataquery
                 ->selectRaw("request_jdi.*,
                     codes.code,
@@ -52,9 +47,8 @@ class JdiReportController extends Controller
                     lvl1.Level as anggota1level,
                     emp2.FullName as anggota2,
                     lvl2.Level as anggota2level,
-                    maxApprovalDates.max_approval_date as registerDate,
-                    YEAR(maxApprovalDates.max_approval_date) as year,
-                    MONTH(maxApprovalDates.max_approval_date) as month
+                    RIGHT(request_jdi.noRegistration, 4) as year,
+                    SUBSTRING(request_jdi.noRegistration, LEN(request_jdi.noRegistration) - 6, 2) as month
                 ")
                 ->leftJoin('codes','request_jdi.code_id','codes.id')
                 ->leftJoin('employee.tbl_department as dept','request_jdi.department_id','dept.id')
@@ -64,9 +58,6 @@ class JdiReportController extends Controller
                 ->leftJoin('employee.tbl_level as lvl1','emp1.level_id','lvl1.id') //anggota 1
                 ->leftJoin('employee.tbl_employee as emp2','request_jdi.anggota2_id','emp2.id') //anggota 2
                 ->leftJoin('employee.tbl_level as lvl2','emp2.level_id','lvl2.id') //anggota 2
-                ->leftJoinSub($maxApprovalDates, 'maxApprovalDates', function($join) {
-                    $join->on('request_jdi.id', '=', 'maxApprovalDates.req_id');
-                })
                 ->with(['user'])
                 ->where('request_jdi.requestStatus',3)
                 ->orderByRaw("request_jdi.submitDate desc")

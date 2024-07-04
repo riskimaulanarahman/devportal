@@ -51,12 +51,12 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'noRegistration',
             width: 180,
         },
-        {
-            dataField: 'registerDate',
-            dataType: 'date',
-            format: "yyyy-MM-dd",
-            width: 150,
-        },
+        // {
+        //     dataField: 'registerDate',
+        //     dataType: 'date',
+        //     format: "yyyy-MM-dd",
+        //     width: 150,
+        // },
         {
             dataField: 'year',
             width: 120,
