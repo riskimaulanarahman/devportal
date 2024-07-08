@@ -45,31 +45,29 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         // showNavigationButtons: true,
       },
     columns: [
-        // {
-        //     caption: 'Action',
-        //     width: 160,
-        //     formItem: {visible:false},
-        //     cellTemplate: function(container, options) {
+        {
+            caption: 'Action',
+            width: 140,
+            cellTemplate: function(container, options) {
 
-        //         var reqid = options.data.id;
-    
-        //         $('<button class="btn btn-primary" id="btnreqid'+reqid+'"><i class="fa fa-history"></i></button>').on('dxclick', function(evt) {
-        //             evt.stopPropagation();
-        //                     popup.option({
-        //                         contentTemplate: () => popupContentTemplate(reqid),
-        //                     });
-        //                     popup.show();
-        //                     // alert('show data history : '+reqid)
+                var reqid = options.data.id;
+      
+                $('<button class="btn btn-info" id="btnpdfid'+reqid+' m-l-3" style="margin-left: 3px;"><i class="fa fa-download"></i></button>').on('dxclick', function(evt) {
+                    evt.stopPropagation();
+                        
+                    var result = confirm('Attention ! please wait until the generate process is complete.');
 
-        //         }).appendTo(container);
-        //         // $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 5px;"><i class="fa fa-people-arrows"></i></button>').on('dxclick', function(evt) {
-        //         //     evt.stopPropagation();
-        //         //             alert('Show Popup Mutasi/Promosi : '+reqid)
+                    if (result) {
+                        // window.open('./gen-pdf/mom/'+reqid, '_blank')
+                        alert(reqid);
+                    } else {
+                        alert('Cancelled.');
+                    }
 
-        //         // }).appendTo(container);
+                }).appendTo(container); 
             
-        //     }
-        // },
+            }
+        },
         // {
         //     dataField: "oldsap",
         //     dataType: "string",
@@ -77,6 +75,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: 'LoginName',
             visible: (admin == 1 || developer ) ? true : false,
+            width: 180
         },
         {
             dataField: "SAPID",
@@ -88,6 +87,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: "FullName",
             sortOrder: "asc",
             dataType: "string",
+            width: 180,
             validationRules: [{ type: "required" }]
         },
         { 

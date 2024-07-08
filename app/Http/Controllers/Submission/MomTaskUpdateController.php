@@ -65,7 +65,7 @@ class MomTaskUpdateController extends Controller
             $this->model->create($requestData);
 
              // START NORIFICATION
-             $this->generateNotificationMessage($request->task_id, $mode = 'Add');
+             $this->generateNotificationMessage($request->task_id, $mode = 'Add', $this->getAuth());
              // END NORIFICATION
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
@@ -119,7 +119,7 @@ class MomTaskUpdateController extends Controller
             $data->update($requestData);
 
              // START NORIFICATION
-             $this->generateNotificationMessage($data->task_id, $mode = 'Update');
+             $this->generateNotificationMessage($data->task_id, $mode = 'Update', $this->getAuth());
              // END NORIFICATION
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
@@ -130,8 +130,8 @@ class MomTaskUpdateController extends Controller
         }
     }
 
-    public function generateNotificationMessage($id, $mode) {
-        $getMomID = DB::table('request_momTask')->select('tbl_category.req_id')
+    public function generateNotificationMessage($id, $mode, $userupdate) {
+        $getMomID = DB::table('request_momTask')->select('tbl_category.req_id','tbl_category.category','request_momTask.description')
                         ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
                         ->where('request_momTask.id',$id)
                         ->first();
@@ -144,7 +144,7 @@ class MomTaskUpdateController extends Controller
             "submission" => $getSubmissionData,
             "email" => $getCreator->email, // kirim kepada creator
             "fullname" => $getCreator->fullname,
-            "message" => $this->mailMessage()['newActivity'],
+            "message" => "This post has a new activity from <b>" .$userupdate->fullname. "</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category.",
             "remarks" => $mode,
         ];
         if($getSubmissionData->requestStatus == 3) {

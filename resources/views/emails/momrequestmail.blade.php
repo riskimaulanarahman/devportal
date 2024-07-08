@@ -86,7 +86,7 @@
                 <p>You have received a New Submission from <b>{{ $mailData['creator'] }}</b></p>
             @endif
             <div class="message">
-                {{ $mailData['message'] }}
+                {!! $mailData['message'] !!}
             </div>
         @else
             <h2>MoM Online <span style="font-size: 8px">{{ date('Y-m-d h:i') }}</span></h2>
@@ -128,11 +128,6 @@
             <div class="assignment">
         @endif
             <h4>Participant :</h4>
-            {{-- <ul>
-                @foreach ($assignment as $assign)
-                    <li>{{ $assign->FullName }}</li>
-                @endforeach
-            </ul> --}}
             <table>
                 <tbody>
                     @php
