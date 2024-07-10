@@ -945,7 +945,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }).append($('<span>').text(options.column.caption));
                                 },
                                 editorOptions: { 
-                                    readOnly: ((isMine == 1) && mode == 'edit' || mode == 'add' ) || (mode == 'approval' && isBCIDv) ? false : true,
+                                    readOnly: ((admin == 1 || isMine == 1) && mode == 'edit' || mode == 'add' ) || (mode == 'approval' && isBCIDv) ? false : true,
                                 }
                             },
                             {

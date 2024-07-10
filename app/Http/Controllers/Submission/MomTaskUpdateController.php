@@ -10,6 +10,7 @@ use App\Mail\SubmissionMail;
 use App\Models\Module;
 use App\Models\Submission\MomTaskUpdate;
 use App\Models\Submission\MomTaskBound;
+use App\Models\Submission\MomTask;
 use App\Models\Stackholders;
 use App\Models\Code;
 use App\Models\User;
@@ -47,7 +48,6 @@ class MomTaskUpdateController extends Controller
 
     public function store(Request $request)
     {
-        try {
 
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
@@ -62,16 +62,33 @@ class MomTaskUpdateController extends Controller
                 return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
             }
 
-            $this->model->create($requestData);
+            DB::beginTransaction();
+            try {
 
-             // START NORIFICATION
-             $this->generateNotificationMessage($request->task_id, $mode = 'Add', $this->getAuth());
-             // END NORIFICATION
+                $store = $this->model->create($requestData);
+                // Setelah create data, dapatkan ID dari $store
+                $storeId = $store->id;
 
-            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+                // Update kolom status pada Model MomTask where task_id = $request->task_id
+                $momTask = MomTask::where('id', $request->task_id)
+                ->where('status', 'Open')
+                ->first();
+
+                if ($momTask) {
+                    $momTask->status = 'Progress'; // Update status sesuai kebutuhan Anda
+                    $momTask->save();
+                }
+
+                // START NORIFICATION
+                $this->generateNotificationMessage($request->task_id, $mode = 'Add', $this->getAuth());
+                // END NORIFICATION
+
+                DB::commit();
+
+                return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 
         } catch (\Exception $e) {
-
+            DB::rollBack();
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
@@ -87,6 +104,7 @@ class MomTaskUpdateController extends Controller
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
                 $data = $this->model->where('task_id',$id)
+                ->orderBy('updated_at','desc')
                 ->get();
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
             } else {
@@ -118,6 +136,8 @@ class MomTaskUpdateController extends Controller
 
             $data->update($requestData);
 
+            // $data = $this->model->findOrFail($id); // callback
+
              // START NORIFICATION
              $this->generateNotificationMessage($data->task_id, $mode = 'Update', $this->getAuth());
              // END NORIFICATION
@@ -130,8 +150,50 @@ class MomTaskUpdateController extends Controller
         }
     }
 
+    public function taskactions(Request $request, $id, $modulename) 
+    {
+
+            $data = MomTask::findOrFail($id);
+            $requestData = $request->all();
+            if($request->status == 'Completed') {
+                $requestData['completion_date'] = date('Y-m-d');
+                $requestData['status'] = 'Done';
+                $approvalAction = 3; // approved/completed
+            } else {
+                $requestData['status'] = $request->status;
+                $approvalAction = 2; // reworked
+            }
+
+        DB::beginTransaction();
+        try {
+
+            $data->update($requestData);
+
+            $getCategoryReqID = DB::table('tbl_category')->where('id',$data->category_id)->first();
+
+            //start save history perubahan
+            $fields = [
+                'status' => $request->status.' | Task Description : '.$data->description.' | Remarks : '.$request->remarks,
+            ];
+            
+            foreach ($fields as $key => $value) {
+                if ($value) {
+                    $this->approverAction($this->modulename, $getCategoryReqID->req_id, $key, $approvalAction, $value);
+                }
+            }
+            //end save history perubahan
+
+            DB::commit();
+            return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
     public function generateNotificationMessage($id, $mode, $userupdate) {
-        $getMomID = DB::table('request_momTask')->select('tbl_category.req_id','tbl_category.category','request_momTask.description')
+        $getMomID = DB::table('request_momTask')->select('tbl_category.req_id','tbl_category.category','request_momTask.id','request_momTask.description')
                         ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
                         ->where('request_momTask.id',$id)
                         ->first();
@@ -146,6 +208,7 @@ class MomTaskUpdateController extends Controller
             "fullname" => $getCreator->fullname,
             "message" => "This post has a new activity from <b>" .$userupdate->fullname. "</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category.",
             "remarks" => $mode,
+            "highlightedTaskId" => $getMomID->id // Menambahkan ID task yang dihighlight
         ];
         if($getSubmissionData->requestStatus == 3) {
             Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
@@ -188,6 +251,7 @@ class MomTaskUpdateController extends Controller
     public function genPdfMom($id) {
 
         $getSubmissionData = DB::table('request_mom')->where('id', $id)->first();
+        $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
         $code = Code::findOrFail($getSubmissionData->code_id);
         $code = $code->code;
         $final = 1;
@@ -198,10 +262,11 @@ class MomTaskUpdateController extends Controller
             "action_id" => 0,
             "submission" => $getSubmissionData,
             // "email" => $getCreator->email,
-            // "fullname" => $getCreator->fullname,
+            "fullname" => $getCreator->fullname,
             "message" => $this->mailMessage()['momTaskSummary'],
             "remarks" => null,
         ];
+        // dd($mailData);
         $assignment = Stackholders::leftJoin('employee.tbl_employee','tbl_stackholders.employee_id','=','employee.tbl_employee.id')
                         ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
                         ->select('tbl_stackholders.*','users.email','employee.tbl_employee.FullName')
@@ -243,6 +308,7 @@ class MomTaskUpdateController extends Controller
 
         // Load view dan passing data
         $pdf = PDF::loadView('emails.momrequestmail', compact(['detailmomtask','mailData','code','final','assignment']));
+        $pdf->set_paper('letter', 'landscape');
 
         return $pdf->stream('document.pdf');
     }

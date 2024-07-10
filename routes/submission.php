@@ -41,6 +41,7 @@ Route::group(['prefix' => 'api'], function () {
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request
+    Route::post('taskapproval/{id}/{modulename}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'taskactions']); //submit submission request
 
     //list
     Route::get('list-getemployee',[App\Http\Controllers\ListController::class, 'listEmployee']); //get list employee

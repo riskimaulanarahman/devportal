@@ -12,9 +12,9 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 100%;
             margin: 0 auto;
-            padding: 20px;
+            padding: 5px;
         }
 
         p {
@@ -107,8 +107,16 @@
                         <td>{{ $mailData['submission']->date }}</td>
                     </tr>
                     <tr>
-                        <th>Chairman</th>
+                        <th>Lead By</th>
                         <td>{{ $mailData['submission']->chairman }}</td>
+                    </tr>
+                    <tr>
+                        <th>Note Taker By</th>
+                        {{-- @if (!isset($mailData['pdf']))
+                            <td>{{ $mailData['submission']->fullname }}</td>
+                        @else --}}
+                            <td>{{ $mailData['fullname'] }}</td>
+                        {{-- @endif --}}
                     </tr>
                     <tr>
                         <th>Venue</th>
@@ -128,28 +136,11 @@
             <div class="assignment">
         @endif
             <h4>Participant :</h4>
-            <table>
-                <tbody>
-                    @php
-                        $counter = 0;
-                    @endphp
-                    @foreach ($assignment as $assign)
-                        @if ($counter % 3 == 0)
-                            <tr>
-                        @endif
-                        <td>{{ $assign->FullName }}</td>
-                        @php
-                            $counter++;
-                        @endphp
-                        @if ($counter % 3 == 0)
-                            </tr>
-                        @endif
-                    @endforeach
-                    @if ($counter % 3 != 0)
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
+            <p>
+                @foreach ($assignment as $index => $assign)
+                    {{ $assign->FullName }}@if (!$loop->last), @endif
+                @endforeach
+            </p>
         </div>
 
         @foreach ($detailmomtask->groupBy('category') as $category => $groupedTasks)
@@ -158,7 +149,6 @@
                 <table class="page-break">
                     <thead>
                         <tr>
-                            {{-- <th rowspan="2">Category</th> --}}
                             <th rowspan="2">Description</th>
                             <th rowspan="2">Section</th>
                             <th rowspan="2">Status</th>
@@ -192,11 +182,10 @@
                                 $handledByList = $groupedTasks->filter(function ($t) use ($task) {
                                     return $t->description == $task->description && $t->section == $task->section && $t->status == $task->status && $t->deadline_date == $task->deadline_date;
                                 })->map(function ($t) {
-                                    return ['FullName' => $t->FullName, 'Content' => $t->content];
+                                    return ['FullName' => explode(' ', trim($t->FullName))[0], 'Content' => $t->content];
                                 })->unique(function ($item) {
                                     return $item['FullName'] . $item['Content'];
                                 });
-
                                 $handledBy = $handledByList->map(function ($item) {
                                     return $item['FullName'] . ' (' . $item['Content'] . ')';
                                 })->implode(', ');
@@ -205,9 +194,16 @@
                                 $updateDescription = $task->UpdateDescription ?? 'N/A';  // Gunakan null coalescing operator untuk default value
                                 $updateDate = $task->UpdateDate ? \Carbon\Carbon::parse($task->UpdateDate)->format('Y-m-d') : 'N/A';
                                 $updateName = $task->UpdateName ?? 'N/A';
+
+                                // Menentukan apakah baris harus dihighlight berdasarkan ID
+                                if(!isset($mailData['pdf'])) {
+                                    $highlightRow = $task->id == $mailData['highlightedTaskId'];
+                                } else {
+                                    $highlightRow = null;
+                                }
+                                    
                             @endphp
-                            <tr>
-                                {{-- <td>{{ $task->category }}</td> --}}
+                            <tr style="background-color: {{ $highlightRow ? '#ffffcc' : 'inherit' }};">
                                 <td>{{ $task->description }}</td>
                                 <td>{{ $task->section }}</td>
                                 <td>{{ $task->status }}</td>

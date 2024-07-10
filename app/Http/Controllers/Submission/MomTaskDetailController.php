@@ -89,25 +89,21 @@ class MomTaskDetailController extends Controller
 
             $data = $this->model->findOrFail($id);
             
-            if($request->status == 'Done') {
-                $requestData['completion_date'] = date('Y-m-d');
-            }
-
             $data->update($requestData);
 
-            $getCategoryReqID = DB::table('tbl_category')->where('id',$data->category_id)->first();
+            // $getCategoryReqID = DB::table('tbl_category')->where('id',$data->category_id)->first();
 
-            //start save history perubahan
-            $fields = [
-                'status' => $request->status.' | Task Description : '.$data->description,
-            ];
+            // //start save history perubahan
+            // $fields = [
+            //     'status' => $request->status.' | Task Description : '.$data->description,
+            // ];
             
-            foreach ($fields as $key => $value) {
-                if ($value) {
-                    $this->approverAction($this->modulename, $getCategoryReqID->req_id, $key, 1, $value);
-                }
-            }
-            //end save history perubahan
+            // foreach ($fields as $key => $value) {
+            //     if ($value) {
+            //         $this->approverAction($this->modulename, $getCategoryReqID->req_id, $key, 1, $value);
+            //     }
+            // }
+            // //end save history perubahan
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 

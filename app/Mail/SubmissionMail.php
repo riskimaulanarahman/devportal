@@ -116,14 +116,15 @@ class SubmissionMail extends Mailable
 
                 $latestUpdates = DB::table('request_momTaskUpdate')
                 ->select('request_momTaskUpdate.*')
-                ->whereIn('request_momTaskUpdate.id', function ($query) {
-                    $query->select(DB::raw('MAX(id)'))
+                ->whereIn('request_momTaskUpdate.updated_at', function ($query) {
+                    $query->select(DB::raw('MAX(updated_at)'))
                         ->from('request_momTaskUpdate')
                         ->groupBy('request_momTaskUpdate.task_id');
                 });
 
                 $datadetailtask = DB::table('tbl_category')
                 ->select('tbl_category.category',
+                'momTaskDetail.id',
                 'momTaskDetail.description',
                 'momTaskDetail.section',
                 'momTaskDetail.status',

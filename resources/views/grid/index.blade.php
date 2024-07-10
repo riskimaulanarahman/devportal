@@ -83,6 +83,8 @@
             <div id="gridContainer" style="height: 600px;"></div>
             <div id="popup"></div>
             <div id="popupdetails"></div>
+            {{-- popupactions untuk approved MOM --}}
+            <div id="popupactions"></div>
         </div>
 
     </div>

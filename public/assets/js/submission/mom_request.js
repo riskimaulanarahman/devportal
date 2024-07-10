@@ -184,6 +184,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
         moveEditColumnToLeft(e.component);
         runpopup();
         runpopupdetails();
+        runpopupactions();
     },
     onCellPrepared: function (e) {
         if (e.rowType == "data") {
@@ -545,7 +546,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                caption: 'FullName List',
+                                caption: 'Handled By',
                                 dataField: 'FullName',
                                 editorOptions: { 
                                     readOnly: true
@@ -554,10 +555,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Action',
                                 width: 140,
-                                cellTemplate: function(container, options) {
-
-                                    var taskID = options.data.id;
-                    
+                                cellTemplate: function(container, options) {                    
                                     $('<button class="btn btn-primary"><i class="fa fa-search"></i></button>').on('dxclick', function(evt) {
                                         evt.stopPropagation();
                                             popupdetails.option({
@@ -1141,7 +1139,6 @@ const popupContentTemplate = function (reqid,mode,options) {
 const popupContentTemplateDetails = function (reqid,mode,options) {
 
     var taskID = options.data.id;
-
     const scrollView = $('<div />');
 
     scrollView.append("<hr>"),
@@ -1210,11 +1207,13 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                             {
                                 dataField: 'status',
                                 lookup: {
-                                    dataSource: ['Open','Progress','Done'],
+                                    dataSource: ['Open','Progress','Reworked','Done'],
                                     searchEnabled: false
                                 },
-                                validationRules: [{ type: "required" }]
-
+                                validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
                                 dataField: "completion_date",
@@ -1254,6 +1253,24 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                                     }
                                     return dataTC;
                                 },
+                            },
+                            {
+                                caption: 'Action',
+                                width: 140,
+                                cellTemplate: function(container, options) {
+                                    var taskID = options.data.id;
+
+                                    if(options.data.status == 'Progress' || options.data.status == 'Reworked') {
+                                        $('<button class="btn btn-info"><i class="fa fa-check"></i></button>').on('dxclick', function(evt) {
+                                            evt.stopPropagation();
+                                            popupactions.option({
+                                                contentTemplate: () => popupContentTemplateActions(taskID,'approval',options),
+                                            });
+                                            popupactions.show();
+                                        }).appendTo(container);
+                                    }
+                                },
+                                visible: true
                             },
                         ],
                         masterDetail: {
@@ -1297,7 +1314,7 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
                     
                             // Memuat ulang DataGrid
-                            // dataGridtaskdetail.refresh();
+                            dataGridtaskdetail.refresh();
                         }
                     })
                 } 
@@ -1315,6 +1332,57 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
 
 };
 
+const popupContentTemplateActions = function (reqid,mode,options) {
+
+    const scrollView = $('<div />');
+
+    var approvalOptions = 
+        '<div class="row">' +
+            '<div class="col-md-6">' +
+                '<label for="remarks">Approval Action :</label>' +
+                '<div class="form-check">'+
+                    '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction1" value="3">'+
+                    '<label class="form-check-label" for="rappraction1">'+
+                    'Completed'+
+                    '</label>'+
+                '</div>'+
+                '<div class="form-check">'+
+                    '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction2" value="2">'+
+                    '<label class="form-check-label" for="rappraction2">'+
+                    'Reworked'+
+                    '</label>'+
+                '</div>'+
+            '</div>' +
+            '<div class="col-md-6">' +
+                '<div class="form-group">' +
+                    '<label for="remarkstaskactions">Remarks :</label>' +
+                    '<textarea class="form-control" id="remarkstaskactions" rows="3"></textarea>' +
+                '</div>' +
+            '</div>' +
+        '</div><hr>';
+    
+    scrollView.append('<div class="row">' +
+    '<div class="col-lg-12">' +
+        '<div class="card">' +
+        '<div class="card-header">' +
+            '<h5 class="card-title">Form Action</h5>' +
+        '</div>' +
+        '<div class="card-body" style="border-bottom-color: darkseagreen !important;border-left-color: darkseagreen;">' +
+            approvalOptions +
+            '<button id="btn-actionstatus" type="button" onClick="btnreqactionstatus('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Release</button>'+
+        '</div>' +
+        '</div>' +
+    '</div>' +
+    '</div>');
+    
+    scrollView.dxScrollView({
+        width: '100%',
+        height: '100%',
+    })
+
+    return scrollView;
+
+};
 
 function masterDetailTemplate(_, masterDetailOptions) {
     return $('<div>').dxTabPanel({
@@ -1433,7 +1501,7 @@ function createUpdateTabTemplate(masterDetailData) {
                     dataField: "date",
                     dataType: "date",
                     format: "dd-MM-yyyy",
-                    sortOrder: "asc",
+                    // sortOrder: "asc",
                     width: 140,
                     editorOptions: { 
                         readOnly: true
@@ -1711,6 +1779,40 @@ function runpopupdetails() {
     }).dxPopup('instance');
 }
 
+function runpopupactions() {
+    popupactions = $('#popupactions').dxPopup({
+        contentTemplate: popupContentTemplateActions,
+        container: '.content',
+        showTitle: true,
+        title: 'Task Action',
+        visible: false,
+        dragEnabled: false,
+        hideOnOutsideClick: false,
+        showCloseButton: true,
+        fullScreen : false,
+        onShowing: function(e) {
+        },
+        onShown: function(e) {
+        },
+        onHidden: function(e) {
+            dataGridtaskdetail.refresh();
+        },
+        toolbarItems: [
+        {
+            widget: 'dxButton',
+            toolbar: 'bottom',
+            location: 'after',
+            options: {
+            text: 'Close',
+            onClick() {
+                popupactions.hide();
+            },
+            },
+        }]
+
+    }).dxPopup('instance');
+}
+
 function btnreqsubmit(reqid,mode) {
 
     var btnSubmit = $('#btn-submit');
@@ -1748,6 +1850,51 @@ function btnreqsubmit(reqid,mode) {
                 btnSubmit.prop('disabled', false);
             } else {
                 popup.hide();
+            }
+        });
+    } else {
+        btnSubmit.prop('disabled', false);
+        alert('Cancelled.');
+    }
+
+}
+
+function btnreqactionstatus(reqid,mode) {
+    var btnSubmit = $('#btn-actionstatus');
+    btnSubmit.prop('disabled', true);
+
+    if(mode == 'approval') {
+        var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
+        console.log(valapprovalAction)
+        var valremarks = $('#remarkstaskactions').val(); // mengambil nilai dari text area
+        console.log(valremarks)
+        if (!valapprovalAction) {
+            alert('Please select approval action.')
+            btnSubmit.prop('disabled', false);
+            return false;
+        }
+        else if (!valremarks) {
+            alert('Please enter remarks.')
+            btnSubmit.prop('disabled', false);
+            return false;
+        }
+        
+    }
+
+    var statusAction = valapprovalAction == 3 ? 'Completed' : valapprovalAction == 2 ? 'Reworked' : '';
+
+    var result = confirm('Are you sure you want to submit this action ?');
+    if (result) {
+        sendRequest(apiurl + "/taskapproval/"+reqid+"/"+modelclass, "POST", {
+            // action: actionForm,
+            // approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+            status: statusAction,
+            remarks: valremarks
+        }).then(function(response){
+            if(response.status == 'error') {
+                btnSubmit.prop('disabled', false);
+            } else {
+                popupactions.hide();
             }
         });
     } else {
