@@ -80,7 +80,7 @@ class MomTaskUpdateController extends Controller
                 }
 
                 // START NORIFICATION
-                $this->generateNotificationMessage($request->task_id, $mode = 'Add', $this->getAuth());
+                $this->generateNotificationMessage($request->task_id, $mode = 'Add', $this->getAuth(), null);
                 // END NORIFICATION
 
                 DB::commit();
@@ -136,10 +136,8 @@ class MomTaskUpdateController extends Controller
 
             $data->update($requestData);
 
-            // $data = $this->model->findOrFail($id); // callback
-
              // START NORIFICATION
-             $this->generateNotificationMessage($data->task_id, $mode = 'Update', $this->getAuth());
+             $this->generateNotificationMessage($data->task_id, $mode = 'Update', $this->getAuth(), null);
              // END NORIFICATION
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
@@ -183,6 +181,10 @@ class MomTaskUpdateController extends Controller
             }
             //end save history perubahan
 
+            // START NORIFICATION
+            $this->generateNotificationMessage($id, $mode = $request->status, $this->getAuth(), $request->remarks);
+            // END NORIFICATION
+
             DB::commit();
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 
@@ -192,7 +194,7 @@ class MomTaskUpdateController extends Controller
         }
     }
 
-    public function generateNotificationMessage($id, $mode, $userupdate) {
+    public function generateNotificationMessage($id, $mode, $userupdate, $remarks) {
         $getMomID = DB::table('request_momTask')->select('tbl_category.req_id','tbl_category.category','request_momTask.id','request_momTask.description')
                         ->leftJoin('tbl_category','request_momTask.category_id','tbl_category.id')
                         ->where('request_momTask.id',$id)
@@ -200,13 +202,21 @@ class MomTaskUpdateController extends Controller
         $getSubmissionData = DB::table('request_mom')->where('id', $getMomID->req_id)->first();
         $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
 
+        if($mode == "Completed") {
+            $messages = "This post has new activities <b>Completed</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category. <br> <b>Remarks</b> : ".$remarks;
+        } if($mode == "Reworked") {
+            $messages = "This post has new activities <b>Reworked</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category. <br> <b>Remarks</b> : ".$remarks;
+        } else {
+            $messages = "This post has a new activity from <b>" .$userupdate->fullname. "</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category.";
+        }
+
         $mailData = [
             "all" => 1,
             "action_id" => 0,
             "submission" => $getSubmissionData,
             "email" => $getCreator->email, // kirim kepada creator
             "fullname" => $getCreator->fullname,
-            "message" => "This post has a new activity from <b>" .$userupdate->fullname. "</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category.",
+            "message" => $messages,
             "remarks" => $mode,
             "highlightedTaskId" => $getMomID->id // Menambahkan ID task yang dihighlight
         ];

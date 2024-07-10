@@ -1206,11 +1206,10 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                             },
                             {
                                 dataField: 'status',
-                                lookup: {
-                                    dataSource: ['Open','Progress','Reworked','Done'],
-                                    searchEnabled: false
-                                },
-                                validationRules: [{ type: "required" }],
+                                // lookup: {
+                                //     dataSource: ['Open','Progress','Reworked','Done'],
+                                //     searchEnabled: false
+                                // },
                                 editorOptions: { 
                                     readOnly: true
                                 }
@@ -1270,7 +1269,7 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                                         }).appendTo(container);
                                     }
                                 },
-                                visible: true
+                                visible: (isMine == 1 || admin == 1 || isChairman == 1) ? true : false
                             },
                         ],
                         masterDetail: {
