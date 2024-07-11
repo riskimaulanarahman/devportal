@@ -1206,12 +1206,12 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                             },
                             {
                                 dataField: 'status',
-                                // lookup: {
-                                //     dataSource: ['Open','Progress','Reworked','Done'],
-                                //     searchEnabled: false
-                                // },
+                                lookup: {
+                                    dataSource: ['Open','Progress','Done'],
+                                    searchEnabled: false
+                                },
                                 editorOptions: { 
-                                    readOnly: true
+                                    readOnly: (admin == 1) ? false : true
                                 }
                             },
                             {
