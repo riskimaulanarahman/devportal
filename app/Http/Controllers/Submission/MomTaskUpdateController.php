@@ -249,6 +249,7 @@ class MomTaskUpdateController extends Controller
                     "fullname" => $getCreator->fullname,
                     "message" => $this->mailMessage()['deadlineTaskReminder'],
                     "remarks" => null,
+                    "highlightedTaskId" => null
                 ];
 
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
