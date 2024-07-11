@@ -157,8 +157,8 @@ class MomTaskUpdateController extends Controller
                 $requestData['completion_date'] = date('Y-m-d');
                 $requestData['status'] = 'Done';
                 $approvalAction = 3; // approved/completed
-            } else {
-                $requestData['status'] = $request->status;
+            } else if ($request->status == 'Reworked'){
+                $requestData['status'] = 'Progress';
                 $approvalAction = 2; // reworked
             }
 
