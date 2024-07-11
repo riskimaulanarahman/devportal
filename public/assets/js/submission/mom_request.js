@@ -1259,7 +1259,7 @@ const popupContentTemplateDetails = function (reqid,mode,options) {
                                 cellTemplate: function(container, options) {
                                     var taskID = options.data.id;
 
-                                    if(options.data.status == 'Progress' || options.data.status == 'Reworked') {
+                                    if(options.data.status == 'Progress') {
                                         $('<button class="btn btn-info"><i class="fa fa-check"></i></button>').on('dxclick', function(evt) {
                                             evt.stopPropagation();
                                             popupactions.option({

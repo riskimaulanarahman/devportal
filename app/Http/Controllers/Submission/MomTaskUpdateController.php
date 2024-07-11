@@ -204,7 +204,7 @@ class MomTaskUpdateController extends Controller
 
         if($mode == "Completed") {
             $messages = "This post has new activities <b>Completed</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category. <br> <b>Remarks</b> : ".$remarks;
-        } if($mode == "Reworked") {
+        } else if($mode == "Reworked") {
             $messages = "This post has new activities <b>Reworked</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category. <br> <b>Remarks</b> : ".$remarks;
         } else {
             $messages = "This post has a new activity from <b>" .$userupdate->fullname. "</b> on task <b>" .$getMomID->description. "</b> in the <b>" .$getMomID->category. "</b> category.";
