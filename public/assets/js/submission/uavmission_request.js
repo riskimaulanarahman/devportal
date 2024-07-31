@@ -92,7 +92,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
 
                 }).appendTo(container);
                 if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                    $('<button class="btn btn-danger" id="btnreqid'+reqid+' m-l-3" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
+                    $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
                             
                         var result = confirm('Are you sure you want to cancel this submission ?');

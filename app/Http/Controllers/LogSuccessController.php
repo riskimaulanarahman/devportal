@@ -15,7 +15,16 @@ class LogSuccessController extends Controller
      */
     public function index()
     {
-        //
+        try {
+
+            $data = LogSuccess::where('url','like','%employeedata%')->orderBy('id','desc')->get();
+
+            return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
     }
 
     /**

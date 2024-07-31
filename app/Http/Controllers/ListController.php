@@ -100,7 +100,7 @@ class ListController extends Controller
     }
 
     public function listCompany() {
-        return Company::select('id','companycode')->where('isUsed',1)->orderBy('companycode','asc')->get();
+        return Company::select('*')->where('isUsed',1)->orderBy('companycode','asc')->get();
     }
 
     public function listDepartment() {
@@ -108,7 +108,7 @@ class ListController extends Controller
     }
 
     public function listLocation() {
-        return Location::select('id','location')->orderBy('location','asc')->where('isUsed',1)->get();
+        return Location::select('*')->orderBy('location','asc')->where('isUsed',1)->get();
     }
 
     public function listDesignation() {

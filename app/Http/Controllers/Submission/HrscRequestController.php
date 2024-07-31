@@ -53,9 +53,10 @@ class HrscRequestController extends Controller
 
             if(!$isAdmin) {
                 $dataquery->selectRaw("CASE WHEN tbl_assignment.employee_id = '".$employeeid."' then 1 else 0 end as isPIC");
-                $dataquery->leftJoin('tbl_assignment',function($join) use ($module_id){
+                $dataquery->leftJoin('tbl_assignment',function($join) use ( $user_id, $module_id){
                     $join->on('request_hrsc.id','=','tbl_assignment.req_id')
-                         ->where('tbl_assignment.module_id',$module_id);
+                        ->where("request_hrsc.user_id", "!=", $user_id)
+                        ->where('tbl_assignment.module_id',$module_id);
                 });
             }
 
@@ -72,11 +73,12 @@ class HrscRequestController extends Controller
                             if ($isAdmin) {
                                 $query->where("request_hrsc.user_id", "!=", $user_id)
                                     ->whereIn("request_hrsc.requestStatus", [1,3,4]);
-                            } else {
+                            }
+                             else {
                                 $query->where("tbl_assignment.employee_id",$employeeid)
                                     ->whereIn("request_hrsc.requestStatus", [3]);
                             }
-                        })             
+                        })
                         ->orWhere("request_hrsc.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')

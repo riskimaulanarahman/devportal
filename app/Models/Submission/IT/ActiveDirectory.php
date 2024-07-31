@@ -1,47 +1,45 @@
 <?php
 
-namespace App\Models\Submission;
+namespace App\Models\Submission\IT;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
+use App\Models\Project;
 use App\Models\ApproverListReq;
+use App\Models\Employee;
 
-class UavMissionDetail extends Model
+class ActiveDirectory extends Model
 {
     use HasFactory;
 
-    protected $table = 'request_uavmissiondetail';
+    protected $table = 'request_it_activedirectory';
 
     protected $guarded = ['id'];
 
     protected $fillable = [
-        'module_id',
-        'req_id',
-        'mission_type',
-        'missiondate',
-        'location_type',
-        'location_sector',
-        'location_nocompt',
-        'mission_pic',
-        'device_id',
-        'plan_start',
-        'plan_end',
-        'completed_date',
-        'status',
-        'remarks',
+        'user_id',
+        'requestStatus',
+        'requestType',
+        'accessType',
+        'accountType',
+        'isVip',
+        'validFrom',
+        'validTo',
+        'remarks'
     ];
 
     protected $casts = [
-        'missiondate' => 'date',
+        'validFrom' => 'date',
+        'validTo' => 'date',
     ];
 
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['device_id','plan_start','plan_end','completed_date','status','remarks']);
+        $fillable = array_diff($fillable, []);
         return $fillable;
     }
 
@@ -63,5 +61,10 @@ class UavMissionDetail extends Model
     public function code()
     {
         return $this->belongsTo(Code::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class,'employee_id');
     }
 }

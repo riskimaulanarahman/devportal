@@ -1,5 +1,5 @@
-var modname = 'ticketrequest';
-var modelclass = 'Ticket';
+var modname = 'adrequest';
+var modelclass = 'AD';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -12,8 +12,6 @@ function moveEditColumnToLeft(dataGrid) {
 
 var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
-    // keyExpr: 'id',
-    // parentIdExpr: 'parentID',
     allowColumnReordering: true,
     allowColumnResizing: true,
     columnHidingEnabled: true,
@@ -24,10 +22,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    // selection: {
-    //     mode: 'multiple',
-    //     recursive: true,
-    // },
     searchPanel: {
         visible: true,
         width: 240,
@@ -48,15 +42,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         showInfo: true,
     },
     columns: [
-        {
-            dataField: 'nameSystem',
-            width: 200,
-            lookup: {
-                dataSource: listOption('/list-parentproject','id','nameSystem'),  
-                valueExpr: 'id',
-                displayExpr: 'nameSystem',
-            },
-        },
         {
             caption: 'Action',
             width: 140,
@@ -117,23 +102,29 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180,
             sortOrder: "desc"
         },
-        {
-            caption: "Description",
-            dataField: 'description',
-            width: 180
-        },
-        {
-            dataField: 'category',
-            dataType: 'string',
-            width: 180,
-            lookup: {
-                dataSource: ['Error/Bug','Modified','Additional'],  
-            },
-        },
         { 
 			dataField: "user.fullname",
             caption: 'Creator Name',
             width: 180
+        },
+        {
+            caption: "Full Name",
+            dataField: 'employee.FullName',
+            width: 180
+        },
+        {
+            dataField: 'requestType',
+            dataType: 'string',
+            lookup: {
+                dataSource: ['Create Account','Delete Account'],  
+            },
+        },
+        {
+            dataField: 'accessType',
+            dataType: 'string',
+            lookup: {
+                dataSource: ['TS Account','Non-TS Account'],  
+            },
         },
         {
             dataField: 'requestStatus',
@@ -151,24 +142,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 return arrText[e.value];
             },
         },
-        {
-            dataField: 'ticketStatus',
-            encodeHtml: false,
-            // sortOrder: "desc",
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Immediately') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Immediately</span>"
-                } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>On Queue</span>"
-                }
-            },
-        },
-      
     ],
     export: {
-        enabled: true,
+        enabled: false,
         fileName: modname,
         excelFilterEnabled: true,
         allowExportSelectedData: true
@@ -204,7 +180,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        location.reload();
+        // location.reload();
     }
 }).dxDataGrid("instance");
 
@@ -265,41 +241,37 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     const scrollView = $('<div />');
 
-    if ((isMine == 1 || isPendingOnMe == 1) && (mode == 'add' || mode == 'edit' || mode == 'approval')) {
-        if((isPendingOnMe == 1) && (mode == 'approval')) {
-            var approvalOptions = 
-                '<div class="row">' +
-                    '<div class="col-md-6">' +
-                    '<label for="remarks">Approval Action :</label>' +
-                    '<div class="form-check">'+
-                        '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction1" value="3">'+
-                        '<label class="form-check-label" for="rappraction1">'+
-                        'Approved'+
-                        '</label>'+
-                    '</div>'+
-                    '<div class="form-check">'+
-                        '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction2" value="2">'+
-                        '<label class="form-check-label" for="rappraction2">'+
-                        'Reworked'+
-                        '</label>'+
-                    '</div>'+
-                    '<div class="form-check mb-3">'+
-                        '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction3" value="4">'+
-                        '<label class="form-check-label" for="rappraction3">'+
-                        'Rejected'+
-                        '</label>'+
-                    '</div>'+
-                    '</div>' +
-                    '<div class="col-md-6">' +
-                    '<div class="form-group">' +
-                        '<label for="remarks">Remarks :</label>' +
-                        '<textarea class="form-control" id="remarks" rows="3"></textarea>' +
-                    '</div>' +
-                    '</div>' +
-                '</div><hr>';
-          } else {
-            var approvalOptions = '';
-          }
+    if ((isPendingOnMe == 1) && (mode == 'approval')) {
+        var approvalOptions = 
+            '<div class="row">' +
+                '<div class="col-md-6">' +
+                '<label for="remarks">Approval Action :</label>' +
+                '<div class="form-check">'+
+                    '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction1" value="3">'+
+                    '<label class="form-check-label" for="rappraction1">'+
+                    'Approved'+
+                    '</label>'+
+                '</div>'+
+                '<div class="form-check">'+
+                    '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction2" value="2">'+
+                    '<label class="form-check-label" for="rappraction2">'+
+                    'Reworked'+
+                    '</label>'+
+                '</div>'+
+                '<div class="form-check mb-3">'+
+                    '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction3" value="4">'+
+                    '<label class="form-check-label" for="rappraction3">'+
+                    'Rejected'+
+                    '</label>'+
+                '</div>'+
+                '</div>' +
+                '<div class="col-md-6">' +
+                '<div class="form-group">' +
+                    '<label for="remarks">Remarks :</label>' +
+                    '<textarea class="form-control" id="remarks" rows="3"></textarea>' +
+                '</div>' +
+                '</div>' +
+            '</div><hr>';
           
           scrollView.append('<div class="row">' +
             '<div class="col-lg-12">' +
@@ -391,11 +363,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 width: 200,
                                 validationRules: [{ type: "required" }]
                             },
-                            // {
-                            //     dataField: 'module',
-                            //     dataType: 'string',
-                            //     validationRules: [{ type: "required" }]
-                            // },
                             {
                                 dataField: 'category',
                                 dataType: 'string',
@@ -1127,4 +1094,4 @@ function editCellTemplate(cellElement, cellInfo) {
         cellElement.append(fileUploaderElement);
         cellElement.append(buttonElement);
   
-  }
+}

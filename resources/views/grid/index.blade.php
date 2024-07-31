@@ -88,4 +88,6 @@
         </div>
 
     </div>
+
+    @include('grid.component')
 @endsection

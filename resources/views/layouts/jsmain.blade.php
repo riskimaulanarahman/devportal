@@ -127,7 +127,9 @@
         '/hrsc_request': 'submission/hrsc_request.js',
         '/mom_request': 'submission/mom_request.js',
         '/jdi_request': 'submission/jdi_request.js',
-        '/jdi_report': 'submission/jdi_report.js',
+        '/jdi_reportl': 'submission/jdi_report.js',
+        //submission/IT
+        '/ad_request': 'submission/IT/ad_request.js',
     }
     
     const pathname = window.location.pathname;
