@@ -57,7 +57,7 @@ class ListController extends Controller
     }
 
     public function listEmployeeAll() {
-        return Employee::selectRaw('employee.tbl_employee.id, sapid, fullname, companycode, employee.tbl_department.departmentname, employee.tbl_department.departmentgroup, employee.tbl_level.level as levels')
+        return Employee::selectRaw('employee.tbl_employee.sys_id ,employee.tbl_employee.id, sapid, fullname, companycode, employee.tbl_department.departmentname, employee.tbl_department.departmentgroup, employee.tbl_level.level as levels')
             ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
             ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->where('employee.tbl_employee.isActive',1)

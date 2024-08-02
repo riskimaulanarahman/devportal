@@ -44,6 +44,7 @@ class EmployeedataController extends Controller
 
             $requestData = $request->all();
             $requestData['companycode'] = $this->getCompanyName($request->company_id);
+            $requestData['sys_id_depthead'] = $this->getsysid($request->deptheadName);
 
             $this->model->create($requestData);
 
@@ -68,6 +69,10 @@ class EmployeedataController extends Controller
             if(isset($request->company_id)) {
                 $requestData['companycode'] = $this->getCompanyName($request->company_id);
             }
+            if(isset($request->deptheadName)) {
+                $requestData['sys_id_depthead'] = $this->getsysid($request->deptheadName);
+            }
+
 
             $data = $this->model->findOrFail($id);
             $data->update($requestData);

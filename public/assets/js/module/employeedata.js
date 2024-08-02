@@ -48,36 +48,38 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         showInfo: true,
       },
     columns: [
-        {
-            caption: 'Create AD',
-            width: 100,
-            cellTemplate: function(container, options) {
+        // {
+        //     caption: 'Create AD',
+        //     fixed: true,
+        //     width: 100,
+        //     cellTemplate: function(container, options) {
 
-                var reqid = options.data.id;
-                $('<button class="btn btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
-                    evt.stopPropagation();
+        //         var reqid = options.data.id;
+        //         $('<button class="btn btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
+        //             evt.stopPropagation();
                 
                     
-                    alert('Create and Send AD Submission')
+        //             alert('Create and Send AD Submission')
 
-                }).appendTo(container);
-            }
-        },
-        {
-            caption: 'Terminate',
-            width: 100,
-            cellTemplate: function(container, options) {
+        //         }).appendTo(container);
+        //     }
+        // },
+        // {
+        //     caption: 'Terminate',
+        //     fixed: true,
+        //     width: 100,
+        //     cellTemplate: function(container, options) {
 
-                var reqid = options.data.id;
-                $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
-                    evt.stopPropagation();
+        //         var reqid = options.data.id;
+        //         $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
+        //             evt.stopPropagation();
                 
                     
-                    alert('Terminate')
+        //             alert('Terminate')
 
-                }).appendTo(container);
-            }
-        },
+        //         }).appendTo(container);
+        //     }
+        // },
         {
             dataField: "SAPID",
             dataType: "string",
@@ -90,6 +92,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "string",
             validationRules: [{ type: "required" }]
         },
+        
         { 
             dataField: "company_id",
             caption: "BU",
@@ -99,20 +102,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 valueExpr: 'id',
                 displayExpr: 'CompanyCode',
             },
-            validationRules: [{ type: "required" }]
-        },
-        { 
-            dataField: "location_id",
-            caption: "Location",
-            lookup: {
-                dataSource: listOption('/list-location','id','location'),  
-                valueExpr: 'id',
-                displayExpr: 'Location',
-            },
-            validationRules: [{ type: "required" }]
-        },
-        {
-            dataField: 'CostCenter',
             validationRules: [{ type: "required" }]
         },
         {
@@ -137,6 +126,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             },
             validationRules: [{ type: "required" }]
         },
+        { 
+            dataField: "location_id",
+            caption: "Location",
+            lookup: {
+                dataSource: listOption('/list-location','id','location'),  
+                valueExpr: 'id',
+                displayExpr: 'Location',
+            },
+            validationRules: [{ type: "required" }]
+        },
         {
             dataField: 'level_id',
             caption: "Level",
@@ -152,14 +151,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Join Date",
             dataType: "date",
             format: "dd-MM-yyyy",
-            // validationRules: [{ type: "required" }]
+            validationRules: [{ type: "required" }]
         },
         {
             dataField: "BirthOfDate",
             dataType: "date",
             format: "dd-MM-yyyy",
-            // validationRules: [{ type: "required" }]
-        },         
+            validationRules: [{ type: "required" }]
+        },       
         {
             dataField: 'isInternationalStaff',
             caption: "IS ?",
@@ -171,8 +170,87 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             },
             validationRules: [{ type: "required" }]
         },
+        {
+            dataField: 'CostCenter',
+            validationRules: [{ type: "required" }]
+        },
+        {
+            caption: 'Department Head',
+            dataField: 'deptheadName',
+            lookup: {
+                dataSource: listOption('/list-employeeall','id','fullname'),  
+                valueExpr: 'fullname',
+                displayExpr: 'fullname',
+            },
+            validationRules: [{ type: "required" }]
+        },
     ],
     onEditorPreparing: function (e) {
+        if ((e.dataField == "deptheadName") && e.parentType == "dataRow") {
+            e.editorName = "dxDropDownBox";                
+            e.editorOptions.dropDownOptions = {                
+                height: 500,
+                width: 600
+            };
+            e.editorOptions.contentTemplate = function (args, container) {
+                console.log(args)
+
+                var value = args.component.option("value"),
+                    $dataGrid = $("<div>").dxDataGrid({
+                        width: '100%',
+                        dataSource: args.component.option("dataSource"),
+                        keyExpr: "id",
+                        columns: ["sys_id","sapid","companycode","fullname","departmentname","levels"],
+                        hoverStateEnabled: true,
+                        paging: { enabled: true, pageSize: 10 },
+                        filterRow: { visible: true },
+                        height: '90%',
+                        showRowLines: true,
+                        showBorders: true,
+                        selection: { mode: "single" },
+                        selectedRowKeys: [value],
+                        focusedRowEnabled: true,
+                        focusedRowKey: args.component.option("value"),
+                        searchPanel: {
+                            visible: true,
+                            width: 265,
+                            placeholder: "Search..."
+                        },
+                        onSelectionChanged: function (selectedItems) {
+                            // const keys = selectedItems.selectedRowKeys;
+                            const datas = selectedItems.selectedRowsData;
+                            // console.log(datas)   
+                            // console.log(keys)   
+                            const hasSelection = datas.length;
+                            // args.component.option('value', hasSelection ? datas[0].fullname : null);
+                            if(hasSelection !== 0) {
+                                args.component.option('value', datas[0].fullname);
+                                args.component.close();
+                            }
+                        }
+                    });
+                console.log(value)
+                var dataGrid = $dataGrid.dxDataGrid("instance");
+
+                args.component.on("valueChanged", function (args) {
+                    var value = args.value;
+                    // var value = args.previousValue;
+
+
+                    dataGrid.selectRows(value, false);
+                });
+                container.append($dataGrid);
+                $("<div>").dxButton({
+                    text: "Close",
+
+                    onClick: function (ev) {
+                        args.component.close();
+                    }
+                }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                return container;
+
+            };
+        }
         if (e.dataField == "department_id" && e.parentType == "dataRow") {
             e.editorName = "dxDropDownBox";                
             e.editorOptions.dropDownOptions = {                

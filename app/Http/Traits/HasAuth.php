@@ -63,4 +63,13 @@ trait HasAuth {
         return null;
     }
 
+    public function getsysid($name) 
+    {
+        $data = Employee::select('id', 'sys_id', 'FullName')->where('FullName', $name)->first();
+        if ($data) {
+            return $data->sys_id;
+        }
+        return null;
+    }
+
 }
