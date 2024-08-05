@@ -80,11 +80,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         //         }).appendTo(container);
         //     }
         // },
-        {
-            dataField: "id",
-            fixed: true,
-            validationRules: [{ type: "required" }]
-        },
+        // {
+        //     dataField: "id",
+        //     fixed: true,
+        //     validationRules: [{ type: "required" }]
+        // },
         {
             dataField: "SAPID",
             dataType: "string",

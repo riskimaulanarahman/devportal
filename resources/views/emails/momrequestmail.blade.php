@@ -149,19 +149,19 @@
                 <table class="page-break">
                     <thead>
                         <tr>
-                            <th rowspan="2">Description</th>
-                            <th rowspan="2">Section</th>
-                            <th rowspan="2">Status</th>
-                            <th rowspan="2">Deadline Date</th>
-                            <th rowspan="2">Aging</th>
-                            <th rowspan="2">Time Category</th>
-                            <th rowspan="2">Handled By</th>
+                            <th style="text-align:center" rowspan="2">Description</th>
+                            <th style="text-align:center" rowspan="2">Section</th>
+                            <th style="text-align:center" rowspan="2">Status</th>
+                            <th style="text-align:center" rowspan="2">Deadline Date</th>
+                            <th style="text-align:center" rowspan="2">Aging</th>
+                            <th style="text-align:center" rowspan="2">Time Category</th>
+                            <th style="text-align:center" rowspan="2">Handled By</th>
                             <th colspan="3" style="text-align:center">Last Update</th>
                         </tr>
                         <tr>
-                            <th>Description</th>
-                            <th>Date</th>
-                            <th>Updated By</th>
+                            <th style="text-align:center">Description</th>
+                            <th style="text-align:center">Date</th>
+                            <th style="text-align:center">Updated By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -207,7 +207,7 @@
                                 <td>{{ $task->description }}</td>
                                 <td>{{ $task->section }}</td>
                                 <td>{{ $task->status }}</td>
-                                <td style="color: {{ $isUrgent ? 'red' : 'inherit' }};">{{ $task->deadline_date }}</td>
+                                <td style="color: {{ $isUrgent ? 'red' : 'inherit' }}; background-color: {{ $isUrgent ? '#F6F6F6' : 'inherit' }};">{{ $task->deadline_date }}</td>
                                 <td>{{ round($task->agings,1) }}</td>
                                 <td>{{ $task->time_categorys }}</td>
                                 <td style="vertical-align: middle">

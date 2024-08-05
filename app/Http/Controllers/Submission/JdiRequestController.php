@@ -172,10 +172,12 @@ class JdiRequestController extends Controller
                 $requestData['category_id'] = null;
             }
 
-            if($request->isSaving == 1) {
-                $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
-            } else {
-                $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
+            if(isset($request->isSaving)) {
+                if($request->isSaving == 1) {
+                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
+                } else {
+                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
+                }
             }
 
             if($request->depthead_id) {
