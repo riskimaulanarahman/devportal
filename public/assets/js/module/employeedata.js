@@ -198,6 +198,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             validationRules: [{ type: "required" }]
         },
         {
+            caption: 'Superior',
+            dataField: 'superiorName',
+            lookup: {
+                dataSource: listOption('/list-employeeall','id','fullname'),  
+                valueExpr: 'fullname',
+                displayExpr: 'fullname',
+            },
+            // validationRules: [{ type: "required" }]
+        },
+        {
             caption: 'Department Head',
             dataField: 'deptheadName',
             lookup: {
@@ -209,6 +219,67 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
     ],
     onEditorPreparing: function (e) {
+        if ((e.dataField == "superiorName") && e.parentType == "dataRow") {
+            e.editorName = "dxDropDownBox";                
+            e.editorOptions.dropDownOptions = {                
+                height: 500,
+                width: 600
+            };
+            e.editorOptions.contentTemplate = function (args, container) {
+                console.log(args)
+
+                var value = args.component.option("value"),
+                    $dataGrid = $("<div>").dxDataGrid({
+                        width: '100%',
+                        dataSource: args.component.option("dataSource"),
+                        keyExpr: "id",
+                        columns: ["sys_id","sapid","companycode","fullname","departmentname","levels"],
+                        hoverStateEnabled: true,
+                        paging: { enabled: true, pageSize: 10 },
+                        filterRow: { visible: true },
+                        height: '90%',
+                        showRowLines: true,
+                        showBorders: true,
+                        selection: { mode: "single" },
+                        selectedRowKeys: [value],
+                        focusedRowEnabled: true,
+                        focusedRowKey: args.component.option("value"),
+                        searchPanel: {
+                            visible: true,
+                            width: 265,
+                            placeholder: "Search..."
+                        },
+                        onSelectionChanged: function (selectedItems) {
+                            const datas = selectedItems.selectedRowsData;
+                            const hasSelection = datas.length;
+                            if(hasSelection !== 0) {
+                                args.component.option('value', datas[0].fullname);
+                                args.component.close();
+                            }
+                        }
+                    });
+                console.log(value)
+                var dataGrid = $dataGrid.dxDataGrid("instance");
+
+                args.component.on("valueChanged", function (args) {
+                    var value = args.value;
+                    // var value = args.previousValue;
+
+
+                    dataGrid.selectRows(value, false);
+                });
+                container.append($dataGrid);
+                $("<div>").dxButton({
+                    text: "Close",
+
+                    onClick: function (ev) {
+                        args.component.close();
+                    }
+                }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                return container;
+
+            };
+        }
         if ((e.dataField == "deptheadName") && e.parentType == "dataRow") {
             e.editorName = "dxDropDownBox";                
             e.editorOptions.dropDownOptions = {                
