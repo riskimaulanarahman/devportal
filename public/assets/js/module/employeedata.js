@@ -34,7 +34,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         useIcons:true,
         mode: "batch",
         allowAdding: true,
-        allowUpdating: (admin == 1 || developer) ? true : false,
+        // allowUpdating: (admin == 1 || developer) ? true : false,
+        allowUpdating: true,
         allowDeleting: true,
     },
     scrolling: {
@@ -86,9 +87,26 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         //     validationRules: [{ type: "required" }]
         // },
         {
-            dataField: "SAPID",
+            dataField: "sys_id",
             dataType: "string",
             fixed: true,
+            editorOptions: { 
+                readOnly: true
+            },
+        },
+        {
+            dataField: "LoginName",
+            dataType: "string",
+            fixed: true,
+            visible: (admin == 1) ? true : false,
+            editorOptions: { 
+                readOnly: (admin == 1) ? true : false
+            },
+        },
+        {
+            dataField: "SAPID",
+            dataType: "string",
+            fixed: false,
             validationRules: [{ type: "required" }]
         },
         {
@@ -267,10 +285,18 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 var value = args.component.option("value"),
                     $dataGrid = $("<div>").dxDataGrid({
                         width: '100%',
-                        dataSource: args.component.option("dataSource"),
+                        // dataSource: args.component.option("dataSource"),
+                        dataSource: store('department'),
                         keyExpr: "id",
                         columns: ["SAPCode","DepartmentName","DepartmentGroup"],
                         hoverStateEnabled: true,
+                        editing: {
+                            useIcons:true,
+                            mode: "row",
+                            allowAdding: true,
+                            allowUpdating: true,
+                            allowDeleting: true,
+                        },
                         scrolling: {
                             mode: "virtual"
                         },
@@ -329,10 +355,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 var value = args.component.option("value"),
                     $dataGrid = $("<div>").dxDataGrid({
                         width: '100%',
-                        dataSource: args.component.option("dataSource"),
+                        dataSource: store('position'),
                         keyExpr: "id",
                         columns: ["SAPCode","DesignationName"],
                         hoverStateEnabled: true,
+                        editing: {
+                            useIcons:true,
+                            mode: "row",
+                            allowAdding: true,
+                            allowUpdating: true,
+                            allowDeleting: true,
+                        },
                         scrolling: {
                             mode: "virtual"
                         },
@@ -393,10 +426,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 var value = args.component.option("value"),
                     $dataGrid = $("<div>").dxDataGrid({
                         width: '100%',
-                        dataSource: args.component.option("dataSource"),
+                        dataSource: store('location'),
                         keyExpr: "id",
                         columns: ["SAPCode","Location"],
                         hoverStateEnabled: true,
+                        editing: {
+                            useIcons:true,
+                            mode: "row",
+                            allowAdding: true,
+                            allowUpdating: true,
+                            allowDeleting: true,
+                        },
                         scrolling: {
                             mode: "virtual"
                         },
@@ -457,10 +497,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 var value = args.component.option("value"),
                     $dataGrid = $("<div>").dxDataGrid({
                         width: '100%',
-                        dataSource: args.component.option("dataSource"),
+                        dataSource: store('company'),
                         keyExpr: "id",
                         columns: ["SAPCode","CompanyCode"],
                         hoverStateEnabled: true,
+                        editing: {
+                            useIcons:true,
+                            mode: "row",
+                            allowAdding: true,
+                            allowUpdating: true,
+                            allowDeleting: true,
+                        },
                         scrolling: {
                             mode: "virtual"
                         },
