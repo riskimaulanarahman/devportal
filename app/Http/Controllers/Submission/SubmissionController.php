@@ -29,6 +29,9 @@ class SubmissionController extends Controller
     {
 
             $locModel = "App\Models\Submission\\".$modulename;
+            if (!class_exists($locModel)) {
+                $locModel = "App\Models\Submission\IT\\".$modulename;
+            }
             $model = new $locModel;
             $columns = $model->getFillableColumns();
             $tableName = $model->getTableName();
@@ -115,8 +118,10 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'After' is required. Please attach it."]);
                 }
             } else {
-                if (count($attachement) < 1) {
-                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
+                if($modulename !== 'ActiveDirectory') {
+                    if (count($attachement) < 1) {
+                        return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
+                    }
                 }
             }
 
@@ -148,7 +153,7 @@ class SubmissionController extends Controller
                     $category = $getSubmissionData->category_id;
                 }
 
-                if (in_array("bu", $columns) || in_array("sector", $columns)) {
+                if (in_array("bu", $columns) && in_array("sector", $columns)) {
                     $bu = $getSubmissionData->bu;
                     $sector = $getSubmissionData->sector;
 
@@ -161,6 +166,9 @@ class SubmissionController extends Controller
                     } else {
                         $company = $bu;
                     }
+                } else if(in_array("bu", $columns)) {
+                    $bu = $getSubmissionData->bu;
+                    $company = $bu;
                 }
             
                     $this->createApprover($modulename, $id, $company, $category);
@@ -375,7 +383,7 @@ class SubmissionController extends Controller
                     break;
                 }
             }
-
+            // dd($mailData);
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
             }

@@ -114,7 +114,7 @@ trait ApproverTrait {
                                         ->where('tbl_approverListReq.module_id', $module->id)
                                         ->where('tbl_approverListReq.req_id', $req_id);
 
-            if($moduleName == 'Jdi') {
+            if($moduleName == 'Jdi' || $moduleName == 'ActiveDirectory') {
                 $apprList->leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
                         ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
                         ->whereNotIn('tbl_approvaltype.ApprovalType',['Department Head','BCID Manager','Finance']);
@@ -138,7 +138,7 @@ trait ApproverTrait {
             ->whereNull('companyList')
             ->whereNull('category_id');
 
-            if($moduleName == 'Jdi') {
+            if($moduleName == 'Jdi' || $moduleName == 'ActiveDirectory') {
                 $appUserNull->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
                             ->where('tbl_approvaltype.ApprovalType','!=','Department Head');
             }
@@ -272,14 +272,14 @@ trait ApproverTrait {
 
     // JDI ===============================================================
     public function createApprManager($employeeID, $moduleName, $reqID) {
-        if($moduleName == 'Jdi') {
+        // if($moduleName == 'Jdi') {
 
             $getemployee = Employee::find($employeeID);
             $getuser = $this->user->where('username',$getemployee->LoginName)->get();
 
             //START approver for Chairman
-            $getIDapprType = Approvaltype::where('Module','Jdi')->where('ApprovalType','Department Head')->first();
-            $checkExistAppr = Approvaluser::where('module','Jdi')
+            $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Department Head')->first();
+            $checkExistAppr = Approvaluser::where('module',$moduleName)
                                         ->where('employee_id',$employeeID)
                                         ->where('approvaltype_id',$getIDapprType->id)
                                         ->where('isActive',1)
@@ -338,7 +338,7 @@ trait ApproverTrait {
             // $approverList->approvalAction = ($reqStatus !== 0) ? 1 : 0;
             $approverList->save();
 
-        }
+        // }
     }
 
     public function createApprSaving($saving, $moduleName, $reqID, $reqStatus) {

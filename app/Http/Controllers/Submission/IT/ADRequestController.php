@@ -13,7 +13,9 @@ use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Assignmentto;
+use App\Models\User;
 use DB;
+use COM;
 
 class ADRequestController extends Controller
 {
@@ -24,8 +26,9 @@ class ADRequestController extends Controller
     public function __construct()
     {
         $this->model = new ActiveDirectory();
-        $this->modulename = 'AD';
+        $this->modulename = 'ActiveDirectory';
         $this->module = new Module();
+        $this->user = new User();
     }
 
     public function index(Request $request)
@@ -46,10 +49,18 @@ class ADRequestController extends Controller
             where l.ApprovalAction='1' and l.req_id = request_it_activedirectory.id and l.module_id = '".$module_id."' and request_it_activedirectory.requestStatus='1'
             order by a.sequence)";
 
+            $getIT = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+            from tbl_approverListReq l
+            left join tbl_approver a on l.approver_id=a.id
+            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            where l.req_id = request_it_activedirectory.id and l.module_id = '".$module_id."' and r.ApprovalType='IT' and r.isactive='1'
+            order by a.sequence)";
+
             $data = $dataquery
                 ->selectRaw("request_it_activedirectory.*,codes.code,
                     CASE WHEN request_it_activedirectory.user_id='".$user_id."' then 1 else 0 end as isMine,
-                    ".$subquery." as isPendingOnMe
+                    ".$subquery." as isPendingOnMe,
+                    ".$getIT." as isIT
                 ")
                 ->leftJoin('codes','request_it_activedirectory.code_id','codes.id')
                 ->with(['user','approverlist','employee'])
@@ -88,12 +99,21 @@ class ADRequestController extends Controller
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
             $requestData['requestStatus'] = 0;
+            $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($request->employee_id);
+            $requestData['bu'] = $this->getEmployeeByID($request->employee_id)->companycode;
 
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
 
             // Simpan id dari data baru
             $req_id = $newData->id;
+
+            if($newData->code_id == null) {
+                $newData->code_id = $this->generateCode($this->modulename);
+                $newData->save();
+            }
+
+            $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
 
             return response()->json([
                 "status" => "success",
@@ -114,6 +134,10 @@ class ADRequestController extends Controller
             $data = $this->model->select('request_it_activedirectory.*','codes.code')
             ->leftJoin('codes','request_it_activedirectory.code_id','codes.id')
             ->where('request_it_activedirectory.id',$id)
+            ->with('employee')
+            // ->with(['employee' => function($query) {
+            //     $query->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id');
+            // }])
             ->first();
 
             if($data->code_id == null) {
@@ -139,7 +163,7 @@ class ADRequestController extends Controller
 
             
             // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
-            $this->addOneDayToDate($requestData);
+            // $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
             ($data->ticketStatus == null) ? $requestData['ticketStatus'] = 'On Queue' : $request->ticketStatus;
@@ -222,5 +246,148 @@ class ADRequestController extends Controller
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
+    }
+
+    public function genPdfAD(Request $request, $id) {
+        $data = DB::table('ItActiveDirectoryDetail')->select('*')->where('id',$id)->first(); // data submission
+        $dataAppr = DB::table('ItActiveDirectoryApprover')->select('*')->where('id',$id)->get(); // data approver
+
+        try {
+			$excel = new COM("Excel.Application") or die("ERROR: Unable to instantaniate COM!\r\n");
+			$excel->Visible = false;
+
+            $file = public_path("template/activedirectory/ad_template.xlsx");
+
+			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
+			$Worksheet = $Workbook->Worksheets(1);
+			$Worksheet->Activate;
+
+            // Start Form Data
+                $Worksheet->Range("F7")->Value = $data->FullName;
+                $Worksheet->Range("F9")->Value = $data->SAPID;
+                $Worksheet->Range("F11")->Value = $data->DesignationName;
+                $Worksheet->Range("F13")->Value = $data->companycode;
+                $Worksheet->Range("F15")->Value = $data->Location;
+                $Worksheet->Range("F19")->Value = $data->DepartmentName;
+                $Worksheet->Range("F31")->Value = $data->validFrom;
+			    $Worksheet->Range("R31")->Value = $data->validTo;
+                $Worksheet->Range("K37")->Value = $data->companycode;
+
+            //condition
+                if($data->requestType == 'Create Account') {
+                    $Worksheet->Range("F22")->Value = 'x';
+                }else {
+                    $Worksheet->Range("L22")->Value = 'x';
+                }
+
+                if($data->isVip == 1) {
+					$Worksheet->Range("F24")->Value = 'x';
+				}else {
+					$Worksheet->Range("P24")->Value = 'x';
+				}
+
+				if($data->accessType == 'TS Account') {
+					$Worksheet->Range("F26")->Value = 'x';
+				}else if($data->accesstype == 2) {
+					$Worksheet->Range("P26")->Value = 'x';
+				}else {
+					$accessT = '';
+				}
+	
+				if($data->accountType == 'Permanent') {
+					$Worksheet->Range("F28")->Value = 'x';
+				}else if($data->accounttype == 2) {
+					$Worksheet->Range("P28")->Value = 'x';
+				}else {
+					$accountT = '';
+				}
+
+				
+			//end condition
+
+            // End Form Data
+
+            $picpath = public_path("assets/images/approved.png");
+            
+            function addPictureToWorksheet($Worksheet, $picPath, $row, $column, $height, $excel) {
+                $pic = $Worksheet->Shapes->AddPicture($picPath, False, True, 0, 0, -1, -1);
+                $pic->Height = $height;
+                $pic->Top = $excel->Cells($row, $column)->Top;
+                $pic->Left = $excel->Cells($row, $column)->Left;
+            }
+            
+            foreach ($dataAppr as $appr) {
+                if($appr->sequence == 2) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("B50")->Value = $appr->apprname;
+                        $Worksheet->Range("B51")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 46, 1, 35, $excel);
+                    }
+                }
+                if($appr->sequence == 3) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("I50")->Value = $appr->apprname;
+                        $Worksheet->Range("I51")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 46, 7, 35, $excel);
+
+                    }
+                }
+                if($appr->sequence == 4) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("P50")->Value = $appr->apprname;
+                        $Worksheet->Range("P51")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 46, 14, 35, $excel);
+                    }
+                }
+                if($appr->sequence == 5) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("W50")->Value = $appr->apprname;
+                        $Worksheet->Range("W51")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 46, 21, 35, $excel);
+                    }
+                }
+            }
+
+            $xlTypePDF = 0;
+			$xlQualityStandard = 0;
+
+            $code_sanitized = str_replace('/', '_', $data->code);
+			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
+			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
+            $filePath = public_path('template/activedirectory/pdf/' . $fileName);
+			$path = $filePath;
+			if (file_exists($path)) {
+				unlink($path);
+			}
+			$Worksheet->ExportAsFixedFormat($xlTypePDF, $path, $xlQualityStandard);
+			
+			$excel->CutCopyMode = false;
+			$Workbook->Close(false);
+			unset($Worksheet);
+			unset($Workbook);
+			$excel->Workbooks->Close();
+			$excel->Quit();
+			unset($excel);
+			
+            $pathfilename = 'public/template/activedirectory/pdf/' . $fileName;
+
+            $updateData = $this->model->find($data->id);
+			$updateData->approveddoc = str_replace("\\", "/", $pathfilename);
+			$updateData->save();
+
+            $this->processcopy($pathfilename);
+
+			return $pathfilename;
+
+		} catch (\Exception $e) {
+            // Log error
+            $ip = $request->ip();
+            $url = $request->url();
+            $action = 'gen-pdf-jdi';
+            $this->logerror($ip, $url, $action, $e->getMessage());
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+		}
+
     }
 }

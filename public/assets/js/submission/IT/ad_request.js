@@ -1,5 +1,5 @@
 var modname = 'adrequest';
-var modelclass = 'AD';
+var modelclass = 'ActiveDirectory';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -142,6 +142,25 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 return arrText[e.value];
             },
         },
+        {
+            dataField: "approveddoc",
+            caption:"Approval Doc",
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: { visible: false},
+            cellTemplate: function (container, options) {
+                if ((options.value!="") && (options.value)){
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        type: "success",
+                        text: "Download",
+                        onClick: function (e) {
+                            window.open(options.value, '_blank');
+                        }
+                    }).appendTo(container);
+                }
+            }
+        },
     ],
     export: {
         enabled: false,
@@ -199,6 +218,11 @@ $('#btnadd').on('click',function(){
 const accordionItems = [
     {
         ID: 1,
+        Title: '<i class="far fa-newspaper"> Employee Data </i>',
+        visible: true
+    },
+    {
+        ID: 6,
         Title: '<i class="far fa-newspaper"> Form Data </i>',
         visible: true
     },
@@ -210,7 +234,7 @@ const accordionItems = [
     {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
-        visible: true
+        visible: false
     },
     {
         ID: 3,
@@ -236,6 +260,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     var isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
+    var isIT = options.data.isIT;
 
     popupid = reqid;
 
@@ -288,12 +313,6 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    if(options.data.requestStatus == 3 || isPendingOnMe) {
-        updateVisibleById(5, true);
-    } else {
-        updateVisibleById(5, false);
-    }
-
     scrollView.append("<hr>"),
 
     scrollView.append(
@@ -308,11 +327,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                 return '<small style="margin-bottom:10px !important ;">'+data.Title+'</small>'
             },
             itemTemplate: function (data) {
-                var container = $("<div>");
+                var infoContent1 = $("<div id='infoContent1'>");
                 if(data.ID == 1) {
-                    if (mode == 'add' || mode == 'edit'){
-                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
-                    }
+                    // if (mode == 'add' || mode == 'edit'){
+                    //     $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent1);
+                    // }
                     var formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
@@ -337,7 +356,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                            allowUpdating: false,
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -354,60 +373,29 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                dataField: 'nameSystem',
-                                lookup: {
-                                    dataSource: listOption('/list-parentproject','id','nameSystem'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'nameSystem',
-                                },
-                                width: 200,
-                                validationRules: [{ type: "required" }]
+                                caption: "Full Name",
+                                dataField: 'employee.FullName',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
-                                dataField: 'category',
-                                dataType: 'string',
-                                lookup: {
-                                    dataSource: ['Error/Bug','Modified','Additional'],  
-                                },
-                                validationRules: [{ type: "required" }]
+                                caption: "Company/BU",
+                                dataField: 'employee.companycode',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
-                                dataField: 'description',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }]
+                                caption: "Department",
+                                dataField: 'employee.department.DepartmentName',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
-                                caption: 'CodeNo (if available)',
-                                dataField: 'codeno',
-                                dataType: 'string',
-                            },
-                            {
-                                dataField: 'priority',
-                                dataType: 'string',
-                                visible: false,
-                                lookup: {
-                                    dataSource: ['Low','Middle','High'],  
-                                },
-                            },
-                            {
-                                caption: 'Completed Date',
-                                dataField: 'completeddate',
-                                dataType: 'date',
-                                format: "yyyy-MM-dd",
-                                visible: false,
-                            },
-                            {
-                                dataField: 'ticketStatus',
-                                dataType: 'string',
-                                visible: false,
-                                lookup: {
-                                    dataSource: ['On Queue','Immediately','Completed'],  
-                                },
-                            },
-                            {
-                                dataField: "created_at",
-                                dataType: "date",
-                                format: "dd-MM-yyyy",
+                                caption: "Department",
+                                dataField: 'employee.designation.DesignationName',
                                 editorOptions: { 
                                     readOnly: true
                                 }
@@ -491,12 +479,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if (e.column.index == 0 && e.rowType == "data") {
-                                if(e.data.requestStatus == 3 || admin == 1) {
-                                    $("#formdata").dxDataGrid('columnOption','ticketStatus', 'visible', true);
-                                }
-                            }
-                            if ( e.rowType == "data" && (e.column.index>0 && e.column.index<4)) {
+                            if ( e.rowType == "data" && (e.column.index>0 && e.column.index<5)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -512,8 +495,156 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
                         }
-                    }).appendTo(container)
-                    return container
+                    }).appendTo(infoContent1)
+                    return infoContent1
+                }
+                var infoContent2 = $("<div id='infoContent2'>");
+                if(data.ID == 6) {
+                    if (mode == 'add' || mode == 'edit'){
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent2);
+                    }
+                    var accountTypeValue = '';
+                    var formData = $("<div id='formdata2'>").dxDataGrid({    
+                        dataSource: storedetail(modname,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "batch",
+                            allowAdding: false,
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isIT ? true : false),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            mode: "virtual"
+                        },
+                        columns: [
+                            {
+                                dataField: 'requestType',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['Create Account','Delete Account'],  
+                                },
+                                editorOptions: { 
+                                    readOnly: true
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'accessType',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['TS Account','Non-TS Account'],  
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'accountType',
+                                dataType: 'string',
+                                lookup: {
+                                    dataSource: ['Permanent','Temporary'],  
+                                },
+                                setCellValue: function (rowData, value) {
+                                    accountTypeValue = value;
+                                    rowData.accountType = value;
+                                    var now = new Date();
+                                    if (value === "Permanent") {
+                                        rowData.validFrom = now;
+                                        rowData.validTo = "9999-12-31";
+                                    } else {
+                                        rowData.validFrom = null;
+                                        rowData.validTo = null;
+                                    }
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'isVip',
+                                dataType: 'boolean',
+                            },
+                            {
+                                dataField: 'validFrom',
+                                dataType: 'date',
+                                format: "yyyy-MM-dd",
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'validTo',
+                                dataType: 'date',
+                                format: "yyyy-MM-dd",
+                                validationRules: [{ type: "required" }]
+                            },
+                            // {
+                            //     dataField: 'remarks'
+                            // },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGrid1 = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGrid1.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPreparing: function (e) {
+                            if (e.parentType === 'dataRow' && (e.dataField === 'validFrom' || e.dataField === 'validTo')) {
+                                e.editorOptions.disabled = (accountTypeValue === 'Permanent');
+                            }
+                        },
+                        onCellPrepared: function (e) {
+                            if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<6)) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGrid1.refresh();
+                        }
+                    }).appendTo(infoContent2)
+                    return infoContent2
                 } 
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
@@ -589,19 +720,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGridAttachment.refresh();
                         }
                     })
-
-                    // var downloadButton = $("<button>")
-                    //     .text("Download Proposal Guide Template")
-                    //     .addClass("btn btn-danger btn-xs")
-                    //     .appendTo(supporting);
-
-                    // downloadButton.click(function() {
-                    //     var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
-                    //     var link = document.createElement("a");
-                    //     link.href = fileUrl;
-                    //     link.download = "Proposal Pengajuan System.pptx";
-                    //     link.click();
-                    // });
 
                     return supporting;
                 }

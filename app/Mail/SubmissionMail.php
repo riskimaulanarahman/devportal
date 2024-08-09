@@ -15,6 +15,7 @@ use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Categoryhrsc;
 use App\Http\Controllers\Submission\JdiRequestController;
+use App\Http\Controllers\Submission\IT\ADRequestController;
 
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
@@ -262,6 +263,18 @@ class SubmissionMail extends Mailable
                 }
                 // end save no registrasi
                 $pdf = $jdiController->genPdfJdi($request,$mailData['submission']->id);
+                $this->attach("http://172.18.83.38/devportal/".$pdf); // add attachment to mail
+                foreach ($Mailrecipient as $cc) {
+                    $this->cc($cc->email); // cc bcid
+                }
+            }
+        }
+
+        if($modulename == 'ActiveDirectory') {
+            $request = new Request();
+            $adController = new ADRequestController();
+            if($final == 1) {
+                $pdf = $adController->genPdfAD($request,$mailData['submission']->id);
                 $this->attach("http://172.18.83.38/devportal/".$pdf); // add attachment to mail
                 foreach ($Mailrecipient as $cc) {
                     $this->cc($cc->email); // cc bcid

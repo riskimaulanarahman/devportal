@@ -1,5 +1,5 @@
 var modname = 'employeedata';
-var modelclass = 'AD';
+var modelclass = 'ActiveDirectory';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -14,7 +14,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     allowColumnReordering: true,
     allowColumnResizing: true,
     // columnsAutoWidth: true,
-    columnMinWidth: 150,
+    columnMinWidth: 80,
     columnHidingEnabled: false,
     rowAlternationEnabled: true,
     wordWrapEnabled: false,
@@ -49,47 +49,106 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         showInfo: true,
       },
     columns: [
-        // {
-        //     caption: 'Create AD',
-        //     fixed: true,
-        //     width: 100,
-        //     cellTemplate: function(container, options) {
+        {
+            caption: 'AD',
+            fixed: true,
+            width: 80,
+            cellTemplate: function(container, options) {
 
-        //         var reqid = options.data.id;
-        //         $('<button class="btn btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
-        //             evt.stopPropagation();
-                
+                var reqid = options.data.id;
+                if(options.data.LoginName == null || options.data.LoginName == '') {
+
+                    $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
                     
-        //             alert('Create and Send AD Submission')
+                        
+                        var result = confirm('Are you sure you want to Create Active Directory '+options.data.FullName+' and send this submission ?');
 
-        //         }).appendTo(container);
-        //     }
-        // },
-        // {
-        //     caption: 'Terminate',
-        //     fixed: true,
-        //     width: 100,
-        //     cellTemplate: function(container, options) {
+                            if (result) {
+                                sendRequest(apiurl + "/adrequest", "POST", {
+                                    employee_id:reqid,
+                                    requestType:'Create Account'
+                                }).then(function(response) {
+                                    const dataid = response.data.id;
+                                    console.log(dataid);
+                                    sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
+                                        requestStatus:1,
+                                        action: 'submission',
+                                        approvalAction: 1,
+                                        approvalType: null,
+                                        remarks: null
+                                    });
+                                }).then(function(response){
+                                    if(response.status != 'error') {
+                                        dataGrid.refresh();
+                                    }
+                                });
+                            } else {
+                                alert('Cancelled.');
+                            }
+                        
+                            
 
-        //         var reqid = options.data.id;
-        //         $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
-        //             evt.stopPropagation();
-                
+                    }).appendTo(container);
+                }
+
+            }
+        },
+        {
+            caption: 'Terminate',
+            fixed: true,
+            width: 80,
+            cellTemplate: function(container, options) {
+
+                var reqid = options.data.id;
+                if(options.data.LoginName !== '') {
+                    $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
                     
-        //             alert('Terminate')
+                        
+                        var result = confirm('Are you sure you want to Delete Active Directory '+options.data.FullName+' and send this submission ?');
 
-        //         }).appendTo(container);
-        //     }
-        // },
-        // {
-        //     dataField: "id",
-        //     fixed: true,
-        //     validationRules: [{ type: "required" }]
-        // },
+                            if (result) {
+                                sendRequest(apiurl + "/adrequest", "POST", {
+                                    employee_id:reqid,
+                                    requestType:'Delete Account'
+                                }).then(function(response) {
+                                    const dataid = response.data.id;
+                                    console.log(dataid);
+                                    sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
+                                        requestStatus:1,
+                                        action: 'submission',
+                                        approvalAction: 1,
+                                        approvalType: null,
+                                        remarks: null
+                                    });
+                                }).then(function(response){
+                                    if(response.status != 'error') {
+                                        dataGrid.refresh();
+                                    }
+                                });
+                            } else {
+                                alert('Cancelled.');
+                            }
+
+                    }).appendTo(container);
+                }
+            }
+        },
+        {
+            dataField: "id",
+            fixed: true,
+            editorOptions: { 
+                readOnly: true
+            },
+            visible: false,
+            validationRules: [{ type: "required" }]
+        },
         {
             dataField: "sys_id",
             dataType: "string",
             fixed: true,
+            width: 150,
             editorOptions: { 
                 readOnly: true
             },
@@ -99,20 +158,23 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "string",
             fixed: true,
             visible: (admin == 1) ? true : false,
+            width: 150,
             editorOptions: { 
-                readOnly: (admin == 1) ? true : false
+                readOnly: (admin == 1) ? false : true
             },
         },
         {
             dataField: "SAPID",
             dataType: "string",
             fixed: false,
+            width: 100,
             validationRules: [{ type: "required" }]
         },
         {
             dataField: "FullName",
             sortOrder: "asc",
             dataType: "string",
+            width: 150,
             validationRules: [{ type: "required" }]
         },
         
@@ -125,6 +187,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 valueExpr: 'id',
                 displayExpr: 'CompanyCode',
             },
+            width: 150,
             validationRules: [{ type: "required" }]
         },
         {
@@ -174,12 +237,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Join Date",
             dataType: "date",
             format: "dd-MM-yyyy",
+            width: 150,
             validationRules: [{ type: "required" }]
         },
         {
             dataField: "BirthOfDate",
             dataType: "date",
             format: "dd-MM-yyyy",
+            width: 150,
             validationRules: [{ type: "required" }]
         },       
         {
@@ -205,6 +270,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 valueExpr: 'fullname',
                 displayExpr: 'fullname',
             },
+            width: 150,
             // validationRules: [{ type: "required" }]
         },
         {
@@ -215,6 +281,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 valueExpr: 'fullname',
                 displayExpr: 'fullname',
             },
+            width: 150,
             validationRules: [{ type: "required" }]
         },
     ],

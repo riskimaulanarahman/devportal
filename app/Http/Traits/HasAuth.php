@@ -81,4 +81,23 @@ trait HasAuth {
         return null;
     }
 
+    public function getDeptheadbyIDemployee($id) 
+    {
+        $data = Employee::select('id', 'sys_id', 'sys_id_depthead', 'FullName')->where('id', $id)->first();
+        if ($data) {
+            $depthead = Employee::select('id', 'sys_id', 'FullName')->where('sys_id', $data->sys_id_depthead)->first();
+            return $depthead->id;
+        }
+        return null;
+    }
+
+    public function getEmployeeByID($id) 
+    {
+        $data = Employee::select('*')->where('id', $id)->first();
+        if ($data) {
+            return $data;
+        }
+        return null;
+    }
+
 }

@@ -97,6 +97,7 @@ class HomeController extends Controller
             'request_hrsc' => $this->getModuleId('Hrsc'),
             'request_mom' => $this->getModuleId('Mom'),
             'request_jdi' => $this->getModuleId('Jdi'),
+            'request_it_activedirectory' => $this->getModuleId('ActiveDirectory'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -148,6 +149,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_jdi':
                                 $url = 'jdi_request';
+                                break;
+                            case 'request_it_activedirectory':
+                                $url = 'ad_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }
@@ -212,6 +216,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_jdi':
                                 $url = 'jdi_request';
+                                break;
+                            case 'request_it_activedirectory':
+                                $url = 'ad_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }

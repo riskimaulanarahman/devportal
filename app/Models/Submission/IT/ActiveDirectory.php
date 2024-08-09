@@ -22,13 +22,16 @@ class ActiveDirectory extends Model
     protected $fillable = [
         'user_id',
         'requestStatus',
+        'employee_id',
         'requestType',
         'accessType',
         'accountType',
         'isVip',
         'validFrom',
         'validTo',
-        'remarks'
+        'depthead_id',
+        'approveddoc',
+        'bu'
     ];
 
     protected $casts = [
@@ -39,7 +42,14 @@ class ActiveDirectory extends Model
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, []);
+        $fillable = array_diff($fillable, [
+            'requestType',
+            'accessType',
+            'accountType',
+            'validFrom',
+            'approveddoc',
+            'validTo'
+        ]);
         return $fillable;
     }
 
