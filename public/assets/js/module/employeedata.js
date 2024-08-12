@@ -135,15 +135,15 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 }
             }
         },
-        {
-            dataField: "id",
-            fixed: true,
-            editorOptions: { 
-                readOnly: true
-            },
-            visible: false,
-            validationRules: [{ type: "required" }]
-        },
+        // {
+        //     dataField: "id",
+        //     fixed: true,
+        //     editorOptions: { 
+        //         readOnly: true
+        //     },
+        //     visible: false,
+        //     validationRules: [{ type: "required" }]
+        // },
         {
             dataField: "sys_id",
             dataType: "string",
