@@ -355,6 +355,7 @@
                             <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/SKYMAP System.pdf', '_blank')">SKYMAP</button></li>
                             <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/HRSC Panduan.pdf', '_blank')">HR Service Care</button></li>
                             <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/JDI Online.pdf', '_blank')">JDI Online</button></li>
+                            <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Mom Online.pdf', '_blank')">JDI Online</button></li>
                         </ul>
                     </div>
                 </div><!-- /.modal-content -->
