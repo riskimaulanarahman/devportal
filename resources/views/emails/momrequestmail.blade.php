@@ -197,7 +197,11 @@
 
                                 // Menentukan apakah baris harus dihighlight berdasarkan ID
                                 if(!isset($mailData['pdf'])) {
-                                    $highlightRow = $task->id == $mailData['highlightedTaskId'];
+                                    if(isset($mailData['highlightedTaskId'])) {
+                                        $highlightRow = $task->id == $mailData['highlightedTaskId'];
+                                    } else {
+                                        $highlightRow = null;
+                                    }
                                 } else {
                                     $highlightRow = null;
                                 }

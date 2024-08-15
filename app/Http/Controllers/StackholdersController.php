@@ -67,6 +67,7 @@ class StackholdersController extends Controller
                     } else {
                         // if($request->role == 'Chairman') {
                             $this->createApprChairman($request->employee_id, $request->modulename, $request->req_id);
+                            $this->model->create($requestData);
                         // }
                     }
                 } else {

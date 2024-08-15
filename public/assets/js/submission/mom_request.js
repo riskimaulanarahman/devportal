@@ -524,7 +524,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         editing: {
                             useIcons:true,
-                            mode: "cell",
+                            mode: "row",
                             allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
