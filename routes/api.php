@@ -9,6 +9,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('getlogin',[App\Http\Controllers\MainController::class, 'getlogin']);
 Route::post('upload-berkas/{modname}',[App\Http\Controllers\BerkasController::class, 'update'])->name('uploadberkas');
+Route::post('/check-user-access',[App\Http\Controllers\Admin\UseraccessController::class, 'show']);
 
 Route::apiResources([
     'logsuccess' => App\Http\Controllers\LogSuccessController::class,

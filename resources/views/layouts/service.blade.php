@@ -167,6 +167,30 @@
         return d.promise();
     }
 
+    function checkUserAccess(moduleId, userId) {
+        return fetch(apiurl+'/check-user-access', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ module_id: moduleId, employee_id: userId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user access');
+            }
+            return response.json();
+        })
+        .then(data => {
+            return {
+                allowAdd: data.allowAdd,
+                allowEdit: data.allowEdit,
+                allowDelete: data.allowDelete,
+                allowView: data.allowView
+            };
+        });
+    }
+
     //List
     function listOption(url,key,sort) {
         action = {

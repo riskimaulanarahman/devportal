@@ -30,19 +30,6 @@ class UseraccessController extends Controller
 
             $requestData = $request->all();
             
-            // if($request->allowAdd) {
-            //     ($request->allowAdd == 'false') ? $requestData['allowAdd'] = 0 : $requestData['allowAdd'] = 1;
-            // }
-            // if($request->allowEdit) {
-            //     ($request->allowEdit == 'false') ? $requestData['allowEdit'] = 0 : $requestData['allowEdit'] = 1;
-            // }
-            // if($request->allowDelete) {
-            //     ($request->allowDelete == 'false') ? $requestData['allowDelete'] = 0 : $requestData['allowDelete'] = 1;
-            // }
-            // if($request->allowView) {
-            //     ($request->allowView == 'false') ? $requestData['allowView'] = 0 : $requestData['allowView'] = 1;
-            // }
-            
             Useraccess::create($requestData);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
@@ -53,9 +40,22 @@ class UseraccessController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request)
     {
-        //
+        try {
+            $modulename = $request->module_id;
+            $userid = $request->employee_id;
+            $data = Useraccess::where('module_id',$this->getModuleId($modulename))->where('employee_id',$userid)->first();
+            if($data) {
+                return $data;
+            } else {
+                return response()->json(["status" => "error", "message" => 404]);
+            }
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
     }
 
     public function update(Request $request, $id)
@@ -63,19 +63,6 @@ class UseraccessController extends Controller
         try {
             
             $requestData = $request->all();
-
-            // if($request->allowAdd) {
-            //     ($request->allowAdd == 'false') ? $requestData['allowAdd'] = 0 : $requestData['allowAdd'] = 1;
-            // }
-            // if($request->allowEdit) {
-            //     ($request->allowEdit == 'false') ? $requestData['allowEdit'] = 0 : $requestData['allowEdit'] = 1;
-            // }
-            // if($request->allowDelete) {
-            //     ($request->allowDelete == 'false') ? $requestData['allowDelete'] = 0 : $requestData['allowDelete'] = 1;
-            // }
-            // if($request->allowView) {
-            //     ($request->allowView == 'false') ? $requestData['allowView'] = 0 : $requestData['allowView'] = 1;
-            // }
     
             $data = Useraccess::findOrFail($id);
             $data->update($requestData);
