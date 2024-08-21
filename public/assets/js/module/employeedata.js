@@ -53,7 +53,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                 caption: 'AD',
                 fixed: true,
                 width: 80,
-                visible: permissions.allowEdit,
+                visible: permissions.allowAdd,
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
@@ -99,7 +99,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                 caption: 'Terminate',
                 fixed: true,
                 width: 80,
-                visible: permissions.allowEdit,
+                visible: permissions.allowDelete,
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
@@ -115,7 +115,6 @@ checkUserAccess(modname, usersid).then(permissions => {
                                     requestType:'Delete Account'
                                 }).then(function(response) {
                                     const dataid = response.data.id;
-                                    console.log(dataid);
                                     sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
                                         requestStatus:1,
                                         action: 'submission',
@@ -123,6 +122,8 @@ checkUserAccess(modname, usersid).then(permissions => {
                                         approvalType: null,
                                         remarks: null
                                     });
+                                    sendRequest(apiurl + "/employeedata/"+reqid, "DELETE");
+                                    dataGrid.refresh();
                                 }).then(function(response){
                                     if(response.status != 'error') {
                                         dataGrid.refresh();
