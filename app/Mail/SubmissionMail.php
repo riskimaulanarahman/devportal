@@ -325,6 +325,9 @@ class SubmissionMail extends Mailable
             case 'Jdi':
                 $viewblade = 'emails.jdirequestmail';
                 break;
+            case 'ActiveDirectory':
+                $viewblade = 'emails.oasys.IT.adrequestmail';
+                break;
             default:
                 $viewblade = 'emails.defaultmail';
                 break;

@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Module;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ApproverNotification;
+use DB;
 
 use App\Models\Employee;
 use App\Models\Company;
@@ -76,8 +79,46 @@ class EmployeedataController extends Controller
                 $requestData['sys_id_superior'] = $this->getsysid($request->superiorName);
             }
 
-
             $data = $this->model->findOrFail($id);
+            $oldData = $data->toArray();
+
+            if(isset($request->company_id) || isset($request->department_id) || isset($request->designation_id) || isset($request->location_id)) {
+                $checkapprover = DB::table('erp.dbo.vw_CombinedApprovers')
+                ->where('employee_id',$id)
+                ->get(); // check approver exist
+                if ($checkapprover->isNotEmpty()) {
+                    // Send email notification
+                    // $approverData = $checkapprover->toArray();
+                    // Mail::to(['riski_maulana@itci-hutani.com', 'purwanto_ihm@itci-hutani.com'])->send(new ApproverNotification($approverData));
+                    $emails = DB::table('reference.tbl_developer')
+                    ->join('users', 'reference.tbl_developer.user_id', '=', 'users.id')
+                    ->where('reference.tbl_developer.role', 'sys')
+                    ->pluck('users.email')
+                    ->toArray();
+
+                    if (!empty($emails)) {
+                        // Send email notification
+                        $listApprover = $checkapprover->toArray();
+                        // $approverData = [
+                        //     "data" => $checkapprover->toArray(),
+                        //     "old" => $oldData,
+                        //     "new" => $getSubmissionData
+                        // ];
+                        $approverData = [];
+                        foreach ($requestData as $key => $value) {
+                            if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {
+                                $approverData[] = [
+                                    'field' => $key,
+                                    'old_value' => $oldData[$key],
+                                    'new_value' => $value
+                                ];
+                            }
+                        }
+                        Mail::to($emails)->send(new ApproverNotification($approverData,$listApprover));
+                    }
+                }
+            }
+
             $data->update($requestData);
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);

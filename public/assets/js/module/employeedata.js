@@ -726,7 +726,7 @@ checkUserAccess(modname, usersid).then(permissions => {
             console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
             // Memuat ulang Page
-            location.reload();
+            // location.reload();
         }
     }).dxDataGrid("instance");
 });
