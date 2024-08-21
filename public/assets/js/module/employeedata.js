@@ -36,7 +36,7 @@ checkUserAccess(modname, usersid).then(permissions => {
             mode: "batch",
             allowAdding: (admin == 1) ? true : permissions.allowAdd,
             allowUpdating: (admin == 1) ? true : permissions.allowEdit,
-            allowDeleting: (admin == 1) ? true : permissions.allowDelete,
+            allowDeleting: false,
         },
         scrolling: {
             mode: "virtual"
