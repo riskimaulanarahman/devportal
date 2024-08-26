@@ -76,6 +76,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "boolean"
         },
         { 
+			dataField: "allowAction",
+            dataType: "boolean"
+        },
+        { 
 			dataField: "allowView",
             dataType: "boolean"
         },

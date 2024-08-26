@@ -7,7 +7,6 @@ Auth::routes();
 
 Route::group(['prefix' => 'api'], function () {
     Route::apiResources([
-        'travelrequest' => App\Http\Controllers\Submission\TravelRequestController::class,
         'projectrequest' => App\Http\Controllers\Submission\ProjectRequestController::class,
         'ticketrequest' => App\Http\Controllers\Submission\TicketRequestController::class,
         'missionrequest' => App\Http\Controllers\Submission\UavMissionRequestController::class,

@@ -21,6 +21,7 @@ class Useraccess extends Model
         'allowAdd' => 'boolean',
         'allowEdit' => 'boolean',
         'allowDelete' => 'boolean',
+        'allowAction' => 'boolean',
         'allowView' => 'boolean',
     ];
 }

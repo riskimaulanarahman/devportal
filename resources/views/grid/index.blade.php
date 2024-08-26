@@ -56,7 +56,11 @@
             </div>
         </div>
     @endif
-
+    
+    <div id="loading-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:9999; text-align:center; color:white; font-size:24px; line-height:100vh;">
+        Loading...
+    </div>
+    
     <div class="card {{ $data['menu'] != null ? 'mt-3' : null }}">
         <div class="card-body">
             <div class="d-flex align-items-center">

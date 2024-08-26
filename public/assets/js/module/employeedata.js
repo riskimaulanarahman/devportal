@@ -9,6 +9,12 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
+function delay(ms) {
+    var deferred = $.Deferred();
+    setTimeout(deferred.resolve, ms);
+    return deferred.promise();
+}
+
 checkUserAccess(modname, usersid).then(permissions => {
     var dataGrid = $("#gridContainer").dxDataGrid({    
         dataSource: store(modname),
@@ -36,7 +42,7 @@ checkUserAccess(modname, usersid).then(permissions => {
             mode: "batch",
             allowAdding: (admin == 1) ? true : permissions.allowAdd,
             allowUpdating: (admin == 1) ? true : permissions.allowEdit,
-            allowDeleting: false,
+            allowDeleting: (admin == 1) ? true : permissions.allowDelete,
         },
         scrolling: {
             mode: "virtual"
@@ -53,7 +59,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                 caption: 'AD',
                 fixed: true,
                 width: 80,
-                visible: permissions.allowAdd,
+                visible: (permissions.allowAction == 1 || admin == 1) ? true : false,
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
@@ -66,29 +72,37 @@ checkUserAccess(modname, usersid).then(permissions => {
                             var result = confirm('Are you sure you want to Create Active Directory '+options.data.FullName+' and send this submission ?');
 
                                 if (result) {
-                                    sendRequest(apiurl + "/adrequest", "POST", {
-                                        employee_id:reqid,
-                                        requestType:'Create Account'
+                                    showLoadingScreen();
+                                    // First request with a delay
+                                    delay(1000).then(function() {
+                                        return sendRequest(apiurl + "/adrequest", "POST", {
+                                            employee_id: reqid,
+                                            requestType: 'Create Account'
+                                        });
                                     }).then(function(response) {
                                         const dataid = response.data.id;
-                                        console.log(dataid);
-                                        sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
-                                            requestStatus:1,
-                                            action: 'submission',
-                                            approvalAction: 1,
-                                            approvalType: null,
-                                            remarks: null
+                                        // Second request with a delay
+                                        return delay(2000).then(function() {
+                                            return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
+                                                requestStatus: 1,
+                                                action: 'submission',
+                                                approvalAction: 1,
+                                                approvalType: null,
+                                                remarks: null
+                                            });
                                         });
-                                    }).then(function(response){
-                                        if(response.status != 'error') {
+                                    }).then(function(response) {
+                                        if (response.status != 'error') {
                                             dataGrid.refresh();
                                         }
+                                        hideLoadingScreen();
+                                    }).fail(function(error) {
+                                        console.error("An error occurred:", error);
+                                        hideLoadingScreen();
                                     });
                                 } else {
                                     alert('Cancelled.');
                                 }
-                            
-                                
 
                         }).appendTo(container);
                     }
@@ -99,52 +113,80 @@ checkUserAccess(modname, usersid).then(permissions => {
                 caption: 'Terminate',
                 fixed: true,
                 width: 80,
-                visible: permissions.allowDelete,
+                visible: (permissions.allowAction == 1 || admin == 1) ? true : false,
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
-                    $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
-                    
+                    if(options.data.LoginName) {
+                        $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
+                            evt.stopPropagation();
                         
-                        var result = confirm('Are you sure you want to Delete Active Directory '+options.data.FullName+' and send this submission ?');
+                            
+                            var result = confirm('Are you sure you want to Delete Active Directory '+options.data.FullName+' and send this submission ?');
 
-                            if (result) {
-                                sendRequest(apiurl + "/adrequest", "POST", {
-                                    employee_id:reqid,
-                                    requestType:'Delete Account'
-                                }).then(function(response) {
-                                    const dataid = response.data.id;
-                                    sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
-                                        requestStatus:1,
-                                        action: 'submission',
-                                        approvalAction: 1,
-                                        approvalType: null,
-                                        remarks: null
+                                // if (result) {
+                                //     sendRequest(apiurl + "/adrequest", "POST", {
+                                //         employee_id:reqid,
+                                //         requestType:'Delete Account'
+                                //     }).then(function(response) {
+                                //         const dataid = response.data.id;
+                                //         sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
+                                //             requestStatus:1,
+                                //             action: 'submission',
+                                //             approvalAction: 1,
+                                //             approvalType: null,
+                                //             remarks: null
+                                //         });
+                                //         sendRequest(apiurl + "/employeedata/"+reqid, "DELETE");
+                                //         dataGrid.refresh();
+                                //     }).then(function(response){
+                                //         if(response.status != 'error') {
+                                //             dataGrid.refresh();
+                                //         }
+                                //     });
+                                // } else {
+                                //     alert('Cancelled.');
+                                // }
+
+                                if (result) {
+                                    // First request with a delay
+                                    delay(1000).then(function() {
+                                        return sendRequest(apiurl + "/adrequest", "POST", {
+                                            employee_id: reqid,
+                                            requestType: 'Delete Account'
+                                        });
+                                    }).then(function(response) {
+                                        const dataid = response.data.id;
+                                        // Second request with a delay
+                                        return delay(2000).then(function() {
+                                            return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
+                                                requestStatus: 1,
+                                                action: 'submission',
+                                                approvalAction: 1,
+                                                approvalType: null,
+                                                remarks: null
+                                            });
+                                        });
+                                    }).then(function(response) {
+                                        return delay(1000).then(function() {
+                                            return sendRequest(apiurl + "/employeedata/" + reqid , "DELETE");
+                                        });
+                                    }).then(function(response) {
+                                        if (response.status != 'error') {
+                                            dataGrid.refresh();
+                                        }
+                                    }).fail(function(error) {
+                                        console.error("An error occurred:", error);
                                     });
-                                    sendRequest(apiurl + "/employeedata/"+reqid, "DELETE");
                                     dataGrid.refresh();
-                                }).then(function(response){
-                                    if(response.status != 'error') {
-                                        dataGrid.refresh();
-                                    }
-                                });
-                            } else {
-                                alert('Cancelled.');
-                            }
+                                } else {
+                                    alert('Cancelled.');
+                                }
 
-                    }).appendTo(container);
+                        }).appendTo(container);
+                    }
                 }
             },
-            // {
-            //     dataField: "id",
-            //     fixed: true,
-            //     editorOptions: { 
-            //         readOnly: true
-            //     },
-            //     visible: false,
-            //     validationRules: [{ type: "required" }]
-            // },
             {
                 dataField: "sys_id",
                 dataType: "string",

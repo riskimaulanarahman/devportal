@@ -59,10 +59,12 @@ class ADRequestController extends Controller
             $data = $dataquery
                 ->selectRaw("request_it_activedirectory.*,codes.code,
                     CASE WHEN request_it_activedirectory.user_id='".$user_id."' then 1 else 0 end as isMine,
+                    employee.tbl_employee.LoginName,
                     ".$subquery." as isPendingOnMe,
                     ".$getIT." as isIT
                 ")
                 ->leftJoin('codes','request_it_activedirectory.code_id','codes.id')
+                ->leftJoin('employee.tbl_employee','request_it_activedirectory.employee_id','employee.tbl_employee.id')
                 ->with(['user','approverlist','employee'])
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
                     $query->whereRaw($subquery . " = 1")
@@ -70,7 +72,10 @@ class ADRequestController extends Controller
                             if ($isAdmin) {
                                 $query->where("request_it_activedirectory.user_id", "!=", $user_id)
                                     ->whereIn("request_it_activedirectory.requestStatus", [1,3,4]);
-                            } 
+                            } else {
+                                $query->where("request_it_activedirectory.user_id", "!=", $user_id)
+                                    ->whereIn("request_it_activedirectory.requestStatus", [3]);
+                            }
                         })             
                         ->orWhere("request_it_activedirectory.user_id", $user_id);
                 })

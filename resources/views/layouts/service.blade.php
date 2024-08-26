@@ -186,6 +186,7 @@
                 allowAdd: data.allowAdd,
                 allowEdit: data.allowEdit,
                 allowDelete: data.allowDelete,
+                allowAction: data.allowAction,
                 allowView: data.allowView
             };
         });

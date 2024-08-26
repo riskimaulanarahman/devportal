@@ -45,11 +45,17 @@ class EmployeedataController extends Controller
     {
         try {
 
+            // Check if SAPID already exists
+            $sapidExists = $this->model->where('SAPID', $request->SAPID)->exists();
+
+            if ($sapidExists) {
+                return response()->json(["status" => "error", "message" => "The SAPID has already been taken."]);
+            }
+
             $requestData = $request->all();
             $requestData['companycode'] = $this->getCompanyName($request->company_id);
             $requestData['sys_id_depthead'] = $this->getsysid($request->deptheadName);
             $requestData['sys_id_superior'] = $this->getsysid($request->superiorName);
-            // $requestData['deptheadName'] = $this->getemployeename($this->getsysid($request->deptheadName));
 
             $this->model->create($requestData);
 
@@ -69,6 +75,13 @@ class EmployeedataController extends Controller
     public function update(Request $request, $id)
     {
         try {
+
+            // Check if SAPID already exists
+            $sapidExists = $this->model->where('SAPID', $request->SAPID)->exists();
+
+            if ($sapidExists) {
+                return response()->json(["status" => "error", "message" => "The SAPID has already been taken."]);
+            }
             
             $requestData = $request->all();
             if(isset($request->company_id)) {
@@ -88,8 +101,6 @@ class EmployeedataController extends Controller
                 ->get(); // check approver exist
                 if ($checkapprover->isNotEmpty()) {
                     // Send email notification
-                    // $approverData = $checkapprover->toArray();
-                    // Mail::to(['riski_maulana@itci-hutani.com', 'purwanto_ihm@itci-hutani.com'])->send(new ApproverNotification($approverData));
                     $emails = DB::table('reference.tbl_developer')
                     ->join('users', 'reference.tbl_developer.user_id', '=', 'users.id')
                     ->where('reference.tbl_developer.role', 'sys')
@@ -99,11 +110,6 @@ class EmployeedataController extends Controller
                     if (!empty($emails)) {
                         // Send email notification
                         $listApprover = $checkapprover->toArray();
-                        // $approverData = [
-                        //     "data" => $checkapprover->toArray(),
-                        //     "old" => $oldData,
-                        //     "new" => $getSubmissionData
-                        // ];
                         $approverData = [];
                         foreach ($requestData as $key => $value) {
                             if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {

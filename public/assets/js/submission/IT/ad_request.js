@@ -47,6 +47,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 140,
             cellTemplate: function(container, options) {
 
+                var isIT = options.data.isIT;
                 var isMine = options.data.isMine;
                 var isPendingOnMe = options.data.isPendingOnMe;
                 var reqid = options.data.id;
@@ -87,6 +88,39 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                                     dataGrid.refresh();
                                 }
                             });
+                        } else {
+                            alert('Cancelled.');
+                        }
+    
+                    }).appendTo(container); 
+                }
+
+                if((reqstatus == 3) && (options.data.LoginName == "" || options.data.LoginName == null) && (isIT == 1)) {
+                    $('<button class="btn btn-info" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-user"></i></button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
+                            
+                        var result = confirm('Are you sure you want to submit this loginName ?');
+
+                        if (result) {
+
+                            var loginNameVal = prompt("Please enter the LoginName:");
+
+                            if (loginNameVal !== null && loginNameVal.trim() !== "") {
+                                showLoadingScreen();
+                                sendRequest(apiurl + "/employeedata/"+options.data.employee_id, "PUT", {
+                                    LoginName:loginNameVal
+                                }).then(function(response){
+                                    if(response.status != 'error') {
+                                        dataGrid.refresh();
+                                    }
+                                    hideLoadingScreen();
+                                }).fail(function(error) {
+                                    hideLoadingScreen();
+                                    console.error("An error occurred:", error);
+                                });
+                            } else {
+                                alert('LoginName input was cancelled or empty.');
+                            }
                         } else {
                             alert('Cancelled.');
                         }
@@ -260,7 +294,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     var isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
-    var isIT = options.data.isIT;
+    isIT = options.data.isIT;
 
     popupid = reqid;
 
@@ -601,7 +635,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             allowExportSelectedData: true
                         },
                         onInitialized: function(e) {
-                            dataGrid1 = e.component;
+                            dataGrid22 = e.component;
                         },
                         onContentReady: function(e){
                             moveEditColumnToLeft(e.component);
@@ -616,7 +650,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     hint: "Refresh Data",
                                     icon: "refresh",
                                     onClick: function() {
-                                        dataGrid1.refresh();
+                                        dataGrid22.refresh();
                                     }
                                 }
                             });
@@ -641,7 +675,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
                     
                             // Memuat ulang DataGrid
-                            dataGrid1.refresh();
+                            dataGrid22.refresh();
                         }
                     }).appendTo(infoContent2)
                     return infoContent2
@@ -1080,10 +1114,26 @@ function btnreqsubmit(reqid,mode) {
     var btnSubmit = $('#btn-submit');
     btnSubmit.prop('disabled', true);
     var actionForm = (mode == 'approval') ? 'approval' : 'submission';
-
+    // console.log(isIT);
     if(mode == 'approval') {
         var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
         var valremarks = $('#remarks').val(); // mengambil nilai dari text area
+
+        if(isIT == 1) {
+            // Validate DataGrid for null values in accessType and accountType
+            var dataGridInstance = $("#formdata2").dxDataGrid("instance");
+            var dataSource = dataGridInstance.getDataSource().items();
+            for (var i = 0; i < dataSource.length; i++) {
+                var rowData = dataSource[i];
+                if (!rowData.accessType || !rowData.accountType) {
+                    alert('Please fill all required fields in the Form Data.');
+                    btnSubmit.prop('disabled', false);
+                    return false;
+                }
+            }
+        }
+
+
         if (!valapprovalAction) {
             alert('Please select approval action.')
             btnSubmit.prop('disabled', false);
