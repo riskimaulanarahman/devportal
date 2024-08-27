@@ -74,7 +74,7 @@ class ADRequestController extends Controller
                                     ->whereIn("request_it_activedirectory.requestStatus", [1,3,4]);
                             } else {
                                 $query->where("request_it_activedirectory.user_id", "!=", $user_id)
-                                    ->whereIn("request_it_activedirectory.requestStatus", [3]);
+                                    ->whereIn("request_it_activedirectory.requestStatus", [1,3]);
                             }
                         })             
                         ->orWhere("request_it_activedirectory.user_id", $user_id);
