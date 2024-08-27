@@ -284,7 +284,12 @@
                 <button type="button" class="btn header-item user text-start d-flex align-items-center"
                     id="page-header-user-dropdown-v" data-bs-toggle="dropdown" aria-haspopup="true"
                     aria-expanded="false">
-                    <img class="rounded-circle header-profile-user" src="@if (Auth::user()->avatar != ''){{ URL::asset('images/' . Auth::user()->avatar) }}@else{{ URL::asset('assets/images/users/avatar-1.jpg') }}@endif" alt="Header Avatar">
+                    <img class="rounded-circle header-profile-user" src="@if (Auth::user()->avatar != '') 
+                                        {{ env('APP_URL') . '/public/upload/profile/' . Auth::user()->avatar }} 
+                                    @else 
+                                        {{ env('APP_URL') . '/public/upload/profile/unnamed.png' }} 
+                                    @endif" 
+                         alt="Header Avatar">
                     </button>
                 <div class="dropdown-menu dropdown-menu-end pt-0">
                     <div class="px-3 pt-3">

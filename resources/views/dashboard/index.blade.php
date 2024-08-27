@@ -18,7 +18,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Pending Submissions</p>
-                                <h4 class="mb-0">{{ $totalPendingSubmission }}</h4>
+                                <h4 class="mb-0">{{ isset($totalPendingSubmission) ? $totalPendingSubmission : 0 }}</h4>
                             </div>
                         </div>
                     </div>
@@ -40,7 +40,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Need Your Approval</p>
-                                <h4 class="mb-0">{{ $totalPendingApproval }}</h4>
+                                <h4 class="mb-0">{{ isset($totalPendingApproval) ? $totalPendingApproval : 0 }}</h4>
                             </div>
                         </div>
                     </div>
@@ -52,7 +52,7 @@
         </div>
         <!-- end row -->
 
-        <div class="row">
+        {{-- <div class="row">
       
             <div class="col-xl-6">
                 <div class="card">
@@ -154,7 +154,7 @@
                 <!-- end card -->
             </div>
             <!-- end col -->
-        </div>
+        </div> --}}
         <!-- end row -->
 
         {{-- <div class="card">
@@ -278,12 +278,69 @@
 
                     <div class="mt-n5 position-relative">
                         <div class="text-center">
-                            <img src="@if (Auth::user()->avatar != ''){{ URL::asset('images/' . Auth::user()->avatar) }}@else{{ URL::asset('assets/images/users/avatar-1.jpg') }}@endif" alt=""
-                                class="avatar-xl rounded-circle img-thumbnail">
+                            <img src="@if (Auth::user()->avatar != '') 
+                                        {{ env('APP_URL') . '/public/upload/profile/' . Auth::user()->avatar }} 
+                                    @else 
+                                        {{ env('APP_URL') . '/public/upload/profile/unnamed.png' }} 
+                                    @endif" 
+                                 alt="" class="avatar-xl rounded-circle img-thumbnail">
 
                             <div class="mt-3">
                                 <h5 class="mb-1">{{ auth::user()->fullname }}</h5>
-                                <p class="text-muted">{{ ($employee) ? $employee->SAPID : 'Not Linked With Employee Data'; }}</p>
+                                <p class="text-muted">{{ ($employee) ? $employee->sys_id : 'Not Linked With Employee Data'; }}</p>
+                                {{-- <p class="text-muted">
+                                    SAPID : {{ ($employee) ? $employee->SAPID : 'Not Linked With Employee Data'; }} <br>
+                                    Company : {{ ($employee) ? $employee->companycode : 'Not Linked With Employee Data'; }} <br>
+                                    Department : {{ ($employee) ? $employee->department->DepartmentName : 'Not Linked With Employee Data'; }} <br>
+                                    Position : {{ ($employee) ? $employee->designation->DesignationName : 'Not Linked With Employee Data'; }} <br>
+                                    Location : {{ ($employee) ? $employee->location->Location : 'Not Linked With Employee Data'; }} <br>
+                                    Level : {{ ($employee) ? $employee->level->Level : 'Not Linked With Employee Data'; }} <br>
+                                    Join Date : {{ ($employee) ? $employee->JoinDate : 'Not Linked With Employee Data'; }} <br>
+                                    Birthday : {{ ($employee) ? $employee->BirthOfDate : 'Not Linked With Employee Data'; }} <br>
+                                    Department Head : {{ ($employee) ? $employee->deptheadName : 'Not Linked With Employee Data'; }}
+                                </p> --}}
+                                <table class="" style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td>SAPID:</td>
+                                        <td>{{ ($employee) ? $employee->SAPID : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Company:</td>
+                                        <td>{{ ($employee) ? $employee->companycode : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Department:</td>
+                                        <td>{{ ($employee) ? $employee->department->DepartmentName : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Dept Group:</td>
+                                        <td>{{ ($employee) ? $employee->department->DepartmentGroup : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Position:</td>
+                                        <td>{{ ($employee) ? $employee->designation->DesignationName : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Location:</td>
+                                        <td>{{ ($employee) ? $employee->location->Location : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level:</td>
+                                        <td>{{ ($employee) ? $employee->level->Level : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Join Date:</td>
+                                        <td>{{ ($employee) ? $employee->JoinDate : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Birthday:</td>
+                                        <td>{{ ($employee) ? $employee->BirthOfDate : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Department Head:</td>
+                                        <td>{{ ($employee) ? $employee->deptheadName : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
                     </div>

@@ -235,12 +235,13 @@ class HomeController extends Controller
             }
 
         // return view and data
-        return view('dashboard.index',compact(
-            'totalPendingSubmission',
-            'listPendingSubmission',
-            'totalPendingApproval',
-            'listPendingApproval'
-        ));
+        // return view('dashboard.index',compact(
+        //     'totalPendingSubmission',
+        //     'listPendingSubmission',
+        //     'totalPendingApproval',
+        //     'listPendingApproval'
+        // ));
+        return view('dashboard.index');
     }
 
     /*Language Translation*/
@@ -266,13 +267,18 @@ class HomeController extends Controller
         }
         
         $filename = Auth::user()->username . '.' . $picture->getClientOriginalExtension();
-        $picture->move(public_path('/images/'), $filename);
+        $tujuan_upload = 'public\\upload\\profile';
+        $picture->move($tujuan_upload,$filename);
+        // $picture->move(public_path('/images/'), $filename);
+        $source_file = $tujuan_upload.'\\'. $filename;
 
         // Update the path of the uploaded file to the avatar field of the currently authenticated user
         $user = Auth::user();
         $changeimage = User::findOrFail($user->id);
         $changeimage->avatar = $filename;
         $changeimage->save();
+
+        $this->processcopy($source_file);
 
         return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
     }
