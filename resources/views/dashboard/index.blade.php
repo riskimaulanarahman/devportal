@@ -299,7 +299,7 @@
                                     Birthday : {{ ($employee) ? $employee->BirthOfDate : 'Not Linked With Employee Data'; }} <br>
                                     Department Head : {{ ($employee) ? $employee->deptheadName : 'Not Linked With Employee Data'; }}
                                 </p> --}}
-                                <table class="" style="width: 100%; border-collapse: collapse;">
+                                <table class="mb-3" style="width: 100%; border-collapse: collapse;">
                                     <tr>
                                         <td>SAPID:</td>
                                         <td>{{ ($employee) ? $employee->SAPID : 'Not Linked With Employee Data' }}</td>
