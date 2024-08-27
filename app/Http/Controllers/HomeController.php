@@ -235,13 +235,12 @@ class HomeController extends Controller
             }
 
         // return view and data
-        // return view('dashboard.index',compact(
-        //     'totalPendingSubmission',
-        //     'listPendingSubmission',
-        //     'totalPendingApproval',
-        //     'listPendingApproval'
-        // ));
-        return view('dashboard.index');
+        return view('dashboard.index',compact(
+            'totalPendingSubmission',
+            'listPendingSubmission',
+            'totalPendingApproval',
+            'listPendingApproval'
+        ));
     }
 
     /*Language Translation*/
