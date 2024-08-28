@@ -288,17 +288,6 @@
                             <div class="mt-3">
                                 <h5 class="mb-1">{{ auth::user()->fullname }}</h5>
                                 <p class="text-muted">{{ ($employee) ? $employee->sys_id : 'Not Linked With Employee Data'; }}</p>
-                                {{-- <p class="text-muted">
-                                    SAPID : {{ ($employee) ? $employee->SAPID : 'Not Linked With Employee Data'; }} <br>
-                                    Company : {{ ($employee) ? $employee->companycode : 'Not Linked With Employee Data'; }} <br>
-                                    Department : {{ ($employee) ? $employee->department->DepartmentName : 'Not Linked With Employee Data'; }} <br>
-                                    Position : {{ ($employee) ? $employee->designation->DesignationName : 'Not Linked With Employee Data'; }} <br>
-                                    Location : {{ ($employee) ? $employee->location->Location : 'Not Linked With Employee Data'; }} <br>
-                                    Level : {{ ($employee) ? $employee->level->Level : 'Not Linked With Employee Data'; }} <br>
-                                    Join Date : {{ ($employee) ? $employee->JoinDate : 'Not Linked With Employee Data'; }} <br>
-                                    Birthday : {{ ($employee) ? $employee->BirthOfDate : 'Not Linked With Employee Data'; }} <br>
-                                    Department Head : {{ ($employee) ? $employee->deptheadName : 'Not Linked With Employee Data'; }}
-                                </p> --}}
                                 <table class="mb-3" style="width: 100%; border-collapse: collapse;">
                                     <tr>
                                         <td>SAPID:</td>

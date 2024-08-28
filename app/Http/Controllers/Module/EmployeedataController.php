@@ -10,6 +10,9 @@ use DB;
 
 use App\Models\Employee;
 use App\Models\Company;
+use App\Models\Department;
+use App\Models\Designation;
+use App\Models\Location;
 
 class EmployeedataController extends Controller
 {
@@ -111,12 +114,44 @@ class EmployeedataController extends Controller
                         // Send email notification
                         $listApprover = $checkapprover->toArray();
                         $approverData = [];
+                        // foreach ($requestData as $key => $value) {
+                        //     if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {
+                        //         $approverData[] = [
+                        //             'field' => $key,
+                        //             'old_value' => $oldData[$key],
+                        //             'new_value' => $value
+                        //         ];
+                        //     }
+                        // }
                         foreach ($requestData as $key => $value) {
                             if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {
+                                $oldValue = $oldData[$key];
+                                $newValue = $value;
+            
+                                // Convert IDs to names
+                                switch ($key) {
+                                    case 'company_id':
+                                        $oldValue = Company::find($oldValue)->CompanyCode ?? $oldValue;
+                                        $newValue = Company::find($newValue)->CompanyCode ?? $newValue;
+                                        break;
+                                    case 'department_id':
+                                        $oldValue = Department::find($oldValue)->DepartmentName ?? $oldValue;
+                                        $newValue = Department::find($newValue)->DepartmentName ?? $newValue;
+                                        break;
+                                    case 'designation_id':
+                                        $oldValue = Designation::find($oldValue)->DesignationName ?? $oldValue;
+                                        $newValue = Designation::find($newValue)->DesignationName ?? $newValue;
+                                        break;
+                                    case 'location_id':
+                                        $oldValue = Location::find($oldValue)->Location ?? $oldValue;
+                                        $newValue = Location::find($newValue)->Location ?? $newValue;
+                                        break;
+                                }
+            
                                 $approverData[] = [
                                     'field' => $key,
-                                    'old_value' => $oldData[$key],
-                                    'new_value' => $value
+                                    'old_value' => $oldValue,
+                                    'new_value' => $newValue
                                 ];
                             }
                         }
