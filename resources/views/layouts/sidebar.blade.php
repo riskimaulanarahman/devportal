@@ -56,7 +56,7 @@
                                         @foreach ($sidemenu as $submenu_item)
                                             @if ($sidemenu_item['id'] == $submenu_item['parent_id'] && $submenu_item['is_active'])
                                                 <li>
-                                                    <a href="{{ $submenu_item['route'] }}">
+                                                    <a href="{{ $submenu_item['route'] }}" class="{{ $sidemenu_item['is_parent'] && $submenu_item['is_secondary_menu'] ? 'has-arrow' : '' }}">
                                                         @foreach ($icons as $icon)
                                                             @if ($submenu_item['icon_id'] == $icon['id'])
                                                                 <i class="icon nav-icon" data-eva="{{ $icon['name'] }}"></i>
