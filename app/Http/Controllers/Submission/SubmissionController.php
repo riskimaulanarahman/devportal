@@ -264,13 +264,6 @@ class SubmissionController extends Controller
                 }
             }
 
-            // if($modulename == 'UavMission') {
-            //         if (count($assignment) < 1) {
-            //             return response()->json(["status" => "error", "message" => $this->getMessage()['assignmentnotfound']]);
-            //         }
-            //     }
-            // }
-
             if($final == 1) {
                 if($modulename == 'Ticket' || $modulename == 'Hrsc') {
                     if (count($assignment) < 1) {

@@ -41,6 +41,13 @@ trait HasAuth {
         return $data;
     }
 
+    public function getUserByid($id) {
+
+        $data = User::find($id);
+
+        return $data;
+    }
+
     public function isDeveloper() {
         if($this->getAuth()) {
             $data = Developer::where('user_id',$this->getAuth()->id)->count();

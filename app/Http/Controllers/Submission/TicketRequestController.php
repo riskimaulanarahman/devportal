@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Submission;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubmissionMail;
 
 use App\Models\Submission\Ticket;
 use App\Models\ApproverListReq;
@@ -172,6 +174,21 @@ class TicketRequestController extends Controller
                 }
             }
             //end save history perubahan
+
+            if(isset($request->ticketStatus) && $data->requestStatus == 3) {
+                $getSubmissionData = $this->model->findOrFail($id);
+
+                $mailData = [
+                    "id" => 30, // final approved
+                    "action_id" => 0,
+                    "submission" => $getSubmissionData,
+                    "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
+                    "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
+                    "message" => $this->mailMessage()['newActivity'],
+                    "remarks" => $request->ticketStatus
+                ];
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
+            }
 
             // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([
