@@ -114,15 +114,7 @@ class EmployeedataController extends Controller
                         // Send email notification
                         $listApprover = $checkapprover->toArray();
                         $approverData = [];
-                        // foreach ($requestData as $key => $value) {
-                        //     if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {
-                        //         $approverData[] = [
-                        //             'field' => $key,
-                        //             'old_value' => $oldData[$key],
-                        //             'new_value' => $value
-                        //         ];
-                        //     }
-                        // }
+
                         foreach ($requestData as $key => $value) {
                             if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {
                                 $oldValue = $oldData[$key];

@@ -11,6 +11,8 @@ Route::get('/check-session',[App\Http\Controllers\SessionCheckController::class,
 
 // dashboard
 Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestController::class, 'dashboard'])->name('dashboardproject'); //Dashboard project
+Route::get('cvaf',[App\Http\Controllers\Submission\CvafRequestController::class, 'showEvaluationForm'])->name('cvaf'); //cvaf
+Route::post('calculate-score', [App\Http\Controllers\Submission\CvafRequestController::class, 'calculateScore']);
 
 Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 

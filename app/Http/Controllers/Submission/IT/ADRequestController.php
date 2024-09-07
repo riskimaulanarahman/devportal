@@ -293,7 +293,7 @@ class ADRequestController extends Controller
 
 				if($data->accessType == 'TS Account') {
 					$Worksheet->Range("F26")->Value = 'x';
-				}else if($data->accesstype == 2) {
+				}else if($data->accessType == 2) {
 					$Worksheet->Range("P26")->Value = 'x';
 				}else {
 					$accessT = '';
@@ -301,7 +301,7 @@ class ADRequestController extends Controller
 	
 				if($data->accountType == 'Permanent') {
 					$Worksheet->Range("F28")->Value = 'x';
-				}else if($data->accounttype == 2) {
+				}else if($data->accountType == 2) {
 					$Worksheet->Range("P28")->Value = 'x';
 				}else {
 					$accountT = '';

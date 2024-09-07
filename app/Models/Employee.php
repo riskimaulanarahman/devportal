@@ -42,4 +42,16 @@ class Employee extends Model
         return $this->belongsTo('App\Models\Company','employee_id');
     }
 
+    // Relasi dengan tabel answers
+    public function answers()
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+    // Relasi dengan tabel scores
+    public function scores()
+    {
+        return $this->hasMany(Score::class);
+    }
+
 }
