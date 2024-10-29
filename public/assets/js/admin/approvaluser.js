@@ -143,6 +143,10 @@ function processData(itemsData) {
                 // },
             },
             { 
+                dataField: "autoAdd",
+                dataType: "boolean"
+            }, 
+            { 
                 dataField: "isFinal",
                 dataType: "boolean"
             }, 

@@ -19,8 +19,10 @@ class Approvaluser extends Model
         'employee_id' => 'integer',
         'sequence' => 'integer',
         'approvaltype_id' => 'integer',
+        'autoAdd' => 'boolean',
         'isFinal' => 'boolean',
         'isActive' => 'boolean',
+        'approver_id' => 'integer',
     ];
 
     public function user()

@@ -97,7 +97,7 @@ class UavMissionRequestDetailController extends Controller
             
             foreach ($fields as $key => $value) {
                 if ($value) {
-                    $this->approverAction($this->modulename, $data->req_id, $key, 1, $value);
+                    $this->approverAction($this->modulename, $data->req_id, $key, 1, $value, null);
                 }
             }
             //end save history perubahan

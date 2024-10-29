@@ -14,12 +14,16 @@ use App\Models\Stackholders;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Categoryhrsc;
-use App\Http\Controllers\Submission\JdiRequestController;
-use App\Http\Controllers\Submission\IT\ADRequestController;
 
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
 use App\Models\Submission\Jdi;
+use App\Models\Submission\MMF\Mmf;
+use App\Http\Controllers\Submission\JdiRequestController;
+use App\Http\Controllers\Submission\IT\ADRequestController;
+use App\Http\Controllers\Submission\Ecatalog\MaterialRequestController;
+use App\Http\Controllers\Submission\MMF\M28RequestController;
+use App\Http\Controllers\Submission\MMF\M30RequestController;
 
 use Storage;
 use DB;
@@ -51,11 +55,13 @@ class SubmissionMail extends Mailable
      */
     public function __construct($mailData,$modulename,$final)
     {
-        // $this->to=$to;
+        $appEnv = env('APP_ENV');
+        $url = ($appEnv == 'production') ? 'http://172.18.83.38/' : 'http://localhost/';
         $this->module = new Module();
         $this->mailData=$mailData;
         $this->modulename=$modulename;
         $this->final=$final;
+
 
         $code = Code::findOrFail($mailData['submission']->code_id);
         $this->code = $code->code;
@@ -289,7 +295,7 @@ class SubmissionMail extends Mailable
                     }
                     // end save no registrasi
                     $pdf = $jdiController->genPdfJdi($request,$mailData['submission']->id);
-                    $this->attach("http://172.18.83.38/devportal/".$pdf); // add attachment to mail
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc bcid
                     }
@@ -303,13 +309,46 @@ class SubmissionMail extends Mailable
                 $adController = new ADRequestController();
                 if($final == 1) {
                     $pdf = $adController->genPdfAD($request,$mailData['submission']->id);
-                    $this->attach("http://172.18.83.38/devportal/".$pdf); // add attachment to mail
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc
                     }
                 }
             }
         // ActiveDirectory MODULE
+
+        // Ecatalog MODULE
+            if($modulename == 'MaterialReq') {
+                $request = new Request();
+                $ecatalogController = new MaterialRequestController();
+                if($final == 1) {
+                    $pdf = $ecatalogController->genPdfMaterialReq($request,$mailData['submission']->id);
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    foreach ($Mailrecipient as $cc) {
+                        $this->cc($cc->email); // cc
+                    }
+                }
+            }
+        // Ecatalog MODULE
+
+        // Ecatalog MODULE
+        if($modulename == 'Mmf') {
+            $checkCategory = Mmf::find($mailData['submission']->id);
+            
+            $request = new Request();
+            if($checkCategory->category == 'MMF28') {
+                $mmfController = new M28RequestController();
+            } else {
+                $mmfController = new M30RequestController();
+            }
+
+            if($final == 1) {
+                $pdf = $mmfController->genPdfMmfReq($request,$mailData['submission']->id);
+                $this->attach($url."devportal/".$pdf); // add attachment to mail
+            }
+
+        }
+    // Ecatalog MODULE
 
     }
 
@@ -338,7 +377,13 @@ class SubmissionMail extends Mailable
                 $viewblade = 'emails.jdirequestmail';
                 break;
             case 'ActiveDirectory':
-                $viewblade = 'emails.oasys.IT.adrequestmail';
+                $viewblade = 'emails.IT.adrequestmail';
+                break;
+            case 'MaterialReq':
+                $viewblade = 'emails.Ecatalog.materialrequestmail';
+                break;
+            case 'Mmf':
+                $viewblade = 'emails.MMF.mmfrequestmail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';

@@ -10,6 +10,7 @@ Route::post('list-sidemenu',[App\Http\Controllers\ListController::class, 'listSi
 Route::post('list-icon',[App\Http\Controllers\ListController::class, 'listIcon']);
 Route::post('list-sequence',[App\Http\Controllers\ListController::class, 'listSequence']);
 Route::post('list-company',[App\Http\Controllers\ListController::class, 'listCompany']);
+Route::post('list-companycode',[App\Http\Controllers\ListController::class, 'listCompanyCode']);
 Route::post('list-department',[App\Http\Controllers\ListController::class, 'listDepartment']);
 Route::post('list-location',[App\Http\Controllers\ListController::class, 'listLocation']);
 Route::post('list-designation',[App\Http\Controllers\ListController::class, 'listDesignation']);
@@ -29,3 +30,8 @@ Route::post('list-categoryform/{modulename}',[App\Http\Controllers\ListControlle
 Route::post('list-categoryform',[App\Http\Controllers\ListController::class, 'listCategoryForm']);
 Route::post('list-uavasset',[App\Http\Controllers\ListController::class, 'listUavAsset']);
 Route::post('list-categoryhrsc',[App\Http\Controllers\ListController::class, 'listCategoryHrsc']);
+Route::post('list-unit',[App\Http\Controllers\ListController::class, 'listUnit']);
+Route::post('list-currency',[App\Http\Controllers\ListController::class, 'listCurrency']);
+Route::post('list-buyer',[App\Http\Controllers\ListController::class, 'listBuyer']);
+Route::post('list-ecatalog',[App\Http\Controllers\ListController::class, 'listEcatalog']);
+Route::post('list-pg',[App\Http\Controllers\ListController::class, 'listPurchasinguser']);

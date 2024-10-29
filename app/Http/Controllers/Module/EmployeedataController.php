@@ -28,13 +28,27 @@ class EmployeedataController extends Controller
     public function index(Request $request)
     {
         try {
+            $isAdmin = $this->getAuth()->isAdmin;
 
             $getcompany = $this->company->where('isUsed',1)->pluck('CompanyCode');
 
-            $data = $this->model
-                    ->where('isActive',1)
-                    ->whereIn('companycode',$getcompany)
-                    ->get(); // show index data by employee
+            $dataquery = $this->model->query();
+
+            $dataquery->whereIn('companycode',$getcompany);
+
+            if(!$isAdmin) {
+                $dataquery->where('isActive',1);
+            }
+
+            // Menambahkan subquery untuk menentukan apakah employee_id ada di request_it_activedirectory
+            $dataquery->addSelect([
+                'isAD' => \DB::table('request_it_activedirectory as ria')
+                    ->selectRaw('CASE WHEN EXISTS (SELECT 1 FROM request_it_activedirectory WHERE employee_id = employee.tbl_employee.id) THEN 1 ELSE 0 END')
+                    ->whereColumn('ria.employee_id', 'employee.tbl_employee.id')
+                    ->limit(1)
+            ]);
+
+            $data = $dataquery->get();
 
             return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
@@ -80,7 +94,7 @@ class EmployeedataController extends Controller
         try {
 
             // Check if SAPID already exists
-            $sapidExists = $this->model->where('SAPID', $request->SAPID)->exists();
+            $sapidExists = $this->model->where('SAPID', $request->SAPID)->where('isActive',1)->exists();
 
             if ($sapidExists) {
                 return response()->json(["status" => "error", "message" => "The SAPID has already been taken."]);

@@ -18,6 +18,11 @@ class GeneratemenuController extends Controller
         ->where('route', $route)
         ->first();
 
+        // jika page/route tidak ditemukan direct to 404 view
+        if(!$sidemenu) {
+            abort('404');
+        }
+
         $sequence = Sequence::select(['title', 'is_active'])
         ->where('id', $sidemenu->sequence_id)
         ->first();

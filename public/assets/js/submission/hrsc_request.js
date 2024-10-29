@@ -1259,6 +1259,7 @@ function btnreqsubmit(reqid,mode) {
         confirmButtonText: 'Yes, send it!'
       }).then((result) => {
         if (result.isConfirmed) {
+            showLoadingScreen();
             sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
                 requestStatus:1,
                 action: actionForm,
@@ -1267,7 +1268,8 @@ function btnreqsubmit(reqid,mode) {
                 remarks: valremarks
           }).then(function(response){
                 if(response.status == 'error') {
-                btnSubmit.prop('disabled', false);
+                    btnSubmit.prop('disabled', false);
+                    hideLoadingScreen();
                 } else {
                     Swal.fire({
                         icon: 'success',
@@ -1275,6 +1277,7 @@ function btnreqsubmit(reqid,mode) {
                         text: 'The submission has been submited.',
                     });
                     popup.hide();
+                    hideLoadingScreen();
                 }
           });
         } else {
@@ -1285,6 +1288,7 @@ function btnreqsubmit(reqid,mode) {
                 text: 'The submission has been cancelled.',
                 confirmButtonColor: '#3085d6'
             });
+            hideLoadingScreen();
         }
       });
 

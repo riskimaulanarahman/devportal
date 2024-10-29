@@ -181,7 +181,7 @@ class ADRequestController extends Controller
             
             foreach ($fields as $key => $value) {
                 if ($value) {
-                    $this->approverAction($this->modulename, $id, $key, 1, $value);
+                    $this->approverAction($this->modulename, $id, $key, 1, $value, null);
                 }
             }
             //end save history perubahan
@@ -384,7 +384,7 @@ class ADRequestController extends Controller
             // Log error
             $ip = $request->ip();
             $url = $request->url();
-            $action = 'gen-pdf-jdi';
+            $action = 'gen-pdf-AD';
             $this->logerror($ip, $url, $action, $e->getMessage());
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);

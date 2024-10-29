@@ -18,16 +18,10 @@
                                                     <div class="d-flex flex-column h-100">
                                                         <div class="mb-4 mb-md-1">
                                                             <a href="{{ url('/') }}" class="d-block auth-logo">
-                                                                {{-- <img src="{{ URL::asset('assets/images/oaslogo.png')}}" alt="" height="250" class="auth-logo-dark me-start"> --}}
-                                                                {{-- <img src="{{ URL::asset('assets/images/logo-light.png')}}" alt="" height="22" class="auth-logo-light me-start"> --}}
                                                                 <center><b style="font-size: 30px;">{{ env('APP_NAME') }}</b></center>
                                                             </a>
                                                         </div>
                                                         <div class="auth-content my-auto">
-                                                            <div class="text-center">
-                                                                {{-- <h5 class="mb-0">Online Approval System</h5> --}}
-                                                                {{-- <p class="text-muted mt-2">Application Management & Ticketing System</p> --}}
-                                                            </div>
                                                             <form class="mt-4 pt-2" id="loginForm" action="{{ route('login') }}" method="POST">
                                                                 @csrf
                                                                 <div class="form-floating form-floating-custom mb-4">
@@ -57,6 +51,16 @@
                                                                     <div class="form-floating-icon">
                                                                         <i data-feather="lock"></i>
                                                                     </div>
+                                                                    {{-- <div id="capslock-indicator" style="display: none; color: red;">Caps Lock is ON</div> --}}
+                                                                </div>
+
+                                                                <div id="capslock-indicator-on">
+                                                                    <i class="mdi mdi-lock-open-outline"></i>
+                                                                    <p>Caps Lock is ON</p>
+                                                                </div>
+                                                                <div id="capslock-indicator-off">
+                                                                    <i class="mdi mdi-lock-outline"></i>
+                                                                    <p>Caps Lock is OFF</p>
                                                                 </div>
 
                                                                 <div class="mb-3">
@@ -68,11 +72,6 @@
                                                                     </div>
                                                                 @endif
                                                             </form>
-                                                            <div>
-                                                                {{-- <a href="{{ env('APP_URL') }}/public/upload/DevPortal Panduan.pdf" target="_blank"> --}}
-                                                                    {{-- </a> --}}
-                                                                    
-                                                            </div>
                                                         </div>
                                                         <div class="mt-1 text-center">
                                                             <button id="downloadBtn" class="btn btn-danger" data-bs-toggle="modal"
@@ -340,7 +339,7 @@
             <!-- end container fluid -->
         </div>
 
-        <div class="modal fade bs-modal-panduan" tabindex="-1" role="dialog"
+        {{-- <div class="modal fade bs-modal-panduan" tabindex="-1" role="dialog"
             aria-labelledby="mySmallModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -361,7 +360,7 @@
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
+        </div><!-- /.modal --> --}}
 
         @endsection
         @section('script')
@@ -373,6 +372,16 @@
                         formSubmit(); // Panggil fungsi formSubmit di sini
                     }
                 });
+
+                var input = document.getElementById("password-input");
+                input.addEventListener("keyup", function(event) {
+                    if (event.getModifierState("CapsLock")) {
+                        $('#capslock-indicator-on').show();
+                    } else {
+                        $('#capslock-indicator-on').hide();
+                    }
+                });
+
                 const formSubmit = async () => {
 
                     const username = $('#input-username').val();

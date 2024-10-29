@@ -26,6 +26,7 @@ trait HasMessage {
             'assignmentnotfound' => 'Error: Assignment not found, Please add it to continue.',
             'userexist' => 'User already exist.',
             'chairmanexist' => 'Chairman already exist.',
+            'buyerexist' => 'The buyer already exists. Only one buyer can be added.',
             'nothaveaccess' => 'Error: Unauthorized Access - You do not have the necessary permissions to perform this action.',
         ];
 

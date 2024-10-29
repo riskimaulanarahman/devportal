@@ -37,11 +37,14 @@ trait CopytoserverTrait {
 
     public function processcopy($path) {
 		try {
-			$copy = $this->mycopy($path); 
-			if ($copy!=="success"){
-				echo "500";
-			} else {
-				unlink($path);
+			$appEnv = env('APP_ENV');
+			if ($appEnv == 'production') {
+				$copy = $this->mycopy($path); 
+				if ($copy!=="success"){
+					echo "500";
+				} else {
+					unlink($path);
+				}
 			}
 		}catch (Exception $e){
 			die(" cannot copy file ".$e->getMessage()); 

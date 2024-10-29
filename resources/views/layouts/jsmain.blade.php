@@ -132,6 +132,8 @@
         //module
         '/headcounts': 'module/headcounts.js',
         '/employeedata': 'module/employeedata.js',
+        '/ecatalog': 'module/ecatalog.js',
+        '/purchasing_user': 'module/purchasinguser.js',
         //submission
         '/travel_request': 'submission/travel_request.js',
         '/project_request': 'submission/project_request.js',
@@ -143,6 +145,10 @@
         '/jdi_report': 'submission/jdi_report.js',
         //submission/IT
         '/ad_request': 'submission/IT/ad_request.js',
+        //submission/MMF
+        '/mmf_28_request': 'submission/MMF/28_request.js',
+        '/mmf_30_request': 'submission/MMF/30_request.js',
+        '/material_request': 'submission/MMF/material_request.js',
     }
     
     const pathname = window.location.pathname;

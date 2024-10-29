@@ -98,6 +98,8 @@ class HomeController extends Controller
             'request_mom' => $this->getModuleId('Mom'),
             'request_jdi' => $this->getModuleId('Jdi'),
             'request_it_activedirectory' => $this->getModuleId('ActiveDirectory'),
+            // 'request_mmf' => $this->getModuleId('Mmf'),
+            // 'request_material' => $this->getModuleId('MaterialReq'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -110,8 +112,15 @@ class HomeController extends Controller
 
         // list pending submissions
         foreach ($tables as $table => $module_id) {
+            if($table == 'request_mmf') {
+                $mmfSelect = ',category';
+            } else {
+                $mmfSelect = '';
+            }
+
             $results = DB::table($table)
-                ->select($table.'.code_id', 'codes.code', 'users.fullname')
+                ->selectRaw($table.".code_id,codes.code,users.fullname".$mmfSelect."
+                ")
                 ->leftJoin('codes', $table.'.code_id', '=', 'codes.id')
                 ->leftJoin('tbl_approverListReq', function($join) use ($table, $module_id) {
                     $join->on($table.'.id', '=', 'tbl_approverListReq.req_id')
@@ -128,7 +137,9 @@ class HomeController extends Controller
 
             if ($count > 0) {
                 foreach ($results as $result) {
-
+                    if($table == 'request_mmf') {
+                        $mmftype = ($result->category == 'MMF30') ? '30' : '28';
+                    }
                     $url = '';
                     if ($table) {
                         switch ($table) {
@@ -153,6 +164,12 @@ class HomeController extends Controller
                             case 'request_it_activedirectory':
                                 $url = 'ad_request';
                                 break;
+                            // case 'request_mmf':
+                            //     $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
+                            //     break;
+                            // case 'request_material':
+                            //     $url = 'material_request';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -173,9 +190,15 @@ class HomeController extends Controller
 
 
 
-
+        
         // list need your approval
         foreach ($tables as $table => $module_id) {
+            if($table == 'request_mmf') {
+                $mmfSelect = ',category';
+            } else {
+                $mmfSelect = '';
+            }
+
             $subquery = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
                 from tbl_approverListReq l
                 left join tbl_approver a on l.approver_id=a.id
@@ -184,7 +207,7 @@ class HomeController extends Controller
                 order by a.sequence)";
 
             $results2 = DB::table($table)
-                ->selectRaw("users.fullname as creator,codes.code,".$subquery." as isPendingOnMe
+                ->selectRaw("users.fullname as creator,codes.code,".$subquery." as isPendingOnMe".$mmfSelect."
                 ")
                 ->leftJoin('codes',$table.'.code_id','codes.id')
                 ->leftJoin('users', $table.'.user_id', '=', 'users.id')
@@ -195,7 +218,9 @@ class HomeController extends Controller
                 ->get();
                 
                 foreach ($results2 as $result2) {
-                    
+                    if($table == 'request_mmf') {
+                        $mmftype = ($result2->category == 'MMF30') ? '30' : '28';
+                    }
                     $url = '';
                     if ($table) {
                         switch ($table) {
@@ -220,6 +245,12 @@ class HomeController extends Controller
                             case 'request_it_activedirectory':
                                 $url = 'ad_request';
                                 break;
+                            // case 'request_mmf':
+                            //     $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
+                            //     break;
+                            // case 'request_material':
+                            //     $url = 'material_request';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }

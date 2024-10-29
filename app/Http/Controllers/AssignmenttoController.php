@@ -10,6 +10,8 @@ use App\Models\Assignmentto;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Support\Str;
+use App\Models\ApproverListReq;
+use App\Models\Approvaluser;
 
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -44,6 +46,16 @@ class AssignmenttoController extends Controller
     public function store(Request $request)
     {
         try {
+
+            // MMF
+            if($request->modulename == 'Mmf') {
+                $checkRow = $this->model->where('module_id',$this->getModuleId($request->modulename))->where('req_id',$request->req_id)->count();
+                if($checkRow < 1) {
+                    $this->createApprBuyer($request->employee_id, $request->req_id);
+                } else {
+                    return response()->json(["status" => "error", "message" => $this->getMessage()['buyerexist']]);
+                }
+            }
 
             $requestData = $request->all();
             $requestData['module_id'] = $this->getModuleId($request->modulename);
@@ -144,6 +156,11 @@ class AssignmenttoController extends Controller
                 $data->update($requestData);
             }
 
+            // BUYER MMF
+            if($this->getModuleName($data->module_id) == 'Mmf') {
+                $this->createApprBuyer($data->employee_id, $data->req_id);
+            }
+
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 
         } catch (\Exception $e) {
@@ -157,6 +174,12 @@ class AssignmenttoController extends Controller
         try {
 
             $data = $this->model->findOrFail($id);
+            
+            // BUYER MMF
+            if($this->getModuleName($data->module_id) == 'Mmf') {
+                $this->deleteApprBuyer($data->employee_id, $data->req_id);
+            }
+
             $data->delete();
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);

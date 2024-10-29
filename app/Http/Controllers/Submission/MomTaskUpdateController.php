@@ -176,7 +176,7 @@ class MomTaskUpdateController extends Controller
             
             foreach ($fields as $key => $value) {
                 if ($value) {
-                    $this->approverAction($this->modulename, $getCategoryReqID->req_id, $key, $approvalAction, $value);
+                    $this->approverAction($this->modulename, $getCategoryReqID->req_id, $key, $approvalAction, $value, null);
                 }
             }
             //end save history perubahan

@@ -33,7 +33,9 @@ Route::get('/mom-reminder/{mode}',[App\Http\Controllers\Submission\MomTaskUpdate
 // Generate PDF
 Route::get('/gen-pdf/jdi/{id}',[App\Http\Controllers\Submission\JdiRequestController::class, 'genPdfJdi'])->name('gen-pdf-jdi');
 Route::get('/gen-pdf/activedirectory/{id}',[App\Http\Controllers\Submission\IT\ADRequestController::class, 'genPdfAD'])->name('gen-pdf-ad');
-Route::get('/gen-pdf/mom/{id}', [App\Http\Controllers\Submission\MomTaskUpdateController::class, 'genPdfMom'])->name('gen-pdf-mom.pdf');
+Route::get('/gen-pdf/mom/{id}', [App\Http\Controllers\Submission\MomTaskUpdateController::class, 'genPdfMom'])->name('gen-pdf-mom');
+Route::get('/gen-pdf/material/{id}', [App\Http\Controllers\Submission\Ecatalog\MaterialRequestController::class, 'genPdfMaterialReq'])->name('gen-pdf-material');
+Route::get('/gen-pdf/mmf30/{id}', [App\Http\Controllers\Submission\MMF\M30RequestController::class, 'genPdfMMF30'])->name('gen-pdf-m30');
 
 
 });

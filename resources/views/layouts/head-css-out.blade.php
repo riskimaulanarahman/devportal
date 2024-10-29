@@ -21,4 +21,24 @@
     .dx-datagrid {
         padding: 10px !important;
     }
+    #capslock-indicator-on, #capslock-indicator-off {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
+        transition: opacity 0.5s ease-in-out;
+        z-index: 100000;
+    }
+    #capslock-indicator-on.show, #capslock-indicator-off.show {
+        display: block;
+        opacity: 0.5;
+    }
+    #capslock-indicator-on i, #capslock-indicator-off i {
+        font-size: 50px;
+    }
 </style>

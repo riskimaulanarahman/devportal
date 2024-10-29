@@ -162,7 +162,7 @@ class CvafRequestController extends Controller
             
             foreach ($fields as $key => $value) {
                 if ($value) {
-                    $this->approverAction($this->modulename, $id, $key, 1, $value);
+                    $this->approverAction($this->modulename, $id, $key, 1, $value, null);
                 }
             }
             //end save history perubahan

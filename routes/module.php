@@ -16,5 +16,7 @@ Route::group(['prefix' => 'api'], function () {
         'historyhclevel' => App\Http\Controllers\Module\HistoryhclevelController::class,
         'historyhcappraisal' => App\Http\Controllers\Module\HistoryhcappraisalController::class,
         'employeedata' => App\Http\Controllers\Module\EmployeedataController::class,
+        'ecatalog' => App\Http\Controllers\Module\EcatalogController::class,
+        'purchasinguser' => App\Http\Controllers\Module\PurchasinguserController::class,
     ]);
 });

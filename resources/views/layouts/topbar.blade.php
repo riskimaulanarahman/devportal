@@ -322,7 +322,7 @@
                             class="align-middle">Settings</span></a> --}}
                     <a class="dropdown-item" href="#"><i
                             class="mdi mdi-lifebuoy text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Help</span></a>
+                            class="align-middle" data-bs-toggle="modal" data-bs-target=".bs-modal-panduan">Help</span></a>
                     <a class="dropdown-item " href="javascript:void();"
                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
                             class="bx bx-power-off font-size-16 align-middle me-1"></i> <span

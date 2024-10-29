@@ -57,6 +57,9 @@
                     values.category_id = param;
                     values.task_id = param;
                 }
+                // if(modulename == 'Mmf') {
+                //     values.mmf30_id = param;
+                // }
                 
                 return sendRequest(apiurl + "/"+module, "POST", values);
             },
@@ -116,8 +119,11 @@
             if(result.status == "show" || result.status == 'prompt') {
             
             } else {
-
-                DevExpress.ui.notify(text, type, time);
+                if(type == 'error') {
+                    DevExpress.ui.dialog.alert(text, type);
+                } else {
+                    DevExpress.ui.notify(text, type, time);
+                }
             }
         }).fail(function(xhr) {
             d.reject(xhr.responseJSON ? xhr.responseJSON.Message : xhr.statusText);

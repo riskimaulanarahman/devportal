@@ -39,7 +39,7 @@ checkUserAccess(modname, usersid).then(permissions => {
         },
         editing: {
             useIcons:true,
-            mode: "batch",
+            mode: "popup",
             allowAdding: (admin == 1) ? true : permissions.allowAdd,
             allowUpdating: (admin == 1) ? true : permissions.allowEdit,
             allowDeleting: (admin == 1) ? true : permissions.allowDelete,
@@ -60,11 +60,15 @@ checkUserAccess(modname, usersid).then(permissions => {
                 fixed: true,
                 width: 80,
                 visible: (permissions.allowAction == 1 || admin == 1) ? true : false,
+                formItem: {
+                    visible: false
+                },
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
-                    if(options.data.LoginName == null || options.data.LoginName == '') {
-
+                    var isad = options.data.isAD;
+                    console.log(isad);
+                    if(options.data.LoginName == null || options.data.LoginName == '' && (isad !== 1)) {
                         $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
                         
@@ -114,6 +118,9 @@ checkUserAccess(modname, usersid).then(permissions => {
                 fixed: true,
                 width: 80,
                 visible: (permissions.allowAction == 1 || admin == 1) ? true : false,
+                formItem: {
+                    visible: false
+                },
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
@@ -123,30 +130,6 @@ checkUserAccess(modname, usersid).then(permissions => {
                         
                             
                             var result = confirm('Are you sure you want to Delete Active Directory '+options.data.FullName+' and send this submission ?');
-
-                                // if (result) {
-                                //     sendRequest(apiurl + "/adrequest", "POST", {
-                                //         employee_id:reqid,
-                                //         requestType:'Delete Account'
-                                //     }).then(function(response) {
-                                //         const dataid = response.data.id;
-                                //         sendRequest(apiurl + "/submissionrequest/"+dataid+"/"+modelclass, "POST", {
-                                //             requestStatus:1,
-                                //             action: 'submission',
-                                //             approvalAction: 1,
-                                //             approvalType: null,
-                                //             remarks: null
-                                //         });
-                                //         sendRequest(apiurl + "/employeedata/"+reqid, "DELETE");
-                                //         dataGrid.refresh();
-                                //     }).then(function(response){
-                                //         if(response.status != 'error') {
-                                //             dataGrid.refresh();
-                                //         }
-                                //     });
-                                // } else {
-                                //     alert('Cancelled.');
-                                // }
 
                                 if (result) {
                                     // First request with a delay
@@ -202,6 +185,9 @@ checkUserAccess(modname, usersid).then(permissions => {
                 fixed: true,
                 visible: (admin == 1) ? true : false,
                 width: 150,
+                formItem: {
+                    visible: (admin == 1) ? true : false
+                },
                 editorOptions: { 
                     readOnly: (admin == 1) ? false : true
                 },
@@ -326,6 +312,11 @@ checkUserAccess(modname, usersid).then(permissions => {
                 },
                 width: 150,
                 validationRules: [{ type: "required" }]
+            },
+            {
+                dataField: 'isActive',
+                dataType: 'boolean',
+                visible: (admin == 1) ? true : false
             },
         ],
         onEditorPreparing: function (e) {

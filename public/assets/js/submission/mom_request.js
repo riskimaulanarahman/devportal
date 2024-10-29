@@ -609,6 +609,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 e.component.columnOption('Action', 'visible', false);
                             }, 0);
                         },
+                        onEditCanceled: function(e) {
+                            setTimeout(function() {
+                                e.component.columnOption('Action', 'visible', true);
+                            }, 0);
+                        },
                         onInitNewRow: function(e) {
                             setTimeout(function() {
                                 e.component.columnOption('Action', 'visible', false);

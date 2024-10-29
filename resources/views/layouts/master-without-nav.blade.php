@@ -17,7 +17,7 @@
     @yield('body')
 
     @yield('content')
-
+    @include('components.panduan-modal')
     @include('layouts.vendor-scripts')
     </body>
 </html>

@@ -25,12 +25,82 @@ class SubmissionController extends Controller
         $this->module = new Module();
     }
 
+    public function checkFields(Request $request, $reqid, $modulename)
+    {
+        $namespaceMap = [
+            'ActiveDirectory' => "App\Models\Submission\IT",
+            'Mmf28' => "App\Models\Submission\MMF",
+            'Mmf30' => "App\Models\Submission\MMF",
+            'MaterialReq' => "App\Models\Submission\Ecatalog",
+        ];
+        
+        $baseNamespace = "App\Models\Submission";
+        $locModel = $baseNamespace . "\\" . $modulename;
+
+        if (!class_exists($locModel)) {
+            if (array_key_exists($modulename, $namespaceMap)) {
+                $locModel = $namespaceMap[$modulename] . "\\" . $modulename;
+            }
+        }
+        $model = new $locModel;
+        $columns = $model->getFillableColumns();
+        $tableName = $model->getTableName();
+        // dd($tableName);
+        try {
+            // Extract the fields to check from the request payload
+            $fieldsToCheck = $request->input('fieldsToCheckGrid');
+
+            // Fetch the data for the given reqid
+            $record =DB::table($tableName)->where('req_id', $reqid)->first(); // Replace with your actual logic to get the record
+            // dd($record);
+            if (!$record) {
+                return response()->json(['status' => 'error', 'message' => 'Record not found.'], 404);
+            }
+
+            // Check if specified fields are null or empty
+            $missingFields = [];
+            foreach ($fieldsToCheck as $fieldInfo) {
+                // dd($fieldInfo);
+                $fieldValue = $fieldInfo['field'];
+                $fieldName = $fieldInfo['name'];
+                if (is_null($record->$fieldValue) || $record->$fieldValue === '') {
+                    $missingFields[] = $fieldName;
+                }
+            }
+
+            $textMissing = "Please fill all required fields : ".implode(",",$missingFields);
+
+            if (!empty($missingFields)) {
+                return response()->json(['status' => 'error', 'message' => $textMissing]);
+            }
+
+            return response()->json(['status' => 'success']);
+            
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
     public function submit(Request $request, $id, $modulename)
     {
+        DB::beginTransaction();
 
-            $locModel = "App\Models\Submission\\".$modulename;
+            // $locModel = "App\Models\Submission\\".$modulename;
+
+            $namespaceMap = [
+                'ActiveDirectory' => "App\Models\Submission\IT",
+                'Mmf' => "App\Models\Submission\MMF",
+                'MaterialReq' => "App\Models\Submission\Ecatalog",
+            ];
+            
+            $baseNamespace = "App\Models\Submission";
+            $locModel = $baseNamespace . "\\" . $modulename;
+
             if (!class_exists($locModel)) {
-                $locModel = "App\Models\Submission\IT\\".$modulename;
+                if (array_key_exists($modulename, $namespaceMap)) {
+                    $locModel = $namespaceMap[$modulename] . "\\" . $modulename;
+                }
             }
             $model = new $locModel;
             $columns = $model->getFillableColumns();
@@ -118,7 +188,9 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'After' is required. Please attach it."]);
                 }
             } else {
-                if($modulename !== 'ActiveDirectory') {
+                // submission yang tidak perlu menambahkan supporting document
+                $except = ['ActiveDirectory', 'Mmf', 'MaterialReq'];
+                if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {
                         return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
                     }
@@ -210,13 +282,13 @@ class SubmissionController extends Controller
             if ($request->requestStatus == 0) {
                 $statusappr = 0;
                 $requeststatus = $request->requestStatus;
-                $this->approverAction($modulename, $id, 'Cancelled', 5 , null);
+                $this->approverAction($modulename, $id, 'Cancelled', 5 , null, null); // $moduleName, $req_id, $type, $appraction, $remarks, appruser
             } else if ($request->requestStatus == 1) {
                 if($request->action == 'submission') {
                     
                     $statusappr = 1;
                     $requeststatus = $request->requestStatus;
-                    $this->approverAction($modulename, $id, 'Submitted', 1, null);
+                    $this->approverAction($modulename, $id, 'Submitted', 1, null, null); // $moduleName, $req_id, $type, $appraction, $remarks, appruser
 
                     foreach($approverlist as $getappr) {
                         $getUser = User::findOrFail($getappr->approvaluser->user_id); // get approver
@@ -260,9 +332,12 @@ class SubmissionController extends Controller
                         }
 
                     }
-                    $this->approverAction($modulename, $id, 'Approver', $request->approvalAction, $request->remarks);
+                    // dd($request);
+                    $getcurrentapprUser = $approverlist[0]->approver_id;
+                    $this->approverAction($modulename, $id, 'Approver', $request->approvalAction, $request->remarks, $getcurrentapprUser); // $moduleName, $req_id, $type, $appraction, $remarks, appuser
                 }
             }
+
 
             if($final == 1) {
                 if($modulename == 'Ticket' || $modulename == 'Hrsc') {
@@ -274,7 +349,10 @@ class SubmissionController extends Controller
 
             foreach($approverlist as $appr) {
                 $appr->approvalAction = $statusappr;
-                $appr->approvalDate = Carbon::now();
+                if($statusappr !== 3) {
+                    $appr->approvalDate = null;
+                }
+                // $appr->approvalDate = null;
                 $appr->update();
             }
 
@@ -380,6 +458,8 @@ class SubmissionController extends Controller
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
             }
+
+            DB::commit();
  
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
             

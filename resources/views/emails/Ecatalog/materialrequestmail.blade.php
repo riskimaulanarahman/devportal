@@ -69,7 +69,8 @@
         </div>
         <table>
             @php
-                $data = DB::table('employee.tbl_employee')->find($mailData['submission']->employee_id);
+                $user = DB::table('users')->find($mailData['submission']->user_id);
+                $data = DB::table('employee.tbl_employee')->where('LoginName',$user->username)->first();
             @endphp
             <tbody>
                 <tr>

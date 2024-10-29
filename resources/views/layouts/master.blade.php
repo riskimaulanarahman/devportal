@@ -31,6 +31,7 @@
                 </div>
                 <!-- container-fluid -->
             </div>
+            @include('components.panduan-modal')
             <!-- End Page-content -->
             @include('layouts.footer')
         </div>

@@ -39,7 +39,7 @@ class Employee extends Model
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company','employee_id');
+        return $this->belongsTo('App\Models\Company','company_id');
     }
 
     // Relasi dengan tabel answers

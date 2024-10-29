@@ -28,6 +28,10 @@ use App\Models\CategoryForm;
 use App\Models\Submission\Project;
 use App\Models\UavAsset;
 use App\Models\Categoryhrsc;
+use App\Models\Unit;
+use App\Models\Currency;
+use App\Models\Ecatalog;
+use App\Models\Purchasinguser;
 use Auth;
 
 class ListController extends Controller
@@ -45,14 +49,14 @@ class ListController extends Controller
         return Module::select('id','module')->get();
     }
 
-    public function listEmployee() {
+    public function listEmployee() { // not have account/loginName
         return Employee::select('employee.tbl_employee.id', 'sapid', 'fullname', 'companycode', 'employee.tbl_department.departmentname', 'employee.tbl_department.departmentgroup')
                 ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
                 ->where(function($query) {
                     $query->whereNotNull('LoginName')
                         ->where('LoginName', '<>', '');
                 })
-                ->where('employee.tbl_employee.isActive',1)
+                // ->where('employee.tbl_employee.isActive',1)
                 ->get();
     }
 
@@ -60,7 +64,7 @@ class ListController extends Controller
         return Employee::selectRaw('employee.tbl_employee.sys_id ,employee.tbl_employee.id, sapid, fullname, companycode, employee.tbl_department.departmentname, employee.tbl_department.departmentgroup, employee.tbl_level.level as levels')
             ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
             ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
-                ->where('employee.tbl_employee.isActive',1)
+                // ->where('employee.tbl_employee.isActive',1)
                 ->get();
     }
 
@@ -78,7 +82,7 @@ class ListController extends Controller
                         ->where('employee.tbl_department.departmentgroup', $departmentGroup);
                 })
                 ->orWhere('employee.tbl_employee.loginname', $loginName)
-                ->where('employee.tbl_employee.isActive',1)
+                // ->where('employee.tbl_employee.isActive',1)
                 ->get();
 
         $employee->makeHidden(['department', 'designation']);
@@ -97,6 +101,10 @@ class ListController extends Controller
 
     public function listSequence() {
         return Sequence::select('id','title')->get();
+    }
+
+    public function listCompanyCode() {
+        return Company::select('id','CompanyCode')->where('isUsed',1)->get();
     }
 
     public function listCompany() {
@@ -200,4 +208,29 @@ class ListController extends Controller
         return Categoryhrsc::all();
     }
 
+    public function listUnit() {
+        return Unit::select('*')->orderBy('nama','asc')->get();
+    }
+
+    public function listCurrency() {
+        return Currency::select('*')->orderBy('nama','asc')->get();
+    }
+
+    public function listBuyer() { // MMF
+        return Approvaluser::selectRaw('employee.tbl_employee.id,tbl_approver.id as approver_id,users.fullname,tbl_approvaltype.ApprovalType')
+        ->leftJoin('users','tbl_approver.user_id','users.id')
+        ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+        ->leftJoin('employee.tbl_employee','tbl_approver.employee_id','employee.tbl_employee.id')
+        ->where('tbl_approver.module','Mmf')
+        ->where('tbl_approver.approvaltype_id',1075) // Buyer = 1075
+        ->get();
+    }
+
+    public function listEcatalog() {
+        return Ecatalog::select('*')->orderBy('description','asc')->get();
+    }
+
+    public function listPurchasinguser() {
+        return Purchasinguser::select('*')->with('employee')->get();
+    }
 }

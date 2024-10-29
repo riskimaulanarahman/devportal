@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Developer;
 use App\Models\User;
 use App\Models\Company;
+use App\Models\Purchasinguser;
 
 trait HasAuth {
 
@@ -101,6 +102,16 @@ trait HasAuth {
     public function getEmployeeByID($id) 
     {
         $data = Employee::select('*')->where('id', $id)->first();
+        if ($data) {
+            return $data;
+        }
+        return null;
+    }
+
+    public function getEmployeeByPG($code) 
+    {
+        $getempidbypg = Purchasinguser::where('code',$code)->first();
+        $data = Employee::select('*')->where('id', $getempidbypg->employee_id)->first();
         if ($data) {
             return $data;
         }
