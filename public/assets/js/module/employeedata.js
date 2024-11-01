@@ -124,6 +124,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
+                    var isad = options.data.isAD;
                     if(options.data.LoginName && (isad !== 1)) {
                         $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
