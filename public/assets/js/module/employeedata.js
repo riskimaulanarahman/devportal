@@ -68,7 +68,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                     var reqid = options.data.id;
                     var isad = options.data.isAD;
                     // console.log(isad);
-                    if(options.data.LoginName == null || options.data.LoginName == '' && (isad !== 1)) {
+                    if(options.data.LoginName == null || options.data.LoginName == '' && (isad == 1)) {
                         $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
                         
