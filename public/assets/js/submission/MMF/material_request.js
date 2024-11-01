@@ -1306,29 +1306,71 @@ function btnreqsubmit(reqid,mode) {
 
     var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
 
-    var result = confirm('Are you sure you want to send this submission ?');
-    if (result) {
-        showLoadingScreen();
-        sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-            requestStatus:1,
-            action: actionForm,
-            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-            approvalType: valApprovalType,
-            remarks: valremarks
-        }).then(function(response){
-            if(response.status == 'error') {
-                btnSubmit.prop('disabled', false);
-                hideLoadingScreen();
-            } else {
-                popup.hide();
-                hideLoadingScreen();
-            }
-        });
-    } else {
-        btnSubmit.prop('disabled', false);
-        alert('Cancelled.');
-        hideLoadingScreen();
-    }
+    // var result = confirm('Are you sure you want to send this submission ?');
+    // if (result) {
+    //     showLoadingScreen();
+    //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+    //         requestStatus:1,
+    //         action: actionForm,
+    //         approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+    //         approvalType: valApprovalType,
+    //         remarks: valremarks
+    //     }).then(function(response){
+    //         if(response.status == 'error') {
+    //             btnSubmit.prop('disabled', false);
+    //             hideLoadingScreen();
+    //         } else {
+    //             popup.hide();
+    //             hideLoadingScreen();
+    //         }
+    //     });
+    // } else {
+    //     btnSubmit.prop('disabled', false);
+    //     alert('Cancelled.');
+    //     hideLoadingScreen();
+    // }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Are you sure you want to send this submission?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, send it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+            showLoadingScreen();
+            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                requestStatus:1,
+                action: actionForm,
+                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                approvalType: valApprovalType,
+                remarks: valremarks
+          }).then(function(response){
+                if(response.status == 'error') {
+                    btnSubmit.prop('disabled', false);
+                    hideLoadingScreen();
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved',
+                        text: 'The submission has been submited.',
+                    });
+                    popup.hide();
+                    hideLoadingScreen();
+                }
+          });
+        } else {
+            btnSubmit.prop('disabled', false);
+            Swal.fire({
+                icon: 'error',
+                title: 'Cancelled',
+                text: 'The submission has been cancelled.',
+                confirmButtonColor: '#3085d6'
+            });
+            hideLoadingScreen();
+        }
+      });
 
 }
 

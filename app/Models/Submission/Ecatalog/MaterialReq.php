@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Code;
 use App\Models\ApproverListReq;
+use App\Models\ApproverListHistory;
 
 class MaterialReq extends Model
 {

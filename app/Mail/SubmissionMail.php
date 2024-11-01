@@ -167,6 +167,7 @@ class SubmissionMail extends Mailable
                     'eb.FullName as UpdateName'
                     )
                     ->where('tbl_category.req_id',$mailData['submission']->id)
+                    ->whereNotIn('momTaskDetail.status',['Done'])
                     ->leftJoin('momTaskDetail','tbl_category.id','momTaskDetail.category_id')
                     ->leftJoin('request_momTaskBound','momTaskDetail.id','request_momTaskBound.task_id')
                     // ->leftJoin('request_momTaskUpdate','momTaskDetail.id','request_momTaskUpdate.task_id')
@@ -317,38 +318,40 @@ class SubmissionMail extends Mailable
             }
         // ActiveDirectory MODULE
 
-        // Ecatalog MODULE
+        // Material Req MODULE
             if($modulename == 'MaterialReq') {
                 $request = new Request();
                 $ecatalogController = new MaterialRequestController();
                 if($final == 1) {
-                    $pdf = $ecatalogController->genPdfMaterialReq($request,$mailData['submission']->id);
-                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    if($mailData['action_id'] !== 5) {
+                        $pdf = $ecatalogController->genPdfMaterialReq($request,$mailData['submission']->id);
+                        $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    }
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc
                     }
                 }
             }
-        // Ecatalog MODULE
+        // Material Req MODULE
 
-        // Ecatalog MODULE
-        if($modulename == 'Mmf') {
-            $checkCategory = Mmf::find($mailData['submission']->id);
-            
-            $request = new Request();
-            if($checkCategory->category == 'MMF28') {
-                $mmfController = new M28RequestController();
-            } else {
-                $mmfController = new M30RequestController();
+        // MMF MODULE
+            if($modulename == 'Mmf') {
+                $checkCategory = Mmf::find($mailData['submission']->id);
+                
+                $request = new Request();
+                if($checkCategory->category == 'MMF28') {
+                    $mmfController = new M28RequestController();
+                } else {
+                    $mmfController = new M30RequestController();
+                }
+
+                if($final == 1) {
+                    $pdf = $mmfController->genPdfMmfReq($request,$mailData['submission']->id);
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                }
+
             }
-
-            if($final == 1) {
-                $pdf = $mmfController->genPdfMmfReq($request,$mailData['submission']->id);
-                $this->attach($url."devportal/".$pdf); // add attachment to mail
-            }
-
-        }
-    // Ecatalog MODULE
+        // MMF MODULE
 
     }
 

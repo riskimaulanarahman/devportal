@@ -319,9 +319,10 @@ class M30RequestController extends Controller
                 $Worksheet->Range("G6")->Value = (($data->detail30->RequisitionType == 3)?'X':'');
                 $Worksheet->Range("G7")->Value = (($data->detail30->RequisitionType == 4)?'X':'');
                 $Worksheet->Range("G8")->Value = (($data->detail30->RequisitionType == 5)?'X':'');
+                $Worksheet->Range("I8")->Value = (($data->detail30->RequisitionType == 5)?$data->detail30->RequisitionOther:'');
 
                 $Worksheet->Range("C9")->Value = $data->code->code;
-                $Worksheet->Range("E9")->Value = $data->created_at->format('Y-m-d');
+                $Worksheet->Range("E9")->Value = $subimissionDate->format('Y-m-d');
                 $Worksheet->Range("H9")->Value = $data->detail30->CostCode;
 
                 $Worksheet->Range("C10")->Value = $emp->FullName;

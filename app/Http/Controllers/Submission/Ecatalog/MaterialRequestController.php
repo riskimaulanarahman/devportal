@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Submission\Ecatalog;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubmissionMail;
 
 use App\Models\Submission\Ecatalog\MaterialReq;
 use App\Models\ApproverListReq;
@@ -111,11 +113,12 @@ class MaterialRequestController extends Controller
                         })
                         ->orWhere("request_material.user_id", $user_id);
                 })
-                ->where(function ($query) use ($user_id,$getAssignment, $isAdmin, $getAllview) {
+                ->where(function ($query) use ($user_id,$getAssignment, $isAdmin, $getAllview, $subquery) {
                     if(!$isAdmin) {
                         if(!$getAllview) {
                             $query->whereRaw($getAssignment . " = 1")
-                            ->orWhere("request_material.user_id", $user_id);
+                            ->orWhere("request_material.user_id", $user_id)
+                            ->orWhereRaw($subquery . " = 1");
                         }
                     }
                 })
@@ -250,6 +253,37 @@ class MaterialRequestController extends Controller
             $this->addOneDayToDate($requestData);
 
             $data->update($requestData);
+
+            //start save history perubahan
+            $fields = [
+                'prStatus' => ($request->prStatus == 1) ? 'Done' : 'Waiting',
+            ];
+            
+            foreach ($fields as $key => $value) {
+                if ($value) {
+                    $this->approverAction($this->modulename, $id, $key, 1, $value, null, null);
+                }
+            }
+            //end save history perubahan
+
+            if(isset($request->prStatus) && $data->requestStatus == 3) {
+                if($request->prStatus == 1) {
+
+                    $getSubmissionData = $this->model->findOrFail($id);
+
+                    $mailData = [
+                        "id" => 30, // final approved
+                        "action_id" => 5, // update id
+                        "submission" => $getSubmissionData,
+                        "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
+                        "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
+                        "message" => $this->mailMessage()['newActivity'],
+                        "remarks" => $request->ticketStatus
+                    ];
+                    Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
+                }
+
+            }
 
             // Komit transaksi jika semuanya berjalan lancar
             DB::commit();

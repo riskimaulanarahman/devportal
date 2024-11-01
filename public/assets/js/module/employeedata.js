@@ -67,7 +67,7 @@ checkUserAccess(modname, usersid).then(permissions => {
 
                     var reqid = options.data.id;
                     var isad = options.data.isAD;
-                    console.log(isad);
+                    // console.log(isad);
                     if(options.data.LoginName == null || options.data.LoginName == '' && (isad !== 1)) {
                         $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
@@ -124,7 +124,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                 cellTemplate: function(container, options) {
 
                     var reqid = options.data.id;
-                    if(options.data.LoginName) {
+                    if(options.data.LoginName && (isad !== 1)) {
                         $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
                         

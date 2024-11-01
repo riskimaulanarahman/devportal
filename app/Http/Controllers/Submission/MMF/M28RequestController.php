@@ -13,6 +13,7 @@ use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\User;
+use App\Models\Employee;
 use DB;
 use COM;
 
@@ -57,12 +58,20 @@ class M28RequestController extends Controller
             where l.req_id = request_mmf.id and l.module_id = '".$module_id."' and r.ApprovalType='Procurement Head' and r.isactive='1'
             order by a.sequence)";
 
+            $getBuyer = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+            from tbl_approverListReq l
+            left join tbl_approver a on l.approver_id=a.id
+            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            where l.req_id = request_mmf.id and l.module_id = '".$module_id."' and r.ApprovalType='Buyer' and r.isactive='1'
+            order by a.sequence)";
+
             $data = $dataquery
                 ->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
                     request_mmf_28.MaterialDescr,request_mmf_28.Symptomps,
                     CASE WHEN request_mmf.employee_id='".$employee_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe,
-                    ".$getProcHead." as isProcHead
+                    ".$getProcHead." as isProcHead,
+                    ".$getBuyer." as isBuyer
                 ")
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
                 ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
@@ -289,8 +298,8 @@ class M28RequestController extends Controller
         $data =  $this->model->select('request_mmf.*','users.username')
                     ->leftJoin('users','request_mmf.user_id','users.id')
                     ->where('request_mmf.id',$id)
-                    ->where('request_mmf.category','MMF30')
-                    ->with(['code','detail30','approverHistory'])
+                    ->where('request_mmf.category','MMF28')
+                    ->with(['code','detail28','approverHistory'])
                     ->first(); // data submission
 
         $originatorApproval = $data->approverHistory
@@ -300,15 +309,15 @@ class M28RequestController extends Controller
         
         $subimissionDate = $originatorApproval->created_at; // time originator submitted submission
         
-        $dataDetails = DB::table('request_mmf_30_detail')->select('*')->where('mmf30_id',$data->id)->get(); // data detail
+        // $dataDetails = DB::table('request_mmf_28_detail')->select('*')->where('mmf28_id',$data->id)->get(); // data detail
         $emp = Employee::select('*')->with(['location','company','department'])->where('LoginName',$data->username)->first(); // data employee
-        $dataAppr = DB::table('Mmf30reqApprover')->select('*')->where('id',$id)->get(); // data approver
+        $dataAppr = DB::table('Mmf28reqApprover')->select('*')->where('id',$id)->get(); // data approver
 
         try {
 			$excel = new COM("Excel.Application") or die("ERROR: Unable to instantaniate COM!\r\n");
 			$excel->Visible = false;
 
-            $file = public_path("template/mmf/mmf30.xls");
+            $file = public_path("template/mmf/mmf28.xlsx");
 
 			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
 			$Worksheet = $Workbook->Worksheets(1);
@@ -320,46 +329,50 @@ class M28RequestController extends Controller
             }
 
             // Start Form Data
-            
-                $Worksheet->Range("A4")->Value = (($data->detail30->PRType == 1)?'X':'');
-                $Worksheet->Range("A5")->Value = (($data->detail30->PRType == 2)?'X':'');
-                $Worksheet->Range("A6")->Value = (($data->detail30->PRType == 3)?'X':'');
-                $Worksheet->Range("A7")->Value = (($data->detail30->PRType == 4)?'X':'');
 
-                $Worksheet->Range("G4")->Value = (($data->detail30->RequisitionType == 1)?'X':'');
-                $Worksheet->Range("G5")->Value = (($data->detail30->RequisitionType == 2)?'X':'');
-                $Worksheet->Range("G6")->Value = (($data->detail30->RequisitionType == 3)?'X':'');
-                $Worksheet->Range("G7")->Value = (($data->detail30->RequisitionType == 4)?'X':'');
-                $Worksheet->Range("G8")->Value = (($data->detail30->RequisitionType == 5)?'X':'');
+                $Worksheet->Range("B5")->Value = $subimissionDate->format('Y-m-d');
+                $Worksheet->Range("F5")->Value = $emp->FullName;
+                $Worksheet->Range("G8")->Value = $data->detail28->TelpNo; 
+                $Worksheet->Range("C6")->Value = $data->code->code; // WO Number
+                $Worksheet->Range("H6")->Value = $data->detail28->ChargeCode; 
+                $Worksheet->Range("D7")->Value = $data->detail28->MaterialDispatch; 
+                $Worksheet->Range("H7")->Value = $data->detail28->RequiredDate; 
+                $Worksheet->Range("C8")->Value = $data->detail28->MaterialCode; 
+                $Worksheet->Range("D9")->Value = $data->detail28->MaterialDescr; 
+                $Worksheet->Range("D10")->Value = $data->detail28->Symptomps; 
 
-                $Worksheet->Range("C9")->Value = $data->code->code;
-                $Worksheet->Range("E9")->Value = $data->created_at->format('Y-m-d');
-                $Worksheet->Range("H9")->Value = $data->detail30->CostCode;
+                $Worksheet->Range("C12")->Value = (($data->detail28->RequiredType == 1)?'X':'');
+                $Worksheet->Range("E12")->Value = (($data->detail28->RequiredType == 2)?'X':'');
+                $Worksheet->Range("G12")->Value = (($data->detail28->RequiredType == 3)?'X':'');
+                $Worksheet->Range("C13")->Value = (($data->detail28->RequiredType == 4)?'X':'');
+                $Worksheet->Range("F13")->Value = (($data->detail28->RequiredType == 4)?$data->detail28->RequiredOther:'');
 
-                $Worksheet->Range("C10")->Value = $emp->FullName;
-                $Worksheet->Range("E10")->Value = $data->detail30->DeliverTo;
-                $Worksheet->Range("H10")->Value = $emp->department->DepartmentName;
+                $Worksheet->Range("C14")->Value = $data->detail28->Instruction;
 
-                $Worksheet->Range("C13")->Value = $data->detail30->SupplierName;
-                $Worksheet->Range("D13")->Value = 'Supplier Address: '.$data->detail30->SupplierAddress;
-                $Worksheet->Range("F13")->Value = 'Email / Fax: '.$data->detail30->SupplierEmailFax;
-                $Worksheet->Range("I13")->Value = 'Contract No.: '.$data->detail30->ContractNo;
+                $Worksheet->Range("C17")->Value = (($data->detail28->isHazardousChemical == 1)?'X':'');
+                $Worksheet->Range("H17")->Value = $data->detail28->HazChemicalName;
+                $Worksheet->Range("C19")->Value = (($data->detail28->isDecontaminated == 1)?'X':'');
+                $Worksheet->Range("C23")->Value = (($data->detail28->isNonChemical == 1)?'X':'');
+                $Worksheet->Range("C20")->Value = (($data->detail28->isNotContaminated == 1)?'X':'');
+                $Worksheet->Range("G20")->Value = (($data->detail28->isNotContaminated == 1)?$data->detail28->NotContaminatedReason:'');
+                $Worksheet->Range("C22")->Value = (($data->detail28->isNonHazardous == 1)?'X':'');
+                $Worksheet->Range("H22")->Value = (($data->detail28->isNonHazardous == 1)?$data->detail28->NonHazChemicalName:'');
 
-                $Worksheet->Range("A19")->Value = 'Remarks : '.$data->detail30->RemarksU;
+                $Worksheet->Range("C35")->Value = formatCurrency($data->detail28->EstimateCost);
                 // Set the initial value of the cell
-                $Worksheet->Range("E23")->Value = 'Reason for requisition/purchase: ' . $data->detail30->Reason;
+                // $Worksheet->Range("E23")->Value = 'Reason for requisition/purchase: ' . $data->detail28->Reason;
 
-                // Format the text in cell E23
-                $range = $Worksheet->Range("E23");
+                // // Format the text in cell E23
+                // $range = $Worksheet->Range("E23");
 
-                // Set "Reason for requisition/purchase:" to red
-                $range->Characters(1, 31)->Font->Color = -16776961; // RGB for red
-                $range->Characters(1, 31)->Font->Underline = true; // underline
+                // // Set "Reason for requisition/purchase:" to red
+                // $range->Characters(1, 31)->Font->Color = -16776961; // RGB for red
+                // $range->Characters(1, 31)->Font->Underline = true; // underline
 
-                // Set the reason text to black
-                $reasonStart = 32; // Assuming the reason starts immediately after the colon and space
-                $reasonLength = strlen($data->detail30->Reason);
-                $range->Characters($reasonStart, $reasonLength)->Font->Color = 0; // RGB for black
+                // // Set the reason text to black
+                // $reasonStart = 32; // Assuming the reason starts immediately after the colon and space
+                // $reasonLength = strlen($data->detail28->Reason);
+                // $range->Characters($reasonStart, $reasonLength)->Font->Color = 0; // RGB for black
 
             // End Form Data
 
@@ -373,76 +386,77 @@ class M28RequestController extends Controller
             }
 
             // // signature originator
-            $Worksheet->Range("C23")->Value = $emp->FullName;
-            $Worksheet->Range("D23")->Value = '/ '.$subimissionDate->format('Y-m-d');
-            addPictureToWorksheet($Worksheet, $picpath, 23, 3, 30, $excel);
+            $Worksheet->Range("A29")->Value = $emp->FullName;
+            $Worksheet->Range("A30")->Value = $subimissionDate->format('Y-m-d');
+            addPictureToWorksheet($Worksheet, $picpath, 26, 1, 30, $excel);
             
             // // signature approver
-            foreach ($dataAppr as $appr) {
-                if($appr->sequence == 2) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("C25")->Value = $appr->apprname;
-                        $Worksheet->Range("D25")->Value = '/ '.$appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 25, 3, 30, $excel);
-                    }
-                }
-                if($appr->sequence == 3) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("C30")->Value = $appr->apprname.' / '.$appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 30, 3, 30, $excel);
-                    }
-                }
-                if($appr->sequence == 4) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("E30")->Value = $appr->apprname.' / '.$appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 30, 5, 30, $excel);
-                    }
-                }
-            }
+            // foreach ($dataAppr as $appr) {
+            //     if($appr->sequence == 2) {
+            //         if($appr->approvalAction == 3) {
+            //             $Worksheet->Range("C25")->Value = $appr->apprname;
+            //             $Worksheet->Range("D25")->Value = '/ '.$appr->approvalDate;
+            //             addPictureToWorksheet($Worksheet, $picpath, 25, 3, 30, $excel);
+            //         }
+            //     }
+            //     if($appr->sequence == 3) {
+            //         if($appr->approvalAction == 3) {
+            //             $Worksheet->Range("C30")->Value = $appr->apprname.' / '.$appr->approvalDate;
+            //             addPictureToWorksheet($Worksheet, $picpath, 30, 3, 30, $excel);
+            //         }
+            //     }
+            //     if($appr->sequence == 4) {
+            //         if($appr->approvalAction == 3) {
+            //             $Worksheet->Range("E30")->Value = $appr->apprname.' / '.$appr->approvalDate;
+            //             addPictureToWorksheet($Worksheet, $picpath, 30, 5, 30, $excel);
+            //         }
+            //     }
+            // }
             
-            $totalExtendedPrice = 0;
-            $xlShiftDown=-4121;
-				$no = 1;
-				for ($a=16;$a<16+count($dataDetails);$a++){
-                    $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
-				}
-                $Worksheet->Range("J19")->Value = formatCurrency($totalExtendedPrice);
+            // $totalExtendedPrice = 0;
+            // $xlShiftDown=-4121;
+			// 	$no = 1;
+			// 	for ($a=16;$a<16+count($dataDetails);$a++){
+            //         $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
+			// 	}
+            //     $Worksheet->Range("J19")->Value = formatCurrency($totalExtendedPrice);
 
-                for ($a=16;$a<16+count($dataDetails);$a++){
-                    $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
+            //     for ($a=16;$a<16+count($dataDetails);$a++){
+            //         $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
 
-					$Worksheet->Rows($a+1)->Copy();
-					$Worksheet->Rows($a+1)->Insert($xlShiftDown);
-					$Worksheet->Range("A".$a)->Value = $no++;
-					$Worksheet->Range("B".$a)->Value = $dataDetails[$a-16]->MaterialCode;
-					$Worksheet->Range("C".$a)->Value = $dataDetails[$a-16]->MaterialDescr;
-					$Worksheet->Range("D".$a)->Value = $dataDetails[$a-16]->PartNumber;
-					$Worksheet->Range("E".$a)->Value = $dataDetails[$a-16]->BrandManufacturer;
-					$Worksheet->Range("F".$a)->Value = formatCurrency($dataDetails[$a-16]->Qty);
-					$Worksheet->Range("G".$a)->Value = $dataDetails[$a-16]->Unit;
-					$Worksheet->Range("H".$a)->Value = $dataDetails[$a-16]->Currency;
-					$Worksheet->Range("I".$a)->Value = formatCurrency($dataDetails[$a-16]->UnitPrice);
-					$Worksheet->Range("J".$a)->Value = formatCurrency($dataDetails[$a-16]->ExtendedPrice);
+			// 		$Worksheet->Rows($a+1)->Copy();
+			// 		$Worksheet->Rows($a+1)->Insert($xlShiftDown);
+			// 		$Worksheet->Range("A".$a)->Value = $no++;
+			// 		$Worksheet->Range("B".$a)->Value = $dataDetails[$a-16]->MaterialCode;
+			// 		$Worksheet->Range("C".$a)->Value = $dataDetails[$a-16]->MaterialDescr;
+			// 		$Worksheet->Range("D".$a)->Value = $dataDetails[$a-16]->PartNumber;
+			// 		$Worksheet->Range("E".$a)->Value = $dataDetails[$a-16]->BrandManufacturer;
+			// 		$Worksheet->Range("F".$a)->Value = formatCurrency($dataDetails[$a-16]->Qty);
+			// 		$Worksheet->Range("G".$a)->Value = $dataDetails[$a-16]->Unit;
+			// 		$Worksheet->Range("H".$a)->Value = $dataDetails[$a-16]->Currency;
+			// 		$Worksheet->Range("I".$a)->Value = formatCurrency($dataDetails[$a-16]->UnitPrice);
+			// 		$Worksheet->Range("J".$a)->Value = formatCurrency($dataDetails[$a-16]->ExtendedPrice);
 
-                    // Enable text wrapping for the MaterialDescr cell
-                    $Worksheet->Cells($a, 3)->WrapText = true;
+            //         // Enable text wrapping for the MaterialDescr cell
+            //         $Worksheet->Cells($a, 3)->WrapText = true;
 
-                    // Auto-fit the row height
-                    $Worksheet->Rows($a)->AutoFit();
+            //         // Auto-fit the row height
+            //         $Worksheet->Rows($a)->AutoFit();
 
-				}
+			// 	}
             
             $xlTypePDF = 0;
 			$xlQualityStandard = 0;
 
             $code_sanitized = str_replace('/', '_', $data->code->code);
-			$fileName = $data->id . '_30' . $code_sanitized . '_' . date("Ymd") . '.pdf';
+			$fileName = $data->id . '_28' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
             $filePath = public_path('template/mmf/pdf/' . $fileName);
 			$path = $filePath;
 			if (file_exists($path)) {
 				unlink($path);
 			}
+            
 			$Worksheet->ExportAsFixedFormat($xlTypePDF, $path, $xlQualityStandard);
 			
 			$excel->CutCopyMode = false;

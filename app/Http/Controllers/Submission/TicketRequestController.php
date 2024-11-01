@@ -180,7 +180,7 @@ class TicketRequestController extends Controller
 
                 $mailData = [
                     "id" => 30, // final approved
-                    "action_id" => 0,
+                    "action_id" => 5, // update id
                     "submission" => $getSubmissionData,
                     "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
                     "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,

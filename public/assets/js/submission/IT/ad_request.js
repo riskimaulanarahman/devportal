@@ -154,7 +154,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             },
             encodeHtml: false,
             customizeText: function (e) {
-                console.log(e)
+                // console.log(e)
                 if(e.value == 'Create Account') {
                     var text = "<span class='btn btn-success btn-xs btn-status'>Create Account</span>";
                 } else {
@@ -438,7 +438,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                caption: "Department",
+                                caption: "Position",
                                 dataField: 'employee.designation.DesignationName',
                                 editorOptions: { 
                                     readOnly: true

@@ -271,6 +271,7 @@ const popupContentTemplate = function (reqid,mode,options) {
     isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
     isProcHead = options.data.isProcHead;
+    isBuyer = options.data.isBuyer;
 
     var validationRequiredType = [];
     var visibleRequiredType = false;
@@ -284,9 +285,9 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     popupid = reqid;
 
-    console.log(mode)
-    console.log(isMine)
-    console.log(isProcHead)
+    // console.log(mode)
+    // console.log(isMine)
+    // console.log(isProcHead)
 
     const scrollView = $('<div />');
 
@@ -341,11 +342,11 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    // if(options.data.requestStatus == 3 || (isPendingOnMe && isBCIDv)) {
-    //     updateVisibleById(7, true);
-    // } else {
-    //     updateVisibleById(7, false);
-    // }
+    if(admin == 1 || (isPendingOnMe && isProcHead)) {
+        updateVisibleById(6, true);
+    } else {
+        updateVisibleById(6, false);
+    }
 
     scrollView.append("<hr>"),
 
@@ -364,7 +365,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 var infoContent2 = $("<div id='infoContent2'>");
                 if(data.ID == 1) {
                     if (mode == 'add' || mode == 'edit'){
-                        $("<span style='color:red;font-size:11pt'>").html(
+                        $("<span style='color:red; font-size:11pt; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;'>").html(
                             'Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span><br> Tekan <span style="color:red;font-weight:bold">ESC</span> Untuk Cancel Edit'
                         ).appendTo(infoContent2);
                     }
@@ -421,11 +422,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 // validationRules: [{ type: "required" }]
                             },
-                            {
-                                caption: 'Work Order No',
-                                dataField: 'detail28.WONumber',
-                                validationRules: [{ type: "required" }],
-                            },
+                            // {
+                            //     caption: 'Work Order No',
+                            //     dataField: 'detail28.WONumber',
+                            //     validationRules: [{ type: "required" }],
+                            // },
                             {
                                 caption: 'Charge Code',
                                 dataField: 'detail28.ChargeCode',
@@ -510,7 +511,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<9)) {
+                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<8)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -561,7 +562,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "cell",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBuyer == 1 ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -594,6 +595,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     // Update the visibility of the "Others Detail" column and refresh the grid
                                     dataGrid11.columnOption('detail28.RequiredOther', 'visible', visibleRequiredType);
                                 },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
                                 validationRules: [{ type: "required" }]
                             },
                             {
@@ -614,6 +618,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     height: 50,
                                     readOnly: (mode == 'approval') ? true : false
+                                }
+                            },
+                            {
+                                caption: 'Estimation Cost',
+                                dataField: 'detail28.EstimateCost',
+                                dataType: "number",
+                                format: "fixedPoint",
+                                visible: (mode == 'approval' && isBuyer == 1) ? true : false,
+                                editorOptions: { 
+                                    format: "fixedPoint",
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
                                 }
                             },
                         ],
@@ -938,7 +953,148 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
 
                   return formData2;
-              }
+                }
+                else if(data.ID == 6) {
+                    return $("<div id='formassignmentto'>").dxDataGrid({    
+                        dataSource: storewithmodule('assignmentto',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: (admin == 1 || isProcHead == 1) ? true : false,
+                            allowUpdating: (admin == 1 || isProcHead == 1) ? true : false,
+                            allowDeleting: (admin == 1 || isProcHead == 1) ? true : false,
+                        },
+                        paging: { enabled: true, pageSize: 10 },
+                        columns: [
+                            {
+                                caption: "Buyer Name",
+                                dataField: "employee_id",
+                                lookup: {
+                                    dataSource: listOption('/list-buyer','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'fullname',
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridAssignmentto = e.component;
+                        },
+                        onRowInserting: function(e) {
+                            // var dataGrid = e.component;
+                            // var rowCount = dataGrid.getDataSource().items().length;
+                
+                            // if (rowCount >= 1) {
+                            //     e.cancel = true; // Batalkan penambahan baris baru
+                            //     DevExpress.ui.dialog.alert("Hanya satu baris yang diperbolehkan.", "Peringatan");
+                            // }
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onEditorPreparing: function (e) {
+                            if (e.dataField == "employee_id" && e.parentType == "dataRow") {
+                                e.editorName = "dxDropDownBox";                
+                                e.editorOptions.dropDownOptions = {                
+                                    height: 500,
+                                    width: 600
+                                };
+                                e.editorOptions.contentTemplate = function (args, container) {
+                    
+                                    var value = args.component.option("value"),
+                                        $dataGrid = $("<div>").dxDataGrid({
+                                            width: '100%',
+                                            dataSource: args.component.option("dataSource"),
+                                            keyExpr: "id",
+                                            columns: ["fullname"],
+                                            hoverStateEnabled: true,
+                                            paging: { enabled: true, pageSize: 10 },
+                                            filterRow: { visible: true },
+                                            height: '90%',
+                                            showRowLines: true,
+                                            showBorders: true,
+                                            selection: { mode: "single" },
+                                            selectedRowKeys: [value],
+                                            focusedRowEnabled: true,
+                                            focusedRowKey: args.component.option("value"),
+                                            searchPanel: {
+                                                visible: true,
+                                                width: 265,
+                                                placeholder: "Search..."
+                                            },
+                                            onSelectionChanged: function (selectedItems) {
+                                                const keys = selectedItems.selectedRowKeys;
+                                                const hasSelection = keys.length;
+                                                args.component.option('value', hasSelection ? keys[0] : null);
+                                                // console.log(hasSelection)
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
+                                            }
+                                        });
+                    
+                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                    
+                                    args.component.on("valueChanged", function (args) {
+                                        var value = args.value;
+                    
+                                        dataGrid.selectRows(value, false);
+                                    });
+                                    container.append($dataGrid);
+                                    $("<div>").dxButton({
+                                        text: "Close",
+                    
+                                        onClick: function (ev) {
+                                            args.component.close();
+                                        }
+                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                                    return container;
+                    
+                                };
+                            }
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridAssignmentto.refresh();
+                                    }
+                                }
+                            })
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (7):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridAssignmentto.refresh();
+                        }
+                    })
+                }
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
                         dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
@@ -1316,7 +1472,7 @@ function btnreqsubmit(reqid,mode) {
         ]
     } else {
         var fieldsToCheckGrid = [
-            { field: 'WONumber', name: 'Work Order No' },
+            // { field: 'WONumber', name: 'Work Order No' },
             { field: 'ChargeCode', name: 'Charge Code' },
             { field: 'MaterialDispatch', name: 'Material Dispatch No' },
             { field: 'RequiredDate', name: 'Required By (Date)' },
@@ -1328,9 +1484,9 @@ function btnreqsubmit(reqid,mode) {
         ];
     }
 
-    console.log(mode);
-    console.log(isProcHead);
-    console.log(fieldsToCheckGrid);
+    // console.log(mode);
+    // console.log(isProcHead);
+    // console.log(fieldsToCheckGrid);
 
     sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/Mmf28", "POST", {
         fieldsToCheckGrid

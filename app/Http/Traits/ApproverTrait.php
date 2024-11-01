@@ -127,6 +127,7 @@ trait ApproverTrait {
             'Jdi',
             'ActiveDirectory',
             'Mmf',
+            'MaterialReq'
         ];
 
         if (in_array($moduleName, $exceptdel)) {
@@ -161,6 +162,7 @@ trait ApproverTrait {
             'Jdi',
             'ActiveDirectory',
             'Mmf',
+            'MaterialReq'
         ];
         
         if (!in_array($moduleName, $except)) {
@@ -496,6 +498,11 @@ trait ApproverTrait {
                 $updbuyer30->update([
                     'Buyer' => $employeeID
                 ]);
+            } else if($checkmmf->category == 'MMF28') {
+                $updbuyer28 = Mmf28::where('req_id',$reqID)->first();
+                $updbuyer28->update([
+                    'Buyer' => $employeeID
+                ]);
             }
 
         // }
@@ -527,6 +534,11 @@ trait ApproverTrait {
         if($checkmmf->category == 'MMF30') {
             $updbuyer30 = Mmf30::where('req_id',$reqID)->first();
             $updbuyer30->update([
+                'Buyer' => null
+            ]);
+        } else if($checkmmf->category == 'MMF28') {
+            $updbuyer28 = Mmf28::where('req_id',$reqID)->first();
+            $updbuyer28->update([
                 'Buyer' => null
             ]);
         }

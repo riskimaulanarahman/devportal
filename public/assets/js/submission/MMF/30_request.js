@@ -386,7 +386,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                 var infoContent2 = $("<div id='infoContent2'>");
                 if(data.ID == 1) {
                     if (mode == 'add' || mode == 'edit'){
-                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent2);
+                        $("<span style='color:red; font-size:11pt; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;'>").html(
+                            'Silahkan lengkapi <b><i style="color:black; font-weight:bold;" class="far fa-newspaper"> Form Data </i></b> sebelum klik tombol <span style="color:black; font-weight:bold;"><i class="bx bx-check-double label-icon"></i> Submit Submission</span><br> Tekan <span style="color:red; font-weight:bold;">ESC</span> Untuk Cancel Edit'
+                        ).appendTo(infoContent2);
                     }
 
                     let formData = $("<div id='formdata'>").dxDataGrid({    
@@ -1076,9 +1078,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             onSelectionChanged: function (selectedItems) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const datas = selectedItems.selectedRowsData;
-                                                console.log(datas)
+                                                // console.log(datas)
                                                 const hasSelection = datas.length;
-                                                console.log(hasSelection)
+                                                // console.log(hasSelection)
 
                                                 // args.component.option('value', hasSelection > 0 ? datas[0]['nama'] : null);
                                                 if(hasSelection !== 0) {
@@ -1087,7 +1089,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 }
                                             }
                                         });
-                                    console.log(value)
+                                    // console.log(value)
                     
                                     var dataGrid = $dataGrid.dxDataGrid("instance");
                     
