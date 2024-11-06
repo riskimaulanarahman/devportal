@@ -35,6 +35,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         { 
+			caption: "Employee Name",
 			dataField: "employee_id",
             lookup: {
                 dataSource: listOption('/list-employee','id','fullname'),  

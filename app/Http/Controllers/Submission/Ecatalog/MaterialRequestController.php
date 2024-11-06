@@ -393,17 +393,17 @@ class MaterialRequestController extends Controller
             }
 
             // signature originator
-            $Worksheet->Range("H37")->Value = $emp->FullName;
-            $Worksheet->Range("H38")->Value = $subimissionDate->format('Y-m-d');;
-            addPictureToWorksheet($Worksheet, $picpath, 34, 8, 35, $excel);
+            $Worksheet->Range("H36")->Value = $emp->FullName;
+            $Worksheet->Range("H37")->Value = $subimissionDate->format('Y-m-d');;
+            addPictureToWorksheet($Worksheet, $picpath, 33, 8, 35, $excel);
             
             // signature approver
             foreach ($dataAppr as $appr) {
                 if($appr->sequence == 2) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("N37")->Value = $appr->apprname;
-                        $Worksheet->Range("N38")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 34, 14, 35, $excel);
+                        $Worksheet->Range("N36")->Value = $appr->apprname;
+                        $Worksheet->Range("N37")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 33, 14, 35, $excel);
                     }
                 }
             }
@@ -426,6 +426,8 @@ class MaterialRequestController extends Controller
 					$Worksheet->Range("T".$a)->Value = $dataDetails[$a-17]->amount;
 					$Worksheet->Range("U".$a)->Value = $dataDetails[$a-17]->remarks;
 				}
+       
+            $Worksheet->Columns("E")->AutoFit();
 
             $xlTypePDF = 0;
 			$xlQualityStandard = 0;

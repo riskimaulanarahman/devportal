@@ -422,11 +422,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 // validationRules: [{ type: "required" }]
                             },
-                            // {
-                            //     caption: 'Work Order No',
-                            //     dataField: 'detail28.WONumber',
-                            //     validationRules: [{ type: "required" }],
-                            // },
+                            {
+                                caption: 'Work Order No',
+                                dataField: 'detail28.WONumber',
+                                validationRules: [{ type: "required" }],
+                            },
                             {
                                 caption: 'Charge Code',
                                 dataField: 'detail28.ChargeCode',
@@ -511,7 +511,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<8)) {
+                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<9)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -1472,7 +1472,7 @@ function btnreqsubmit(reqid,mode) {
         ]
     } else {
         var fieldsToCheckGrid = [
-            // { field: 'WONumber', name: 'Work Order No' },
+            { field: 'WONumber', name: 'Work Order No' },
             { field: 'ChargeCode', name: 'Charge Code' },
             { field: 'MaterialDispatch', name: 'Material Dispatch No' },
             { field: 'RequiredDate', name: 'Required By (Date)' },

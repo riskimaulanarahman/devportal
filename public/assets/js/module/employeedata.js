@@ -184,7 +184,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                 dataField: "LoginName",
                 dataType: "string",
                 fixed: true,
-                visible: (admin == 1) ? true : false,
+                visible: (admin == 1 || permissions.allowAction == 1) ? true : false,
                 width: 150,
                 formItem: {
                     visible: (admin == 1) ? true : false

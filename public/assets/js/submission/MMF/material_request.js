@@ -64,6 +64,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 
                 var isMine = options.data.isMine;
                 var isPendingOnMe = options.data.isPendingOnMe;
+                var isAssignment = options.data.isAssignment;
+                var prStatus = options.data.prStatus;
                 var reqid = options.data.id;
                 var reqstatus = options.data.requestStatus;
                 var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
@@ -71,11 +73,15 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     "btn-secondary",
                     (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
                     "btn-warning",
-                    "btn-success",
+                    ((prStatus == 0 && isAssignment == 1 && reqstatus == 3)) ? "btn-primary" : "btn-success",
                     "btn-danger",
                 ];
 
-                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
+                var viewIcon = (mode == 'approval' && reqstatus == 1) 
+                ? "fa-check" 
+                : ((prStatus == 0 && isAssignment == 1 && reqstatus == 3) 
+                    ? "fa-pen" 
+                    : "fa-search");
     
                 $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
                     evt.stopPropagation();
@@ -90,21 +96,59 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
                             
-                        var result = confirm('Are you sure you want to cancel this submission ?');
+                        // var result = confirm('Are you sure you want to cancel this submission ?');
 
-                        if (result) {
-                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                requestStatus:0,
-                                action:'submission',
-                                approvalAction: 0
-                            }).then(function(response){
-                                if(response.status != 'error') {
-                                    dataGrid.refresh();
+                        // if (result) {
+                        //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                        //         requestStatus:0,
+                        //         action:'submission',
+                        //         approvalAction: 0
+                        //     }).then(function(response){
+                        //         if(response.status != 'error') {
+                        //             dataGrid.refresh();
+                        //         }
+                        //     });
+                        // } else {
+                        //     alert('Cancelled.');
+                        // }
+
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: "Are you sure you want to cancel this submission?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Yes, cancel it'
+                          }).then((result) => {
+                            if (result.isConfirmed) {
+                                showLoadingScreen();
+                                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                    requestStatus:0,
+                                    action:'submission',
+                                    approvalAction: 0
+                                }).then(function(response){
+                                    if(response.status != 'error') {
+                                        hideLoadingScreen();
+                                        dataGrid.refresh();
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Saved',
+                                            text: 'The submission has been cancelled.',
+                                        });
+                                    } else {
+                                        hideLoadingScreen();
+                                    }
+                                });
+                                } else {
+                                    hideLoadingScreen();
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Cancelled',
+                                        text: 'The submission cancellation has been cancelled.'
+                                    });
                                 }
-                            });
-                        } else {
-                            alert('Cancelled.');
-                        }
+                          });
     
                     }).appendTo(container); 
                 }
