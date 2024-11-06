@@ -86,6 +86,7 @@ return [
             'database' => env('DB_DATABASE', 'oasysv2'),
             'username' => env('DB_USERNAME', 'admplanning'),
             'password' => env('DB_PASSWORD', 'Planning2021'),
+            'strict' => false,
             // 'charset' => 'utf8',
             // 'prefix' => '',
             // 'prefix_indexes' => true,
