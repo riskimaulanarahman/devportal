@@ -1282,37 +1282,6 @@ const popupContentTemplate = function (reqid,mode,options) {
         return scrollView;
 };
 
-
-function checkRequiredFields(dataGridSelector, fieldsToCheck) {
-    const dataGridInstance = $(dataGridSelector).dxDataGrid("instance");
-    const data = dataGridInstance.getDataSource().items();
-
-    let emptyFieldsInfo = [];
-    data.forEach((row, index) => {
-        const missingFields = getMissingFields(row, fieldsToCheck);
-        if (missingFields.length > 0) {
-            emptyFieldsInfo.push(`Missing : ${missingFields.join(', ')}`);
-            // emptyFieldsInfo.push(`Row ${index + 1}: Missing ${missingFields.join(', ')}`);
-        }
-    });
-
-    return emptyFieldsInfo;
-}
-
-function getMissingFields(row, fieldsToCheck) {
-    return fieldsToCheck
-        .filter(fieldInfo => isValueEmpty(getNestedValue(row, fieldInfo.field)))
-        .map(fieldInfo => fieldInfo.name);
-}
-
-function getNestedValue(obj, path) {
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-}
-
-function isValueEmpty(value) {
-    return value === null || value === undefined || value === '';
-}
-
 function btnreqsubmit(reqid,mode) {
 
     if (mode == 'add' || mode == 'edit') {
@@ -1325,8 +1294,6 @@ function btnreqsubmit(reqid,mode) {
             return false;
         }
     }
-
-    // END Check required fields in both DataGrids
 
     var btnSubmit = $('#btn-submit');
     btnSubmit.prop('disabled', true);
