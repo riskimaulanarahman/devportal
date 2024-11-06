@@ -273,6 +273,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 }).dxDataGrid("instance");
 
 $('#btnadd').on('click',function(){
+    showLoadingScreen();
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
         const mode = 'add';
@@ -281,6 +282,7 @@ $('#btnadd').on('click',function(){
             contentTemplate: () => popupContentTemplate(reqid,mode,options),
         });
         popup.show();
+        hideLoadingScreen();
     });
 })
 
@@ -1350,29 +1352,6 @@ function btnreqsubmit(reqid,mode) {
 
     var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
 
-    // var result = confirm('Are you sure you want to send this submission ?');
-    // if (result) {
-    //     showLoadingScreen();
-    //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-    //         requestStatus:1,
-    //         action: actionForm,
-    //         approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-    //         approvalType: valApprovalType,
-    //         remarks: valremarks
-    //     }).then(function(response){
-    //         if(response.status == 'error') {
-    //             btnSubmit.prop('disabled', false);
-    //             hideLoadingScreen();
-    //         } else {
-    //             popup.hide();
-    //             hideLoadingScreen();
-    //         }
-    //     });
-    // } else {
-    //     btnSubmit.prop('disabled', false);
-    //     alert('Cancelled.');
-    //     hideLoadingScreen();
-    // }
     Swal.fire({
         title: 'Are you sure?',
         text: "Are you sure you want to send this submission?",
