@@ -167,9 +167,9 @@ class HomeController extends Controller
                             // case 'request_mmf':
                             //     $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
                             //     break;
-                            case 'request_material':
-                                $url = 'material_request';
-                                break;
+                            // case 'request_material':
+                            //     $url = 'material_request';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -248,9 +248,9 @@ class HomeController extends Controller
                             // case 'request_mmf':
                             //     $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
                             //     break;
-                            case 'request_material':
-                                $url = 'material_request';
-                                break;
+                            // case 'request_material':
+                            //     $url = 'material_request';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
