@@ -75,6 +75,12 @@ function processData(itemsData) {
         },
         columns: [
             { 
+                dataField: "id",
+                editorOptions: { 
+                    readOnly: true
+                }
+            }, 
+            { 
                 dataField: "module",
                 sortOrder: "asc",
                 lookup: {

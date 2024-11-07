@@ -91,11 +91,6 @@ class MaterialRequestController extends Controller
                          ->where('tbl_assignment.module_id', '=', $module_id);
                 })
                 ->leftJoin('employee.tbl_employee as emp', 'tbl_assignment.employee_id', '=', 'emp.id')
-                // ->leftJoin('authorization.tbl_useraccess as ua', function($join) use ($module_id) {
-                //     $join->on('emp.id', '=', 'ua.employee_id')
-                //          ->where('ua.module_id', '=', $module_id);
-                // })
-                // ->leftJoin('authorization.tbl_useraccess as ua', 'tbl_assignment.employee_id', '=', 'emp.id')
                 ->with(['user','approverlist'])
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $getAllview) {
                     $query->whereRaw($subquery . " = 1")
