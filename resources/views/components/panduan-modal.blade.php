@@ -19,6 +19,7 @@
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/JDI Online.pdf', '_blank')">JDI Online</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Mom Online.pdf', '_blank')">MoM Online</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/IT Active Directory Panduan.pdf', '_blank')">IT - Active Directory</button></li>
+                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Material Request.pdf', '_blank')">Material Request</button></li>
                 </ul>
             </div>
         </div><!-- /.modal-content -->
