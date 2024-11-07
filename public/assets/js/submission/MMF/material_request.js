@@ -729,6 +729,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                     showInfo: true,
                                                 },
                                                 columnsAutoWidth: true,
+                                                allowColumnResizing: true,
                                                 hoverStateEnabled: true,
                                                 paging: { enabled: true, pageSize: 10 },
                                                 filterRow: { visible: true },

@@ -98,7 +98,7 @@ class HomeController extends Controller
             'request_mom' => $this->getModuleId('Mom'),
             'request_jdi' => $this->getModuleId('Jdi'),
             'request_it_activedirectory' => $this->getModuleId('ActiveDirectory'),
-            // 'request_mmf' => $this->getModuleId('Mmf'),
+            'request_mmf' => $this->getModuleId('Mmf'),
             'request_material' => $this->getModuleId('MaterialReq'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
@@ -164,9 +164,9 @@ class HomeController extends Controller
                             case 'request_it_activedirectory':
                                 $url = 'ad_request';
                                 break;
-                            // case 'request_mmf':
-                            //     $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
-                            //     break;
+                            case 'request_mmf':
+                                $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
+                                break;
                             case 'request_material':
                                 $url = 'material_request';
                                 break;
@@ -245,9 +245,9 @@ class HomeController extends Controller
                             case 'request_it_activedirectory':
                                 $url = 'ad_request';
                                 break;
-                            // case 'request_mmf':
-                            //     $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
-                            //     break;
+                            case 'request_mmf':
+                                $url = ($mmftype == '30') ? 'mmf_30_request' : 'mmf_28_request';
+                                break;
                             case 'request_material':
                                 $url = 'material_request';
                                 break;
