@@ -177,13 +177,22 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             allowSorting: false,
             formItem: { visible: false},
             cellTemplate: function (container, options) {
-                if ((options.value!="") && (options.value)){
+                var value = options.value;
+                var origin = window.location.origin;
+                if (value && value.includes('doc')) {
+                    var baseUrl = origin + '/oasys/';
+                } else {
+                    var baseUrl = origin + '/devportal/';
+                }
+                var fullUrl = baseUrl + value;
+                if ((value!="") && (value)){
                     $("<div />").dxButton({
                         icon: 'download',
                         type: "success",
                         text: "Download",
                         onClick: function (e) {
-                            window.open(options.value, '_blank');
+                            window.open(fullUrl, '_blank');
+
                         }
                     }).appendTo(container);
                 }
