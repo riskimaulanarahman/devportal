@@ -1008,7 +1008,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 format: "fixedPoint",
                                 editorOptions: {
                                     format: "fixedPoint",
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                                    // readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                                    readOnly: true,
                                 }
                             },
                             {

@@ -357,7 +357,11 @@ class SubmissionMail extends Mailable
 
     public function build()
     {  
-        $subject = 'Submission - '.$this->code;
+        if($this->modulename == 'Mom') {
+            $subject = 'Submission MoM - '.$this->mailData['submission']->subjectMeeting;
+        } else {
+            $subject = 'Submission - '.$this->code;
+        }
         $viewblade = '';
 
         switch ($this->modulename) {

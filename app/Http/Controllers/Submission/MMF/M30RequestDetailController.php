@@ -87,6 +87,11 @@ class M30RequestDetailController extends Controller
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
+
+            if(isset($request->UnitPrice)) {
+                $requestData['ExtendedPrice'] = $request->UnitPrice*$data->Qty;
+            }
+
             $data->update($requestData);
 
             //start save history perubahan
