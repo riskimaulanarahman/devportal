@@ -168,12 +168,43 @@ class M28RequestController extends Controller
                     $data->user_id = $this->getAuth()->id;
                     $data->save();
                 }
+            // } else {
+            //     if($data->user_id == null) {
+            //         $getemployee = $this->getEmployeeByID($data->employee_id);
+            //         $getuser = $this->getUser($getemployee->LoginName);
+            //         $data->user_id = $getuser->id;
+            //         $data->save();
+            //     }
+            // }
             } else {
                 if($data->user_id == null) {
-                    $getemployee = $this->getEmployeeByID($data->employee_id);
-                    $getuser = $this->getUser($getemployee->LoginName);
-                    $data->user_id = $getuser->id;
-                    $data->save();
+                    $getEmployee = $this->getEmployeeByID($data->employee_id); // mendapatkan data employee by id
+                    $getUser = $this->user->where('username',$getEmployee->LoginName)->get(); // cari username pada table users
+
+                    if(count($getUser) > 0) {
+                        $getuserid = $this->getUser($getemployee->LoginName);
+                        $data->user_id = $getuserid->id;
+                        $data->save();
+                    } else {
+                        $getldap = LdapUser::findBy('samaccountname',$getEmployee->LoginName);
+
+                        if ($getldap) {
+                            $createdUser = $this->user->create([
+                                "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                                "domain" => "default",
+                                "username" => $getldap['samaccountname'][0],
+                                "fullname" => $getldap['name'][0],
+                                "email" => $getldap['mail'][0]
+                            ]);
+                            // setelah terdaftar di users lalu dapatkan id dan save pada user_id
+                            $data->user_id = $createdUser->id;
+                            $data->save();
+                        } else {
+                            return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                        }
+
+                    }
+                    
                 }
             }
 
