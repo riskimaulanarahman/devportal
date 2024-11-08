@@ -303,11 +303,12 @@ const updateVisibleById = (itemId, visible) => {
   };
 
 const popupContentTemplate = function (reqid,mode,options) {
-
+    // console.log('id detail 30 : '+options.data.detail30.id);
     isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
     isProcHead = options.data.isProcHead;
     isBuyer = options.data.isBuyer;
+    detail30id = options.data.detail30.id;
 
     var validationRules = [];
     var visibleRulesReqType = false;
@@ -902,7 +903,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 6) {
                     return formData = $("<div id='formdetail'>").dxDataGrid({    
-                        dataSource: storewithmodule('mmf30detail',modelclass,reqid),
+                        dataSource: storewithmodule('mmf30detail',modelclass,detail30id),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,

@@ -76,7 +76,7 @@ class M30RequestController extends Controller
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
                 ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
                 ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
-                ->with(['user','approverlist'])
+                ->with(['user','approverlist','detail30'])
                 ->where('category','MMF30')
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $employee_id) {
                     $query->whereRaw($subquery . " = 1")
