@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Employee;
 use DB;
 use COM;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
 class M30RequestController extends Controller
 {
