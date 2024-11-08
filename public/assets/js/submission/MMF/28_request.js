@@ -1131,7 +1131,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                             },
                             {
-                                dataField: "remarks"
+                                dataField: "remarks",
+                                encodeHtml: false,
                             },
                         ],
                         export: {
@@ -1575,7 +1576,16 @@ function runpopup() {
 
 
 function cellTemplate(container, options) {
-    container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
+    var value = options.value ? options.value.trim() : '';
+    var origin = window.location.origin;
+    if (value && value.includes('upload')) {
+        var baseUrl = origin + '/oasys/';
+    } else {
+        var baseUrl = origin + '/devportal/public/upload/';
+    }
+    var fullUrl = baseUrl + value;
+    container.append('<a href="'+fullUrl+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
+    // container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
 }
 
 function editCellTemplate(cellElement, cellInfo) {
