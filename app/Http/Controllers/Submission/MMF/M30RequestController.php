@@ -170,7 +170,7 @@ class M30RequestController extends Controller
                     $getUser = $this->user->where('username',$getEmployee->LoginName)->get(); // cari username pada table users
 
                     if(count($getUser) > 0) {
-                        $getuserid = $this->getUser($getemployee->LoginName);
+                        $getuserid = $this->getUser($getEmployee->LoginName);
                         $data->user_id = $getuserid->id;
                         $data->save();
                     } else {

@@ -936,7 +936,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: 'MaterialCode',
                                 editorOptions: { 
-                                    readOnly: ((mode == 'approval') ? true : false),
+                                    // readOnly: ((mode == 'approval') ? true : false),
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
                                 }
                             },
                             {
@@ -974,7 +975,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     displayExpr: 'nama'
                                 },
                                 editorOptions: { 
-                                    readOnly: ((mode == 'approval') ? true : false),
+                                    // readOnly: ((mode == 'approval') ? true : false),
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
                                 }
                             },
                             {
