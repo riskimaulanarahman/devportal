@@ -158,9 +158,23 @@ class M28RequestController extends Controller
                 $data->save();
             }
 
-            if($data->employee_id == $this->getEmployeeID()->id && $data->user_id == null) {
-                $data->user_id = $this->getAuth()->id;
-                $data->save();
+            // if($data->employee_id == $this->getEmployeeID()->id && $data->user_id == null) {
+            //     $data->user_id = $this->getAuth()->id;
+            //     $data->save();
+            // }
+
+            if($data->employee_id == $this->getEmployeeID()->id) {
+                if($data->user_id == null) {
+                    $data->user_id = $this->getAuth()->id;
+                    $data->save();
+                }
+            } else {
+                if($data->user_id == null) {
+                    $getemployee = $this->getEmployeeByID($data->employee_id);
+                    $getuser = $this->getUser($getemployee->LoginName);
+                    $data->user_id = $getuser->id;
+                    $data->save();
+                }
             }
 
             return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);

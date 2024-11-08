@@ -37,7 +37,7 @@ trait HasAuth {
 
     public function getUser($loginName) {
 
-        $data = User::where('username',$loginName)->first();
+        $data = User::where('username',$loginName)->whereNotNull('guid')->first();
 
         return $data;
     }
