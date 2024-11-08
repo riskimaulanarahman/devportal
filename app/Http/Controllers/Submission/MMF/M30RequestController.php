@@ -321,7 +321,7 @@ class M30RequestController extends Controller
         
         $subimissionDate = ($originatorApproval) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
         
-        $dataDetails = DB::table('request_mmf_30_detail')->select('*')->where('mmf30_id',$data->id)->get(); // data detail
+        $dataDetails = DB::table('request_mmf_30_detail')->select('*')->where('mmf30_id',$data->detail30->id)->get(); // data detail
         $emp = Employee::select('*')->with(['location','company','department'])->where('LoginName',$data->username)->first(); // data employee
         $dataAppr = DB::table('Mmf30reqApprover')->select('*')->where('id',$id)->get(); // data approver
 

@@ -353,7 +353,8 @@ class M28RequestController extends Controller
             ->sortByDesc('approvalDate')
             ->first();
         
-        $subimissionDate = ($originatorApproval->created_at) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
+        // $subimissionDate = ($originatorApproval->created_at) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
+        $subimissionDate = ($originatorApproval) ? $originatorApproval->created_at : $data->created_at;
         
         // $dataDetails = DB::table('request_mmf_28_detail')->select('*')->where('mmf28_id',$data->id)->get(); // data detail
         $emp = Employee::select('*')->with(['location','company','department'])->where('LoginName',$data->username)->first(); // data employee
