@@ -937,33 +937,39 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'MaterialCode',
                                 editorOptions: { 
                                     // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
                                 }
                             },
                             {
                                 dataField: 'MaterialDescr',
                                 editorOptions: { 
-                                    readOnly: ((mode == 'approval') ? true : false),
+                                    // readOnly: ((mode == 'approval') ? true : false),
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
                                 }
                             },
                             {
                                 dataField: 'PartNumber',
                                 editorOptions: { 
-                                    readOnly: ((mode == 'approval') ? true : false),
+                                    // readOnly: ((mode == 'approval') ? true : false),
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
                                 }
                             },
                             {
                                 caption: 'Brand/Manufacturer',
                                 dataField: 'BrandManufacturer',
                                 editorOptions: { 
-                                    readOnly: ((mode == 'approval') ? true : false),
+                                    // readOnly: ((mode == 'approval') ? true : false),
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+
                                 }
                             },
                             {
                                 dataField: 'Qty',
                                 dataType: "number",
                                 editorOptions: { 
-                                    readOnly: ((mode == 'approval') ? true : false),
+                                    // readOnly: ((mode == 'approval') ? true : false),
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+
                                 }
                             },
                             {
@@ -976,7 +982,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 editorOptions: { 
                                     // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
                                 }
                             },
                             {
@@ -1017,7 +1023,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField:'Remarks',
                                 dataType: "string",
                                 editorOptions: { 
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
                                 }
                             },
                         ],

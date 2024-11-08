@@ -91,6 +91,9 @@ class M30RequestDetailController extends Controller
             if(isset($request->UnitPrice)) {
                 $requestData['ExtendedPrice'] = $request->UnitPrice*$data->Qty;
             }
+            if(isset($request->Qty)) {
+                $requestData['ExtendedPrice'] = $data->UnitPrice*$request->Qty;
+            }
 
             $data->update($requestData);
 
