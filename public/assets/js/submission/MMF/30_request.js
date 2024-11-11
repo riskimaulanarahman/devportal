@@ -951,6 +951,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 dataField: 'PartNumber',
+                                dataType: 'string',
                                 editorOptions: { 
                                     // readOnly: ((mode == 'approval') ? true : false),
                                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,

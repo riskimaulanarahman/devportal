@@ -64,7 +64,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
         { 
             dataField: "part_number",
-            dataType: 'number',
+            dataType: 'string',
         },
         { 
             dataField: "brand",
