@@ -935,6 +935,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         columns: [
                             {
                                 dataField: 'MaterialCode',
+                                dataType: "string",
                                 editorOptions: { 
                                     // readOnly: ((mode == 'approval') ? true : false),
                                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
@@ -942,6 +943,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 dataField: 'MaterialDescr',
+                                dataType: "string",
                                 editorOptions: { 
                                     // readOnly: ((mode == 'approval') ? true : false),
                                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
