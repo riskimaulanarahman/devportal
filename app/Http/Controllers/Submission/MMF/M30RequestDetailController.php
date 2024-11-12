@@ -84,7 +84,7 @@ class M30RequestDetailController extends Controller
             
             $requestData = $request->all();
 
-            $this->addOneDayToDate($requestData);
+            // $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
 

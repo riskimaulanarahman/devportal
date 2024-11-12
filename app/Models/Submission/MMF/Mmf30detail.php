@@ -18,6 +18,7 @@ class Mmf30detail extends Model
     protected $guarded = ['id'];
     protected $casts = [
         'mmf30_id' => 'integer',
+        'MaterialCode' => 'string',
         'UnitPrice' => 'integer',
         'ExtendedPrice' => 'integer',
         'Qty' => 'integer',
