@@ -318,7 +318,7 @@ trait ApproverTrait {
         // if($moduleName == 'Jdi') {
 
             $getemployee = Employee::find($employeeID);
-            $getuser = $this->user->where('username',$getemployee->LoginName)->get();
+            $getuser = $this->user->where('username',$getemployee->LoginName)->whereNull('guid')->get();
 
             //START approver for Chairman
             $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Department Head')->first();
