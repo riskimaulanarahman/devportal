@@ -232,6 +232,17 @@ checkUserAccess(modname, usersid).then(permissions => {
                 validationRules: [{ type: "required" }]
             },
             { 
+                dataField: "designation.SAPCode",
+                caption: "Position No",
+                width: 250,
+                editorOptions: { 
+                    readOnly: true,
+                },
+                formItem: {
+                    visible: false
+                },
+            },
+            { 
                 dataField: "designation_id",
                 caption: "Position",
                 width: 250,
