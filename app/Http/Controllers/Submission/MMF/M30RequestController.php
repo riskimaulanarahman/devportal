@@ -123,11 +123,12 @@ class M30RequestController extends Controller
 
             // Simpan id dari data baru
             $req_id = $newData->id;
-
             $detailData['req_id'] = $req_id;
             $newData->detail30()->create($detailData);
 
             $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
+
+            $newData = $this->model->with('detail30')->find($newData->id);
             
             return response()->json([
                 "status" => "success",

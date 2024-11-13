@@ -321,10 +321,10 @@
                                         <td>Join Date:</td>
                                         <td>{{ ($employee) ? $employee->JoinDate : 'Not Linked With Employee Data' }}</td>
                                     </tr>
-                                    <tr>
+                                    {{-- <tr>
                                         <td>Birthday:</td>
                                         <td>{{ ($employee) ? $employee->BirthOfDate : 'Not Linked With Employee Data' }}</td>
-                                    </tr>
+                                    </tr> --}}
                                     <tr>
                                         <td>Department Head:</td>
                                         <td>{{ ($employee) ? $employee->deptheadName : 'Not Linked With Employee Data' }}</td>

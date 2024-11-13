@@ -248,7 +248,16 @@ $('#btnadd').on('click',function(){
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
         const mode = 'add';
-        const options = {"data": {"isMine": 1}};
+        const options = {
+            "data": 
+            {
+                "isMine": 1,
+                "detail30": 
+                {
+                    "id":response.data.detail30.id
+                }
+            }
+        };
         popup.option({
             contentTemplate: () => popupContentTemplate(reqid,mode,options),
         });
@@ -308,17 +317,13 @@ const popupContentTemplate = function (reqid,mode,options) {
     var isPendingOnMe = options.data.isPendingOnMe;
     isProcHead = options.data.isProcHead;
     isBuyer = options.data.isBuyer;
-    detail30id = options.data.detail30.id;
+    var detail30id = options.data.detail30.id;
 
     var validationRules = [];
     var visibleRulesReqType = false;
     var visibleRulesPRType = false;
 
     popupid = reqid;
-
-    // console.log(mode)
-    // console.log(isMine)
-    // console.log(isProcHead)
 
     const scrollView = $('<div />');
 
