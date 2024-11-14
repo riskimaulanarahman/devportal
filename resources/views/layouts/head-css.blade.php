@@ -85,4 +85,8 @@
     .swal2-container {
         z-index: 99999;
     }
+    .modal-fullscreen-with-margin {
+        max-width: calc(100% - 20px);
+        margin: 10px;
+    }
 </style>

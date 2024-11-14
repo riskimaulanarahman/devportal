@@ -464,6 +464,7 @@ var dataGridhistory = $("#historyMMF30").dxDataGrid({
     }
 }).dxDataGrid("instance");
 
+
 $('#btnadd').on('click',function(){
     showLoadingScreen();
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
