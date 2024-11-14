@@ -460,7 +460,7 @@ var dataGridhistory = $("#historyMMF30").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        location.reload();
+        dataGridhistory.refresh();
     }
 }).dxDataGrid("instance");
 
