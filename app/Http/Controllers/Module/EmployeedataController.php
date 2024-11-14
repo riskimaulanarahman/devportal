@@ -45,6 +45,7 @@ class EmployeedataController extends Controller
                 'isAD' => \DB::table('request_it_activedirectory as ria')
                     ->selectRaw('CASE WHEN EXISTS (SELECT 1 FROM request_it_activedirectory WHERE employee_id = employee.tbl_employee.id) THEN 1 ELSE 0 END')
                     ->whereColumn('ria.employee_id', 'employee.tbl_employee.id')
+                    ->whereIn('ria.requestStatus',[1,3])
                     ->limit(1)
             ]);
 
