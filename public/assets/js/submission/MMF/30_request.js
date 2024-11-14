@@ -244,7 +244,228 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     }
 }).dxDataGrid("instance");
 
+var dataGridhistory = $("#historyMMF30").dxDataGrid({    
+    dataSource: store('mmf30historyApp'),
+    allowColumnReordering: true,
+    allowColumnResizing: true,
+    columnHidingEnabled: true,
+    rowAlternationEnabled: false,
+    wordWrapEnabled: true,
+    autoExpandAll: true,
+    showBorders: true,
+    filterRow: { visible: true },
+    filterPanel: { visible: true },
+    headerFilter: { visible: true },
+    searchPanel: {
+        visible: true,
+        width: 240,
+        placeholder: 'Search...',
+    },
+    editing: {
+        useIcons:true,
+        mode: "popup",
+        allowAdding: false,
+        allowUpdating: false,
+        allowDeleting: true,
+    },
+    scrolling: {
+        mode: "virtual"
+    },
+    pager: {
+        visible: false,
+        showInfo: true,
+    },
+    columns: [
+        {
+            caption: 'Action',
+            width: 140,
+            cellTemplate: function(container, options) {
+
+                var isMine = options.data.isMine;
+                var isPendingOnMe = options.data.isPendingOnMe;
+                var reqid = options.data.id;
+                var reqstatus = options.data.requestStatus;
+                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
+                var arrColor = [
+                    "btn-secondary",
+                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
+                    "btn-warning",
+                    "btn-success",
+                    "btn-danger",
+                ];
+
+                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
+    
+                $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
+                    evt.stopPropagation();
+                
+                            popup.option({
+                                contentTemplate: () => popupContentTemplate(reqid,mode,options),
+                            });
+                            popup.show();
+
+                }).appendTo(container);
+                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
+                    $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
+                            
+                        var result = confirm('Are you sure you want to cancel this submission ?');
+
+                        if (result) {
+                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                requestStatus:0,
+                                action:'submission',
+                                approvalAction: 0
+                            }).then(function(response){
+                                if(response.status != 'error') {
+                                    dataGrid.refresh();
+                                }
+                            });
+                        } else {
+                            alert('Cancelled.');
+                        }
+    
+                    }).appendTo(container); 
+                }
+            
+            }
+        },
+        {
+            caption: "Code",
+            dataField: 'code',
+            width: 180,
+        },
+        { 
+            caption: 'BU',
+			dataField: "bu",
+            width: 80
+        },
+        { 
+            caption: 'PR Type',
+			dataField: "PRType",
+            width: 200,
+            lookup: { 
+                dataSource: prType,  
+                valueExpr: 'id',
+                displayExpr: 'name',
+            },
+        },
+        { 
+            caption: 'Requisition Material',
+			dataField: "RequisitionType",
+            width: 200,
+            lookup: { 
+                dataSource: reqType,  
+                valueExpr: 'id',
+                displayExpr: 'name',
+            },
+        },
+        { 
+			dataField: "Reason",
+            width: 180
+        },
+        { 
+            caption: 'Creator Name',
+			dataField: "user.fullname",
+            width: 180
+        },
+        { 
+            caption: 'Employee Name',
+			dataField: "employee_name",
+            width: 180
+        },
+        {
+            dataField: 'requestStatus',
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                ];
+                return arrText[e.value];
+            },
+        },
+        {
+            dataField: "approveddoc",
+            caption:"Approval Doc",
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: { visible: false},
+            cellTemplate: function (container, options) {
+                var value = options.value;
+                var origin = window.location.origin;
+                if (value && value.includes('doc')) {
+                    var baseUrl = origin + '/oasys/';
+                } else {
+                    var baseUrl = origin + '/devportal/';
+                }
+                var fullUrl = baseUrl + value;
+                if ((value!="") && (value)){
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        type: "success",
+                        text: "Download",
+                        onClick: function (e) {
+                            window.open(fullUrl, '_blank');
+
+                        }
+                    }).appendTo(container);
+                }
+            }
+        },
+      
+    ],
+    columnChooser: {
+      enabled: true,
+    },
+    export: {
+        enabled: true,
+        fileName: modname,
+        excelFilterEnabled: true,
+        allowExportSelectedData: true
+    },
+    onContentReady: function(e){
+        moveEditColumnToLeft(e.component);
+        runpopup();
+    },
+    onCellPrepared: function (e) {
+        if (e.rowType == "data") {
+            if(e.data.isParent === 1) {
+                e.cellElement.css('background','rgba(128, 128, 0,0.1)')
+            }
+        }
+    },
+    onToolbarPreparing: function(e) {
+        dataGridhistory = e.component;
+
+        e.toolbarOptions.items.unshift({						
+            location: "after",
+            widget: "dxButton",
+            options: {
+                hint: "Refresh Data",
+                icon: "refresh",
+                onClick: function() {
+                    dataGridhistory.refresh();
+                }
+            }
+        })
+    },
+    onDataErrorOccurred: function(e) {
+        // Menampilkan pesan kesalahan
+        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+
+        // Memuat ulang Page
+        location.reload();
+    }
+}).dxDataGrid("instance");
+
 $('#btnadd').on('click',function(){
+    showLoadingScreen();
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
         const mode = 'add';
@@ -262,6 +483,7 @@ $('#btnadd').on('click',function(){
             contentTemplate: () => popupContentTemplate(reqid,mode,options),
         });
         popup.show();
+        hideLoadingScreen();
     });
 })
 

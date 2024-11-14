@@ -222,7 +222,7 @@ class ListController extends Controller
         ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
         ->leftJoin('employee.tbl_employee','tbl_approver.employee_id','employee.tbl_employee.id')
         ->where('tbl_approver.module','Mmf')
-        ->where('tbl_approver.approvaltype_id',1075) // Buyer = 1075
+        ->where('tbl_approvaltype.ApprovalType','Buyer') // Buyer
         ->get();
     }
 

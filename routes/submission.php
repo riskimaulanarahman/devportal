@@ -48,6 +48,7 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('momtaskupdate/{id}/{modulename}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'getList']); //get list momtaskbound by req_id of module
     // MMF 30
     Route::get('mmf30detail/{id}/{modulename}',[App\Http\Controllers\Submission\MMF\M30RequestDetailController::class, 'getList']); //get list mmf30 by req_id of module
+    Route::get('mmf30historyApp',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'historyApprover']); //get list mmf30historyApp of module
     // eCatalog
     Route::get('materialdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Ecatalog\MaterialRequestDetailController::class, 'getList']); //get list material req by req_id of module
 

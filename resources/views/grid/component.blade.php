@@ -3,6 +3,7 @@
     // Mapping segmen terakhir ke komponen Blade
     $components = [
         'employeedata' => 'employeedata',
+        'mmf_30_request' => 'mmf30',
         // Tambahkan mapping lainnya di sini
     ];
 

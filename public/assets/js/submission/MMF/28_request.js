@@ -208,6 +208,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 }).dxDataGrid("instance");
 
 $('#btnadd').on('click',function(){
+    showLoadingScreen();
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
         const mode = 'add';
@@ -216,6 +217,7 @@ $('#btnadd').on('click',function(){
             contentTemplate: () => popupContentTemplate(reqid,mode,options),
         });
         popup.show();
+        hideLoadingScreen();
     });
 })
 
