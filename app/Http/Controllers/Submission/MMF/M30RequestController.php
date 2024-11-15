@@ -111,7 +111,7 @@ class M30RequestController extends Controller
             
             $id = $request->id;
             $user_id = $this->getAuth()->id;
-            // $employee_id = $this->getEmployeeID()->id;
+            $employee_id = $this->getEmployeeID()->id;
             $module_id = $this->getModuleId($this->modulename);
 
             $data = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
@@ -125,7 +125,7 @@ class M30RequestController extends Controller
                 ->where('request_mmf.category', 'MMF30')
                 ->where('request_mmf.requestStatus', 3)
                 ->where('tbl_approverListReq.module_id', $module_id)
-                ->where('tbl_approver.user_id', $user_id)
+                ->where('tbl_approver.employee_id', $employee_id)
                 ->with(['user','approverlist','detail30'])
             ->get();
 
