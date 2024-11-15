@@ -126,7 +126,7 @@ class M30RequestController extends Controller
                 ->where('request_mmf.requestStatus', 3)
                 ->where('tbl_approverListReq.module_id', $module_id)
                 ->where('tbl_approver.employee_id', $employee_id)
-                ->with(['user','approverlist','detail30'])
+                ->with(['detail30'])
             ->get();
 
             return response()->json([
