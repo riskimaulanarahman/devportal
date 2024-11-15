@@ -48,6 +48,7 @@ trait HasMessage {
             'newActivity' => 'This Submission has new activity. Please check it.',
             'deadlineTaskReminder' => 'This Submission has a task with an approaching deadline. Please check it.',
             'momTaskSummary' => 'We are proud to inform you regarding this MoM. Please check it.',
+            'addPRCreator' => 'We would like to inform you that you have been added as the PR Creator in this submission.'
         ];
 
         return $message;

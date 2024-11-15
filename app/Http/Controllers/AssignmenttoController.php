@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubmissionMail;
 
+use App\Models\Submission\Ecatalog\MaterialReq;
 use App\Models\Module;
 use App\Models\Assignmentto;
 use App\Models\Employee;
@@ -12,6 +15,7 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\ApproverListReq;
 use App\Models\Approvaluser;
+use DB;
 
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -45,6 +49,9 @@ class AssignmenttoController extends Controller
 
     public function store(Request $request)
     {
+
+        DB::beginTransaction();
+
         try {
 
             // MMF
@@ -86,6 +93,24 @@ class AssignmenttoController extends Controller
             }else{
                 $this->model->create($requestData);
             }
+
+            if($request->modulename == 'MaterialReq') {
+                $getuserFb = $this->user->where('username',$getemployee->LoginName)->first();
+                $getSubmissionData = MaterialReq::findOrFail($request->req_id);
+
+                $mailData = [
+                    "id" => 30, // final approved
+                    "action_id" => 5, // update id
+                    "submission" => $getSubmissionData,
+                    "email" => $this->getUserByid($getuserFb->id)->email, // kirim kepada PR Creator
+                    "fullname" => $this->getUserByid($getuserFb->id)->fullname,
+                    "message" => $this->mailMessage()['addPRCreator'],
+                    "remarks" => null
+                ];
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$request->modulename,1));
+            }
+
+            DB::commit();
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 

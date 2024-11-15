@@ -1749,10 +1749,6 @@ function btnreqsubmit(reqid,mode) {
         ];
     }
 
-    // console.log(mode);
-    // console.log(isProcHead);
-    // console.log(fieldsToCheckGrid);
-
     sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/Mmf30", "POST", {
         fieldsToCheckGrid
     }).then(function(response){
@@ -1779,29 +1775,31 @@ function btnreqsubmit(reqid,mode) {
 
             var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
 
-            var result = confirm('Are you sure you want to send this submission ?');
-            if (result) {
-                showLoadingScreen();
-                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                    requestStatus:1,
-                    action: actionForm,
-                    approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                    approvalType: valApprovalType,
-                    remarks: valremarks
-                }).then(function(response){
-                    if(response.status == 'error') {
-                        btnSubmit.prop('disabled', false);
-                        hideLoadingScreen();
-                    } else {
-                        popup.hide();
-                        hideLoadingScreen();
-                    }
-                });
-            } else {
-                btnSubmit.prop('disabled', false);
-                alert('Cancelled.');
-                hideLoadingScreen();
-            }
+            confirmAndSendSubmission(reqid, modelclass, actionForm, valapprovalAction, valApprovalType, valremarks);
+
+            // var result = confirm('Are you sure you want to send this submission ?');
+            // if (result) {
+            //     showLoadingScreen();
+            //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+            //         requestStatus:1,
+            //         action: actionForm,
+            //         approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+            //         approvalType: valApprovalType,
+            //         remarks: valremarks
+            //     }).then(function(response){
+            //         if(response.status == 'error') {
+            //             btnSubmit.prop('disabled', false);
+            //             hideLoadingScreen();
+            //         } else {
+            //             popup.hide();
+            //             hideLoadingScreen();
+            //         }
+            //     });
+            // } else {
+            //     btnSubmit.prop('disabled', false);
+            //     alert('Cancelled.');
+            //     hideLoadingScreen();
+            // }
         }
     });
 
