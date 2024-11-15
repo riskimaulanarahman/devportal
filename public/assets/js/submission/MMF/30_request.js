@@ -1731,9 +1731,11 @@ const popupContentTemplate = function (reqid,mode,options) {
 };
 
 function btnreqsubmit(reqid,mode) {
-
+    var btnSubmit = $('#btn-submit');
+    var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
+    var valremarks = $('#remarks').val(); // mengambil nilai dari text area
     
-    if(mode == 'approval' && isProcHead == 1) {
+    if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
         var fieldsToCheckGrid = [
             { field: 'Buyer', name: 'Buyer' },
         ]
@@ -1755,15 +1757,13 @@ function btnreqsubmit(reqid,mode) {
         fieldsToCheckGrid
     }).then(function(response){
         if(response.status !== 'error') {
-            var btnSubmit = $('#btn-submit');
 
             btnSubmit.prop('disabled', true);
 
             var actionForm = (mode == 'approval') ? 'approval' : 'submission';
 
             if(mode == 'approval') {
-                var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
-                var valremarks = $('#remarks').val(); // mengambil nilai dari text area
+                
                 if (!valapprovalAction) {
                     DevExpress.ui.dialog.alert("Please select approval action.", "Warning");
                     btnSubmit.prop('disabled', false);
