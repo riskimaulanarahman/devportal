@@ -159,7 +159,7 @@ class ListController extends Controller
     }
 
     public function listDeveloper() {
-        return Developer::select('id','developerName')->orderBy('developerName','asc')->get();
+        return Developer::select('id','developerName')->whereNotNull('role')->orderBy('developerName','asc')->get();
     }
 
     public function listApprover($modulename) {
