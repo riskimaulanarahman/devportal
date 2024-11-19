@@ -1488,11 +1488,11 @@ function btnreqsubmit(reqid,mode) {
         ]
     } else {
         var fieldsToCheckGrid = [
-            { field: 'WONumber', name: 'Work Order No' },
-            { field: 'ChargeCode', name: 'Charge Code' },
-            { field: 'MaterialDispatch', name: 'Material Dispatch No' },
+            // { field: 'WONumber', name: 'Work Order No' },
+            // { field: 'ChargeCode', name: 'Charge Code' },
+            // { field: 'MaterialDispatch', name: 'Material Dispatch No' },
             { field: 'RequiredDate', name: 'Required By (Date)' },
-            { field: 'MaterialCode', name: 'Material Code' },
+            // { field: 'MaterialCode', name: 'Material Code' },
             { field: 'MaterialDescr', name: 'Material Description' },
             { field: 'Symptomps', name: 'Symptoms (Problem)' },
             { field: 'RequiredType', name: 'Required' },
