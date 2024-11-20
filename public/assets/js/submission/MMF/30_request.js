@@ -1740,13 +1740,14 @@ function btnreqsubmit(reqid,mode) {
             { field: 'Buyer', name: 'Buyer' },
         ]
     } else {
-        var fieldsToCheckGrid = [
-            { field: 'PRType', name: 'PR Type' },
-            { field: 'RequisitionType', name: 'Requisition Material' },
-            { field: 'Reason', name: 'Reason for requisition/purchase' },
-            { field: 'RemarksU', name: 'Remarks' },
-            
-        ];
+        if(mode !== 'approval') {
+            var fieldsToCheckGrid = [
+                { field: 'PRType', name: 'PR Type' },
+                { field: 'RequisitionType', name: 'Requisition Material' },
+                { field: 'Reason', name: 'Reason for requisition/purchase' },
+                { field: 'RemarksU', name: 'Remarks' },
+            ];
+        }
     }
 
     sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/Mmf30", "POST", {
@@ -1776,30 +1777,7 @@ function btnreqsubmit(reqid,mode) {
             var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
 
             confirmAndSendSubmission(reqid, modelclass, actionForm, valapprovalAction, valApprovalType, valremarks);
-
-            // var result = confirm('Are you sure you want to send this submission ?');
-            // if (result) {
-            //     showLoadingScreen();
-            //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-            //         requestStatus:1,
-            //         action: actionForm,
-            //         approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-            //         approvalType: valApprovalType,
-            //         remarks: valremarks
-            //     }).then(function(response){
-            //         if(response.status == 'error') {
-            //             btnSubmit.prop('disabled', false);
-            //             hideLoadingScreen();
-            //         } else {
-            //             popup.hide();
-            //             hideLoadingScreen();
-            //         }
-            //     });
-            // } else {
-            //     btnSubmit.prop('disabled', false);
-            //     alert('Cancelled.');
-            //     hideLoadingScreen();
-            // }
+       
         }
     });
 
@@ -1824,17 +1802,35 @@ function runpopup() {
             dataGrid.refresh();
         },
         toolbarItems: [
-        {
-            widget: 'dxButton',
-            toolbar: 'bottom',
-            location: 'after',
-            options: {
-            text: 'Close',
-            onClick() {
-                popup.hide();
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',  // Set the button to the bottom toolbar
+                location: 'after',
+                options: {
+                    text: "Fullscreen",
+                    onClick: function() {
+                        if (popup.option("fullScreen")) {
+                            popup.option("fullScreen", false);
+                            this.option("text", "Enable Fullscreen");
+                        } else {
+                            popup.option("fullScreen", true);
+                            this.option("text", "Disable Fullscreen");
+                        }
+                    }
+                }
             },
-            },
-        }]
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                    text: 'Close',
+                    onClick() {
+                        popup.hide();
+                    },
+                },
+            }
+        ]
 
     }).dxPopup('instance');
 }
@@ -1850,7 +1846,6 @@ function cellTemplate(container, options) {
     }
     var fullUrl = baseUrl + value;
     container.append('<a href="'+fullUrl+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
-    // container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
 }
 
 function editCellTemplate(cellElement, cellInfo) {

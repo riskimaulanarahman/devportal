@@ -1059,17 +1059,35 @@ function runpopup() {
             dataGrid.refresh();
         },
         toolbarItems: [
-        {
-            widget: 'dxButton',
-            toolbar: 'bottom',
-            location: 'after',
-            options: {
-            text: 'Close',
-            onClick() {
-                popup.hide();
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',  // Set the button to the bottom toolbar
+                location: 'after',
+                options: {
+                    text: "Fullscreen",
+                    onClick: function() {
+                        if (popup.option("fullScreen")) {
+                            popup.option("fullScreen", false);
+                            this.option("text", "Enable Fullscreen");
+                        } else {
+                            popup.option("fullScreen", true);
+                            this.option("text", "Disable Fullscreen");
+                        }
+                    }
+                }
             },
-            },
-        }]
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                    text: 'Close',
+                    onClick() {
+                        popup.hide();
+                    },
+                },
+            }
+        ]
 
     }).dxPopup('instance');
 }
