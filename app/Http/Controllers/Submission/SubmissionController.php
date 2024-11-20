@@ -50,6 +50,10 @@ class SubmissionController extends Controller
             // Extract the fields to check from the request payload
             $fieldsToCheck = $request->input('fieldsToCheckGrid');
 
+            if(!$fieldsToCheck) {
+                return response()->json(['status' => 'show']);
+            }
+
             // Fetch the data for the given reqid
             $record =DB::table($tableName)->where('req_id', $reqid)->first(); // Replace with your actual logic to get the record
             // dd($record);
