@@ -586,7 +586,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             },
                             scrolling: {
-                                mode: "virtual"
+                                rowRenderingMode: 'virtual',
+                            },
+                            paging: {
+                                pageSize: 15,
+                            },
+                            pager: {
+                                visible: true,
+                                allowedPageSizes: [5, 15, 'all'],
+                                showPageSizeSelector: true,
+                                showInfo: true,
+                                showNavigationButtons: true,
                             },
                             columns: [
                                 {
