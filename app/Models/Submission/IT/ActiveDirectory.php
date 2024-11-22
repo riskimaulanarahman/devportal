@@ -52,6 +52,7 @@ class ActiveDirectory extends Model
             'validFrom',
             'approveddoc',
             'validTo',
+            'pic_empid',
             'username_temp',
             'password_temp'
         ]);

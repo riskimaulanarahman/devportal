@@ -314,7 +314,9 @@ class SubmissionMail extends Mailable
                 if($final == 1) {
                     $pdf = $adController->genPdfAD($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
-                    $this->to($getPIC->email);
+                    if ($getPIC) {
+                        $this->to($getPIC->email);
+                    }
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc
                     }
