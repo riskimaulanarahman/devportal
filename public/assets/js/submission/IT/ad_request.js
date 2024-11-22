@@ -99,31 +99,133 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     $('<button class="btn btn-info" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-user"></i></button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
                             
-                        var result = confirm('Are you sure you want to submit this loginName ?');
+                        // var result = confirm('Are you sure want to submit account information for this employee ?');
 
-                        if (result) {
+                        // if (result) {
 
-                            var loginNameVal = prompt("Please enter the LoginName:");
+                        //     var loginNameVal = prompt("Please enter username of "+options.data.employee.FullName+":");
 
-                            if (loginNameVal !== null && loginNameVal.trim() !== "") {
-                                showLoadingScreen();
-                                sendRequest(apiurl + "/employeedata/"+options.data.employee_id, "PUT", {
-                                    LoginName:loginNameVal
-                                }).then(function(response){
-                                    if(response.status != 'error') {
-                                        dataGrid.refresh();
+                        //     if (loginNameVal !== null && loginNameVal.trim() !== "") {
+                        //         showLoadingScreen();
+                        //         sendRequest(apiurl + "/employeedata/"+options.data.employee_id, "PUT", {
+                        //             LoginName:loginNameVal
+                        //         }).then(function(response){
+                        //             if(response.status != 'error') {
+                        //                 dataGrid.refresh();
+                        //             }
+                        //             hideLoadingScreen();
+                        //         }).fail(function(error) {
+                        //             hideLoadingScreen();
+                        //             console.error("An error occurred:", error);
+                        //         });
+                        //     } else {
+                        //         alert('Cancelled: The action has an empty value');
+                        //     }
+                        // } else {
+                        //     alert('Cancelled.');
+                        // }
+
+                        // var result = confirm('Are you sure want to submit account information for this employee?');
+
+                        // if (result) {
+                        //     var loginNameVal = prompt("Please enter username of " + options.data.employee.FullName + ":");
+
+                        //     if (loginNameVal !== null && loginNameVal.trim() !== "") {
+                        //         var passwordVal = prompt("Please enter the password for " + options.data.employee.FullName + ":");
+
+                        //         if (passwordVal !== null && passwordVal.trim() !== "") {
+                        //             showLoadingScreen();
+                        //             sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
+                        //                 username_temp: loginNameVal,
+                        //                 password_temp: passwordVal
+                        //             });
+                        //             sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
+                        //                 LoginName: loginNameVal
+                        //             }).then(function(response) {
+                        //                 if (response.status != 'error') {
+                        //                     dataGrid.refresh();
+                        //                 }
+                        //                 hideLoadingScreen();
+                        //             }).fail(function(error) {
+                        //                 hideLoadingScreen();
+                        //                 console.error("An error occurred:", error);
+                        //             });
+                        //         } else {
+                        //             alert('Cancelled: The password has an empty value');
+                        //         }
+                        //     } else {
+                        //         alert('Cancelled: The username has an empty value');
+                        //     }
+                        // } else {
+                        //     alert('Cancelled.');
+                        // }
+
+                        Swal.fire({
+                            title: "Are you sure?",
+                            text: "Do you want to submit account information for this employee?",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Yes, submit!",
+                            cancelButtonText: "No, cancel!"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                Swal.fire({
+                                    title: "Enter Username of "+options.data.employee.FullName,
+                                    input: "text",
+                                    inputPlaceholder: "Username",
+                                    showCancelButton: true,
+                                    confirmButtonText: "Next",
+                                    cancelButtonText: "Cancel"
+                                }).then((usernameResult) => {
+                                    if (usernameResult.isConfirmed) {
+                                        const loginNameVal = usernameResult.value;
+                        
+                                        if (loginNameVal !== null && loginNameVal.trim() !== "") {
+                                            Swal.fire({
+                                                title: "Enter Password for "+options.data.employee.FullName,
+                                                input: "password",
+                                                inputPlaceholder: "Password",
+                                                showCancelButton: true,
+                                                confirmButtonText: "Submit",
+                                                cancelButtonText: "Cancel"
+                                            }).then((passwordResult) => {
+                                                if (passwordResult.isConfirmed) {
+                                                    const passwordVal = passwordResult.value;
+                        
+                                                    if (passwordVal !== null && passwordVal.trim() !== "") {
+                                                        showLoadingScreen();  // Show loading screen
+                                                        
+                                                        sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
+                                                            username_temp: loginNameVal,
+                                                            password_temp: passwordVal
+                                                        });
+                                                        
+                                                        sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
+                                                            LoginName: loginNameVal
+                                                        }).then(function(response) {
+                                                            hideLoadingScreen();  // Hide loading screen
+                                                            
+                                                            if (response.status != 'error') {
+                                                                dataGrid.refresh();
+                                                            }
+                                                        }).catch(function(error) {
+                                                            hideLoadingScreen();  // Hide loading screen
+                                                            console.error("An error occurred:", error);
+                                                        });
+                                                    } else {
+                                                        Swal.fire("Cancelled", "The password has an empty value", "error");
+                                                    }
+                                                }
+                                            });
+                                        } else {
+                                            Swal.fire("Cancelled", "The username has an empty value", "error");
+                                        }
                                     }
-                                    hideLoadingScreen();
-                                }).fail(function(error) {
-                                    hideLoadingScreen();
-                                    console.error("An error occurred:", error);
                                 });
                             } else {
-                                alert('LoginName input was cancelled or empty.');
+                                Swal.fire("Cancelled", "Submission has been cancelled", "info");
                             }
-                        } else {
-                            alert('Cancelled.');
-                        }
+                        });
     
                     }).appendTo(container); 
                 }
@@ -442,6 +544,15 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: true
                                 }
+                            },
+                            {
+                                caption: "PIC Name",
+                                dataField: "pic_empid",
+                                lookup: {
+                                    dataSource: listOption('/list-employeead','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'fullname',
+                                },
                             },
                         ],
                         export: {

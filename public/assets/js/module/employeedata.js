@@ -67,46 +67,52 @@ checkUserAccess(modname, usersid).then(permissions => {
 
                     var reqid = options.data.id;
                     var isad = options.data.isAD;
-                    // console.log(isad);
                     if((options.data.LoginName == null || options.data.LoginName == '') && isad !== 1) {
                         $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
-                        
-                            
-                            var result = confirm('Are you sure you want to Create Active Directory '+options.data.FullName+' and send this submission ?');
+                            runpopup(options);
 
-                                if (result) {
-                                    showLoadingScreen();
-                                    // First request with a delay
-                                    delay(1000).then(function() {
-                                        return sendRequest(apiurl + "/adrequest", "POST", {
-                                            employee_id: reqid,
-                                            requestType: 'Create Account'
-                                        });
-                                    }).then(function(response) {
-                                        const dataid = response.data.id;
-                                        // Second request with a delay
-                                        return delay(2000).then(function() {
-                                            return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
-                                                requestStatus: 1,
-                                                action: 'submission',
-                                                approvalAction: 1,
-                                                approvalType: null,
-                                                remarks: null
-                                            });
-                                        });
-                                    }).then(function(response) {
-                                        if (response.status != 'error') {
-                                            dataGrid.refresh();
-                                        }
-                                        hideLoadingScreen();
-                                    }).fail(function(error) {
-                                        console.error("An error occurred:", error);
-                                        hideLoadingScreen();
-                                    });
-                                } else {
-                                    alert('Cancelled.');
-                                }
+                            // console.log(reqid);
+
+                            popup.option({
+                                contentTemplate: () => popupContentTemplate(reqid,options),
+                            });
+                            popup.show();
+                            
+                            // var result = confirm('Are you sure you want to Create Active Directory '+options.data.FullName+' and send this submission ?');
+
+                            //     if (result) {
+                            //         showLoadingScreen();
+                            //         // First request with a delay
+                            //         delay(1000).then(function() {
+                            //             return sendRequest(apiurl + "/adrequest", "POST", {
+                            //                 employee_id: reqid,
+                            //                 requestType: 'Create Account'
+                            //             });
+                            //         }).then(function(response) {
+                            //             const dataid = response.data.id;
+                            //             // Second request with a delay
+                            //             return delay(2000).then(function() {
+                            //                 return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
+                            //                     requestStatus: 1,
+                            //                     action: 'submission',
+                            //                     approvalAction: 1,
+                            //                     approvalType: null,
+                            //                     remarks: null
+                            //                 });
+                            //             });
+                            //         }).then(function(response) {
+                            //             if (response.status != 'error') {
+                            //                 dataGrid.refresh();
+                            //             }
+                            //             hideLoadingScreen();
+                            //         }).fail(function(error) {
+                            //             console.error("An error occurred:", error);
+                            //             hideLoadingScreen();
+                            //         });
+                            //     } else {
+                            //         alert('Cancelled.');
+                            //     }
 
                         }).appendTo(container);
                     }
@@ -128,7 +134,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                     if(options.data.LoginName && (isad !== 1)) {
                         $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
-                        
+                            runpopup(options);
                             
                             var result = confirm('Are you sure you want to Delete Active Directory '+options.data.FullName+' and send this submission ?');
 
@@ -339,7 +345,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                     width: 600
                 };
                 e.editorOptions.contentTemplate = function (args, container) {
-                    console.log(args)
+                    // console.log(args)
 
                     var value = args.component.option("value"),
                         $dataGrid = $("<div>").dxDataGrid({
@@ -371,7 +377,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                                 }
                             }
                         });
-                    console.log(value)
+                    // console.log(value)
                     var dataGrid = $dataGrid.dxDataGrid("instance");
 
                     args.component.on("valueChanged", function (args) {
@@ -400,7 +406,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                     width: 600
                 };
                 e.editorOptions.contentTemplate = function (args, container) {
-                    console.log(args)
+                    // console.log(args)
 
                     var value = args.component.option("value"),
                         $dataGrid = $("<div>").dxDataGrid({
@@ -432,7 +438,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                                 }
                             }
                         });
-                    console.log(value)
+                    // console.log(value)
                     var dataGrid = $dataGrid.dxDataGrid("instance");
 
                     args.component.on("valueChanged", function (args) {
@@ -775,8 +781,182 @@ checkUserAccess(modname, usersid).then(permissions => {
             // location.reload();
         }
     }).dxDataGrid("instance");
+
+    function runpopup(options) {
+        popup = $('#popup').dxPopup({
+            contentTemplate: popupContentTemplate,
+            width: 600,
+            height: 400,
+            container: '.content',
+            showTitle: true,
+            title: 'PIC',
+            visible: false,
+            dragEnabled: false,
+            hideOnOutsideClick: false,
+            showCloseButton: true,
+            fullScreen : false,
+            onShowing: function(e) {
+            },
+            onShown: function(e) {
+            },
+            onHidden: function(e) {
+                dataGrid.refresh();
+            },
+            toolbarItems: [
+                {
+                    widget: 'dxButton',
+                    toolbar: 'bottom',
+                    location: 'after',
+                    options: {
+                        text: 'Submit',
+                        onClick: function () {
+                            const selectedValue = $('#dropdown').dxDropDownBox("option", "value");
+                            if(selectedValue == null) {
+                                DevExpress.ui.dialog.alert("Please Select an Employee", "error");
+                                return false;
+                            }
+                            // console.log("Selected ID:", selectedValue);
+                            // console.log(options.data);
+                            // console.log("Selected employeeid:", options.data.id);
+
+                            var result = confirm('Are you sure you want to Create Active Directory "'+options.data.FullName+'" and send this submission ?');
+
+                                if (result) {
+                                    showLoadingScreen();
+                                    // First request with a delay
+                                    delay(1000).then(function() {
+                                        return sendRequest(apiurl + "/adrequest", "POST", {
+                                            employee_id: options.data.id,
+                                            pic_empid: selectedValue,
+                                            requestType: 'Create Account'
+                                        });
+                                    }).then(function(response) {
+                                        const dataid = response.data.id;
+                                        // Second request with a delay
+                                        return delay(2000).then(function() {
+                                            return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
+                                                requestStatus: 1,
+                                                action: 'submission',
+                                                approvalAction: 1,
+                                                approvalType: null,
+                                                remarks: null
+                                            });
+                                        });
+                                    }).then(function(response) {
+                                        if (response.status != 'error') {
+                                            dataGrid.refresh();
+                                        }
+                                        hideLoadingScreen();
+                                    }).fail(function(error) {
+                                        console.error("An error occurred:", error);
+                                        hideLoadingScreen();
+                                    });
+                                } else {
+                                    alert('Cancelled.');
+                                }
+
+                            popup.hide();
+
+                        },
+                    },
+                },
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                text: 'Close',
+                onClick() {
+                    popup.hide();
+                },
+                },
+            }]
+    
+        }).dxPopup('instance');
+    }
+    
+    const popupContentTemplate = function (reqid,options) {
+        // console.log(reqid)
+        // console.log(options)
+    
+        const scrollView = $('<div />');
+    
+        scrollView.append("<hr>");
+
+         // Menambahkan dropdown
+         const dropdown = $('<div id="dropdown"></div>').appendTo(scrollView);
+
+         // Mengambil data dari fungsi listOption
+        const employeeOptions = listOption("/list-employeead", "id", "fullname");
+
+         // Inisialisasi dropdown
+         dropdown.dxDropDownBox({
+             value: null,
+             dataSource: employeeOptions.store,
+             displayExpr(item) {
+                return item && `${item.fullname}`;
+            },
+             contentTemplate: function (args, container) {
+                 const $dataGrid = $("<div>").dxDataGrid({
+                     width: '100%',
+                     dataSource: args.component.option("dataSource"),
+                     keyExpr: "id",
+                     columns: ["sapid", "fullname", "companycode", "departmentname"],
+                     hoverStateEnabled: true,
+                     paging: { enabled: true, pageSize: 10 },
+                     filterRow: { visible: true },
+                     height: '90%',
+                     showRowLines: true,
+                     showBorders: true,
+                     selection: { mode: "single" },
+                     searchPanel: {
+                         visible: true,
+                         width: 265,
+                         placeholder: "Search..."
+                     },
+                     onSelectionChanged: function (selectedItems) {
+                         const keys = selectedItems.selectedRowKeys;
+                         const hasSelection = keys.length;
+                         args.component.option('value', hasSelection ? keys[0] : null);
+                         if (hasSelection) {
+                            args.component.close();
+                         }
+                     }
+                 });
+ 
+                 const dataGrid = $dataGrid.dxDataGrid("instance");
+ 
+                 args.component.on("valueChanged", function (args) {
+                     const value = args.value;
+                     dataGrid.selectRows(value, false);
+                 });
+ 
+                 container.append($dataGrid);
+                 $("<div>").dxButton({
+                     text: "Close",
+                     onClick: function () {
+                         args.component.close();
+                     }
+                 }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+ 
+                 return container;
+             },
+             dropDownOptions: {
+                 height: 550,
+                 width: 900
+             }
+         });
+
+        scrollView.dxScrollView({
+            width: '100%',
+            height: '100%',
+        })
+    
+        return scrollView;
+    
+    };
 });
-var dataGrid = $("#loghistory").dxDataGrid({    
+var dataGridhistory = $("#loghistory").dxDataGrid({    
     dataSource: store('logsuccess'),
     allowColumnReordering: false,
     allowColumnResizing: true,
@@ -842,3 +1022,4 @@ var dataGrid = $("#loghistory").dxDataGrid({
         })
     },
 }).dxDataGrid("instance");
+

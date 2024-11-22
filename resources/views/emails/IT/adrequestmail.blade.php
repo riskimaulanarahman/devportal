@@ -92,6 +92,16 @@
                     <th>Request Type</th>
                     <td>{{ $mailData['submission']->requestType }}</td>
                 </tr>
+                @if ($mailData['action_id'] == 5)
+                    <tr>
+                        <th>Username</th>
+                        <td>{{ $mailData['submission']->username_temp }}</td>
+                    </tr>
+                    <tr>
+                        <th>Password</th>
+                        <td>{{ $mailData['submission']->password_temp }}</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
         @if (!empty($mailData['remarks']))

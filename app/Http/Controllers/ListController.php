@@ -68,6 +68,18 @@ class ListController extends Controller
                 ->get();
     }
 
+    public function listEmployeeAD() { // have account/loginName
+        return Employee::select('employee.tbl_employee.id', 'sapid', 'fullname', 'companycode', 'employee.tbl_department.departmentname', 'employee.tbl_department.departmentgroup')
+                ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+                // ->where(function($query) {
+                //     $query->whereNotNull('LoginName')
+                //         ->where('LoginName', '<>', '');
+                // })
+                ->whereNotNull('LoginName')
+                // ->where('employee.tbl_employee.isActive',1)
+                ->get();
+    }
+
     public function listEmployeeSameDept() {
 
         $departmentGroup = $this->getEmployeeID()->department->DepartmentGroup;

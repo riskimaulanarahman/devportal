@@ -31,7 +31,10 @@ class ActiveDirectory extends Model
         'validTo',
         'depthead_id',
         'approveddoc',
-        'bu'
+        'bu',
+        'pic_empid',
+        'username_temp',
+        'password_temp'
     ];
 
     protected $casts = [
@@ -48,7 +51,9 @@ class ActiveDirectory extends Model
             'accountType',
             'validFrom',
             'approveddoc',
-            'validTo'
+            'validTo',
+            'username_temp',
+            'password_temp'
         ]);
         return $fillable;
     }

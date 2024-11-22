@@ -42,6 +42,11 @@ class Employee extends Model
         return $this->belongsTo('App\Models\Company','company_id');
     }
 
+    // public function users()
+    // {
+    //     return $this->belongsTo('App\Models\User','LoginName','username');
+    // }
+
     // Relasi dengan tabel answers
     public function answers()
     {

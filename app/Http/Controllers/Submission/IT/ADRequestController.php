@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Submission\IT;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubmissionMail;
 
 use App\Models\Submission\IT\ActiveDirectory;
 use App\Models\ApproverListReq;
@@ -14,6 +16,7 @@ use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Assignmentto;
 use App\Models\User;
+use App\Models\Employee;
 use DB;
 use COM;
 
@@ -28,6 +31,7 @@ class ADRequestController extends Controller
         $this->model = new ActiveDirectory();
         $this->modulename = 'ActiveDirectory';
         $this->module = new Module();
+        $this->employee = new Employee();
         $this->user = new User();
     }
 
@@ -97,6 +101,8 @@ class ADRequestController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
+
         try {
             // Ambil semua data dari request
             $requestData = $request->all();
@@ -108,7 +114,32 @@ class ADRequestController extends Controller
             $requestData['bu'] = $this->getEmployeeByID($request->employee_id)->companycode;
 
             // Buat data baru pada tabel utama
-            $newData = $this->model->create($requestData);
+            // $newData = $this->model->create($requestData);
+
+            if($request->pic_empid) {
+                $getemployee = $this->employee->find( $request->pic_empid);
+                $getuser = $this->user->where('username',$getemployee->LoginName)->get();
+                
+                if(count($getuser) > 0) {
+                    $newData = $this->model->create($requestData);
+                } else {
+                    $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+
+                    if ($getldap) {
+                        $this->user->create([
+                            "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                            "domain" => "default",
+                            "username" => $getldap['samaccountname'][0],
+                            "fullname" => $getldap['name'][0],
+                            "email" => $getldap['mail'][0]
+                        ]);
+                        $newData = $this->model->create($requestData);
+                    } else {
+                        return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                    }
+
+                }
+            }
 
             // Simpan id dari data baru
             $req_id = $newData->id;
@@ -119,6 +150,8 @@ class ADRequestController extends Controller
             }
 
             $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
+
+            DB::commit();
 
             return response()->json([
                 "status" => "success",
@@ -160,6 +193,8 @@ class ADRequestController extends Controller
 
     public function update(Request $request, $id)
     {
+        DB::beginTransaction();
+
         try {
 
             // Mengambil semua data dari request
@@ -185,6 +220,27 @@ class ADRequestController extends Controller
                 }
             }
             //end save history perubahan
+
+            if(isset($request->password_temp) && $data->requestStatus == 3) {
+                if(!empty($request->password_temp)) {
+
+                    $getSubmissionData = $this->model->findOrFail($id);
+
+                    $mailData = [
+                        "id" => 30, // final approved
+                        "action_id" => 5, // update id
+                        "submission" => $getSubmissionData,
+                        "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
+                        "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
+                        "message" => $this->mailMessage()['accountInfoAD'],
+                        "remarks" => null
+                    ];
+                    Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
+                }
+
+            }
+
+            DB::commit();
 
             // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([

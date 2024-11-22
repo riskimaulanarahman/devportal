@@ -14,6 +14,7 @@ use App\Models\Stackholders;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Categoryhrsc;
+use App\Models\Employee;
 
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
@@ -308,9 +309,12 @@ class SubmissionMail extends Mailable
             if($modulename == 'ActiveDirectory') {
                 $request = new Request();
                 $adController = new ADRequestController();
+                $getempPIC = Employee::where('id',$mailData['submission']->pic_empid)->first();
+                $getPIC = User::where('username',$getempPIC->LoginName)->first();
                 if($final == 1) {
                     $pdf = $adController->genPdfAD($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    $this->to($getPIC->email);
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc
                     }
