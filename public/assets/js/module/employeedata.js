@@ -20,7 +20,6 @@ checkUserAccess(modname, usersid).then(permissions => {
         dataSource: store(modname),
         allowColumnReordering: true,
         allowColumnResizing: true,
-        // columnsAutoWidth: true,
         columnMinWidth: 80,
         columnHidingEnabled: false,
         rowAlternationEnabled: true,
@@ -70,50 +69,13 @@ checkUserAccess(modname, usersid).then(permissions => {
                     if((options.data.LoginName == null || options.data.LoginName == '') && isad !== 1) {
                         $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
-                            runpopup(options);
-
-                            // console.log(reqid);
+                            runpopup(options,1); // 1 create
 
                             popup.option({
                                 contentTemplate: () => popupContentTemplate(reqid,options),
                             });
                             popup.show();
                             
-                            // var result = confirm('Are you sure you want to Create Active Directory '+options.data.FullName+' and send this submission ?');
-
-                            //     if (result) {
-                            //         showLoadingScreen();
-                            //         // First request with a delay
-                            //         delay(1000).then(function() {
-                            //             return sendRequest(apiurl + "/adrequest", "POST", {
-                            //                 employee_id: reqid,
-                            //                 requestType: 'Create Account'
-                            //             });
-                            //         }).then(function(response) {
-                            //             const dataid = response.data.id;
-                            //             // Second request with a delay
-                            //             return delay(2000).then(function() {
-                            //                 return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
-                            //                     requestStatus: 1,
-                            //                     action: 'submission',
-                            //                     approvalAction: 1,
-                            //                     approvalType: null,
-                            //                     remarks: null
-                            //                 });
-                            //             });
-                            //         }).then(function(response) {
-                            //             if (response.status != 'error') {
-                            //                 dataGrid.refresh();
-                            //             }
-                            //             hideLoadingScreen();
-                            //         }).fail(function(error) {
-                            //             console.error("An error occurred:", error);
-                            //             hideLoadingScreen();
-                            //         });
-                            //     } else {
-                            //         alert('Cancelled.');
-                            //     }
-
                         }).appendTo(container);
                     }
 
@@ -134,45 +96,13 @@ checkUserAccess(modname, usersid).then(permissions => {
                     if(options.data.LoginName && (isad !== 1)) {
                         $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
-                            runpopup(options);
+                            runpopup(options,2); // 2 delete
+
+                            popup.option({
+                                contentTemplate: () => popupContentTemplate(reqid,options),
+                            });
+                            popup.show();
                             
-                            var result = confirm('Are you sure you want to Delete Active Directory '+options.data.FullName+' and send this submission ?');
-
-                                if (result) {
-                                    // First request with a delay
-                                    delay(1000).then(function() {
-                                        return sendRequest(apiurl + "/adrequest", "POST", {
-                                            employee_id: reqid,
-                                            requestType: 'Delete Account'
-                                        });
-                                    }).then(function(response) {
-                                        const dataid = response.data.id;
-                                        // Second request with a delay
-                                        return delay(2000).then(function() {
-                                            return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
-                                                requestStatus: 1,
-                                                action: 'submission',
-                                                approvalAction: 1,
-                                                approvalType: null,
-                                                remarks: null
-                                            });
-                                        });
-                                    }).then(function(response) {
-                                        return delay(1000).then(function() {
-                                            return sendRequest(apiurl + "/employeedata/" + reqid , "DELETE");
-                                        });
-                                    }).then(function(response) {
-                                        if (response.status != 'error') {
-                                            dataGrid.refresh();
-                                        }
-                                    }).fail(function(error) {
-                                        console.error("An error occurred:", error);
-                                    });
-                                    dataGrid.refresh();
-                                } else {
-                                    alert('Cancelled.');
-                                }
-
                         }).appendTo(container);
                     }
                 }
@@ -318,7 +248,6 @@ checkUserAccess(modname, usersid).then(permissions => {
                     displayExpr: 'fullname',
                 },
                 width: 150,
-                // validationRules: [{ type: "required" }]
             },
             {
                 caption: 'Department Head',
@@ -778,11 +707,12 @@ checkUserAccess(modname, usersid).then(permissions => {
             console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
             // Memuat ulang Page
-            // location.reload();
+            location.reload();
         }
     }).dxDataGrid("instance");
 
-    function runpopup(options) {
+    function runpopup(options,mode) {
+        var mode = (mode == 1) ? "Create" : "Delete";
         popup = $('#popup').dxPopup({
             contentTemplate: popupContentTemplate,
             width: 600,
@@ -815,11 +745,8 @@ checkUserAccess(modname, usersid).then(permissions => {
                                 DevExpress.ui.dialog.alert("Please Select an Employee", "error");
                                 return false;
                             }
-                            // console.log("Selected ID:", selectedValue);
-                            // console.log(options.data);
-                            // console.log("Selected employeeid:", options.data.id);
 
-                            var result = confirm('Are you sure you want to Create Active Directory "'+options.data.FullName+'" and send this submission ?');
+                            var result = confirm('Are you sure you want to '+mode+' Active Directory "'+options.data.FullName+'" and send this submission ?');
 
                                 if (result) {
                                     showLoadingScreen();
@@ -828,7 +755,7 @@ checkUserAccess(modname, usersid).then(permissions => {
                                         return sendRequest(apiurl + "/adrequest", "POST", {
                                             employee_id: options.data.id,
                                             pic_empid: selectedValue,
-                                            requestType: 'Create Account'
+                                            requestType: mode+' Account'
                                         });
                                     }).then(function(response) {
                                         const dataid = response.data.id;
@@ -876,8 +803,6 @@ checkUserAccess(modname, usersid).then(permissions => {
     }
     
     const popupContentTemplate = function (reqid,options) {
-        // console.log(reqid)
-        // console.log(options)
     
         const scrollView = $('<div />');
     
