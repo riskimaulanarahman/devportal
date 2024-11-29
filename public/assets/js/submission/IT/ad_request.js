@@ -1239,7 +1239,7 @@ function btnreqsubmit(reqid,mode) {
         var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
         var valremarks = $('#remarks').val(); // mengambil nilai dari text area
 
-        if(isIT == 1) {
+        if(isIT == 1 && valapprovalAction == 3) { // if IT and approval action approved
             // Validate DataGrid for null values in accessType and accountType
             var dataGridInstance = $("#formdata2").dxDataGrid("instance");
             var dataSource = dataGridInstance.getDataSource().items();
