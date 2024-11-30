@@ -148,6 +148,7 @@
         //submission/MMF
         '/mmf_28_request': 'submission/MMF/28_request.js',
         '/mmf_30_request': 'submission/MMF/30_request.js',
+        '/mmf_30_report': 'submission/MMF/30_report.js',
         '/material_request': 'submission/MMF/material_request.js',
     }
     

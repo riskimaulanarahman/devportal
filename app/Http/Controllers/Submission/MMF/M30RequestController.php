@@ -144,24 +144,18 @@ class M30RequestController extends Controller
     public function report(Request $request)
     {
         try {
-            
-            // $id = $request->id;
-            // $user_id = $this->getAuth()->id;
-            // $employee_id = $this->getEmployeeID()->id;
-            // $module_id = $this->getModuleId($this->modulename);
 
             $data = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
                     request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason
                 ")
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
-                ->leftJoin('tbl_approverListReq', 'request_mmf.id', '=', 'tbl_approverListReq.req_id')
-                ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                // ->leftJoin('tbl_approverListReq', 'request_mmf.id', '=', 'tbl_approverListReq.req_id')
+                // ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
                 ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
                 ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
                 ->where('request_mmf.category', 'MMF30')
-                ->whereIn('request_mmf.requestStatus', [1,2,3,4])
-                // ->where('tbl_approverListReq.module_id', $module_id)
-                // ->where('tbl_approver.employee_id', $employee_id)
+                ->whereIn('request_mmf.requestStatus', [3])
+                ->orderBy('created_at','desc')
                 ->with(['user'])
             ->get();
 
