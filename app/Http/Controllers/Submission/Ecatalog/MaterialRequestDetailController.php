@@ -57,6 +57,10 @@ class MaterialRequestDetailController extends Controller
             $requestData['unit_price'] = $listCatalog->historicalPrice;
             $requestData['amount'] = $listCatalog->historicalPrice*$request->order;
 
+            if($listCatalog->historicalPrice == 0) {
+                return response()->json(["status" => "error", "message" => "The historical price cannot be zero. Please choose a valid price or reach out to procurement staff for assistance."]);
+            }
+
             // $this->addOneDayToDate($requestData);
 
             $this->model->create($requestData);
@@ -112,6 +116,10 @@ class MaterialRequestDetailController extends Controller
 
             $amount = (isset($request->order)) ? $request->order : $data->order;
             $requestData['amount'] = $listCatalog->historicalPrice*$amount;
+
+            if($listCatalog->historicalPrice == 0) {
+                return response()->json(["status" => "error", "message" => "The historical price cannot be zero. Please choose a valid price or reach out to procurement staff for assistance."]);
+            }
 
             // $this->addOneDayToDate($requestData);
 
