@@ -603,7 +603,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
                     
                             // Memuat ulang DataGrid
-                            // dataGrid1.refresh();
+                            dataGrid1.refresh();
                         }
                     }).appendTo(infoContent2)
 
@@ -668,7 +668,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Cost Code',
                                 dataField: 'detail30.CostCode',
-                                // validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Reason for requisition/purchase',
@@ -740,7 +739,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             console.log("Terjadi kesalahan saat memuat data (1.1.2):", e.error.message);
                     
                             // Memuat ulang DataGrid
-                            // dataGrid11.refresh();
+                            dataGrid11.refresh();
                         }
                     })
 
