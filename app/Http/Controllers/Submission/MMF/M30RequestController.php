@@ -149,8 +149,6 @@ class M30RequestController extends Controller
                     request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason
                 ")
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
-                // ->leftJoin('tbl_approverListReq', 'request_mmf.id', '=', 'tbl_approverListReq.req_id')
-                // ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
                 ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
                 ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
                 ->where('request_mmf.category', 'MMF30')

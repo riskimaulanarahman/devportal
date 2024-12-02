@@ -1,4 +1,5 @@
-var modname = 'mmf30report';
+var modnameindex = 'mmf30report';
+var modname = 'mmf30request';
 var modelclass = 'Mmf';
 var popupmode;
 
@@ -25,7 +26,7 @@ reqType = [
 
 
 var dataGrid = $("#gridContainer").dxDataGrid({    
-    dataSource: store(modname),
+    dataSource: store(modnameindex),
     allowColumnReordering: true,
     allowColumnResizing: true,
     columnHidingEnabled: true,
@@ -244,228 +245,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     }
 }).dxDataGrid("instance");
 
-$('#HistoryButton').on('click',function(){
-    var dataGridhistory = $("#historyMMF30").dxDataGrid({    
-        dataSource: store('mmf30historyApp'),
-        allowColumnReordering: true,
-        allowColumnResizing: true,
-        columnHidingEnabled: true,
-        rowAlternationEnabled: false,
-        wordWrapEnabled: true,
-        autoExpandAll: true,
-        showBorders: true,
-        filterRow: { visible: true },
-        filterPanel: { visible: true },
-        headerFilter: { visible: true },
-        searchPanel: {
-            visible: true,
-            width: 240,
-            placeholder: 'Search...',
-        },
-        editing: {
-            useIcons:true,
-            mode: "popup",
-            allowAdding: false,
-            allowUpdating: false,
-            allowDeleting: true,
-        },
-        scrolling: {
-            mode: "virtual"
-        },
-        pager: {
-            visible: false,
-            showInfo: true,
-        },
-        columns: [
-            {
-                caption: 'Action',
-                width: 140,
-                cellTemplate: function(container, options) {
-
-                    var isMine = options.data.isMine;
-                    var isPendingOnMe = options.data.isPendingOnMe;
-                    var reqid = options.data.id;
-                    var reqstatus = options.data.requestStatus;
-                    var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-                    var arrColor = [
-                        "btn-secondary",
-                        (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                        "btn-warning",
-                        "btn-success",
-                        "btn-danger",
-                    ];
-
-                    var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
-        
-                    $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
-                    
-                                popup.option({
-                                    contentTemplate: () => popupContentTemplate(reqid,mode,options),
-                                });
-                                popup.show();
-
-                    }).appendTo(container);
-                    if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                        $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-                            evt.stopPropagation();
-                                
-                            var result = confirm('Are you sure you want to cancel this submission ?');
-
-                            if (result) {
-                                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                    requestStatus:0,
-                                    action:'submission',
-                                    approvalAction: 0
-                                }).then(function(response){
-                                    if(response.status != 'error') {
-                                        dataGrid.refresh();
-                                    }
-                                });
-                            } else {
-                                alert('Cancelled.');
-                            }
-        
-                        }).appendTo(container); 
-                    }
-                
-                }
-            },
-            {
-                caption: "Code",
-                dataField: 'code',
-                width: 180,
-            },
-            { 
-                caption: 'BU',
-                dataField: "bu",
-                width: 80
-            },
-            { 
-                caption: 'PR Type',
-                dataField: "PRType",
-                width: 200,
-                lookup: { 
-                    dataSource: prType,  
-                    valueExpr: 'id',
-                    displayExpr: 'name',
-                },
-            },
-            { 
-                caption: 'Requisition Material',
-                dataField: "RequisitionType",
-                width: 200,
-                lookup: { 
-                    dataSource: reqType,  
-                    valueExpr: 'id',
-                    displayExpr: 'name',
-                },
-            },
-            { 
-                dataField: "Reason",
-                width: 180
-            },
-            { 
-                caption: 'Creator Name',
-                dataField: "user.fullname",
-                width: 180
-            },
-            { 
-                caption: 'Employee Name',
-                dataField: "employee_name",
-                width: 180
-            },
-            {
-                dataField: 'requestStatus',
-                encodeHtml: false,
-                allowFiltering: false,
-                allowHeaderFiltering: true,
-                customizeText: function (e) {
-                    var arrText = [
-                        "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                        "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                        "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                        "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                        "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                    ];
-                    return arrText[e.value];
-                },
-            },
-            {
-                dataField: "approveddoc",
-                caption:"Approval Doc",
-                allowFiltering: false,
-                allowSorting: false,
-                formItem: { visible: false},
-                cellTemplate: function (container, options) {
-                    var value = options.value;
-                    var origin = window.location.origin;
-                    if (value && value.includes('doc')) {
-                        var baseUrl = origin + '/oasys/';
-                    } else {
-                        var baseUrl = origin + '/devportal/';
-                    }
-                    var fullUrl = baseUrl + value;
-                    if ((value!="") && (value)){
-                        $("<div />").dxButton({
-                            icon: 'download',
-                            type: "success",
-                            text: "Download",
-                            onClick: function (e) {
-                                window.open(fullUrl, '_blank');
-
-                            }
-                        }).appendTo(container);
-                    }
-                }
-            },
-        
-        ],
-        columnChooser: {
-        enabled: true,
-        },
-        export: {
-            enabled: true,
-            fileName: modname,
-            excelFilterEnabled: true,
-            allowExportSelectedData: true
-        },
-        onContentReady: function(e){
-            moveEditColumnToLeft(e.component);
-            runpopup();
-        },
-        onCellPrepared: function (e) {
-            if (e.rowType == "data") {
-                if(e.data.isParent === 1) {
-                    e.cellElement.css('background','rgba(128, 128, 0,0.1)')
-                }
-            }
-        },
-        onToolbarPreparing: function(e) {
-            dataGridhistory = e.component;
-
-            e.toolbarOptions.items.unshift({						
-                location: "after",
-                widget: "dxButton",
-                options: {
-                    hint: "Refresh Data",
-                    icon: "refresh",
-                    onClick: function() {
-                        dataGridhistory.refresh();
-                    }
-                }
-            })
-        },
-        onDataErrorOccurred: function(e) {
-            // Menampilkan pesan kesalahan
-            console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-            // Memuat ulang Page
-            dataGridhistory.refresh();
-        }
-    }).dxDataGrid("instance");
-})
-
 $('#btnadd').on('click',function(){
     showLoadingScreen();
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
@@ -541,7 +320,7 @@ const popupContentTemplate = function (reqid,mode,options) {
     var isPendingOnMe = options.data.isPendingOnMe;
     isProcHead = options.data.isProcHead;
     isBuyer = options.data.isBuyer;
-    var detail30id = options.data.detail30.id;
+    // var detail30id = options.data.detail30.id;
 
     var validationRules = [];
     var visibleRulesReqType = false;
@@ -846,7 +625,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
                     
                             // Memuat ulang DataGrid
-                            dataGrid1.refresh();
+                            // dataGrid1.refresh();
                         }
                     }).appendTo(infoContent2)
 
@@ -983,7 +762,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             console.log("Terjadi kesalahan saat memuat data (1.1.2):", e.error.message);
                     
                             // Memuat ulang DataGrid
-                            dataGrid11.refresh();
+                            // dataGrid11.refresh();
                         }
                     })
 
@@ -1130,259 +909,259 @@ const popupContentTemplate = function (reqid,mode,options) {
                         }
                     })
                 }
-                else if(data.ID == 6) {
-                    return formData = $("<div id='formdetail'>").dxDataGrid({    
-                        dataSource: storewithmodule('mmf30detail',modelclass,detail30id),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        showColumnLines:true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: true,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        sorting: {
-                            mode: "none" // or "multiple" | "none"
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "cell",
-                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || (mode == 'approval' && isBuyer) ? true : false),
-                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                        },
-                        scrolling: {
-                            rowRenderingMode: 'virtual',
-                        },
-                        paging: {
-                            pageSize: 15,
-                        },
-                        pager: {
-                            visible: true,
-                            allowedPageSizes: [5, 15, 'all'],
-                            showPageSizeSelector: true,
-                            showInfo: true,
-                            showNavigationButtons: true,
-                        },
-                        columns: [
-                            {
-                                dataField: 'MaterialCode',
-                                dataType: "string",
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                            {
-                                dataField: 'MaterialDescr',
-                                dataType: "string",
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                            {
-                                dataField: 'PartNumber',
-                                dataType: 'string',
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: 'Brand/Manufacturer',
-                                dataField: 'BrandManufacturer',
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                // else if(data.ID == 6) {
+                //     return formData = $("<div id='formdetail'>").dxDataGrid({    
+                //         dataSource: storewithmodule('mmf30detail',modelclass,detail30id),
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         showColumnLines:true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: true,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         sorting: {
+                //             mode: "none" // or "multiple" | "none"
+                //         },
+                //         editing: {
+                //             useIcons:true,
+                //             mode: "cell",
+                //             allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //             allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || (mode == 'approval' && isBuyer) ? true : false),
+                //             allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //         },
+                //         scrolling: {
+                //             rowRenderingMode: 'virtual',
+                //         },
+                //         paging: {
+                //             pageSize: 15,
+                //         },
+                //         pager: {
+                //             visible: true,
+                //             allowedPageSizes: [5, 15, 'all'],
+                //             showPageSizeSelector: true,
+                //             showInfo: true,
+                //             showNavigationButtons: true,
+                //         },
+                //         columns: [
+                //             {
+                //                 dataField: 'MaterialCode',
+                //                 dataType: "string",
+                //                 editorOptions: { 
+                //                     // readOnly: ((mode == 'approval') ? true : false),
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 dataField: 'MaterialDescr',
+                //                 dataType: "string",
+                //                 editorOptions: { 
+                //                     // readOnly: ((mode == 'approval') ? true : false),
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 dataField: 'PartNumber',
+                //                 dataType: 'string',
+                //                 editorOptions: { 
+                //                     // readOnly: ((mode == 'approval') ? true : false),
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'Brand/Manufacturer',
+                //                 dataField: 'BrandManufacturer',
+                //                 editorOptions: { 
+                //                     // readOnly: ((mode == 'approval') ? true : false),
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
 
-                                }
-                            },
-                            {
-                                dataField: 'Qty',
-                                dataType: "number",
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 dataField: 'Qty',
+                //                 dataType: "number",
+                //                 editorOptions: { 
+                //                     // readOnly: ((mode == 'approval') ? true : false),
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
 
-                                }
-                            },
-                            {
-                                caption: 'Unit',
-                                dataField: 'Unit',
-                                lookup: {
-                                    dataSource: listOption('/list-unit','id','nama'),  
-                                    valueExpr: 'nama',
-                                    displayExpr: 'nama'
-                                },
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: 'Currency',
-                                dataField: 'Currency',
-                                lookup: {
-                                    dataSource: listOption('/list-currency','id','nama'),  
-                                    valueExpr: 'nama',
-                                    displayExpr: 'nama'
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: "Unit Price",
-                                dataField:'UnitPrice',
-                                dataType: "number",
-                                format: "fixedPoint",
-                                editorOptions: {
-                                    format: "fixedPoint",
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: "Extended Price",
-                                dataField:'ExtendedPrice',
-                                dataType: "number",
-                                format: "fixedPoint",
-                                editorOptions: {
-                                    format: "fixedPoint",
-                                    // readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
-                                    readOnly: true,
-                                }
-                            },
-                            {
-                                caption: "Remarks",
-                                dataField:'Remarks',
-                                dataType: "string",
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGriddetail = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                                // e.component.columnOption('Action', 'visible', true);
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGriddetail.refresh();
-                                    }
-                                }
-                            });
-                        },
-                        onEditorPrepared: function (e) {
-                        },
-                        onEditorPreparing: function (e) {
-                            if ((e.dataField == "Unit") && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";                
-                                e.editorOptions.dropDownOptions = {                
-                                    height: 500,
-                                    width: 600,
-                                    valueExpr: 'nama',
-                                    displayExpr: 'nama'
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'Unit',
+                //                 dataField: 'Unit',
+                //                 lookup: {
+                //                     dataSource: listOption('/list-unit','id','nama'),  
+                //                     valueExpr: 'nama',
+                //                     displayExpr: 'nama'
+                //                 },
+                //                 editorOptions: { 
+                //                     // readOnly: ((mode == 'approval') ? true : false),
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'Currency',
+                //                 dataField: 'Currency',
+                //                 lookup: {
+                //                     dataSource: listOption('/list-currency','id','nama'),  
+                //                     valueExpr: 'nama',
+                //                     displayExpr: 'nama'
+                //                 },
+                //                 editorOptions: { 
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 caption: "Unit Price",
+                //                 dataField:'UnitPrice',
+                //                 dataType: "number",
+                //                 format: "fixedPoint",
+                //                 editorOptions: {
+                //                     format: "fixedPoint",
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                //                 }
+                //             },
+                //             {
+                //                 caption: "Extended Price",
+                //                 dataField:'ExtendedPrice',
+                //                 dataType: "number",
+                //                 format: "fixedPoint",
+                //                 editorOptions: {
+                //                     format: "fixedPoint",
+                //                     // readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
+                //                     readOnly: true,
+                //                 }
+                //             },
+                //             {
+                //                 caption: "Remarks",
+                //                 dataField:'Remarks',
+                //                 dataType: "string",
+                //                 editorOptions: { 
+                //                     readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
+                //                 }
+                //             },
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGriddetail = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //                 // e.component.columnOption('Action', 'visible', true);
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGriddetail.refresh();
+                //                     }
+                //                 }
+                //             });
+                //         },
+                //         onEditorPrepared: function (e) {
+                //         },
+                //         onEditorPreparing: function (e) {
+                //             if ((e.dataField == "Unit") && e.parentType == "dataRow") {
+                //                 e.editorName = "dxDropDownBox";                
+                //                 e.editorOptions.dropDownOptions = {                
+                //                     height: 500,
+                //                     width: 600,
+                //                     valueExpr: 'nama',
+                //                     displayExpr: 'nama'
+                //                 };
+                //                 e.editorOptions.contentTemplate = function (args, container) {
                     
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
-                                            dataSource: args.component.option("dataSource"),
-                                            keyExpr: "nama",
-                                            columns: ["nama","detail"],
-                                            scrolling: {
-                                                mode: "virtual"
-                                            },
-                                            pager: {
-                                                visible: false,
-                                                showInfo: true,
-                                            },
-                                            hoverStateEnabled: true,
-                                            paging: { enabled: true, pageSize: 10 },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: value,
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const datas = selectedItems.selectedRowsData;
-                                                // console.log(datas)
-                                                const hasSelection = datas.length;
-                                                // console.log(hasSelection)
+                //                     var value = args.component.option("value"),
+                //                         $dataGrid = $("<div>").dxDataGrid({
+                //                             width: '100%',
+                //                             dataSource: args.component.option("dataSource"),
+                //                             keyExpr: "nama",
+                //                             columns: ["nama","detail"],
+                //                             scrolling: {
+                //                                 mode: "virtual"
+                //                             },
+                //                             pager: {
+                //                                 visible: false,
+                //                                 showInfo: true,
+                //                             },
+                //                             hoverStateEnabled: true,
+                //                             paging: { enabled: true, pageSize: 10 },
+                //                             filterRow: { visible: true },
+                //                             height: '90%',
+                //                             showRowLines: true,
+                //                             showBorders: true,
+                //                             selection: { mode: "single" },
+                //                             selectedRowKeys: [value],
+                //                             focusedRowEnabled: true,
+                //                             focusedRowKey: value,
+                //                             searchPanel: {
+                //                                 visible: true,
+                //                                 width: 265,
+                //                                 placeholder: "Search..."
+                //                             },
+                //                             onSelectionChanged: function (selectedItems) {
+                //                                 const keys = selectedItems.selectedRowKeys;
+                //                                 const datas = selectedItems.selectedRowsData;
+                //                                 // console.log(datas)
+                //                                 const hasSelection = datas.length;
+                //                                 // console.log(hasSelection)
 
-                                                // args.component.option('value', hasSelection > 0 ? datas[0]['nama'] : null);
-                                                if(hasSelection !== 0) {
-                                                    args.component.option('value', datas[0]['nama']);
-                                                    args.component.close();
-                                                }
-                                            }
-                                        });
-                                    // console.log(value)
+                //                                 // args.component.option('value', hasSelection > 0 ? datas[0]['nama'] : null);
+                //                                 if(hasSelection !== 0) {
+                //                                     args.component.option('value', datas[0]['nama']);
+                //                                     args.component.close();
+                //                                 }
+                //                             }
+                //                         });
+                //                     // console.log(value)
                     
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                //                     var dataGrid = $dataGrid.dxDataGrid("instance");
                     
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
+                //                     args.component.on("valueChanged", function (args) {
+                //                         var value = args.value;
                     
-                                        dataGrid.selectRows(value, false);
-                                    });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
+                //                         dataGrid.selectRows(value, false);
+                //                     });
+                //                     container.append($dataGrid);
+                //                     $("<div>").dxButton({
+                //                         text: "Close",
                     
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
+                //                         onClick: function (ev) {
+                //                             args.component.close();
+                //                         }
+                //                     }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                //                     return container;
                     
-                                };
-                            }
-                        },
-                        onCellPrepared: function (e) {
-                        },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                //                 };
+                //             }
+                //         },
+                //         onCellPrepared: function (e) {
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //             // Menampilkan pesan kesalahan
+                //             console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGriddetail.refresh();
-                        }
-                    })
-                }
+                //             // Memuat ulang DataGrid
+                //             dataGriddetail.refresh();
+                //         }
+                //     })
+                // }
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
                         dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
