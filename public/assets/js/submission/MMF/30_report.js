@@ -113,12 +113,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             
             }
         },
-        { 
-            caption: 'Created At',
-			dataField: "created_at",
-            dataType: "date",
-            width: 180
-        },
         {
             caption: "Code",
             dataField: 'code',
@@ -238,6 +232,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         e.toolbarOptions.items.unshift(
             {
                 location: "after",
+                widget: "dxTextBox",
+                options: {
+                    value: "Start Date :",
+                    readOnly: true,
+                }
+            },
+            {
+                location: "after",
                 widget: "dxDateBox",
                 options: {
                     hint: "Start Date",
@@ -249,6 +251,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         endDateBox.option("value", endDate); // Clear end date box
                         filterData();
                     }
+                }
+            },
+            {
+                location: "after",
+                widget: "dxTextBox",
+                options: {
+                    value: "End Date :",
+                    readOnly: true,
                 }
             },
             {
