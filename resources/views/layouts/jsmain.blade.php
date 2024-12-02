@@ -107,6 +107,43 @@
         $('#loading-screen').fadeOut();
     }
 
+    function getStartAndEndDateOfMonth() {
+        // Get today's date
+        var today = new Date();
+
+        // Get year and month
+        var year = today.getFullYear();
+        var month = today.getMonth(); // Note: months are 0-based in JavaScript
+
+        // Start of the month
+        var startOfMonth = new Date(year, month, 1);
+
+        // End of the month
+        var endOfMonth = new Date(year, month + 1, 0); // 0 means last day of the previous month
+
+        // Format dates to Y-m-d
+        var formatDate = function(date) {
+            var y = date.getFullYear();
+            var m = String(date.getMonth() + 1).padStart(2, '0'); // Pad with zero if needed
+            var d = String(date.getDate()).padStart(2, '0'); // Pad with zero if needed
+            return `${y}-${m}-${d}`;
+        };
+
+        return {
+            today: formatDate(today),
+            startOfMonth: formatDate(startOfMonth),
+            endOfMonth: formatDate(endOfMonth)
+        };
+    }
+
+    function formatDate(date) { // format date y-m-d
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     const jsFiles = {
         //admin
         '/module': 'admin/module.js',

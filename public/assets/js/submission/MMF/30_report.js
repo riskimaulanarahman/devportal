@@ -10,6 +10,8 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
+var dates = getStartAndEndDateOfMonth();
+
 prType = [
     { id: 1, name: "Normal PR" },
     { id: 2, name: "Urgent PR" },
@@ -26,7 +28,7 @@ reqType = [
 
 
 var dataGrid = $("#gridContainer").dxDataGrid({    
-    dataSource: store(modnameindex),
+    dataSource: storereport(modnameindex,dates.startOfMonth,dates.endOfMonth),
     allowColumnReordering: true,
     allowColumnResizing: true,
     columnHidingEnabled: true,
@@ -111,6 +113,12 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             
             }
         },
+        { 
+            caption: 'Created At',
+			dataField: "created_at",
+            dataType: "date",
+            width: 180
+        },
         {
             caption: "Code",
             dataField: 'code',
@@ -155,6 +163,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 			dataField: "employee_name",
             width: 180
         },
+        
         {
             dataField: 'requestStatus',
             encodeHtml: false,
@@ -224,17 +233,52 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
 
-        e.toolbarOptions.items.unshift({						
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function() {
-                    dataGrid.refresh();
+        let endDateBox;
+
+        e.toolbarOptions.items.unshift(
+            {
+                location: "after",
+                widget: "dxDateBox",
+                options: {
+                    hint: "Start Date",
+                    displayFormat: "dd/MM/yyyy",
+                    value: dates.startOfMonth,
+                    onValueChanged: function(e) {
+                        startDate = e.value;
+                        endDate = null; // Reset end date when start date changes
+                        endDateBox.option("value", endDate); // Clear end date box
+                        filterData();
+                    }
+                }
+            },
+            {
+                location: "after",
+                widget: "dxDateBox",
+                options: {
+                    hint: "End Date",
+                    displayFormat: "dd/MM/yyyy",
+                    value: dates.endOfMonth,
+                    onValueChanged: function(e) {
+                        endDate = e.value;
+                        filterData();
+                    },
+                    onInitialized: function(e) {
+                        endDateBox = e.component; // Save reference to end date box
+                    }
+                }
+            },
+            {						
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    hint: "Refresh Data",
+                    icon: "refresh",
+                    onClick: function() {
+                        dataGrid.refresh();
+                    }
                 }
             }
-        })
+        )
     },
     onDataErrorOccurred: function(e) {
         // Menampilkan pesan kesalahan
@@ -244,6 +288,34 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         location.reload();
     }
 }).dxDataGrid("instance");
+
+var startDate;
+var endDate;
+
+function filterData() {
+    var filter = [];
+
+    var formattedStartDate = formatDate(startDate);
+    var formattedEndDate = formatDate(endDate);
+
+    if (startDate && endDate) {
+
+        if (new Date(startDate) <= new Date(endDate)) {
+            filter.push(["created_at", ">=", formattedStartDate]);
+            filter.push(["created_at", "<=", formattedEndDate]);
+        } else {
+            DevExpress.ui.dialog.alert("startDate cannot be later than endDate.", "error")
+            return;
+        }
+    }
+
+    if(filter.length == 2) {
+        console.log('run')
+        dataGrid.option("dataSource", storereport(modnameindex, formattedStartDate, formattedEndDate));
+        dataGrid.refresh();
+    }
+
+}
 
 
 const accordionItems = [

@@ -33,6 +33,11 @@ class M30RequestController extends Controller
         $this->user = new User();
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('d-m-Y H:i'); // Mengubah format tanggal
+    }
+
     public function index(Request $request)
     {
         try {
@@ -144,18 +149,38 @@ class M30RequestController extends Controller
     public function report(Request $request)
     {
         try {
-
-            $data = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
+            $startDate = $request->input('startDate');
+            $endDate = $request->input('endDate');
+            
+            $query = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
                     request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason
                 ")
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
                 ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
                 ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
                 ->where('request_mmf.category', 'MMF30')
-                ->whereIn('request_mmf.requestStatus', [3])
-                ->orderBy('created_at','desc')
-                ->with(['user'])
-            ->get();
+                ->whereIn('request_mmf.requestStatus', [3]);
+                // ->orderBy('created_at','desc')
+                // ->with(['user'])
+            // ->get();
+
+            // Tambahkan filter berdasarkan tanggal yang diterima
+            // if ($request->startDate) {
+            //     $query->where('request_mmf.created_at', '>=', $request->start_date);
+            // }
+            // if ($request->end_date) {
+            //     $query->where('request_mmf.created_at', '<=', $request->end_date);
+            // }
+            if ($startDate && $endDate) {
+                $query->whereBetween('request_mmf.created_at', [$startDate, $endDate]);
+            }
+            $data = $query->orderBy('created_at', 'desc')->with(['user'])->get();
+
+
+            // $data->transform(function ($item) {
+            //     $item->created_at = Carbon::parse($item->created_at)->format('d-m-Y');
+            //     return $item;
+            // });
 
             return response()->json([
                 'status' => "show",

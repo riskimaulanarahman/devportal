@@ -74,6 +74,26 @@
         return storedetail;
     }
 
+    function storereport(module,startDate,endDate) {
+        var store = new DevExpress.data.CustomStore({
+            key: "id",
+            load: function() {
+                return sendRequest(apiurl + "/"+module+ "?startDate=" + startDate + "&endDate=" + endDate);
+            },
+            insert: function(values) {
+                return sendRequest(apiurl + "/"+module, "POST", values);
+            },
+            update: function(key, values) {
+                return sendRequest(apiurl + "/"+module+"/"+key, "PUT", values);
+            },
+            remove: function(key) {
+                return sendRequest(apiurl + "/"+module+"/"+key, "DELETE");
+            },
+        });
+
+        return store;
+    }
+
     function sendRequest(url, method, data) {
         var d = $.Deferred();
 
