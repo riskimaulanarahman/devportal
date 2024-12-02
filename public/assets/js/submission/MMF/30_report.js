@@ -245,28 +245,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     }
 }).dxDataGrid("instance");
 
-$('#btnadd').on('click',function(){
-    showLoadingScreen();
-    sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
-        const reqid = response.data.id;
-        const mode = 'add';
-        const options = {
-            "data": 
-            {
-                "isMine": 1,
-                "detail30": 
-                {
-                    "id":response.data.detail30.id
-                }
-            }
-        };
-        popup.option({
-            contentTemplate: () => popupContentTemplate(reqid,mode,options),
-        });
-        popup.show();
-        hideLoadingScreen();
-    });
-})
 
 const accordionItems = [
     {
@@ -1519,59 +1497,6 @@ const popupContentTemplate = function (reqid,mode,options) {
 
 };
 
-function btnreqsubmit(reqid,mode) {
-    var btnSubmit = $('#btn-submit');
-    var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
-    var valremarks = $('#remarks').val(); // mengambil nilai dari text area
-    
-    if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
-        var fieldsToCheckGrid = [
-            { field: 'Buyer', name: 'Buyer' },
-        ]
-    } else {
-        if(mode !== 'approval') {
-            var fieldsToCheckGrid = [
-                { field: 'PRType', name: 'PR Type' },
-                { field: 'RequisitionType', name: 'Requisition Material' },
-                { field: 'Reason', name: 'Reason for requisition/purchase' },
-                { field: 'RemarksU', name: 'Remarks' },
-            ];
-        }
-    }
-
-    sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/Mmf30", "POST", {
-        fieldsToCheckGrid
-    }).then(function(response){
-        if(response.status !== 'error') {
-
-            btnSubmit.prop('disabled', true);
-
-            var actionForm = (mode == 'approval') ? 'approval' : 'submission';
-
-            if(mode == 'approval') {
-                
-                if (!valapprovalAction) {
-                    DevExpress.ui.dialog.alert("Please select approval action.", "Warning");
-                    btnSubmit.prop('disabled', false);
-                    return false;
-                }
-                else if (!valremarks) {
-                    DevExpress.ui.dialog.alert("Please enter remarks.", "Warning");
-                    btnSubmit.prop('disabled', false);
-                    return false;
-                }
-                
-            }
-
-            var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
-
-            confirmAndSendSubmission(reqid, modelclass, actionForm, valapprovalAction, valApprovalType, valremarks);
-       
-        }
-    });
-
-}
-
 function runpopup() {
     popup = $('#popup').dxPopup({
         contentTemplate: popupContentTemplate,
@@ -1623,7 +1548,6 @@ function runpopup() {
 
     }).dxPopup('instance');
 }
-
 
 function cellTemplate(container, options) {
     var value = options.value ? options.value.trim() : '';
