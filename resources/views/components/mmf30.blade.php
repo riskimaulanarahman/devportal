@@ -22,6 +22,6 @@
     document.getElementById('HistoryButton').addEventListener('click', function() {
         var HistoryModal = new bootstrap.Modal(document.getElementById('HistoryModal'));
         HistoryModal.show();
-        dataGridhistory.refresh();
+        // dataGridhistory.refresh();
     });
 </script>

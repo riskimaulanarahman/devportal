@@ -310,11 +310,11 @@ class SubmissionMail extends Mailable
                 $request = new Request();
                 $adController = new ADRequestController();
                 if($final == 1) {
-                    $getempPIC = Employee::where('id',$mailData['submission']->pic_empid)->first();
-                    $getPIC = User::where('username',$getempPIC->LoginName)->first();
                     $pdf = $adController->genPdfAD($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
-                    if (!empty($getPIC)) {
+                    if(!empty($mailData['submission']->pic_empid)) {
+                        $getempPIC = Employee::where('id',$mailData['submission']->pic_empid)->first();
+                        $getPIC = User::where('username',$getempPIC->LoginName)->first();
                         $this->to($getPIC->email);
                     }
                     foreach ($Mailrecipient as $cc) {
