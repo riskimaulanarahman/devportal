@@ -187,6 +187,8 @@
         '/mmf_30_request': 'submission/MMF/30_request.js',
         '/mmf_30_report': 'submission/MMF/30_report.js',
         '/material_request': 'submission/MMF/material_request.js',
+        //submission/Advance
+        '/advance_request': 'submission/Financial/Advance/advance_request.js',
     }
     
     const pathname = window.location.pathname;

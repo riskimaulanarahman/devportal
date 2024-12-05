@@ -16,14 +16,21 @@ Route::group(['prefix' => 'api'], function () {
         'momtaskdetail' => App\Http\Controllers\Submission\MomTaskDetailController::class,
         'momtaskbound' => App\Http\Controllers\Submission\MomTaskBoundController::class,
         'momtaskupdate' => App\Http\Controllers\Submission\MomTaskUpdateController::class,
+        // BCID - JDI
         'jdirequest' => App\Http\Controllers\Submission\JdiRequestController::class,
         'jdireport' => App\Http\Controllers\Submission\JdiReportController::class,
+        // IT - Active Directory
         'adrequest' => App\Http\Controllers\Submission\IT\ADRequestController::class,
+        // procurement - mmf
         'mmf28request' => App\Http\Controllers\Submission\MMF\M28RequestController::class,
         'mmf30request' => App\Http\Controllers\Submission\MMF\M30RequestController::class,
         'mmf30detail' => App\Http\Controllers\Submission\MMF\M30RequestDetailController::class,
+        // procurement - material
         'materialrequest' => App\Http\Controllers\Submission\Ecatalog\MaterialRequestController::class,
         'materialdetail' => App\Http\Controllers\Submission\Ecatalog\MaterialRequestDetailController::class,
+        // financial - advance
+        'advancerequest' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class,
+        'advancedetail' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -46,12 +53,20 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('momtaskdetail/{id}/{modulename}',[App\Http\Controllers\Submission\MomTaskDetailController::class, 'getList']); //get list momtaskdetail by req_id of module
     Route::get('momtaskbound/{id}/{modulename}',[App\Http\Controllers\Submission\MomTaskBoundController::class, 'getList']); //get list momtaskbound by req_id of module
     Route::get('momtaskupdate/{id}/{modulename}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'getList']); //get list momtaskbound by req_id of module
-    // MMF 30
+    // procurement - MMF 30
     Route::get('mmf30detail/{id}/{modulename}',[App\Http\Controllers\Submission\MMF\M30RequestDetailController::class, 'getList']); //get list mmf30 by req_id of module
     Route::get('mmf30historyApp',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'historyApprover']); //get list mmf30historyApp of module
     Route::get('mmf30report',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'report']); //get list report of module
-    // eCatalog
+    // procurement - MMF 30
+    Route::get('mmf30detail/{id}/{modulename}',[App\Http\Controllers\Submission\MMF\M30RequestDetailController::class, 'getList']); //get list mmf30 by req_id of module
+    Route::get('mmf30historyApp',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'historyApprover']); //get list mmf30historyApp of module
+    Route::get('mmf30report',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'report']); //get list report of module
+    // procurement - material (eCatalog)
     Route::get('materialdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Ecatalog\MaterialRequestDetailController::class, 'getList']); //get list material req by req_id of module
+    // Advance
+    Route::get('advancedetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class, 'getList']); //get list advance by req_id of module
+    Route::get('advancehistoryApp',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'historyApprover']); //get list advancehistoryApp of module
+    Route::get('advancereport',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'report']); //get list report of module
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
-use App\Models\ApproverListReq;
 
 class Mmf30 extends Model
 {

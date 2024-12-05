@@ -1,5 +1,5 @@
-var modname = 'mmf30request';
-var modelclass = 'Mmf';
+var modname = 'advancerequest';
+var modelclass = 'Financial';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -120,30 +120,30 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 			dataField: "bu",
             width: 80
         },
-        { 
-            caption: 'PR Type',
-			dataField: "PRType",
-            width: 200,
-            lookup: { 
-                dataSource: prType,  
-                valueExpr: 'id',
-                displayExpr: 'name',
-            },
-        },
-        { 
-            caption: 'Requisition Material',
-			dataField: "RequisitionType",
-            width: 200,
-            lookup: { 
-                dataSource: reqType,  
-                valueExpr: 'id',
-                displayExpr: 'name',
-            },
-        },
-        { 
-			dataField: "Reason",
-            width: 180
-        },
+        // { 
+        //     caption: 'PR Type',
+		// 	dataField: "PRType",
+        //     width: 200,
+        //     lookup: { 
+        //         dataSource: prType,  
+        //         valueExpr: 'id',
+        //         displayExpr: 'name',
+        //     },
+        // },
+        // { 
+        //     caption: 'Requisition Material',
+		// 	dataField: "RequisitionType",
+        //     width: 200,
+        //     lookup: { 
+        //         dataSource: reqType,  
+        //         valueExpr: 'id',
+        //         displayExpr: 'name',
+        //     },
+        // },
+        // { 
+		// 	dataField: "Reason",
+        //     width: 180
+        // },
         { 
             caption: 'Creator Name',
 			dataField: "user.fullname",
@@ -240,7 +240,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        location.reload();
+        // location.reload();
     }
 }).dxDataGrid("instance");
 
@@ -267,7 +267,7 @@ $('#HistoryButton').on('click',function(){
             mode: "popup",
             allowAdding: false,
             allowUpdating: false,
-            allowDeleting: false,
+            allowDeleting: true,
         },
         scrolling: {
             mode: "virtual"
@@ -277,6 +277,60 @@ $('#HistoryButton').on('click',function(){
             showInfo: true,
         },
         columns: [
+            {
+                caption: 'Action',
+                width: 140,
+                cellTemplate: function(container, options) {
+
+                    var isMine = options.data.isMine;
+                    var isPendingOnMe = options.data.isPendingOnMe;
+                    var reqid = options.data.id;
+                    var reqstatus = options.data.requestStatus;
+                    var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
+                    var arrColor = [
+                        "btn-secondary",
+                        (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
+                        "btn-warning",
+                        "btn-success",
+                        "btn-danger",
+                    ];
+
+                    var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
+        
+                    $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
+                    
+                                popup.option({
+                                    contentTemplate: () => popupContentTemplate(reqid,mode,options),
+                                });
+                                popup.show();
+
+                    }).appendTo(container);
+                    if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
+                        $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
+                            evt.stopPropagation();
+                                
+                            var result = confirm('Are you sure you want to cancel this submission ?');
+
+                            if (result) {
+                                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                    requestStatus:0,
+                                    action:'submission',
+                                    approvalAction: 0
+                                }).then(function(response){
+                                    if(response.status != 'error') {
+                                        dataGrid.refresh();
+                                    }
+                                });
+                            } else {
+                                alert('Cancelled.');
+                            }
+        
+                        }).appendTo(container); 
+                    }
+                
+                }
+            },
             {
                 caption: "Code",
                 dataField: 'code',
@@ -423,7 +477,7 @@ $('#btnadd').on('click',function(){
                 "isMine": 1,
                 "detail30": 
                 {
-                    "id":response.data.detail30.id
+                    "id":response.data.detail_advance.id
                 }
             }
         };
@@ -482,12 +536,12 @@ const updateVisibleById = (itemId, visible) => {
   };
 
 const popupContentTemplate = function (reqid,mode,options) {
-    // console.log('id detail 30 : '+options.data.detail30.id);
+    // console.log('id detail : '+options.data.detail_advance.id);
     isMine = options.data.isMine;
     var isPendingOnMe = options.data.isPendingOnMe;
     isProcHead = options.data.isProcHead;
     isBuyer = options.data.isBuyer;
-    var detail30id = options.data.detail30.id;
+    var detailid = options.data.detail_advance.id;
 
     var validationRules = [];
     var visibleRulesReqType = false;
@@ -1078,7 +1132,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 6) {
                     return formData = $("<div id='formdetail'>").dxDataGrid({    
-                        dataSource: storewithmodule('mmf30detail',modelclass,detail30id),
+                        dataSource: storewithmodule('mmf30detail',modelclass,detailid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,

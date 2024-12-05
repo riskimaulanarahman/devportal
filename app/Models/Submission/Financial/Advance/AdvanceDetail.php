@@ -1,26 +1,20 @@
 <?php
 
-namespace App\Models\Submission\MMF;
+namespace App\Models\Submission\Financial\Advance;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-use App\Models\User;
-use App\Models\Code;
-
-class Mmf30detail extends Model
+class AdvanceDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'request_mmf_30_detail';
+    protected $table = 'request_f_advance_detail';
 
     protected $guarded = ['id'];
     protected $casts = [
-        'mmf30_id' => 'integer',
-        'MaterialCode' => 'string',
-        'UnitPrice' => 'integer',
-        'ExtendedPrice' => 'integer',
-        'Qty' => 'integer',
+        'advance_id' => 'integer',
+        'Amount' => 'integer',
     ];
     public static function getFillableColumns()
     {
