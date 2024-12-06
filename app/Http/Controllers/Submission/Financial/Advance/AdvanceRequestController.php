@@ -29,8 +29,10 @@ class AdvanceRequestController extends Controller
     {
         $this->model = new Financial();
         $this->modulename = 'Financial';
+        $this->submodulename = "Advance";
         $this->module = new Module();
         $this->user = new User();
+
     }
 
     public function getCreatedAtAttribute($value)
@@ -78,7 +80,7 @@ class AdvanceRequestController extends Controller
                 ")
                 ->leftJoin('codes','request_financial.code_id','codes.id')
                 ->leftJoin('employee.tbl_employee','request_financial.createdby','employee.tbl_employee.id')
-                ->leftJoin('request_f_advance', 'request_financial.id', 'request_f_advance.req_id')
+                // ->leftJoin('request_f_advance', 'request_financial.id', 'request_f_advance.req_id')
                 ->with(['user','approverlist','detailAdvance'])
                 ->where('category','Advance')
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $employee_id) {
@@ -184,8 +186,9 @@ class AdvanceRequestController extends Controller
 
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
+            $requestData['createdby'] = $this->getEmployeeID()->id;
             $requestData['employee_id'] = $this->getEmployeeID()->id;
-            $requestData['category'] = 'MMF30';
+            $requestData['category'] = $this->submodulename;
             $requestData['bu'] = $this->getEmployeeID()->companycode;
             $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
 
@@ -197,7 +200,7 @@ class AdvanceRequestController extends Controller
             $detailData['req_id'] = $req_id;
             $newData->detailAdvance()->create($detailData);
 
-            $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
+            $this->createApprManager($requestData['depthead_id'], $this->submodulename, $req_id);
 
             $newData = $this->model->with('detailAdvance')->find($newData->id);
             
@@ -290,17 +293,18 @@ class AdvanceRequestController extends Controller
 
             $this->addOneDayToDate($requestData);
 
-            $data->update($requestData);
-
-            if (isset($requestData['detailAdvance'])) {
-                $detailData = $requestData['detailAdvance'];
+            // $data->update($requestData);
+            
+            if (isset($requestData['detail_advance'])) {
+                $detailData = $requestData['detail_advance'];
                 
+                // dd($data);
                 // Cari detail berdasarkan ID, jika ada
                 $detail = $data->detailAdvance;
                 if ($detail) {
-                    if(isset($detailData['RequisitionType'])) {
-                        if($detailData['RequisitionType'] !== 5) {
-                            $detail->RequisitionOther = null;
+                    if(isset($detailData['AdvanceForm'])) {
+                        if($detailData['AdvanceForm'] !== 2) {
+                            $detail->OpsCategory = null;
                         }
                     }
                     $detail->update($detailData);
@@ -331,7 +335,7 @@ class AdvanceRequestController extends Controller
         try {
 
             // Cari module berdasarkan nama modul
-            $module = $this->module->select('id', 'module')->where('module', $this->modulename)->first();
+            $module = $this->module->select('id', 'module')->where('module', $this->submodulename)->first();
             $user_id = $this->getAuth()->id;
             
             // Jika module ditemukan, lakukan delete secara atomik

@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Submission\MMF;
+namespace App\Http\Controllers\Submission\Financial\Advance;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\Module;
-use App\Models\Submission\MMF\Mmf30detail;
+use App\Models\Submission\Financial\Advance\AdvanceDetail;
 
 class AdvanceRequestDetailController extends Controller
 {
@@ -17,8 +17,8 @@ class AdvanceRequestDetailController extends Controller
 
     public function __construct()
     {
-        $this->model = new Mmf30detail();
-        $this->modulename = 'Mmf';
+        $this->model = new AdvanceDetail();
+        $this->modulename = 'Advance';
         $this->module = new Module();
     }
 
@@ -42,7 +42,7 @@ class AdvanceRequestDetailController extends Controller
 
             $requestData = $request->all();
             // $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $requestData['mmf30_id'] = $request->req_id;
+            $requestData['advance_id'] = $request->req_id;
 
             // $this->addOneDayToDate($requestData);
 
@@ -66,7 +66,7 @@ class AdvanceRequestDetailController extends Controller
         try {
             $module = $this->module->select('id','module')->where('module',$modulename)->first();
             if($module) {
-                $data = $this->model->where('mmf30_id',$id)->get();
+                $data = $this->model->where('advance_id',$id)->get();
                 return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
             } else {
                 return response()->json(["status" => "show", "message" => $this->getMessage()['errornotfound']]);
@@ -104,7 +104,7 @@ class AdvanceRequestDetailController extends Controller
             
             // foreach ($fields as $key => $value) {
             //     if ($value) {
-            //         $this->approverAction($this->modulename, $data->mmf30_id, $key, 1, $value, null);
+            //         $this->approverAction($this->modulename, $data->advance_id, $key, 1, $value, null);
             //     }
             // }
             //end save history perubahan

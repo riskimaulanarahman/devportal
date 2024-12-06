@@ -30,6 +30,9 @@ class Financial extends Model
 
     protected $casts = [
         'user_id' => 'integer',
+        'createdby' => 'integer',
+        'employee_id' => 'integer',
+        'requestStatus' => 'integer',
     ];
 
     public static function getFillableColumns()

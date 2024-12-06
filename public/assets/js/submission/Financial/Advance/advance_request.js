@@ -1,5 +1,6 @@
 var modname = 'advancerequest';
 var modelclass = 'Financial';
+var modelsubclass = 'Advance';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -9,18 +10,14 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
-prType = [
-    { id: 1, name: "Normal PR" },
-    { id: 2, name: "Urgent PR" },
-    { id: 3, name: "Minor Purchase" },
-    { id: 4, name: "Request For Sourcing (RFS) Only" }
+AdvanceForm = [
+    { id: 1, name: "HR Related" },
+    { id: 2, name: "Ops Related" }
 ];
-reqType = [
-    { id: 1, name:"Stok Item"},
-    { id: 2, name:"Services"},
-    { id: 3, name:"Fixed Asset (Requires CAPEX approval)"},
-    { id: 4, name:"Raw Material"},
-    { id: 5, name:"Others"}
+OpsCategory = [
+    { id: 1, name:"General"},
+    { id: 4, name:"Direct Purchased"},
+    { id: 5, name:"SSL"}
 ];
 
 
@@ -120,30 +117,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 			dataField: "bu",
             width: 80
         },
-        // { 
-        //     caption: 'PR Type',
-		// 	dataField: "PRType",
-        //     width: 200,
-        //     lookup: { 
-        //         dataSource: prType,  
-        //         valueExpr: 'id',
-        //         displayExpr: 'name',
-        //     },
-        // },
-        // { 
-        //     caption: 'Requisition Material',
-		// 	dataField: "RequisitionType",
-        //     width: 200,
-        //     lookup: { 
-        //         dataSource: reqType,  
-        //         valueExpr: 'id',
-        //         displayExpr: 'name',
-        //     },
-        // },
-        // { 
-		// 	dataField: "Reason",
-        //     width: 180
-        // },
+        { 
+            caption: 'Form',
+			dataField: "detail_advance.AdvanceForm",
+            width: 180,
+            lookup: { 
+                dataSource: AdvanceForm,  
+                valueExpr: 'id',
+                displayExpr: 'name',
+            },
+        },
         { 
             caption: 'Creator Name',
 			dataField: "user.fullname",
@@ -244,227 +227,227 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     }
 }).dxDataGrid("instance");
 
-$('#HistoryButton').on('click',function(){
-    var dataGridhistory = $("#historyMMF30").dxDataGrid({    
-        dataSource: store('mmf30historyApp'),
-        allowColumnReordering: true,
-        allowColumnResizing: true,
-        columnHidingEnabled: true,
-        rowAlternationEnabled: false,
-        wordWrapEnabled: true,
-        autoExpandAll: true,
-        showBorders: true,
-        filterRow: { visible: true },
-        filterPanel: { visible: true },
-        headerFilter: { visible: true },
-        searchPanel: {
-            visible: true,
-            width: 240,
-            placeholder: 'Search...',
-        },
-        editing: {
-            useIcons:true,
-            mode: "popup",
-            allowAdding: false,
-            allowUpdating: false,
-            allowDeleting: true,
-        },
-        scrolling: {
-            mode: "virtual"
-        },
-        pager: {
-            visible: false,
-            showInfo: true,
-        },
-        columns: [
-            {
-                caption: 'Action',
-                width: 140,
-                cellTemplate: function(container, options) {
+// $('#HistoryButton').on('click',function(){
+//     var dataGridhistory = $("#historyMMF30").dxDataGrid({    
+//         dataSource: store('mmf30historyApp'),
+//         allowColumnReordering: true,
+//         allowColumnResizing: true,
+//         columnHidingEnabled: true,
+//         rowAlternationEnabled: false,
+//         wordWrapEnabled: true,
+//         autoExpandAll: true,
+//         showBorders: true,
+//         filterRow: { visible: true },
+//         filterPanel: { visible: true },
+//         headerFilter: { visible: true },
+//         searchPanel: {
+//             visible: true,
+//             width: 240,
+//             placeholder: 'Search...',
+//         },
+//         editing: {
+//             useIcons:true,
+//             mode: "popup",
+//             allowAdding: false,
+//             allowUpdating: false,
+//             allowDeleting: true,
+//         },
+//         scrolling: {
+//             mode: "virtual"
+//         },
+//         pager: {
+//             visible: false,
+//             showInfo: true,
+//         },
+//         columns: [
+//             {
+//                 caption: 'Action',
+//                 width: 140,
+//                 cellTemplate: function(container, options) {
 
-                    var isMine = options.data.isMine;
-                    var isPendingOnMe = options.data.isPendingOnMe;
-                    var reqid = options.data.id;
-                    var reqstatus = options.data.requestStatus;
-                    var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-                    var arrColor = [
-                        "btn-secondary",
-                        (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                        "btn-warning",
-                        "btn-success",
-                        "btn-danger",
-                    ];
+//                     var isMine = options.data.isMine;
+//                     var isPendingOnMe = options.data.isPendingOnMe;
+//                     var reqid = options.data.id;
+//                     var reqstatus = options.data.requestStatus;
+//                     var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
+//                     var arrColor = [
+//                         "btn-secondary",
+//                         (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
+//                         "btn-warning",
+//                         "btn-success",
+//                         "btn-danger",
+//                     ];
 
-                    var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
+//                     var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
         
-                    $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
+//                     $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
+//                         evt.stopPropagation();
                     
-                                popup.option({
-                                    contentTemplate: () => popupContentTemplate(reqid,mode,options),
-                                });
-                                popup.show();
+//                                 popup.option({
+//                                     contentTemplate: () => popupContentTemplate(reqid,mode,options),
+//                                 });
+//                                 popup.show();
 
-                    }).appendTo(container);
-                    if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                        $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-                            evt.stopPropagation();
+//                     }).appendTo(container);
+//                     if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
+//                         $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
+//                             evt.stopPropagation();
                                 
-                            var result = confirm('Are you sure you want to cancel this submission ?');
+//                             var result = confirm('Are you sure you want to cancel this submission ?');
 
-                            if (result) {
-                                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                    requestStatus:0,
-                                    action:'submission',
-                                    approvalAction: 0
-                                }).then(function(response){
-                                    if(response.status != 'error') {
-                                        dataGrid.refresh();
-                                    }
-                                });
-                            } else {
-                                alert('Cancelled.');
-                            }
+//                             if (result) {
+//                                 sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+//                                     requestStatus:0,
+//                                     action:'submission',
+//                                     approvalAction: 0
+//                                 }).then(function(response){
+//                                     if(response.status != 'error') {
+//                                         dataGrid.refresh();
+//                                     }
+//                                 });
+//                             } else {
+//                                 alert('Cancelled.');
+//                             }
         
-                        }).appendTo(container); 
-                    }
+//                         }).appendTo(container); 
+//                     }
                 
-                }
-            },
-            {
-                caption: "Code",
-                dataField: 'code',
-                width: 180,
-            },
-            { 
-                caption: 'BU',
-                dataField: "bu",
-                width: 80
-            },
-            { 
-                caption: 'PR Type',
-                dataField: "PRType",
-                width: 200,
-                lookup: { 
-                    dataSource: prType,  
-                    valueExpr: 'id',
-                    displayExpr: 'name',
-                },
-            },
-            { 
-                caption: 'Requisition Material',
-                dataField: "RequisitionType",
-                width: 200,
-                lookup: { 
-                    dataSource: reqType,  
-                    valueExpr: 'id',
-                    displayExpr: 'name',
-                },
-            },
-            { 
-                dataField: "Reason",
-                width: 180
-            },
-            { 
-                caption: 'Creator Name',
-                dataField: "user.fullname",
-                width: 180
-            },
-            { 
-                caption: 'Employee Name',
-                dataField: "employee_name",
-                width: 180
-            },
-            {
-                dataField: 'requestStatus',
-                encodeHtml: false,
-                allowFiltering: false,
-                allowHeaderFiltering: true,
-                customizeText: function (e) {
-                    var arrText = [
-                        "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                        "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                        "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                        "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                        "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                    ];
-                    return arrText[e.value];
-                },
-            },
-            {
-                dataField: "approveddoc",
-                caption:"Approval Doc",
-                allowFiltering: false,
-                allowSorting: false,
-                formItem: { visible: false},
-                cellTemplate: function (container, options) {
-                    var value = options.value;
-                    var origin = window.location.origin;
-                    if (value && value.includes('doc')) {
-                        var baseUrl = origin + '/oasys/';
-                    } else {
-                        var baseUrl = origin + '/devportal/';
-                    }
-                    var fullUrl = baseUrl + value;
-                    if ((value!="") && (value)){
-                        $("<div />").dxButton({
-                            icon: 'download',
-                            type: "success",
-                            text: "Download",
-                            onClick: function (e) {
-                                window.open(fullUrl, '_blank');
+//                 }
+//             },
+//             {
+//                 caption: "Code",
+//                 dataField: 'code',
+//                 width: 180,
+//             },
+//             { 
+//                 caption: 'BU',
+//                 dataField: "bu",
+//                 width: 80
+//             },
+//             { 
+//                 caption: 'PR Type',
+//                 dataField: "PRType",
+//                 width: 200,
+//                 lookup: { 
+//                     dataSource: prType,  
+//                     valueExpr: 'id',
+//                     displayExpr: 'name',
+//                 },
+//             },
+//             { 
+//                 caption: 'Requisition Material',
+//                 dataField: "RequisitionType",
+//                 width: 200,
+//                 lookup: { 
+//                     dataSource: reqType,  
+//                     valueExpr: 'id',
+//                     displayExpr: 'name',
+//                 },
+//             },
+//             { 
+//                 dataField: "Reason",
+//                 width: 180
+//             },
+//             { 
+//                 caption: 'Creator Name',
+//                 dataField: "user.fullname",
+//                 width: 180
+//             },
+//             { 
+//                 caption: 'Employee Name',
+//                 dataField: "employee_name",
+//                 width: 180
+//             },
+//             {
+//                 dataField: 'requestStatus',
+//                 encodeHtml: false,
+//                 allowFiltering: false,
+//                 allowHeaderFiltering: true,
+//                 customizeText: function (e) {
+//                     var arrText = [
+//                         "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+//                         "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+//                         "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+//                         "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+//                         "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+//                     ];
+//                     return arrText[e.value];
+//                 },
+//             },
+//             {
+//                 dataField: "approveddoc",
+//                 caption:"Approval Doc",
+//                 allowFiltering: false,
+//                 allowSorting: false,
+//                 formItem: { visible: false},
+//                 cellTemplate: function (container, options) {
+//                     var value = options.value;
+//                     var origin = window.location.origin;
+//                     if (value && value.includes('doc')) {
+//                         var baseUrl = origin + '/oasys/';
+//                     } else {
+//                         var baseUrl = origin + '/devportal/';
+//                     }
+//                     var fullUrl = baseUrl + value;
+//                     if ((value!="") && (value)){
+//                         $("<div />").dxButton({
+//                             icon: 'download',
+//                             type: "success",
+//                             text: "Download",
+//                             onClick: function (e) {
+//                                 window.open(fullUrl, '_blank');
 
-                            }
-                        }).appendTo(container);
-                    }
-                }
-            },
+//                             }
+//                         }).appendTo(container);
+//                     }
+//                 }
+//             },
         
-        ],
-        columnChooser: {
-        enabled: true,
-        },
-        export: {
-            enabled: true,
-            fileName: modname,
-            excelFilterEnabled: true,
-            allowExportSelectedData: true
-        },
-        onContentReady: function(e){
-            moveEditColumnToLeft(e.component);
-            runpopup();
-        },
-        onCellPrepared: function (e) {
-            if (e.rowType == "data") {
-                if(e.data.isParent === 1) {
-                    e.cellElement.css('background','rgba(128, 128, 0,0.1)')
-                }
-            }
-        },
-        onToolbarPreparing: function(e) {
-            dataGridhistory = e.component;
+//         ],
+//         columnChooser: {
+//         enabled: true,
+//         },
+//         export: {
+//             enabled: true,
+//             fileName: modname,
+//             excelFilterEnabled: true,
+//             allowExportSelectedData: true
+//         },
+//         onContentReady: function(e){
+//             moveEditColumnToLeft(e.component);
+//             runpopup();
+//         },
+//         onCellPrepared: function (e) {
+//             if (e.rowType == "data") {
+//                 if(e.data.isParent === 1) {
+//                     e.cellElement.css('background','rgba(128, 128, 0,0.1)')
+//                 }
+//             }
+//         },
+//         onToolbarPreparing: function(e) {
+//             dataGridhistory = e.component;
 
-            e.toolbarOptions.items.unshift({						
-                location: "after",
-                widget: "dxButton",
-                options: {
-                    hint: "Refresh Data",
-                    icon: "refresh",
-                    onClick: function() {
-                        dataGridhistory.refresh();
-                    }
-                }
-            })
-        },
-        onDataErrorOccurred: function(e) {
-            // Menampilkan pesan kesalahan
-            console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+//             e.toolbarOptions.items.unshift({						
+//                 location: "after",
+//                 widget: "dxButton",
+//                 options: {
+//                     hint: "Refresh Data",
+//                     icon: "refresh",
+//                     onClick: function() {
+//                         dataGridhistory.refresh();
+//                     }
+//                 }
+//             })
+//         },
+//         onDataErrorOccurred: function(e) {
+//             // Menampilkan pesan kesalahan
+//             console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
-            // Memuat ulang Page
-            dataGridhistory.refresh();
-        }
-    }).dxDataGrid("instance");
-})
+//             // Memuat ulang Page
+//             dataGridhistory.refresh();
+//         }
+//     }).dxDataGrid("instance");
+// })
 
 $('#btnadd').on('click',function(){
     showLoadingScreen();
@@ -475,7 +458,7 @@ $('#btnadd').on('click',function(){
             "data": 
             {
                 "isMine": 1,
-                "detail30": 
+                "detail_advance": 
                 {
                     "id":response.data.detail_advance.id
                 }
@@ -544,8 +527,7 @@ const popupContentTemplate = function (reqid,mode,options) {
     var detailid = options.data.detail_advance.id;
 
     var validationRules = [];
-    var visibleRulesReqType = false;
-    var visibleRulesPRType = false;
+    var visibleRulesAdvForm = false;
 
     popupid = reqid;
 
@@ -630,7 +612,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         ).appendTo(infoContent2);
                     }
 
-                    let formData = $("<div id='formdata'>").dxDataGrid({    
+                    $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -681,89 +663,76 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: true
                                 },
-                                // validationRules: [{ type: "required" }]
                             },
                             {
-                                caption: 'PR Type',
-                                dataField: 'detail30.PRType',
+                                caption: 'Form',
+                                dataField: "detail_advance.AdvanceForm",
+                                width: 180,
                                 lookup: { 
-                                    dataSource: prType,  
+                                    dataSource: AdvanceForm,  
                                     valueExpr: 'id',
                                     displayExpr: 'name',
                                 },
                                 setCellValue: function (rowData, value) {
-                                    rowData.detail30 = rowData.detail30 || {};
-                                    rowData.detail30.PRType = value;
+                                    rowData.detail_advance = rowData.detail_advance || {};
+                                    rowData.detail_advance.AdvanceForm = value;
 
-                                    console.log('Selected PRType:', value);
-
-                                    // Update visibility based on the selected value
-                                    let visibleRulesPRType = (value === 3);
-
-                                    // Update the visibility of the "Others Detail" columns
-                                    dataGrid1.columnOption('detail30.SupplierName', 'visible', visibleRulesPRType);
-                                    dataGrid1.columnOption('detail30.SupplierAddress', 'visible', visibleRulesPRType);
-                                    dataGrid1.columnOption('detail30.SupplierEmailFax', 'visible', visibleRulesPRType);
-                                    dataGrid1.columnOption('detail30.ContractNo', 'visible', visibleRulesPRType);
-
-                                    // Clear and apply validation rules if needed
-                                    validationRules.length = 0; // Clear existing rules
-                                },
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'Supplier Name',
-                                dataField: 'detail30.SupplierName',
-                                visible: visibleRulesPRType,
-                            },
-                            {
-                                caption: 'Supplier Address',
-                                dataField: 'detail30.SupplierAddress',
-                                visible: visibleRulesPRType,
-                            },
-                            {
-                                caption: 'Email/Fax',
-                                dataField: 'detail30.SupplierEmailFax',
-                                visible: visibleRulesPRType,
-                            },
-                            {
-                                caption: 'Contract No',
-                                dataField: 'detail30.ContractNo',
-                                visible: visibleRulesPRType,
-                            },
-                            {
-                                caption: 'Requisition Material',
-                                dataField: 'detail30.RequisitionType',
-                                lookup: { 
-                                    dataSource: reqType,  
-                                    valueExpr: 'id',
-                                    displayExpr: 'name',
-                                },
-                                setCellValue: function (rowData, value) {
-                                    rowData.detail30 = rowData.detail30 || {};
-                                    rowData.detail30.RequisitionType = value;
-
-                                    if (value == 5) {
+                                    if (value == 2) {
                                         validationRules.length = 0;
                                         validationRules.push({
                                             type: "required", 
                                             message: "This item is required"
                                         });
-                                        visibleRulesReqType = true;
+                                        visibleRulesAdvForm = true;
                                     } else {
                                         validationRules.length = 0;
-                                        visibleRulesReqType = false;
+                                        visibleRulesAdvForm = false;
                                     }
                                     // Update the visibility of the "Others Detail" column and refresh the grid
-                                    dataGrid1.columnOption('detail30.RequisitionOther', 'visible', visibleRulesReqType);
+                                    dataGrid1.columnOption('detail_advance.OpsCategory', 'visible', visibleRulesAdvForm);
                                 },
                                 validationRules: [{ type: "required" }]
                             },
                             {
-                                caption: 'Others Detail',
-                                dataField: 'detail30.RequisitionOther',
-                                visible: visibleRulesReqType,
+                                caption: 'Category OPS',
+                                dataField: 'detail_advance.OpsCategory',
+                                lookup: { 
+                                    dataSource: OpsCategory,  
+                                    valueExpr: 'id',
+                                    displayExpr: 'name',
+                                },
+                                visible: visibleRulesAdvForm,
                                 validationRules: validationRules,
+                            },
+                            {
+                                caption: 'Beneficiary',
+                                dataField: 'detail_advance.Beneficiary',
+                            },
+                            {
+                                caption: 'AccountName',
+                                dataField: 'detail_advance.AccountName',
+                            },
+                            {
+                                caption: 'Bank',
+                                dataField: 'detail_advance.Bank',
+                            },
+                            {
+                                caption: 'Bank Account No',
+                                dataField: 'detail_advance.AccountNumber',
+                            },
+                            {
+                                caption: 'Expected Date',
+                                dataField: "detail_advance.ExpectedDate",
+                                dataType: "date",
+                                format: "dd-MM-yyyy", 
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'Due Date',
+                                dataField: "detail_advance.DueDate",
+                                dataType: "date",
+                                format: "dd-MM-yyyy", 
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 dataField: "created_at",
@@ -804,6 +773,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     icon: "refresh",
                                     onClick: function() {
                                         dataGrid1.refresh();
+                                        dataGrid11.refresh();
                                     }
                                 }
                             });
@@ -819,7 +789,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index==2 || e.column.index==7)) {
+                            if ( e.rowType == "data" && (e.column.index==2 || e.column.index>=8 && e.column.index<=9)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -909,35 +879,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         columns: [
                             {
-                                caption: 'Cost Code',
-                                dataField: 'detail30.CostCode',
-                                // validationRules: [{ type: "required" }]
-                            },
-                            {
-                                caption: 'Reason for requisition/purchase',
-                                dataField: 'detail30.Reason',
-                                editorType: 'dxTextArea',
-                                editorOptions: { 
-                                    height: 50,
-                                    readOnly: (mode == 'approval') ? true : false
-                                },
-                                validationRules: [{ type: "required" }]
-                            },
-                            {
                                 caption: 'Remarks',
-                                dataField: 'detail30.RemarksU',
+                                dataField: 'detail_advance.Remarks',
                                 editorType: 'dxTextArea',
                                 editorOptions: { 
                                     height: 50,
                                     readOnly: (mode == 'approval') ? true : false
                                 },
-                                validationRules: [{ type: "required" }]
                             },
-                            {
-                                caption: 'Deliver To',
-                                dataField: 'detail30.DeliverTo',
-                            },
-                
                         ],
                         export: {
                             enabled: false,
@@ -954,17 +903,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onInitNewRow : function(e) {
                         },
                         onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGrid11.refresh();
-                                    }
-                                }
-                            });
+                            // e.toolbarOptions.items.unshift({						
+                            //     location: "after",
+                            //     widget: "dxButton",
+                            //     options: {
+                            //         hint: "Refresh Data",
+                            //         icon: "refresh",
+                            //         onClick: function() {
+                            //             dataGrid11.refresh();
+                            //         }
+                            //     }
+                            // });
                         },
                         onEditorPreparing: function (e) {
                         },
@@ -1132,7 +1081,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 6) {
                     return formData = $("<div id='formdetail'>").dxDataGrid({    
-                        dataSource: storewithmodule('mmf30detail',modelclass,detailid),
+                        dataSource: storewithmodule('advancedetail',modelsubclass,detailid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
@@ -1155,7 +1104,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "cell",
                             allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || (mode == 'approval' && isBuyer) ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                         },
                         scrolling: {
@@ -1173,102 +1122,37 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         columns: [
                             {
-                                dataField: 'MaterialCode',
+                                dataField: 'Description',
                                 dataType: "string",
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
                             },
                             {
-                                dataField: 'MaterialDescr',
+                                dataField: 'AccountCode',
                                 dataType: "string",
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
                             },
                             {
-                                dataField: 'PartNumber',
-                                dataType: 'string',
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: 'Brand/Manufacturer',
-                                dataField: 'BrandManufacturer',
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-
-                                }
-                            },
-                            {
-                                dataField: 'Qty',
-                                dataType: "number",
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-
-                                }
-                            },
-                            {
-                                caption: 'Unit',
-                                dataField: 'Unit',
-                                lookup: {
-                                    dataSource: listOption('/list-unit','id','nama'),  
-                                    valueExpr: 'nama',
-                                    displayExpr: 'nama'
-                                },
-                                editorOptions: { 
-                                    // readOnly: ((mode == 'approval') ? true : false),
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: 'Currency',
-                                dataField: 'Currency',
-                                lookup: {
-                                    dataSource: listOption('/list-currency','id','nama'),  
-                                    valueExpr: 'nama',
-                                    displayExpr: 'nama'
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: "Unit Price",
-                                dataField:'UnitPrice',
+                                caption: "Amount",
+                                dataField:'Amount',
                                 dataType: "number",
                                 format: "fixedPoint",
                                 editorOptions: {
                                     format: "fixedPoint",
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
-                                }
-                            },
-                            {
-                                caption: "Extended Price",
-                                dataField:'ExtendedPrice',
-                                dataType: "number",
-                                format: "fixedPoint",
-                                editorOptions: {
-                                    format: "fixedPoint",
-                                    // readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : true,
-                                    readOnly: true,
                                 }
                             },
                             {
                                 caption: "Remarks",
                                 dataField:'Remarks',
                                 dataType: "string",
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval' && isBuyer) || (admin == 1) ? false : (isMine == 1) ? false : true,
-                                }
                             },
                         ],
+                        summary: {
+                            recalculateWhileEditing: true,
+                            totalItems: [{
+                                column: "Amount",
+                                summaryType: "sum",
+                                valueFormat: "fixedPoint",
+                                displayFormat: "Total: {0}",
+                            }]
+                        },
                         export: {
                             enabled: false,
                             fileName: modname,
@@ -1280,7 +1164,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         onContentReady: function(e){
                             moveEditColumnToLeft(e.component);
-                                // e.component.columnOption('Action', 'visible', true);
                         },
                         onToolbarPreparing: function(e) {
                             e.toolbarOptions.items.unshift({						
@@ -1298,79 +1181,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPrepared: function (e) {
                         },
                         onEditorPreparing: function (e) {
-                            if ((e.dataField == "Unit") && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";                
-                                e.editorOptions.dropDownOptions = {                
-                                    height: 500,
-                                    width: 600,
-                                    valueExpr: 'nama',
-                                    displayExpr: 'nama'
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
-                    
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
-                                            dataSource: args.component.option("dataSource"),
-                                            keyExpr: "nama",
-                                            columns: ["nama","detail"],
-                                            scrolling: {
-                                                mode: "virtual"
-                                            },
-                                            pager: {
-                                                visible: false,
-                                                showInfo: true,
-                                            },
-                                            hoverStateEnabled: true,
-                                            paging: { enabled: true, pageSize: 10 },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: value,
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const datas = selectedItems.selectedRowsData;
-                                                // console.log(datas)
-                                                const hasSelection = datas.length;
-                                                // console.log(hasSelection)
-
-                                                // args.component.option('value', hasSelection > 0 ? datas[0]['nama'] : null);
-                                                if(hasSelection !== 0) {
-                                                    args.component.option('value', datas[0]['nama']);
-                                                    args.component.close();
-                                                }
-                                            }
-                                        });
-                                    // console.log(value)
-                    
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
-                    
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
-                    
-                                        dataGrid.selectRows(value, false);
-                                    });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
-                    
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
-                    
-                                };
-                            }
                         },
                         onCellPrepared: function (e) {
                         },
@@ -1385,7 +1195,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
-                        dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
+                        dataSource: storewithmodule('attachmentrequest',modelsubclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
@@ -1463,7 +1273,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 3) {
                     return $("<div id='formapproverlist'>").dxDataGrid({    
-                        dataSource: storewithmodule('approverlistrequest',modelclass,reqid),
+                        dataSource: storewithmodule('approverlistrequest',modelsubclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
@@ -1493,7 +1303,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: "Fullname",
                                 dataField: "approver_id",
                                 lookup: {
-                                    dataSource: listOption('/list-approver/'+modelclass,'id','fullname'),  
+                                    dataSource: listOption('/list-approver/'+modelsubclass,'id','fullname'),  
                                     valueExpr: 'id',
                                     displayExpr: 'fullname',
                                 },
@@ -1631,7 +1441,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 4) {
                     return $("<div id='formhistorylist'>").dxDataGrid({    
-                        dataSource: storewithmodule('approverlisthistory',modelclass,reqid),
+                        dataSource: storewithmodule('approverlisthistory',modelsubclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
@@ -1745,22 +1555,21 @@ function btnreqsubmit(reqid,mode) {
     var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
     var valremarks = $('#remarks').val(); // mengambil nilai dari text area
     
-    if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
-        var fieldsToCheckGrid = [
-            { field: 'Buyer', name: 'Buyer' },
-        ]
-    } else {
-        if(mode !== 'approval') {
+    // if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
+    //     var fieldsToCheckGrid = [
+    //         { field: 'Buyer', name: 'Buyer' },
+    //     ]
+    // } else {
+    //     if(mode !== 'approval') {
             var fieldsToCheckGrid = [
-                { field: 'PRType', name: 'PR Type' },
-                { field: 'RequisitionType', name: 'Requisition Material' },
-                { field: 'Reason', name: 'Reason for requisition/purchase' },
-                { field: 'RemarksU', name: 'Remarks' },
+                { field: 'AdvanceForm', name: 'Form Type' },
+                { field: 'ExpectedDate', name: 'Expected Date' },
+                { field: 'DueDate', name: 'Due Date' },
             ];
-        }
-    }
+    //     }
+    // }
 
-    sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/Mmf30", "POST", {
+    sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/"+modelsubclass, "POST", {
         fieldsToCheckGrid
     }).then(function(response){
         if(response.status !== 'error') {

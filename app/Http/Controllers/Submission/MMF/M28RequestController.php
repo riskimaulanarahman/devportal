@@ -438,27 +438,29 @@ class M28RequestController extends Controller
             addPictureToWorksheet($Worksheet, $picpath, 26, 1, 30, $excel);
             
             // // signature approver
-            // foreach ($dataAppr as $appr) {
-            //     if($appr->sequence == 2) {
-            //         if($appr->approvalAction == 3) {
-            //             $Worksheet->Range("C25")->Value = $appr->apprname;
-            //             $Worksheet->Range("D25")->Value = '/ '.$appr->approvalDate;
-            //             addPictureToWorksheet($Worksheet, $picpath, 25, 3, 30, $excel);
-            //         }
-            //     }
-            //     if($appr->sequence == 3) {
-            //         if($appr->approvalAction == 3) {
-            //             $Worksheet->Range("C30")->Value = $appr->apprname.' / '.$appr->approvalDate;
-            //             addPictureToWorksheet($Worksheet, $picpath, 30, 3, 30, $excel);
-            //         }
-            //     }
-            //     if($appr->sequence == 4) {
-            //         if($appr->approvalAction == 3) {
-            //             $Worksheet->Range("E30")->Value = $appr->apprname.' / '.$appr->approvalDate;
-            //             addPictureToWorksheet($Worksheet, $picpath, 30, 5, 30, $excel);
-            //         }
-            //     }
-            // }
+            foreach ($dataAppr as $appr) {
+                if($appr->sequence == 2) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("C29")->Value = $appr->apprname;
+                        $Worksheet->Range("C30")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 26, 3, 30, $excel);
+                    }
+                }
+                if($appr->sequence == 3) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("F29")->Value = $appr->apprname;
+                        $Worksheet->Range("F30")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 26, 6, 30, $excel);
+                    }
+                }
+                if($appr->sequence == 4) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("H29")->Value = $appr->apprname;
+                        $Worksheet->Range("H30")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 26, 8, 30, $excel);
+                    }
+                }
+            }
             
             // $totalExtendedPrice = 0;
             // $xlShiftDown=-4121;

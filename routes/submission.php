@@ -31,6 +31,9 @@ Route::group(['prefix' => 'api'], function () {
         // financial - advance
         'advancerequest' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class,
         'advancedetail' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class,
+        // HRIS - hcrf
+        // 'hcrfrequest' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class,
+        // 'hcrfdetail' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -57,16 +60,16 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('mmf30detail/{id}/{modulename}',[App\Http\Controllers\Submission\MMF\M30RequestDetailController::class, 'getList']); //get list mmf30 by req_id of module
     Route::get('mmf30historyApp',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'historyApprover']); //get list mmf30historyApp of module
     Route::get('mmf30report',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'report']); //get list report of module
-    // procurement - MMF 30
-    Route::get('mmf30detail/{id}/{modulename}',[App\Http\Controllers\Submission\MMF\M30RequestDetailController::class, 'getList']); //get list mmf30 by req_id of module
-    Route::get('mmf30historyApp',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'historyApprover']); //get list mmf30historyApp of module
-    Route::get('mmf30report',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'report']); //get list report of module
     // procurement - material (eCatalog)
     Route::get('materialdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Ecatalog\MaterialRequestDetailController::class, 'getList']); //get list material req by req_id of module
-    // Advance
+    // financial - advance
     Route::get('advancedetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class, 'getList']); //get list advance by req_id of module
     Route::get('advancehistoryApp',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'historyApprover']); //get list advancehistoryApp of module
     Route::get('advancereport',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'report']); //get list report of module
+    //  HRIS - hcrf
+    // Route::get('hcrfdetail/{id}/{modulename}',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestDetailController::class, 'getList']); //get list hcrf by req_id of module
+    // Route::get('hcrfhistoryApp',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestController::class, 'historyApprover']); //get list hcrfhistoryApp of module
+    // Route::get('hcrfreport',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestController::class, 'report']); //get list report of module
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request
