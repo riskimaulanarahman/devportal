@@ -32,8 +32,8 @@ Route::group(['prefix' => 'api'], function () {
         'advancerequest' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class,
         'advancedetail' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class,
         // HRIS - hcrf
-        // 'hcrfrequest' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class,
-        // 'hcrfdetail' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestDetailController::class,
+        'hcrfrequest' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class,
+        'hcrfdetail' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -67,7 +67,7 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('advancehistoryApp',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'historyApprover']); //get list advancehistoryApp of module
     Route::get('advancereport',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'report']); //get list report of module
     //  HRIS - hcrf
-    // Route::get('hcrfdetail/{id}/{modulename}',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestDetailController::class, 'getList']); //get list hcrf by req_id of module
+    Route::get('hcrfdetail/{id}/{modulename}',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestDetailController::class, 'getList']); //get list hcrf by req_id of module
     // Route::get('hcrfhistoryApp',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestController::class, 'historyApprover']); //get list hcrfhistoryApp of module
     // Route::get('hcrfreport',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestController::class, 'report']); //get list report of module
 

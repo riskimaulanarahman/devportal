@@ -4,6 +4,7 @@ namespace App\Http\Traits;
 
 use Illuminate\Http\Request;
 use App\Models\Module;
+use App\Models\CategoryForm;
 
 trait HasGetModule {
 
@@ -25,6 +26,15 @@ trait HasGetModule {
         $module = Module::select('id', 'module')->where('id', $moduleID)->first();
         if ($module) {
             return $module->module;
+        }
+        return null;
+    }
+
+    public function getCategoryFormIdByModule($moduleName) 
+    {
+        $categoryForm = CategoryForm::select('id', 'nameCategory')->where('nameCategory', $categoryFormName)->first();
+        if ($categoryForm) {
+            return $categoryForm->id;
         }
         return null;
     }

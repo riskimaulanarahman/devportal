@@ -181,6 +181,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 var arrText = [
                     "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>",
                     "<span class='btn btn-success btn-xs btn-status'>Done</span>",
+                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
                 ];
                 return arrText[e.value];
             },
@@ -475,7 +476,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     caption: 'PR Status',
                                     dataField: 'prStatus',
                                     lookup: { 
-                                        dataSource: [{id:0,name:"Waiting"},{id:1,name:"Done"}],  
+                                        dataSource: [{id:0,name:"Waiting"},{id:1,name:"Done"},{id:2,name:"Rejected"}],  
                                         valueExpr: 'id',
                                         displayExpr: 'name',
                                     },

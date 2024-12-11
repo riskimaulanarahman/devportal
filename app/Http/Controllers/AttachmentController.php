@@ -121,6 +121,7 @@ class AttachmentController extends Controller
 
             $data = $this->model->findOrFail($id);
             $path = $this->copyuploadpath() . $data->path; // path file yang akan dihapus
+            // dd($path);
             if (file_exists($path)) { // cek apakah file ada di direktori
                 unlink($path); // hapus file dari direktori
             }

@@ -117,7 +117,6 @@ trait ApproverTrait {
 
         $results = $getApprover->get();
 
-
         // Hapus data yang bersangkutan di tabel ApproverListReq
         $apprList = ApproverListReq::select('tbl_approverListReq.*')
                                     ->where('tbl_approverListReq.module_id', $module->id)
@@ -127,7 +126,7 @@ trait ApproverTrait {
             'Jdi',
             'ActiveDirectory',
             'Mmf',
-            'MaterialReq'
+            'MaterialReq',
         ];
 
         if (in_array($moduleName, $exceptdel)) {
@@ -162,7 +161,7 @@ trait ApproverTrait {
             'Jdi',
             'ActiveDirectory',
             'Mmf',
-            'MaterialReq'
+            'MaterialReq',
         ];
         
         if (!in_array($moduleName, $except)) {

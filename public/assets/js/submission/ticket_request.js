@@ -1129,10 +1129,26 @@ function editCellTemplate(cellElement, cellInfo) {
         reader.readAsDataURL(e.value[0]); // convert to base64 string
       },
       onUploaded: function(e){
-          $path = e.request.response;
-          $adafile = false;
-          cellInfo.setValue(e.request.responseText);
-          retryButton.option("visible", false);
+       
+        let path = e.request.response;
+
+        const unsafeCharacters = /[#"%<>\\^`{|}]/g;
+        let unsafeFound = path.match(unsafeCharacters);
+
+        if (unsafeFound) {
+            let unsafeCharactersString = unsafeFound.join(', ');
+            DevExpress.ui.dialog.alert(
+                `The file name contains these unsafe characters: ${unsafeCharactersString}. Please rename the file to continue.`,
+                "error"
+            );
+        
+            path = "";
+            retryButton.option("visible", true);
+        } else {
+            cellInfo.setValue(e.request.responseText);
+            retryButton.option("visible", false);
+        }
+
       },
       onUploadError: function(e){
           $path = "";

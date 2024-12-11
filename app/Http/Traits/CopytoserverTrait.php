@@ -6,7 +6,12 @@ use Illuminate\Support\Facades\Auth;
 trait CopytoserverTrait {
 
 	public function copyuploadpath() {
-		$path = '\\\\172.18.83.38\\www\\devportal\\public\\upload\\';
+		$appEnv = env('APP_ENV');
+		if ($appEnv == 'production') {
+			$path = '\\\\172.18.83.38\\www\\devportal\\public\\upload\\';
+		} else {
+			$path = 'public\\upload\\';
+		}
 
 		return $path;
 	}

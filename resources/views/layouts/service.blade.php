@@ -231,7 +231,7 @@
             confirmButtonText: 'Yes, send it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                showLoadingScreen();
+                showLoadingScreen(); 
                 sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                     requestStatus: 1,
                     action: actionForm,

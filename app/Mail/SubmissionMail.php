@@ -25,6 +25,8 @@ use App\Http\Controllers\Submission\IT\ADRequestController;
 use App\Http\Controllers\Submission\Ecatalog\MaterialRequestController;
 use App\Http\Controllers\Submission\MMF\M28RequestController;
 use App\Http\Controllers\Submission\MMF\M30RequestController;
+use App\Models\Submission\HRIS\Hris;
+use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
 
 use Storage;
 use DB;
@@ -329,7 +331,7 @@ class SubmissionMail extends Mailable
                 $request = new Request();
                 $ecatalogController = new MaterialRequestController();
                 if($final == 1) {
-                    if($mailData['action_id'] !== 5) {
+                    if($mailData['action_id'] !== 5) {// action task MoM
                         $pdf = $ecatalogController->genPdfMaterialReq($request,$mailData['submission']->id);
                         $this->attach($url."devportal/".$pdf); // add attachment to mail
                     }
@@ -358,6 +360,28 @@ class SubmissionMail extends Mailable
 
             }
         // MMF MODULE
+
+        // MMF MODULE
+        if($modulename == 'Hris') {
+            $checkCategory = Hris::find($mailData['submission']->id);
+            
+            $request = new Request();
+            if($checkCategory->category == 'Hcrf') {
+                $controller = new HcrfRequestController();
+            }
+
+            if($final == 1) {
+                // $pdf = $mmfController->genPdfMmfReq($request,$mailData['submission']->id);
+                // $this->attach($url."devportal/".$pdf); // add attachment to mail
+                foreach ($Mailrecipient as $cc){
+                    if($cc->company_list == 'Hcrf') {
+                        $this->cc($cc->email);
+                    } 
+                }
+            }
+
+        }
+    // MMF MODULE
 
     }
 
@@ -397,6 +421,9 @@ class SubmissionMail extends Mailable
                 break;
             case 'Mmf':
                 $viewblade = 'emails.MMF.mmfrequestmail';
+                break;
+            case 'Hris':
+                $viewblade = 'emails.HRIS.hrisrequestmail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';

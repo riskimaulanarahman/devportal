@@ -33,7 +33,7 @@ class SubmissionController extends Controller
             'Mmf30' => "App\Models\Submission\MMF",
             'MaterialReq' => "App\Models\Submission\Ecatalog",
             'Advance' => "App\Models\Submission\Financial\Advance",
-            // 'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
+            'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
         ];
         
         $baseNamespace = "App\Models\Submission";
@@ -80,7 +80,7 @@ class SubmissionController extends Controller
                 return response()->json(['status' => 'error', 'message' => $textMissing]);
             }
 
-            return response()->json(['status' => 'success']);
+            return response()->json(['status' => 'show']);
             
         } catch (\Exception $e) {
 
@@ -98,6 +98,7 @@ class SubmissionController extends Controller
                 'ActiveDirectory' => "App\Models\Submission\IT",
                 'Mmf' => "App\Models\Submission\MMF",
                 'MaterialReq' => "App\Models\Submission\Ecatalog",
+                'Hris' => "App\Models\Submission\HRIS",
             ];
             
             $baseNamespace = "App\Models\Submission";
@@ -195,7 +196,12 @@ class SubmissionController extends Controller
                 }
             } else {
                 // submission yang tidak perlu menambahkan supporting document
-                $except = ['ActiveDirectory', 'Mmf', 'MaterialReq'];
+                $except = [
+                    'ActiveDirectory', 
+                    'Mmf', 
+                    'MaterialReq',
+                    'Hris',
+                ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {
                         return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
