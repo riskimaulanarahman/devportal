@@ -69,7 +69,7 @@ class SubmissionMail extends Mailable
         $code = Code::findOrFail($mailData['submission']->code_id);
         $this->code = $code->code;
 
-        $Mailrecipient = DB::table('reference.tbl_mailrecipient')
+        $MailrecipientNoBu = DB::table('reference.tbl_mailrecipient')
         ->where('module',$modulename)
         ->where('isActive',1)
         ->get();
@@ -222,19 +222,19 @@ class SubmissionMail extends Mailable
                 
                 if($mailData['email'] == 'kf_developer@d1.lcl') {  
                     if($project->id == 120 || $project->parentID == 120) {
-                        foreach ($Mailrecipient as $cc){
+                        foreach ($MailrecipientNoBu as $cc){
                             if($cc->company_list == 'iop') {
                                 $this->cc($cc->email);
                             } 
                         }
                     } else if($project->id == 158 || $project->parentID == 158) {
-                        foreach ($Mailrecipient as $cc){
+                        foreach ($MailrecipientNoBu as $cc){
                             if($cc->company_list == 'webmap') {
                                 $this->cc($cc->email);
                             } 
                         }
                     } else {
-                        foreach ($Mailrecipient as $cc){
+                        foreach ($MailrecipientNoBu as $cc){
                             if($cc->company_list == null) {
                                 $this->cc($cc->email);
                             } 
@@ -373,7 +373,7 @@ class SubmissionMail extends Mailable
             if($final == 1) {
                 // $pdf = $mmfController->genPdfMmfReq($request,$mailData['submission']->id);
                 // $this->attach($url."devportal/".$pdf); // add attachment to mail
-                foreach ($Mailrecipient as $cc){
+                foreach ($MailrecipientNoBu as $cc){
                     if($cc->company_list == 'Hcrf') {
                         $this->cc($cc->email);
                     } 

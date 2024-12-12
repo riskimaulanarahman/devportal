@@ -99,67 +99,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     $('<button class="btn btn-info" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-user"></i></button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
                             
-                        // var result = confirm('Are you sure want to submit account information for this employee ?');
-
-                        // if (result) {
-
-                        //     var loginNameVal = prompt("Please enter username of "+options.data.employee.FullName+":");
-
-                        //     if (loginNameVal !== null && loginNameVal.trim() !== "") {
-                        //         showLoadingScreen();
-                        //         sendRequest(apiurl + "/employeedata/"+options.data.employee_id, "PUT", {
-                        //             LoginName:loginNameVal
-                        //         }).then(function(response){
-                        //             if(response.status != 'error') {
-                        //                 dataGrid.refresh();
-                        //             }
-                        //             hideLoadingScreen();
-                        //         }).fail(function(error) {
-                        //             hideLoadingScreen();
-                        //             console.error("An error occurred:", error);
-                        //         });
-                        //     } else {
-                        //         alert('Cancelled: The action has an empty value');
-                        //     }
-                        // } else {
-                        //     alert('Cancelled.');
-                        // }
-
-                        // var result = confirm('Are you sure want to submit account information for this employee?');
-
-                        // if (result) {
-                        //     var loginNameVal = prompt("Please enter username of " + options.data.employee.FullName + ":");
-
-                        //     if (loginNameVal !== null && loginNameVal.trim() !== "") {
-                        //         var passwordVal = prompt("Please enter the password for " + options.data.employee.FullName + ":");
-
-                        //         if (passwordVal !== null && passwordVal.trim() !== "") {
-                        //             showLoadingScreen();
-                        //             sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
-                        //                 username_temp: loginNameVal,
-                        //                 password_temp: passwordVal
-                        //             });
-                        //             sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
-                        //                 LoginName: loginNameVal
-                        //             }).then(function(response) {
-                        //                 if (response.status != 'error') {
-                        //                     dataGrid.refresh();
-                        //                 }
-                        //                 hideLoadingScreen();
-                        //             }).fail(function(error) {
-                        //                 hideLoadingScreen();
-                        //                 console.error("An error occurred:", error);
-                        //             });
-                        //         } else {
-                        //             alert('Cancelled: The password has an empty value');
-                        //         }
-                        //     } else {
-                        //         alert('Cancelled: The username has an empty value');
-                        //     }
-                        // } else {
-                        //     alert('Cancelled.');
-                        // }
-
                         Swal.fire({
                             title: "Are you sure?",
                             text: "Do you want to submit account information for this employee?",
