@@ -353,10 +353,8 @@ class M28RequestController extends Controller
             ->sortByDesc('approvalDate')
             ->first();
         
-        // $subimissionDate = ($originatorApproval->created_at) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
         $subimissionDate = ($originatorApproval) ? $originatorApproval->created_at : $data->created_at;
         
-        // $dataDetails = DB::table('request_mmf_28_detail')->select('*')->where('mmf28_id',$data->id)->get(); // data detail
         $emp = Employee::select('*')->with(['location','company','department'])->where('LoginName',$data->username)->first(); // data employee
         $dataAppr = DB::table('Mmf28reqApprover')->select('*')->where('id',$id)->get(); // data approver
 
@@ -406,20 +404,6 @@ class M28RequestController extends Controller
                 $Worksheet->Range("H22")->Value = (($data->detail28->isNonHazardous == 1)?$data->detail28->NonHazChemicalName:'');
 
                 $Worksheet->Range("C35")->Value = formatCurrency($data->detail28->EstimateCost);
-                // Set the initial value of the cell
-                // $Worksheet->Range("E23")->Value = 'Reason for requisition/purchase: ' . $data->detail28->Reason;
-
-                // // Format the text in cell E23
-                // $range = $Worksheet->Range("E23");
-
-                // // Set "Reason for requisition/purchase:" to red
-                // $range->Characters(1, 31)->Font->Color = -16776961; // RGB for red
-                // $range->Characters(1, 31)->Font->Underline = true; // underline
-
-                // // Set the reason text to black
-                // $reasonStart = 32; // Assuming the reason starts immediately after the colon and space
-                // $reasonLength = strlen($data->detail28->Reason);
-                // $range->Characters($reasonStart, $reasonLength)->Font->Color = 0; // RGB for black
 
             // End Form Data
 
@@ -462,38 +446,6 @@ class M28RequestController extends Controller
                 }
             }
             
-            // $totalExtendedPrice = 0;
-            // $xlShiftDown=-4121;
-			// 	$no = 1;
-			// 	for ($a=16;$a<16+count($dataDetails);$a++){
-            //         $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
-			// 	}
-            //     $Worksheet->Range("J19")->Value = formatCurrency($totalExtendedPrice);
-
-            //     for ($a=16;$a<16+count($dataDetails);$a++){
-            //         $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
-
-			// 		$Worksheet->Rows($a+1)->Copy();
-			// 		$Worksheet->Rows($a+1)->Insert($xlShiftDown);
-			// 		$Worksheet->Range("A".$a)->Value = $no++;
-			// 		$Worksheet->Range("B".$a)->Value = $dataDetails[$a-16]->MaterialCode;
-			// 		$Worksheet->Range("C".$a)->Value = $dataDetails[$a-16]->MaterialDescr;
-			// 		$Worksheet->Range("D".$a)->Value = $dataDetails[$a-16]->PartNumber;
-			// 		$Worksheet->Range("E".$a)->Value = $dataDetails[$a-16]->BrandManufacturer;
-			// 		$Worksheet->Range("F".$a)->Value = formatCurrency($dataDetails[$a-16]->Qty);
-			// 		$Worksheet->Range("G".$a)->Value = $dataDetails[$a-16]->Unit;
-			// 		$Worksheet->Range("H".$a)->Value = $dataDetails[$a-16]->Currency;
-			// 		$Worksheet->Range("I".$a)->Value = formatCurrency($dataDetails[$a-16]->UnitPrice);
-			// 		$Worksheet->Range("J".$a)->Value = formatCurrency($dataDetails[$a-16]->ExtendedPrice);
-
-            //         // Enable text wrapping for the MaterialDescr cell
-            //         $Worksheet->Cells($a, 3)->WrapText = true;
-
-            //         // Auto-fit the row height
-            //         $Worksheet->Rows($a)->AutoFit();
-
-			// 	}
-            
             $xlTypePDF = 0;
 			$xlQualityStandard = 0;
 
@@ -530,7 +482,7 @@ class M28RequestController extends Controller
             // Log error
             $ip = $request->ip();
             $url = $request->url();
-            $action = 'gen-pdf-ecatalog';
+            $action = 'gen-pdf-mmf28';
             $this->logerror($ip, $url, $action, $e->getMessage());
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);

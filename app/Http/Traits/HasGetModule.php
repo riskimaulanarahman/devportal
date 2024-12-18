@@ -32,7 +32,7 @@ trait HasGetModule {
 
     public function getCategoryFormIdByModule($moduleName) 
     {
-        $categoryForm = CategoryForm::select('id', 'nameCategory')->where('nameCategory', $categoryFormName)->first();
+        $categoryForm = CategoryForm::select('id', 'nameCategory')->where('nameCategory', $moduleName)->first();
         if ($categoryForm) {
             return $categoryForm->id;
         }

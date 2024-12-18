@@ -12,6 +12,17 @@ class Employee extends Model
     protected $table = 'employee.tbl_employee';
     
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'company_id' => 'integer',
+        'department_id' => 'integer',
+        'designation_id' => 'integer',
+        'location_id' => 'integer',
+        'level_id' => 'integer',
+        'isActive' => 'integer',
+        'isTerminate' => 'integer',
+        'isNotHC' => 'integer',
+    ];
     
     public $timestamps = false;
 

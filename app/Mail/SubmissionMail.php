@@ -371,8 +371,8 @@ class SubmissionMail extends Mailable
             }
 
             if($final == 1) {
-                // $pdf = $mmfController->genPdfMmfReq($request,$mailData['submission']->id);
-                // $this->attach($url."devportal/".$pdf); // add attachment to mail
+                $pdf = $controller->genPdfHcrfReq($request,$mailData['submission']->id);
+                $this->attach($url."devportal/".$pdf); // add attachment to mail
                 foreach ($MailrecipientNoBu as $cc){
                     if($cc->company_list == 'Hcrf') {
                         $this->cc($cc->email);

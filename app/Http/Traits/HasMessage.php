@@ -28,6 +28,7 @@ trait HasMessage {
             'chairmanexist' => 'Chairman already exist.',
             'buyerexist' => 'The buyer already exists. Only one buyer can be added.',
             'nothaveaccess' => 'Error: Unauthorized Access - You do not have the necessary permissions to perform this action.',
+            'accessformanageronly' => 'Error: Unauthorized Access - Only for Manager Up, You do not have the necessary permissions to perform this action.',
         ];
 
         return $message;

@@ -564,7 +564,7 @@ class M30RequestController extends Controller
             // Log error
             $ip = $request->ip();
             $url = $request->url();
-            $action = 'gen-pdf-ecatalog';
+            $action = 'gen-pdf-mmf30';
             $this->logerror($ip, $url, $action, $e->getMessage());
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);

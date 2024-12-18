@@ -59,20 +59,6 @@ class HcrfRequestController extends Controller
             where l.ApprovalAction='1' and l.req_id = request_hris.id and l.module_id = '".$module_id."' and request_hris.requestStatus='1'
             order by a.sequence)";
 
-            // $getProcHead = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
-            // from tbl_approverListReq l
-            // left join tbl_approver a on l.approver_id=a.id
-            // left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            // where l.req_id = request_hris.id and l.module_id = '".$module_id."' and r.ApprovalType='Procurement Head' and r.isactive='1'
-            // order by a.sequence)";
-
-            // $getBuyer = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
-            // from tbl_approverListReq l
-            // left join tbl_approver a on l.approver_id=a.id
-            // left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            // where l.req_id = request_hris.id and l.module_id = '".$module_id."' and r.ApprovalType='Buyer' and r.isactive='1'
-            // order by a.sequence)";
-
             $data = $dataquery
                 ->selectRaw("request_hris.*,codes.code,employee.tbl_employee.FullName as employee_name,
                     CASE WHEN request_hris.employee_id='".$employee_id."' then 1 else 0 end as isMine,
@@ -109,59 +95,23 @@ class HcrfRequestController extends Controller
         }
     }
 
-    // public function historyApprover(Request $request)
-    // {
-    //     try {
-            
-    //         $id = $request->id;
-    //         $user_id = $this->getAuth()->id;
-    //         $employee_id = $this->getEmployeeID()->id;
-    //         $module_id = $this->getModuleId($this->modulename);
-
-    //         $data = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
-    //                 request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason
-    //             ")
-    //             ->leftJoin('codes','request_mmf.code_id','codes.id')
-    //             ->leftJoin('tbl_approverListReq', 'request_mmf.id', '=', 'tbl_approverListReq.req_id')
-    //             ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
-    //             ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
-    //             ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
-    //             ->where('request_mmf.category', 'MMF30')
-    //             ->where('request_mmf.requestStatus', 3)
-    //             ->where('tbl_approverListReq.module_id', $module_id)
-    //             ->where('tbl_approver.employee_id', $employee_id)
-    //             ->with(['user'])
-    //         ->get();
-
-    //         return response()->json([
-    //             'status' => "show",
-    //             'message' => $this->getMessage()['show'],
-    //             'data' => $data
-    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
-    //     } catch (\Exception $e) {
-
-    //         return response()->json(["status" => "error", "message" => $e->getMessage()]);
-    //     }
-    // }
-
     // public function report(Request $request)
     // {
     //     try {
     //         $startDate = $request->input('startDate');
     //         $endDate = $request->input('endDate');
             
-    //         $query = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
-    //                 request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason
+    //         $query = $this->model->selectRaw("request_hris.*,codes.code,employee.tbl_employee.FullName as employee_name,
+    //                 request_hris_30.PRType,request_hris_30.RequisitionType,request_hris_30.Reason
     //             ")
-    //             ->leftJoin('codes','request_mmf.code_id','codes.id')
-    //             ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
-    //             ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
-    //             ->where('request_mmf.category', 'MMF30')
-    //             ->whereIn('request_mmf.requestStatus', [3]);
+    //             ->leftJoin('codes','request_hris.code_id','codes.id')
+    //             ->leftJoin('employee.tbl_employee','request_hris.employee_id','employee.tbl_employee.id')
+    //             ->leftJoin('request_hris_30', 'request_hris.id', 'request_hris_30.req_id')
+    //             ->where('request_hris.category', 'MMF30')
+    //             ->whereIn('request_hris.requestStatus', [3]);
                
     //         if ($startDate && $endDate) {
-    //             $query->whereBetween('request_mmf.created_at', [$startDate, $endDate]);
+    //             $query->whereBetween('request_hris.created_at', [$startDate, $endDate]);
     //         }
             
     //         $data = $query->orderBy('created_at', 'desc')->with(['user'])->get();
@@ -192,8 +142,11 @@ class HcrfRequestController extends Controller
             $requestData['category'] = $this->submodulename;
             $requestData['category_id'] = $this->getCategoryFormIdByModule($this->submodulename);
             $requestData['bu'] = $this->getEmployeeID()->companycode;
-            $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
-
+            // $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
+            // dd($this->getEmployeeID()->level_id);
+            if($this->getEmployeeID()->level_id !== 4) {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['accessformanageronly']]);
+            }
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
 
@@ -201,8 +154,6 @@ class HcrfRequestController extends Controller
             $req_id = $newData->id;
             $detailData['req_id'] = $req_id;
             $newData->detailHcrf()->create($detailData);
-
-            // $this->createApprManager($requestData['depthead_id'], $this->submodulename, $req_id);
 
             $newData = $this->model->with('detailHcrf')->find($newData->id);
 
@@ -386,12 +337,12 @@ class HcrfRequestController extends Controller
         }
     }
 
-    public function genPdfMmfReq(Request $request, $id) {
-        $data =  $this->model->select('request_mmf.*','users.username')
-                    ->leftJoin('users','request_mmf.user_id','users.id')
-                    ->where('request_mmf.id',$id)
-                    ->where('request_mmf.category','MMF30')
-                    ->with(['code','detail30','approverHistory'])
+    public function genPdfHcrfReq(Request $request, $id) {
+        $data =  $this->model->select('request_hris.*','users.username')
+                    ->leftJoin('users','request_hris.user_id','users.id')
+                    ->where('request_hris.id',$id)
+                    ->where('request_hris.category','Hcrf')
+                    ->with(['code','detailHcrf','approverHistory'])
                     ->first(); // data submission
 
         $originatorApproval = $data->approverHistory
@@ -401,67 +352,79 @@ class HcrfRequestController extends Controller
         
         $subimissionDate = ($originatorApproval) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
         
-        $dataDetails = DB::table('request_mmf_30_detail')->select('*')->where('mmf30_id',$data->detail30->id)->get(); // data detail
         $emp = Employee::select('*')->with(['location','company','department'])->where('LoginName',$data->username)->first(); // data employee
-        $dataAppr = DB::table('Mmf30reqApprover')->select('*')->where('id',$id)->get(); // data approver
+        $dataAppr = DB::table('HcrfreqApprover')->select('*')->where('id',$id)->get(); // data approver
 
         try {
 			$excel = new COM("Excel.Application") or die("ERROR: Unable to instantaniate COM!\r\n");
 			$excel->Visible = false;
 
-            $file = public_path("template/mmf/mmf30.xls");
+            $file = public_path("template/hris/hcrf/hcrf.xlsx");
 
 			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
 			$Worksheet = $Workbook->Worksheets(1);
 			$Worksheet->Activate;
 
-            function formatCurrency($amount, $decimals = 0, $decimalSeparator = '.', $thousandSeparator = ',')
-            {
-                return number_format($amount, $decimals, $decimalSeparator, $thousandSeparator);
+
+            // Fungsi untuk membersihkan dan mengkonversi HTML menjadi teks plain dengan newline
+            function cleanAndConvertHTML($text) {
+                // Gantikan <br>, <br/>, <br /> dengan karakter newline
+                $textWithNewlines = str_replace(['<br>', '<br/>', '</p>', '<br />'], "\n", $text);
+                // Hilangkan tag HTML lainnya
+                return strip_tags($textWithNewlines);
             }
 
             // Start Form Data
             
-                $Worksheet->Range("A4")->Value = (($data->detail30->PRType == 1)?'X':'');
-                $Worksheet->Range("A5")->Value = (($data->detail30->PRType == 2)?'X':'');
-                $Worksheet->Range("A6")->Value = (($data->detail30->PRType == 3)?'X':'');
-                $Worksheet->Range("A7")->Value = (($data->detail30->PRType == 4)?'X':'');
+                $Worksheet->Range("D5")->Value = $data->detailHcrf->jobTitle;
+                $Worksheet->Range("D6")->Value = $data->detailHcrf->level;
+                $Worksheet->Range("D7")->Value = $data->detailHcrf->department;
+                $Worksheet->Range("J5")->Value = $data->detailHcrf->neededEmp;
+                $Worksheet->Range("J6")->Value = $data->detailHcrf->reportDirectly;
+                $Worksheet->Range("J7")->Value = $data->detailHcrf->reportIndirectly;
 
-                $Worksheet->Range("G4")->Value = (($data->detail30->RequisitionType == 1)?'X':'');
-                $Worksheet->Range("G5")->Value = (($data->detail30->RequisitionType == 2)?'X':'');
-                $Worksheet->Range("G6")->Value = (($data->detail30->RequisitionType == 3)?'X':'');
-                $Worksheet->Range("G7")->Value = (($data->detail30->RequisitionType == 4)?'X':'');
-                $Worksheet->Range("G8")->Value = (($data->detail30->RequisitionType == 5)?'X':'');
-                $Worksheet->Range("I8")->Value = (($data->detail30->RequisitionType == 5)?$data->detail30->RequisitionOther:'');
+                $Worksheet->Range("D9")->Value = (($data->detailHcrf->isHeadcount == 1)?'Budgeted':'Replacement');
+                $Worksheet->Range("D10")->Value = (($data->detailHcrf->isCriticalPosition == 1)?'Yes':'No');
+                $Worksheet->Range("D11")->Value = $data->detailHcrf->expectedDate;
 
-                $Worksheet->Range("C9")->Value = $data->code->code;
-                $Worksheet->Range("E9")->Value = $subimissionDate->format('Y-m-d');
-                $Worksheet->Range("H9")->Value = $data->detail30->CostCode;
+                // Memproses data detail menggunakan fungsi cleanAndConvertHTML
+                $jobDescCleaned = cleanAndConvertHTML($data->detailHcrf->jobDesc);
+                $trainingPlanCleaned = cleanAndConvertHTML($data->detailHcrf->trainingPlan);
+                $careerDevPlanCleaned = cleanAndConvertHTML($data->detailHcrf->careerDevPlan);
+                $specialSkillsCleaned = cleanAndConvertHTML($data->detailHcrf->specialSkills);
 
-                $Worksheet->Range("C10")->Value = $emp->FullName;
-                $Worksheet->Range("E10")->Value = $data->detail30->DeliverTo;
-                $Worksheet->Range("H10")->Value = $emp->department->DepartmentName;
+                $Worksheet->Range("A14")->Value = $jobDescCleaned;
 
-                $Worksheet->Range("C13")->Value = $data->detail30->SupplierName;
-                $Worksheet->Range("D13")->Value = 'Supplier Address: '.$data->detail30->SupplierAddress;
-                $Worksheet->Range("F13")->Value = 'Email / Fax: '.$data->detail30->SupplierEmailFax;
-                $Worksheet->Range("I13")->Value = 'Contract No.: '.$data->detail30->ContractNo;
+                $Worksheet->Range("D20")->Value = $data->detailHcrf->location;
+                $Worksheet->Range("A24")->Value = $trainingPlanCleaned;
+                $Worksheet->Range("A28")->Value = $careerDevPlanCleaned;
 
-                $Worksheet->Range("A19")->Value = 'Remarks : '.$data->detail30->RemarksU;
-                // Set the initial value of the cell
-                $Worksheet->Range("E23")->Value = 'Reason for requisition/purchase: ' . $data->detail30->Reason;
+                $Worksheet->Range("B33")->Value = $data->detailHcrf->education;
+                $Worksheet->Range("H33")->Value = $data->detailHcrf->experienceLength;
+                $Worksheet->Range("B35")->Value = $data->detailHcrf->language;
+                $Worksheet->Range("H35")->Value = $specialSkillsCleaned;
+
 
                 // Format the text in cell E23
-                $range = $Worksheet->Range("E23");
+                // $range = $Worksheet->Range("E23");
+
+                // $Worksheet->Rows("14:14")->AutoFit();
+                // Mengaktifkan pembungkusan teks dalam sel yang di-merge
+                // $range->WrapText = true;
+
+                // Menyesuaikan tinggi semua baris yang bersesuaian (A14:K19)
+                // for ($i = 14; $i <= 19; $i++) {
+                //     $Worksheet->Rows($i)->AutoFit();
+                // }
 
                 // Set "Reason for requisition/purchase:" to red
-                $range->Characters(1, 31)->Font->Color = -16776961; // RGB for red
-                $range->Characters(1, 31)->Font->Underline = true; // underline
+                // $range->Characters(1, 31)->Font->Color = -16776961; // RGB for red
+                // $range->Characters(1, 31)->Font->Underline = true; // underline
 
                 // Set the reason text to black
-                $reasonStart = 32; // Assuming the reason starts immediately after the colon and space
-                $reasonLength = strlen($data->detail30->Reason);
-                $range->Characters($reasonStart, $reasonLength)->Font->Color = 0; // RGB for black
+                // $reasonStart = 32; // Assuming the reason starts immediately after the colon and space
+                // $reasonLength = strlen($data->detailHcrf->Reason);
+                // $range->Characters($reasonStart, $reasonLength)->Font->Color = 0; // RGB for black
 
             // End Form Data
 
@@ -475,72 +438,35 @@ class HcrfRequestController extends Controller
             }
 
             // // signature originator
-            $Worksheet->Range("C23")->Value = $emp->FullName;
-            $Worksheet->Range("D23")->Value = '/ '.$subimissionDate->format('Y-m-d');
-            addPictureToWorksheet($Worksheet, $picpath, 23, 3, 30, $excel);
+            $Worksheet->Range("D46")->Value = $emp->FullName;
+            $Worksheet->Range("D47")->Value = $subimissionDate->format('Y-m-d');
+            addPictureToWorksheet($Worksheet, $picpath, 42, 4, 30, $excel);
             
             // // signature approver
             foreach ($dataAppr as $appr) {
-                if($appr->sequence == 2) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("C25")->Value = $appr->apprname;
-                        $Worksheet->Range("D25")->Value = '/ '.$appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 25, 3, 30, $excel);
-                    }
-                }
                 if($appr->sequence == 3) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("C30")->Value = $appr->apprname.' / '.$appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 30, 3, 30, $excel);
+                        $Worksheet->Range("F46")->Value = $appr->apprname;
+                        $Worksheet->Range("F47")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 42, 6, 30, $excel);
                     }
                 }
                 if($appr->sequence == 4) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("E30")->Value = $appr->apprname.' / '.$appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 30, 5, 30, $excel);
+                        $Worksheet->Range("I46")->Value = $appr->apprname;
+                        $Worksheet->Range("I47")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 42, 9, 30, $excel);
                     }
                 }
             }
-            
-            $totalExtendedPrice = 0;
-            $xlShiftDown=-4121;
-				$no = 1;
-				for ($a=16;$a<16+count($dataDetails);$a++){
-                    $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
-				}
-                $Worksheet->Range("J19")->Value = formatCurrency($totalExtendedPrice);
-
-                for ($a=16;$a<16+count($dataDetails);$a++){
-                    $totalExtendedPrice += $dataDetails[$a-16]->ExtendedPrice;
-
-					$Worksheet->Rows($a+1)->Copy();
-					$Worksheet->Rows($a+1)->Insert($xlShiftDown);
-					$Worksheet->Range("A".$a)->Value = $no++;
-					$Worksheet->Range("B".$a)->Value = $dataDetails[$a-16]->MaterialCode;
-					$Worksheet->Range("C".$a)->Value = $dataDetails[$a-16]->MaterialDescr;
-					$Worksheet->Range("D".$a)->Value = $dataDetails[$a-16]->PartNumber;
-					$Worksheet->Range("E".$a)->Value = $dataDetails[$a-16]->BrandManufacturer;
-					$Worksheet->Range("F".$a)->Value = formatCurrency($dataDetails[$a-16]->Qty);
-					$Worksheet->Range("G".$a)->Value = $dataDetails[$a-16]->Unit;
-					$Worksheet->Range("H".$a)->Value = $dataDetails[$a-16]->Currency;
-					$Worksheet->Range("I".$a)->Value = formatCurrency($dataDetails[$a-16]->UnitPrice);
-					$Worksheet->Range("J".$a)->Value = formatCurrency($dataDetails[$a-16]->ExtendedPrice);
-
-                    // Enable text wrapping for the MaterialDescr cell
-                    $Worksheet->Cells($a, 3)->WrapText = true;
-
-                    // Auto-fit the row height
-                    $Worksheet->Rows($a)->AutoFit();
-
-				}
             
             $xlTypePDF = 0;
 			$xlQualityStandard = 0;
 
             $code_sanitized = str_replace('/', '_', $data->code->code);
-			$fileName = $data->id . '_30' . $code_sanitized . '_' . date("Ymd") . '.pdf';
+			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
-            $filePath = public_path('template/mmf/pdf/' . $fileName);
+            $filePath = public_path('template/hris/hcrf/pdf/' . $fileName);
 			$path = $filePath;
 			if (file_exists($path)) {
 				unlink($path);
@@ -555,7 +481,7 @@ class HcrfRequestController extends Controller
 			$excel->Quit();
 			unset($excel);
 			
-            $pathfilename = 'public/template/mmf/pdf/' . $fileName;
+            $pathfilename = 'public/template/hris/hcrf/pdf/' . $fileName;
 
             $updateData = $this->model->find($data->id);
 			$updateData->approveddoc = str_replace("\\", "/", $pathfilename);
@@ -569,7 +495,7 @@ class HcrfRequestController extends Controller
             // Log error
             $ip = $request->ip();
             $url = $request->url();
-            $action = 'gen-pdf-ecatalog';
+            $action = 'gen-pdf-hcrf';
             $this->logerror($ip, $url, $action, $e->getMessage());
 
             return response()->json(["status" => "error", "message" => $e->getMessage()]);

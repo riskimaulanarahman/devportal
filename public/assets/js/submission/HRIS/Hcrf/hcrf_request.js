@@ -14,12 +14,18 @@ isHeadcount = [
     { id: 1, name: "Budgeted" },
     { id: 2, name: "Replacement" }
 ];
-// OpsCategory = [
-//     { id: 1, name:"General"},
-//     { id: 4, name:"Direct Purchased"},
-//     { id: 5, name:"SSL"}
-// ];
-
+jobLevel = [
+    { id: 1, name:"Non Staff"},
+    { id: 2, name:"Mandor"},
+    { id: 3, name:"Asst"},
+    { id: 4, name:"Askep"},
+    { id: 5, name:"Manager Up"},
+];
+statusContract = [
+    { id: 1, name: "Contract" },
+    { id: 2, name: "Contract Averis" },
+    { id: 3, name: "Permanent" }
+];
 
 var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
@@ -227,230 +233,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     }
 }).dxDataGrid("instance");
 
-// $('#HistoryButton').on('click',function(){
-//     var dataGridhistory = $("#historyMMF30").dxDataGrid({    
-//         dataSource: store('mmf30historyApp'),
-//         allowColumnReordering: true,
-//         allowColumnResizing: true,
-//         columnHidingEnabled: true,
-//         rowAlternationEnabled: false,
-//         wordWrapEnabled: true,
-//         autoExpandAll: true,
-//         showBorders: true,
-//         filterRow: { visible: true },
-//         filterPanel: { visible: true },
-//         headerFilter: { visible: true },
-//         searchPanel: {
-//             visible: true,
-//             width: 240,
-//             placeholder: 'Search...',
-//         },
-//         editing: {
-//             useIcons:true,
-//             mode: "popup",
-//             allowAdding: false,
-//             allowUpdating: false,
-//             allowDeleting: true,
-//         },
-//         scrolling: {
-//             mode: "virtual"
-//         },
-//         pager: {
-//             visible: false,
-//             showInfo: true,
-//         },
-//         columns: [
-//             {
-//                 caption: 'Action',
-//                 width: 140,
-//                 cellTemplate: function(container, options) {
-
-//                     var isMine = options.data.isMine;
-//                     var isPendingOnMe = options.data.isPendingOnMe;
-//                     var reqid = options.data.id;
-//                     var reqstatus = options.data.requestStatus;
-//                     var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-//                     var arrColor = [
-//                         "btn-secondary",
-//                         (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-//                         "btn-warning",
-//                         "btn-success",
-//                         "btn-danger",
-//                     ];
-
-//                     var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
-        
-//                     $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-//                         evt.stopPropagation();
-                    
-//                                 popup.option({
-//                                     contentTemplate: () => popupContentTemplate(reqid,mode,options),
-//                                 });
-//                                 popup.show();
-
-//                     }).appendTo(container);
-//                     if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-//                         $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-//                             evt.stopPropagation();
-                                
-//                             var result = confirm('Are you sure you want to cancel this submission ?');
-
-//                             if (result) {
-//                                 sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-//                                     requestStatus:0,
-//                                     action:'submission',
-//                                     approvalAction: 0
-//                                 }).then(function(response){
-//                                     if(response.status != 'error') {
-//                                         dataGrid.refresh();
-//                                     }
-//                                 });
-//                             } else {
-//                                 alert('Cancelled.');
-//                             }
-        
-//                         }).appendTo(container); 
-//                     }
-                
-//                 }
-//             },
-//             {
-//                 caption: "Code",
-//                 dataField: 'code',
-//                 width: 180,
-//             },
-//             { 
-//                 caption: 'BU',
-//                 dataField: "bu",
-//                 width: 80
-//             },
-//             { 
-//                 caption: 'PR Type',
-//                 dataField: "PRType",
-//                 width: 200,
-//                 lookup: { 
-//                     dataSource: prType,  
-//                     valueExpr: 'id',
-//                     displayExpr: 'name',
-//                 },
-//             },
-//             { 
-//                 caption: 'Requisition Material',
-//                 dataField: "RequisitionType",
-//                 width: 200,
-//                 lookup: { 
-//                     dataSource: reqType,  
-//                     valueExpr: 'id',
-//                     displayExpr: 'name',
-//                 },
-//             },
-//             { 
-//                 dataField: "Reason",
-//                 width: 180
-//             },
-//             { 
-//                 caption: 'Creator Name',
-//                 dataField: "user.fullname",
-//                 width: 180
-//             },
-//             { 
-//                 caption: 'Employee Name',
-//                 dataField: "employee_name",
-//                 width: 180
-//             },
-//             {
-//                 dataField: 'requestStatus',
-//                 encodeHtml: false,
-//                 allowFiltering: false,
-//                 allowHeaderFiltering: true,
-//                 customizeText: function (e) {
-//                     var arrText = [
-//                         "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-//                         "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-//                         "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-//                         "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-//                         "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-//                     ];
-//                     return arrText[e.value];
-//                 },
-//             },
-//             {
-//                 dataField: "approveddoc",
-//                 caption:"Approval Doc",
-//                 allowFiltering: false,
-//                 allowSorting: false,
-//                 formItem: { visible: false},
-//                 cellTemplate: function (container, options) {
-//                     var value = options.value;
-//                     var origin = window.location.origin;
-//                     if (value && value.includes('doc')) {
-//                         var baseUrl = origin + '/oasys/';
-//                     } else {
-//                         var baseUrl = origin + '/devportal/';
-//                     }
-//                     var fullUrl = baseUrl + value;
-//                     if ((value!="") && (value)){
-//                         $("<div />").dxButton({
-//                             icon: 'download',
-//                             type: "success",
-//                             text: "Download",
-//                             onClick: function (e) {
-//                                 window.open(fullUrl, '_blank');
-
-//                             }
-//                         }).appendTo(container);
-//                     }
-//                 }
-//             },
-        
-//         ],
-//         columnChooser: {
-//         enabled: true,
-//         },
-//         export: {
-//             enabled: true,
-//             fileName: modname,
-//             excelFilterEnabled: true,
-//             allowExportSelectedData: true
-//         },
-//         onContentReady: function(e){
-//             moveEditColumnToLeft(e.component);
-//             runpopup();
-//         },
-//         onCellPrepared: function (e) {
-//             if (e.rowType == "data") {
-//                 if(e.data.isParent === 1) {
-//                     e.cellElement.css('background','rgba(128, 128, 0,0.1)')
-//                 }
-//             }
-//         },
-//         onToolbarPreparing: function(e) {
-//             dataGridhistory = e.component;
-
-//             e.toolbarOptions.items.unshift({						
-//                 location: "after",
-//                 widget: "dxButton",
-//                 options: {
-//                     hint: "Refresh Data",
-//                     icon: "refresh",
-//                     onClick: function() {
-//                         dataGridhistory.refresh();
-//                     }
-//                 }
-//             })
-//         },
-//         onDataErrorOccurred: function(e) {
-//             // Menampilkan pesan kesalahan
-//             console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-//             // Memuat ulang Page
-//             dataGridhistory.refresh();
-//         }
-//     }).dxDataGrid("instance");
-// })
-
 $('#btnadd').on('click',function(){
-    showLoadingScreen();
+    // showLoadingScreen();
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
         const mode = 'add';
@@ -469,6 +253,11 @@ $('#btnadd').on('click',function(){
         });
         popup.show();
         hideLoadingScreen();
+    }).then(function (response) {
+        console.log(response)
+        if (response.status == 'error') {
+            hideLoadingScreen();
+        }
     });
 })
 
@@ -519,10 +308,9 @@ const popupContentTemplate = function (reqid,mode,options) {
     var isPendingOnMe = options.data.isPendingOnMe;
     isProcHead = options.data.isProcHead;
     isBuyer = options.data.isBuyer;
-    var detailid = options.data.detail_hcrf.id;
+    // var detailid = options.data.detail_hcrf.id;
 
-    var validationRules = [];
-    var visibleRulesAdvForm = false;
+    // var validationRules = [];
 
     popupid = reqid;
 
@@ -653,9 +441,23 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 // validationRules: [{ type: "required" }]
                             },
                             { 
-                                caption: "Job Grade",
-                                dataField: "detail_hcrf.jobGrade",
+                                caption: "Level",
+                                dataField: "detail_hcrf.level",
+                                lookup: { 
+                                    dataSource: jobLevel,  
+                                    valueExpr: 'name',
+                                    displayExpr: 'name',
+                                },
                                 // validationRules: [{ type: "required" }]
+                            },
+                            { 
+                                caption: "Status Contract",
+                                dataField: "detail_hcrf.statusContract",
+                                lookup: { 
+                                    dataSource: statusContract,  
+                                    valueExpr: 'name',
+                                    displayExpr: 'name',
+                                },
                             },
                             { 
                                 caption: "Department",
@@ -732,7 +534,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index>=1 && e.column.index<=6)) {
+                            if ( e.rowType == "data" && (e.column.index>=1 && e.column.index<=7)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -830,7 +632,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPreparing: function (e) {
                         },
                         onCellPrepared: function (e) {
-                            if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<=2)) {
+                            if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<=1)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -897,16 +699,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             cellInfo.setValue(e.value);
                                         },
                                         height: 200, // Set a height for the editor
-                                        toolbar: {
-                                            items: [
+                                        // toolbar: {
+                                        //     items: [
                                                 // 'bold', 'italic', 'underline', 
                                                 // 'separator', 
                                                 // 'alignLeft', 'alignCenter', 'alignRight', 
                                                 // 'separator',
                                                 // 'orderedList', 
-                                                'bulletList'
-                                            ]
-                                        },
+                                                // 'bulletList'
+                                        //     ]
+                                        // },
                                         // Add any other configurations you need here
                                     });
                                 },
@@ -927,12 +729,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             cellInfo.setValue(e.value);
                                         },
                                         height: 200, // Set a height for the editor
-                                        toolbar: {
-                                            items: [
-                                                'bulletList'
-                                            ]
-                                        },
-                                        // Add any other configurations you need here
                                     });
                                 },
                                 // validationRules: [{ type: "required" }]
@@ -952,12 +748,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             cellInfo.setValue(e.value);
                                         },
                                         height: 200, // Set a height for the editor
-                                        toolbar: {
-                                            items: [
-                                                'bulletList'
-                                            ]
-                                        },
-                                        // Add any other configurations you need here
                                     });
                                 },
                                 // validationRules: [{ type: "required" }]
@@ -1064,11 +854,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             cellInfo.setValue(e.value);
                                         },
                                         height: 200, // Set a height for the editor
-                                        toolbar: {
-                                            items: [
-                                                'bulletList'
-                                            ]
-                                        },
                                     });
                                 },
                             },
@@ -1399,13 +1184,14 @@ function btnreqsubmit(reqid,mode) {
     
     var fieldsToCheckGrid = [
         { field: 'jobTitle', name: 'Job Title' },
-        { field: 'jobGrade', name: 'Job Grade' },
+        { field: 'level', name: 'Level' },
         { field: 'department', name: 'Department' },
+        { field: 'statusContract', name: 'Status Contract' },
         { field: 'neededEmp', name: 'Neede Employee' },
         { field: 'reportDirectly', name: 'Reporting to (Directly)' },
         { field: 'reportIndirectly', name: 'Reporting to (Indirectly)' },
         { field: 'isHeadcount', name: 'Category HC' },
-        { field: 'isCriticalPosition', name: 'Critical Position' },
+        // { field: 'isCriticalPosition', name: 'Critical Position' },
         { field: 'location', name: 'Location' },
         { field: 'jobDesc', name: 'Job Description' },
         { field: 'trainingPlan', name: 'Training Plan' },
