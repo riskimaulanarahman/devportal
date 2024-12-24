@@ -13,6 +13,7 @@ use App\Models\Company;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Location;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
 class EmployeedataController extends Controller
 {
@@ -92,6 +93,8 @@ class EmployeedataController extends Controller
 
     public function update(Request $request, $id)
     {
+        DB::beginTransaction();
+
         try {
 
             // Check if SAPID already exists
@@ -108,6 +111,14 @@ class EmployeedataController extends Controller
             if(isset($request->deptheadName)) {
                 $requestData['sys_id_depthead'] = $this->getsysid($request->deptheadName);
                 $requestData['sys_id_superior'] = $this->getsysid($request->superiorName);
+            }
+            if(isset($request->LoginName)) {
+                $getldap = LdapUser::findBy('samaccountname',$request->LoginName);
+                if ($getldap) {
+                    $requestData['LoginName'] = $getldap['samaccountname'][0];
+                } else {
+                    return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregisteredldap']]);
+                }
             }
 
             $data = $this->model->findOrFail($id);
@@ -168,6 +179,8 @@ class EmployeedataController extends Controller
             }
 
             $data->update($requestData);
+
+            DB::commit();
 
             return response()->json(["status" => "success", "message" => $this->getMessage()['update']]);
 

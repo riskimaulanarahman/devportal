@@ -99,6 +99,73 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     $('<button class="btn btn-info" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-user"></i></button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
                             
+                        // Swal.fire({
+                        //     title: "Are you sure?",
+                        //     text: "Do you want to submit account information for this employee?",
+                        //     icon: "warning",
+                        //     showCancelButton: true,
+                        //     confirmButtonText: "Yes, submit!",
+                        //     cancelButtonText: "No, cancel!"
+                        // }).then((result) => {
+                        //     if (result.isConfirmed) {
+                        //         Swal.fire({
+                        //             title: "Enter Username of "+options.data.employee.FullName,
+                        //             input: "text",
+                        //             inputPlaceholder: "Username",
+                        //             showCancelButton: true,
+                        //             confirmButtonText: "Next",
+                        //             cancelButtonText: "Cancel"
+                        //         }).then((usernameResult) => {
+                        //             if (usernameResult.isConfirmed) {
+                        //                 const loginNameVal = usernameResult.value;
+                        
+                        //                 if (loginNameVal !== null && loginNameVal.trim() !== "") {
+                        //                     Swal.fire({
+                        //                         title: "Enter Password for "+options.data.employee.FullName,
+                        //                         input: "password",
+                        //                         inputPlaceholder: "Password",
+                        //                         showCancelButton: true,
+                        //                         confirmButtonText: "Submit",
+                        //                         cancelButtonText: "Cancel"
+                        //                     }).then((passwordResult) => {
+                        //                         if (passwordResult.isConfirmed) {
+                        //                             const passwordVal = passwordResult.value;
+                        
+                        //                             if (passwordVal !== null && passwordVal.trim() !== "") {
+                        //                                 showLoadingScreen();  // Show loading screen
+                                                        
+                        //                                 sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
+                        //                                     username_temp: loginNameVal,
+                        //                                     password_temp: passwordVal
+                        //                                 });
+                                                        
+                        //                                 sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
+                        //                                     LoginName: loginNameVal
+                        //                                 }).then(function(response) {
+                        //                                     hideLoadingScreen();  // Hide loading screen
+                                                            
+                        //                                     if (response.status != 'error') {
+                        //                                         dataGrid.refresh();
+                        //                                     }
+                        //                                 }).catch(function(error) {
+                        //                                     hideLoadingScreen();  // Hide loading screen
+                        //                                     console.error("An error occurred:", error);
+                        //                                 });
+                        //                             } else {
+                        //                                 Swal.fire("Cancelled", "The password has an empty value", "error");
+                        //                             }
+                        //                         }
+                        //                     });
+                        //                 } else {
+                        //                     Swal.fire("Cancelled", "The username has an empty value", "error");
+                        //                 }
+                        //             }
+                        //         });
+                        //     } else {
+                        //         Swal.fire("Cancelled", "Submission has been cancelled", "info");
+                        //     }
+                        // });
+
                         Swal.fire({
                             title: "Are you sure?",
                             text: "Do you want to submit account information for this employee?",
@@ -109,7 +176,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 Swal.fire({
-                                    title: "Enter Username of "+options.data.employee.FullName,
+                                    title: "Enter Username of " + options.data.employee.FullName,
                                     input: "text",
                                     inputPlaceholder: "Username",
                                     showCancelButton: true,
@@ -121,7 +188,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         
                                         if (loginNameVal !== null && loginNameVal.trim() !== "") {
                                             Swal.fire({
-                                                title: "Enter Password for "+options.data.employee.FullName,
+                                                title: "Enter Password for " + options.data.employee.FullName,
                                                 input: "password",
                                                 inputPlaceholder: "Password",
                                                 showCancelButton: true,
@@ -134,23 +201,35 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                                                     if (passwordVal !== null && passwordVal.trim() !== "") {
                                                         showLoadingScreen();  // Show loading screen
                                                         
-                                                        sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
-                                                            username_temp: loginNameVal,
-                                                            password_temp: passwordVal
-                                                        });
-                                                        
                                                         sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
                                                             LoginName: loginNameVal
-                                                        }).then(function(response) {
+                                                        })
+                                                        .then(function(apiResponse) {
+                                                            // Check the response of the first request
+                                                            if (apiResponse.status === 'error') throw new Error('Error!');
+                                                            
+                                                            // return sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
+                                                            //     LoginName: loginNameVal
+                                                            // });
+                                                            return sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
+                                                                username_temp: loginNameVal,
+                                                                password_temp: passwordVal
+                                                            })
+                                                        })
+                                                        .then(function(response) {
                                                             hideLoadingScreen();  // Hide loading screen
                                                             
-                                                            if (response.status != 'error') {
-                                                                dataGrid.refresh();
-                                                            }
-                                                        }).catch(function(error) {
+                                                            if (response.status === 'error') throw new Error('Error!!');
+                        
+                                                            // Successfully completed
+                                                            dataGrid.refresh();
+                                                        })
+                                                        .catch(function(error) {
                                                             hideLoadingScreen();  // Hide loading screen
+                                                            Swal.fire("Error", "An error occurred: " + error.message, "error");
                                                             console.error("An error occurred:", error);
                                                         });
+                        
                                                     } else {
                                                         Swal.fire("Cancelled", "The password has an empty value", "error");
                                                     }
@@ -165,7 +244,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                                 Swal.fire("Cancelled", "Submission has been cancelled", "info");
                             }
                         });
-    
+
                     }).appendTo(container); 
                 }
             

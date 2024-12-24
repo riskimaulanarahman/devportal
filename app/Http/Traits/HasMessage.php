@@ -11,7 +11,7 @@ trait HasMessage {
      * @param Request $request
      * @return $this|false|string
      */
-    public function getMessage() {
+    public function getMessage(): array {
 
         $message = [
             'show' => 'The data is being displayed.',
@@ -29,13 +29,14 @@ trait HasMessage {
             'buyerexist' => 'The buyer already exists. Only one buyer can be added.',
             'nothaveaccess' => 'Error: Unauthorized Access - You do not have the necessary permissions to perform this action.',
             'accessformanageronly' => 'Error: Unauthorized Access - Only for Manager Up, You do not have the necessary permissions to perform this action.',
+            'usernotregisteredldap' => 'User Not Registered on LDAP.',
         ];
 
         return $message;
 
     }
 
-    public function mailMessage() {
+    public function mailMessage(): array {
 
         $message = [
             'approved' => 'Your submission has been approved and will be processed further.',

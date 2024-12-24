@@ -1,9 +1,9 @@
 <input type="hidden" name="appenv" id="appenv" value="{{ env('APP_ENV') }}">
-<input type="hidden" name="empid" id="empid" value="{{ ($employee) ? $employee->id : null; }}">
+<input type="hidden" name="empid" id="empid" value="{{ ($employee) ? $employee->id : null }}">
 <input type="hidden" name="usersid" id="usersid" value="{{ Auth::user()->id }}">
 <input type="hidden" name="isadmin" id="isadmin" value="{{ Auth::user()->isAdmin }}">
 <input type="hidden" name="isusername" id="isusername" value="{{ Auth::user()->username }}">
-<input type="hidden" name="isdeveloper" id="isdeveloper" value="{{ ($developer) ? true : null; }}">
+<input type="hidden" name="isdeveloper" id="isdeveloper" value="{{ ($developer) ? true : null }}">
 <script>
     appenv = $('#appenv').val();
     admin = $('#isadmin').val();

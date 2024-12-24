@@ -273,24 +273,17 @@
                     </div>
                 </div>
             </div> --}}
-
             <div class="dropdown d-inline-block">
-                <button type="button" class="btn header-item noti-icon right-bar-toggle" id="right-bar-toggle-v">
-                    <i class="icon-sm" data-eva="settings-outline"></i>
-                </button>
-            </div>
-
-            <div class="dropdown d-inline-block">
-                <button type="button" class="btn header-item user text-start d-flex align-items-center"
-                    id="page-header-user-dropdown-v" data-bs-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
+                <button type="button" class="btn header-item user" id="page-header-user-dropdown-v" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="display: flex; align-items: center;">
+                    <p class="font-size-11 text-muted" style="margin: 0;">{{ Auth::user()->fullname }}</p>
                     <img class="rounded-circle header-profile-user" src="@if (Auth::user()->avatar != '') 
-                                        {{ env('APP_URL') . '/public/upload/profile/' . Auth::user()->avatar }} 
-                                    @else 
-                                        {{ env('APP_URL') . '/public/upload/profile/unnamed.png' }} 
-                                    @endif" 
-                         alt="Header Avatar">
-                    </button>
+                                                    {{ env('APP_URL') . '/public/upload/profile/' . Auth::user()->avatar }} 
+                                                @else 
+                                                    {{ env('APP_URL') . '/public/upload/profile/unnamed.png' }} 
+                                                @endif" 
+                         alt="Header Avatar" style="margin-left: 10px;"> <!-- Adding some right margin -->
+                    
+                </button>
                 <div class="dropdown-menu dropdown-menu-end pt-0">
                     <div class="px-3 pt-3">
                         <h6 class="mb-0"></h6>
@@ -300,26 +293,6 @@
                         <h6 class="mb-0"></h6>
                         <p class="mb-0 font-size-11 text-muted">{{ Auth::user()->email }}</p>
                     </div>
-                    {{-- <a class="dropdown-item mt-2" href="#"><i
-                            class="mdi mdi-account-circle text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Profile</span></a> --}}
-                    {{-- <a class="dropdown-item" href="apps-chat"><i
-                            class="mdi mdi-message-text-outline text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Messages</span></a> --}}
-                    
-                    {{-- <div class="dropdown-divider"></div> --}}
-                    {{-- <a class="dropdown-item" href="#"><i
-                            class="mdi mdi-account text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Remaining Day Off : <b>12</b></span></a> --}}
-                    {{-- <a class="dropdown-item d-flex align-items-center" href="#"><i
-                            class="mdi mdi-cog-outline text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Settings</span></a> --}}
-                    {{-- <a class="dropdown-item" href="auth-lock-screen"><i
-                            class="mdi mdi-lock text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Lock screen</span></a> --}}
-                    {{-- <a class="dropdown-item" href="pages-faqs"><i
-                            class="mdi mdi-cog-outline text-muted font-size-16 align-middle me-1"></i> <span
-                            class="align-middle">Settings</span></a> --}}
                     <a class="dropdown-item" href="#"><i
                             class="mdi mdi-lifebuoy text-muted font-size-16 align-middle me-1"></i> <span
                             class="align-middle" data-bs-toggle="modal" data-bs-target=".bs-modal-panduan">Help</span></a>
@@ -332,6 +305,14 @@
                     </form>
                 </div>
             </div>
+
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn header-item noti-icon right-bar-toggle" id="right-bar-toggle-v">
+                    <i class="icon-sm" data-eva="settings-outline"></i>
+                </button>
+            </div>
+
+            
         </div>
     </div>
 </header>
