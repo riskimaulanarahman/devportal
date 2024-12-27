@@ -590,7 +590,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 rowRenderingMode: 'virtual',
                             },
                             paging: {
-                                pageSize: 15,
+                                pageSize: 5,
                             },
                             pager: {
                                 visible: true,
