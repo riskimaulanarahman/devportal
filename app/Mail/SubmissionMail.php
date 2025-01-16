@@ -15,6 +15,7 @@ use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\Categoryhrsc;
 use App\Models\Employee;
+use App\Models\Submission\MMF\Mmf30;
 
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
@@ -351,6 +352,19 @@ class SubmissionMail extends Mailable
                     $mmfController = new M28RequestController();
                 } else {
                     $mmfController = new M30RequestController();
+                    if($mailData['submission']->requestStatus == 0 || $mailData['submission']->requestStatus == 2) { // if draft or rework status
+                        // delete data pada tbl_assignment dimana req_id = $checkCategory->id
+                        $assignmentCount  = Assignmentto::where('req_id', $checkCategory->id)->count();
+                        if($assignmentCount > 0) {
+                            Assignmentto::where('req_id', $checkCategory->id)->delete();
+                        }
+                        $mmf30req = Mmf30::where('req_id', $checkCategory->id)->first();
+                        if ($mmf30req) {
+                            $mmf30req->update([
+                                'Buyer' => null
+                            ]);
+                        }
+                    }
                 }
 
                 if($final == 1) {
@@ -361,7 +375,7 @@ class SubmissionMail extends Mailable
             }
         // MMF MODULE
 
-        // MMF MODULE
+        // hcrf MODULE
         if($modulename == 'Hris') {
             $checkCategory = Hris::find($mailData['submission']->id);
             
@@ -381,7 +395,7 @@ class SubmissionMail extends Mailable
             }
 
         }
-    // MMF MODULE
+    // hcrf MODULE
 
     }
 
