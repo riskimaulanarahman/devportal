@@ -435,6 +435,13 @@ checkUserAccess(modname, usersid).then(permissions => {
                                 width: 265,
                                 placeholder: "Search..."
                             },
+                            onContentReady: function(e) {
+                                // Focus the search panel's input
+                                const searchInput = e.element.find(".dx-datagrid-search-panel input");
+                                if (searchInput.length > 0) {
+                                    searchInput.focus();
+                                }
+                            },
                             onSelectionChanged: function (selectedItems) {
                                 const keys = selectedItems.selectedRowKeys;
                                 const hasSelection = keys.length;
@@ -499,12 +506,19 @@ checkUserAccess(modname, usersid).then(permissions => {
                             showBorders: true,
                             selection: { mode: "single" },
                             selectedRowKeys: [value],
-                            focusedRowEnabled: true,
+                            focusedRowEnabled: false,
                             focusedRowKey: args.component.option("value"),
                             searchPanel: {
                                 visible: true,
                                 width: 265,
                                 placeholder: "Search..."
+                            },
+                            onContentReady: function(e) {
+                                // Focus the search panel's input
+                                const searchInput = e.element.find(".dx-datagrid-search-panel input");
+                                if (searchInput.length > 0) {
+                                    searchInput.focus();
+                                }
                             },
                             onSelectionChanged: function (selectedItems) {
                                 const keys = selectedItems.selectedRowKeys;
@@ -577,6 +591,13 @@ checkUserAccess(modname, usersid).then(permissions => {
                                 visible: true,
                                 width: 265,
                                 placeholder: "Search..."
+                            },
+                            onContentReady: function(e) {
+                                // Focus the search panel's input
+                                const searchInput = e.element.find(".dx-datagrid-search-panel input");
+                                if (searchInput.length > 0) {
+                                    searchInput.focus();
+                                }
                             },
                             onSelectionChanged: function (selectedItems) {
                                 const keys = selectedItems.selectedRowKeys;

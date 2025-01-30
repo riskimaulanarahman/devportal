@@ -14,7 +14,7 @@ class PositionController extends Controller
     {
         try {
 
-            $data = Designation::all();
+            $data = Designation::orderBy('id', 'desc')->get();
 
             return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
 
