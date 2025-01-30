@@ -8,6 +8,8 @@
 <!-- sweetalert2 Css-->
 <link href="{{ URL::asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet">
 
+<link href="{{ URL::asset('assets/libs/choices.js/choices.js.min.css') }}" rel="stylesheet">
+
 <link rel="stylesheet" href="{{ asset('assets/css/dx.common.css') }}">
 @if(Auth::user())
     @if(Auth::user()->theme->layout_mode !== 'dark')

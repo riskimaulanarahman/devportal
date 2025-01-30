@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ApproverNotification;
 use DB;
+use Log;
 
 use App\Models\Employee;
 use App\Models\Company;
@@ -203,6 +204,50 @@ class EmployeedataController extends Controller
 
         } catch (\Exception $e) {
 
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public function changeDeptHead(Request $request)
+    {
+        try {
+            // Start a database transaction
+            DB::beginTransaction();
+
+            // Ambil dari dan ke department_id dari request
+            $fromDeptHeadID = $request->input('empfrom'); // sys_id
+            $toDeptHeadID = $request->input('empto'); // sys_id
+
+            // Backup the employee data
+            $timestamp = now()->format('Ymd_His');
+            $backupTableName = "employee.tbl_employees_backup_{$timestamp}";
+            
+            // Create the backup table by copying data
+            DB::statement("SELECT * INTO {$backupTableName} FROM employee.tbl_employee");
+
+            Log::info("Backup table created: " . $backupTableName);
+
+            // Update department_id for all relevant employees
+            $updatedRows = Employee::where('sys_id_depthead', $fromDeptHeadID)
+                ->update([
+                    'sys_id_depthead' => $toDeptHeadID,
+                    'deptHeadName' => $this->getemployeename($toDeptHeadID)
+                ]);
+
+            // Commit the transaction
+            DB::commit();
+
+            return response()->json([
+                "status" => "success",
+                "message" => "Employees updated successfully.",
+                "updatedRows" => $updatedRows
+            ]);
+
+        } catch (\Exception $e) {
+            
+            DB::rollBack();
+
+            Log::error("Error updating employees: " . $e->getMessage());
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }

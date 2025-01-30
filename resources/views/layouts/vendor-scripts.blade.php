@@ -11,6 +11,7 @@
 <script type="text/javascript" src="{{ asset('assets/js/jszip.js') }}"></script>
 <script type="text/javascript" src="{{ asset('assets/js/dx-quill.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('assets/js/dx.all.js') }}"></script>
+<script src="{{ URL::asset('assets/libs/choices.js/choices.js.min.js') }}"></script>
 
 @yield('script')
 @yield('script-bottom')

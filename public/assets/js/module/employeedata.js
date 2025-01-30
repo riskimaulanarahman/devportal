@@ -123,10 +123,10 @@ checkUserAccess(modname, usersid).then(permissions => {
                 visible: (admin == 1 || permissions.allowAction == 1) ? true : false,
                 width: 150,
                 formItem: {
-                    visible: (admin == 1) ? true : false
+                    visible: (admin == 1 || permissions.allowAction == 1) ? true : false
                 },
                 editorOptions: { 
-                    readOnly: (admin == 1) ? false : true
+                    readOnly: (admin == 1 || permissions.allowAction == 1) ? false : true
                 },
             },
             {
@@ -263,7 +263,10 @@ checkUserAccess(modname, usersid).then(permissions => {
             {
                 dataField: 'isActive',
                 dataType: 'boolean',
-                visible: (admin == 1) ? true : false
+                visible: (admin == 1) ? true : false,
+                formItem: {
+                    visible: (admin == 1) ? true : false
+                },
             },
         ],
         onEditorPreparing: function (e) {
@@ -948,3 +951,117 @@ var dataGridhistory = $("#loghistory").dxDataGrid({
     },
 }).dxDataGrid("instance");
 
+///// change dept head /////
+
+function populateEmployeeDropdowns() {
+    $.ajax({
+        url: apiurl + '/list-employeeall',
+        type: 'POST',
+            success: function(data) {
+                if (data && Array.isArray(data)) {
+                    var fromSelect = document.getElementById('fromInput');
+                    var toSelect = document.getElementById('toInput');
+                    
+                    // Clear existing options
+                    fromSelect.innerHTML = '<option value="" disabled selected>Select an option</option>';
+                    toSelect.innerHTML = '<option value="" disabled selected>Select an option</option>';
+
+                    data.forEach(function(employee) {
+                        // Combine employee name with department name
+                        var optionText = `${employee.fullname} (${employee.departmentname})`;
+
+                        var fromOption = new Option(optionText, employee.sys_id);
+                        var toOption = new Option(optionText, employee.sys_id);
+
+                        fromSelect.add(fromOption);
+                        toSelect.add(toOption);
+                    });
+
+                    // Initialize Choices.js
+                    fromChoices = new Choices('#fromInput', { removeItemButton: true, searchEnabled: true });
+                    toChoices = new Choices('#toInput', { removeItemButton: true, searchEnabled: true });
+                }
+            },
+        error: function(xhr, status, error) {
+            console.error('Error fetching employee list:', error);
+        }
+    });
+}
+
+$('#changeDeptHead').click(function() {
+    $('#changeDeptHeadModal').modal('show');
+    var fromSelect = document.getElementById('fromInput');
+    var toSelect = document.getElementById('toInput');
+    
+    // Clear existing options
+    fromSelect.innerHTML = '<option value="" disabled selected>Select an option</option>';
+    toSelect.innerHTML = '<option value="" disabled selected>Select an option</option>';
+    populateEmployeeDropdowns();
+});
+
+// Function to handle the "Save Changes" button click inside the modal
+$('#btnChangeDeptHead').click(function(){
+    const empFrom = $('#fromInput').val(); // Retrieve the "From" input value
+    const empTo = $('#toInput').val(); // Retrieve the "To" input value
+
+    const empFromText = $('#fromInput').text();
+    const empToText = $('#toInput').text();
+
+    // If inputs are not filled, alert the user.
+    if(!empFrom || !empTo) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete Information',
+            text: 'Please fill out both fields before submitting.',
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Are you sure?',
+        html: "Are you sure you want to submit this change ? <br><br>from<br><strong>"+empFromText+"</strong><br>to<br><strong>"+empToText+"</strong>",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, submit it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoadingScreen(); 
+            sendRequest(apiurl + "/changedepthead", "POST", {
+                empfrom: empFrom, // Use the value from the "From" input
+                empto: empTo // Use the value from the "To" input
+            }).then(function (response) {
+                if (response.status == 'error') {
+                    btnSubmit.prop('disabled', false);
+                    hideLoadingScreen();
+                } else {
+                    $('#changeDeptHeadModal').modal('hide'); // Hide modal after successful submission
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved',
+                        text: 'The Changes has been submitted.',
+                    });
+                    hideLoadingScreen();
+                    location.reload()
+                }
+            }).catch(function(error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Changes Failed',
+                    text: 'An error occurred while sending the request.',
+                });
+                hideLoadingScreen();
+            });
+
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Cancelled',
+                text: 'The Changes has been cancelled.',
+                confirmButtonColor: '#3085d6'
+            });
+            hideLoadingScreen();
+        }
+    });
+});
