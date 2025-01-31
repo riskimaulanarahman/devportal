@@ -39,8 +39,8 @@
         <div id="sidebar-menu">
             <ul class="metismenu list-unstyled" id="side-menu">
                 @foreach ($sequence as $sequenceitem)
-                    <li class="menu-title" data-key="t-applications">{{ $sequenceitem['title'] }}</li>
-                    @foreach ($sidemenu as $sidemenu_item)
+                <li class="menu-title" data-key="t-applications">{{ $sequenceitem['title'] }}</li>
+                @foreach ($sidemenu as $sidemenu_item)                
                         @if ($sidemenu_item['sequence_id'] == $sequenceitem['id'] && $sidemenu_item['is_active'] && $sidemenu_item['parent_id'] == null)
                             <li>
                                 <a href="{{ !$sidemenu_item['is_parent'] ? $sidemenu_item['route'] : '#' }}" class="{{ $sidemenu_item['is_parent'] ? 'has-arrow' : '' }}">

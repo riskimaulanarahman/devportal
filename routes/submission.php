@@ -8,14 +8,17 @@ Auth::routes();
 Route::group(['prefix' => 'api'], function () {
     Route::apiResources([
         'projectrequest' => App\Http\Controllers\Submission\ProjectRequestController::class,
+        'projectreport' => App\Http\Controllers\Submission\ProjectReportController::class,
         'ticketrequest' => App\Http\Controllers\Submission\TicketRequestController::class,
         'missionrequest' => App\Http\Controllers\Submission\UavMissionRequestController::class,
         'missionrequestdetail' => App\Http\Controllers\Submission\UavMissionRequestDetailController::class,
-        'hrscrequest' => App\Http\Controllers\Submission\HrscRequestController::class,
         'momrequest' => App\Http\Controllers\Submission\MomRequestController::class,
         'momtaskdetail' => App\Http\Controllers\Submission\MomTaskDetailController::class,
         'momtaskbound' => App\Http\Controllers\Submission\MomTaskBoundController::class,
         'momtaskupdate' => App\Http\Controllers\Submission\MomTaskUpdateController::class,
+        //HRSC
+        'hrscrequest' => App\Http\Controllers\Submission\HrscRequestController::class,
+        'hrscreport' => App\Http\Controllers\Submission\HrscReportController::class,
         // BCID - JDI
         'jdirequest' => App\Http\Controllers\Submission\JdiRequestController::class,
         'jdireport' => App\Http\Controllers\Submission\JdiReportController::class,

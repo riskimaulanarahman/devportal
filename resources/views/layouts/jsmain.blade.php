@@ -174,9 +174,11 @@
         //submission
         '/travel_request': 'submission/travel_request.js',
         '/project_request': 'submission/project_request.js',
+        '/project_report': 'submission/project_report.js',
         '/ticket_request': 'submission/ticket_request.js',
         '/uavmission_request': 'submission/uavmission_request.js',
         '/hrsc_request': 'submission/hrsc_request.js',
+        '/hrsc_report': 'submission/hrsc_report.js',
         '/mom_request': 'submission/mom_request.js',
         '/jdi_request': 'submission/jdi_request.js',
         '/jdi_report': 'submission/jdi_report.js',
