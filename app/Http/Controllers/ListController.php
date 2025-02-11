@@ -32,6 +32,7 @@ use App\Models\Unit;
 use App\Models\Currency;
 use App\Models\Ecatalog;
 use App\Models\Purchasinguser;
+use App\Models\RekeningCcm;
 use Auth;
 
 class ListController extends Controller
@@ -244,5 +245,9 @@ class ListController extends Controller
 
     public function listPurchasinguser() {
         return Purchasinguser::select('*')->with('employee')->get();
+    }
+
+    public function listRekeningCcm() {
+        return RekeningCcm::selectRaw("id, bu, CONCAT(nama, ' - ', norek, ' (', bank, ')') AS nama")->get();
     }
 }

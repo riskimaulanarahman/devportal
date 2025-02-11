@@ -191,6 +191,8 @@
         '/advance_request': 'submission/Financial/Advance/advance_request.js',
         //submission/HRIS/Hcrf
         '/hcrf_request': 'submission/HRIS/Hcrf/hcrf_request.js',
+        //submission/CCM
+        '/ccm_request': 'submission/Financial/Ccm/ccm_request.js',
     }
     
     const pathname = window.location.pathname;

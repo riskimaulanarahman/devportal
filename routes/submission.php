@@ -34,6 +34,9 @@ Route::group(['prefix' => 'api'], function () {
         // HRIS - hcrf
         'hcrfrequest' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class,
         'hcrfdetail' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestDetailController::class,
+        // financial - CCM
+        'ccmrequest' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestController::class,
+        'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -70,6 +73,9 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('hcrfdetail/{id}/{modulename}',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestDetailController::class, 'getList']); //get list hcrf by req_id of module
     // Route::get('hcrfhistoryApp',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestController::class, 'historyApprover']); //get list hcrfhistoryApp of module
     // Route::get('hcrfreport',[App\Http\Controllers\Submission\HRIS\Hcrf\HrisRequestController::class, 'report']); //get list report of module
+    //  financial - ccm
+    Route::get('ccmdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class, 'getList']); //get list ccm by req_id of module
+    Route::post('ccmcheckbalance/{id}',[App\Http\Controllers\Submission\Financial\Ccm\CcmRequestController::class, 'checkBalance']); // check balance ccm with detail
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request

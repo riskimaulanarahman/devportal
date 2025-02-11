@@ -99,6 +99,7 @@ class SubmissionController extends Controller
                 'Mmf' => "App\Models\Submission\MMF",
                 'MaterialReq' => "App\Models\Submission\Ecatalog",
                 'Hris' => "App\Models\Submission\HRIS",
+                'Ccm' => "App\Models\Submission\Financial",
             ];
             
             $baseNamespace = "App\Models\Submission";

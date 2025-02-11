@@ -72,7 +72,8 @@ class JdiRequestController extends Controller
                                     ->whereIn("request_jdi.requestStatus", [1,3,4]);
                             } else {
                                 $query->where("request_jdi.user_id", "!=", $user_id)
-                                    ->whereIn("request_jdi.requestStatus", [3]);
+                                    ->whereIn("request_jdi.requestStatus", [3])
+                                    ->where("bu",$this->getEmployeeID()->companycode);
                             }
                         })             
                         ->orWhere("request_jdi.user_id", $user_id);
@@ -101,6 +102,14 @@ class JdiRequestController extends Controller
 
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
+            
+            $employee = $this->getEmployeeID();
+
+            if ($employee->companycode === 'KPSI') {
+                $employee->companycode = 'IHM';
+            }
+
+            $requestData['bu'] = $employee->companycode;
 
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
@@ -174,9 +183,9 @@ class JdiRequestController extends Controller
 
             if(isset($request->isSaving)) {
                 if($request->isSaving == 1) {
-                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
+                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
                 } else {
-                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus);
+                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
                 }
             }
 
@@ -296,6 +305,7 @@ class JdiRequestController extends Controller
 			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
 			$Worksheet = $Workbook->Worksheets(1);
 			$Worksheet->Activate;
+            $separatorbreak = "\n \nBenefit:\n";
 
             // Start Form Data
                 $Worksheet->Range("D3")->Value = $data->submitDate; // Tanggal
@@ -316,7 +326,8 @@ class JdiRequestController extends Controller
                 $Worksheet->Range("G8")->Value = $data->sapid_deptHead;
 
                 $Worksheet->Range("B11")->Value = $data->htk;
-                $Worksheet->Range("E11")->Value = $data->perbaikan;
+                $valueperbaikan = $data->perbaikan . $separatorbreak . $data->benefit;
+                $Worksheet->Range("E11")->Value = $valueperbaikan;
                 $Worksheet->Range("G12")->Value = $data->isNotWasteful;
                 $Worksheet->Range("G13")->Value = $data->reasonNotWasteful;
 
@@ -381,18 +392,29 @@ class JdiRequestController extends Controller
                 }
             }
 
+            $appEnv = env('APP_ENV');
+
             $rowbefore = 63;
             $rowafter = 153;
             $countBefore = 0;  // Penghitung untuk gambar 'Before'
             $countAfter = 0;   // Penghitung untuk gambar 'After'
             foreach($dataAtt as $att) {
                 if($att->remarks == 'Before' && $countBefore < 3) { // kondisi untuk menambahkan foto sebelum dan menampilkan foto tidak lebih dari 3 (max)
-                    $Worksheet->Range("B" . $rowbefore)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowbefore, 2, 300, $excel);
+                    if ($appEnv == 'production') {
+                        $Worksheet->Range("B" . $rowbefore)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowbefore, 2, 300, $excel);
+                    } else {
+                        $Worksheet->Range("B" . $rowbefore)->Value = addPictureToWorksheet($Worksheet, "http://localhost/devportal/public/upload/" . $att->path, $rowbefore, 2, 300, $excel);
+                    }
                     $rowbefore+=25;
                     $countBefore++;
                 }
                 if($att->remarks == 'After' && $countAfter < 3) { // kondisi untuk menambahkan foto sesudah dan menampilkan foto tidak lebih dari 3 (max)
                     $Worksheet->Range("B" . $rowafter)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowafter, 2, 300, $excel);
+                    if ($appEnv == 'production') {
+                        $Worksheet->Range("B" . $rowafter)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowafter, 2, 300, $excel);
+                } else {
+                        $Worksheet->Range("B" . $rowafter)->Value = addPictureToWorksheet($Worksheet, "http://localhost/devportal/public/upload/" . $att->path, $rowafter, 2, 300, $excel);
+                    }
                     $rowafter+=25;
                     $countAfter++;
                 }

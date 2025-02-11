@@ -34,6 +34,7 @@ class Jdi extends Model
         'depthead_id',
         'htk',
         'perbaikan',
+        'benefit',
         'category_id',
         'isSaving',
         'isNotWasteful',

@@ -384,10 +384,10 @@ trait ApproverTrait {
         // }
     }
 
-    public function createApprSaving($saving, $moduleName, $reqID, $reqStatus) {
+    public function createApprSaving($saving, $moduleName, $reqID, $reqStatus, $company) {
 
         if($moduleName == 'Jdi') {
-
+            // dd($company);
             // Mengambil data ApprovalType terlebih dahulu untuk mengurangi duplikasi kode
             $getIDapprType = Approvaltype::where('Module','Jdi')->whereIn('ApprovalType',['Finance','BCID Manager'])->get();
 
@@ -396,6 +396,7 @@ trait ApproverTrait {
                 $apprUsers = Approvaluser::where('module', 'Jdi')
                                         // ->where('employee_id', $employeeID) // Baris ini di-comment, bisa di-uncomment jika diperlukan
                                         ->where('approvaltype_id', $apprType->id)
+                                        ->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
                                         ->where('isActive', 1)
                                         ->get();
 

@@ -36,3 +36,4 @@ Route::post('list-currency',[App\Http\Controllers\ListController::class, 'listCu
 Route::post('list-buyer',[App\Http\Controllers\ListController::class, 'listBuyer']);
 Route::post('list-ecatalog',[App\Http\Controllers\ListController::class, 'listEcatalog']);
 Route::post('list-pg',[App\Http\Controllers\ListController::class, 'listPurchasinguser']);
+Route::post('list-rekeningccm',[App\Http\Controllers\ListController::class, 'listRekeningCcm']);
