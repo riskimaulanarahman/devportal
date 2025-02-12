@@ -1,4 +1,4 @@
-var modname = 'hrscrequest';
+var modname = 'hrscreport';
 var modelclass = 'Hrsc';
 var popupmode;
 
@@ -14,14 +14,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     dataSource: store(modname),
     allowColumnReordering: true,
     allowColumnResizing: true,
-    columnHidingEnabled: true,
+    columnHidingEnabled: false,
     rowAlternationEnabled: false,
-    wordWrapEnabled: true,
-    autoExpandAll: true,
+    wordWrapEnabled: false,
     showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
+    selection: { mode: "multiple" },
     searchPanel: {
         visible: true,
         width: 240,
@@ -32,7 +32,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         mode: "popup",
         allowAdding: false,
         allowUpdating: false,
-        allowDeleting: true,
+        allowDeleting: false,
     },
     scrolling: {
         mode: "virtual"
@@ -43,148 +43,160 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         {
+            caption: "Code",
+            dataField: 'code',
+            width: 140,
+            sortOrder: "desc"
+        },
+        {caption: "Submit Date", 
+            dataField: 'Submitted', 
+            cellTemplate: function(container, options) {
+                if (!options.value) {
+                    container.text(" ");
+                } else {
+                const date = new Date(options.value);
+                const formattedDate = date.toISOString().split('T') [0];
+                const formattedTime = date.toTimeString().split(' ') [0];
+                container.html(`
+                    <div>${formattedDate}</div>
+                    <div>${formattedTime}</div>                    
+                    `);
+                }
+            },
+            width: 100,
+        },
+        {
+            caption: "Assignment PIC", 
+            dataField: 'Approver',
+            cellTemplate: function(container, options) {
+                if (!options.value) {
+                    container.text(" ");
+                } else {
+                const date = new Date(options.value);
+                const formattedDate = date.toISOString().split('T') [0];
+                const formattedTime = date.toTimeString().split(' ') [0];
+                container.html(`
+                    <div>${formattedDate}</div>
+                    <div>${formattedTime}</div>                    
+                    `);
+                }
+            }, 
+            width: 100,
+        },
+        {caption: "Submit To Assigmnet ", 
+            dataField: 'submit_to_approve',             
+            width: 100,
+        },
+        {caption: "Completed by PIC", 
+            dataField: 'ts',
+            cellTemplate: function(container, options) {
+                if (!options.value) {
+                    container.text(" ");
+                } else {
+                const date = new Date(options.value);
+                const formattedDate = date.toISOString().split('T') [0];
+                const formattedTime = date.toTimeString().split(' ') [0];
+                container.html(`
+                    <div>${formattedDate}</div>
+                    <div>${formattedTime}</div>                    
+                    `);
+                }
+            },
+            width: 100,
+        },
+        {caption: "Completed by User",
+            dataField: 'cs',
+            cellTemplate: function(container, options) {
+                if (!options.value) {
+                    container.text(" ");
+                } else {
+                const date = new Date(options.value);
+                const formattedDate = date.toISOString().split('T') [0];
+                const formattedTime = date.toTimeString().split(' ') [0];
+                container.html(`
+                    <div>${formattedDate}</div>
+                    <div>${formattedTime}</div>                    
+                    `);
+                }
+            },
+            width: 100
+        },
+        {caption: "Done Time", 
+            dataField: 'approve_to_ts', 
+            width: 100,
+        },
+        {caption: "Close Time", 
+            dataField: 'submitted_to_cs', 
+            width: 100,
+        },
+        // {caption: "Completed Time", dataField: 'assignment_to_complete', dataType: 'date', width: 90, },
+        {
+            caption: "PIC Name",
+            dataField: 'pic_name',
+            width: 180,            
+        },
+        { 
+            dataField: "description",
+            width: 200
+        },         
+        {
+            caption: "BU",
+            dataField: 'bu',
+            width: 60
+        },
+        {
+            caption: "Sector",
+            dataField: 'sector',
+            width: 60
+        },
+        {
+            caption: "Location",
+            dataField: 'location',
+            width: 100
+        },
+        {
             caption: 'Category',
             dataField: 'hrsc_category_id',
-            width: 200,
+            width: 120,
             lookup: {
                 dataSource: listOption('/list-categoryhrsc','id','name'),  
                 valueExpr: 'id',
                 displayExpr: 'name',
             },
-        },
+        },               
         { 
-			dataField: "description",
-            width: 180
-        },
-        {
-            caption: 'Action',
-            width: 140,
-            cellTemplate: function(container, options) {
-
-                var isMine = options.data.isMine;
-                var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
-                var isPendingOnMe = options.data.isPendingOnMe;
-                var reqid = options.data.id;
-                var reqstatus = options.data.requestStatus;
-                var ticketstatus = options.data.ticketStatus;
-                var confirmationStatus = options.data.confirmationStatus;
-                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-                var arrColor = [
-                    "btn-secondary",
-                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                    "btn-warning",
-                    (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed')) ? "btn-info" : (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed'))) ? "btn-info" : "btn-success",
-                    "btn-danger",
-                ];
-
-                var viewIcon = ((mode == 'approval' && reqstatus == 1) || (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed'))) ? "fa-check" :  ((mode == 'approval' && reqstatus == 1) || (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed')))) ? "fa-check" : "fa-search";
-    
-                $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-                    evt.stopPropagation();
-                
-                            popup.option({
-                                contentTemplate: () => popupContentTemplate(reqid,mode,options),
-                            });
-                            popup.show();
-
-                }).appendTo(container);
-                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                    $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
-
-                        Swal.fire({
-                            title: 'Are you sure?',
-                            text: "Are you sure you want to cancel this submission?",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#d33',
-                            cancelButtonColor: '#3085d6',
-                            confirmButtonText: 'Yes, cancel it'
-                          }).then((result) => {
-                            if (result.isConfirmed) {
-                              sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                requestStatus:0,
-                                action:'submission',
-                                approvalAction: 0
-                              }).then(function(response){
-                                if(response.status != 'error') {
-                                    dataGrid.refresh();
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Saved',
-                                        text: 'The submission has been cancelled.',
-                                    });
-                                }
-                              });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Cancelled',
-                                    text: 'The submission cancellation has been cancelled.'
-                                });
-                            }
-                          });
-    
-                    }).appendTo(container); 
-                }
-            
-            }
-        },
-        {
-            caption: "Code",
-            dataField: 'code',
-            width: 180,
-            sortOrder: "desc"
-        },
-        { 
-			dataField: "user.fullname",
+            dataField: "user.fullname",
             caption: 'Creator Name',
-            width: 180
-        },
+            width: 160,
+        },  
         {
             dataField: 'requestStatus',
+            width: 120,
             encodeHtml: false,
             allowFiltering: false,
             allowHeaderFiltering: true,
             customizeText: function (e) {
                 var arrText = [
-                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                    "Submit",
+                    "Waiting Aprroval",
+                    "Rework",
+                    "Completed",
+                    "Rejected",
                 ];
                 return arrText[e.value];
             },
-        },     
-        {
-            dataField: 'ticketStatus',
-            encodeHtml: false,
-            width: 180,
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Immediately') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Immediately</span>"
-                } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>On Queue</span>"
-                }
-            },
         },
-        {
-            dataField: 'confirmationStatus',
-            encodeHtml: false,
-            width: 180,
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Reworked') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Reworked</span>"
-                } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>"
-                }
-            },
+        { 
+            dataField: "ticketStatus",
+            caption: 'Ticket Status',
+            width: 120
         },
+        { 
+            dataField: "confirmationStatus",
+            caption: 'Confirmation Status',
+            width: 120
+        },
+        
       
     ],
     export: {
@@ -287,7 +299,7 @@ const popupContentTemplate = function (reqid,mode,options) {
     // console.log(options.data)
     // console.log('isMine :' + isMine)
     // console.log('isMineCompleted :' + isMineCompleted)
-    console.log('isPIC :' + isPIC)
+    // console.log('isPIC :' + isPIC)
     // console.log('completed :' + completed)
     // console.log(mode)
 
@@ -1082,18 +1094,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                             allowDeleting: (admin == 1 || isPendingOnMe == 1) ? true : false,
                         },
                         paging: { enabled: true, pageSize: 10 },
-                        columns: [
-                            {
-                                caption: "PIC Name",
-                                dataField: "employee_id",
-                                lookup: {
-                                    dataSource: listOption('/list-employeeall','id','fullname'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'fullname',
-                                },
-                                validationRules: [{ type: "required" }]
-                            },
-                        ],
+                        // columns: [
+                        //     {
+                        //         caption: "PIC Name",
+                        //         dataField: "employee_id",
+                        //         lookup: {
+                        //             dataSource: listOption('/list-employeeall','id','fullname'),  
+                        //             valueExpr: 'id',
+                        //             displayExpr: 'fullname',
+                        //         },
+                        //         validationRules: [{ type: "required" }]
+                        //     },
+                        // ],
                         export: {
                             enabled: false,
                             fileName: modname,

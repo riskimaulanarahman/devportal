@@ -1,5 +1,5 @@
-var modname = 'hrscrequest';
-var modelclass = 'Hrsc';
+var modname = 'projectreport';
+var modelclass = 'Project';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -14,14 +14,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     dataSource: store(modname),
     allowColumnReordering: true,
     allowColumnResizing: true,
-    columnHidingEnabled: true,
+    columnHidingEnabled: false,
     rowAlternationEnabled: false,
-    wordWrapEnabled: true,
-    autoExpandAll: true,
+    wordWrapEnabled: false,
     showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
+    selection: { mode: "multiple" },
     searchPanel: {
         visible: true,
         width: 240,
@@ -32,7 +32,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         mode: "popup",
         allowAdding: false,
         allowUpdating: false,
-        allowDeleting: true,
+        allowDeleting: false,
     },
     scrolling: {
         mode: "virtual"
@@ -43,151 +43,139 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         {
-            caption: 'Category',
-            dataField: 'hrsc_category_id',
-            width: 200,
-            lookup: {
-                dataSource: listOption('/list-categoryhrsc','id','name'),  
-                valueExpr: 'id',
-                displayExpr: 'name',
-            },
-        },
-        { 
-			dataField: "description",
-            width: 180
-        },
-        {
-            caption: 'Action',
-            width: 140,
-            cellTemplate: function(container, options) {
-
-                var isMine = options.data.isMine;
-                var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
-                var isPendingOnMe = options.data.isPendingOnMe;
-                var reqid = options.data.id;
-                var reqstatus = options.data.requestStatus;
-                var ticketstatus = options.data.ticketStatus;
-                var confirmationStatus = options.data.confirmationStatus;
-                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-                var arrColor = [
-                    "btn-secondary",
-                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                    "btn-warning",
-                    (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed')) ? "btn-info" : (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed'))) ? "btn-info" : "btn-success",
-                    "btn-danger",
-                ];
-
-                var viewIcon = ((mode == 'approval' && reqstatus == 1) || (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed'))) ? "fa-check" :  ((mode == 'approval' && reqstatus == 1) || (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed')))) ? "fa-check" : "fa-search";
-    
-                $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-                    evt.stopPropagation();
-                
-                            popup.option({
-                                contentTemplate: () => popupContentTemplate(reqid,mode,options),
-                            });
-                            popup.show();
-
-                }).appendTo(container);
-                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                    $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
-
-                        Swal.fire({
-                            title: 'Are you sure?',
-                            text: "Are you sure you want to cancel this submission?",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#d33',
-                            cancelButtonColor: '#3085d6',
-                            confirmButtonText: 'Yes, cancel it'
-                          }).then((result) => {
-                            if (result.isConfirmed) {
-                              sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                requestStatus:0,
-                                action:'submission',
-                                approvalAction: 0
-                              }).then(function(response){
-                                if(response.status != 'error') {
-                                    dataGrid.refresh();
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Saved',
-                                        text: 'The submission has been cancelled.',
-                                    });
-                                }
-                              });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Cancelled',
-                                    text: 'The submission cancellation has been cancelled.'
-                                });
-                            }
-                          });
-    
-                    }).appendTo(container); 
-                }
-            
-            }
-        },
-        {
             caption: "Code",
             dataField: 'code',
-            width: 180,
-            sortOrder: "desc"
+            width: 210
+        },
+        {
+            caption: "Submit Date",
+            dataField: 'Submitted',
+            dataType: 'date',
+            format: 'yyyy-MM-dd', 
+            width: 100,
+        },        
+        {
+            caption: "Approve Date",
+            dataField: 'Approver',
+            dataType: 'date',
+            format: 'yyyy-MM-dd', 
+            width: 100,
+        },        
+        {
+            caption: "Last Progress Update",
+            dataField: 'progres',
+            dataType: 'date',
+            format: 'yyyy-MM-dd', 
+            width: 100,
+        },        
+        {
+            caption: "Project Complete",
+            dataField: 'ps',
+            dataType: 'date',
+            format: 'yyyy-MM-dd', 
+            width: 100,
+        },        
+        {
+            caption: "Approver Name",
+            dataField: "approver_name",
+            width: 120,
         },
         { 
-			dataField: "user.fullname",
-            caption: 'Creator Name',
+            caption: 'Developer Name',
+            width: 200,
+			dataField: "developer_name",
+            
+        },           
+        {
+            dataField: 'nameSystem',
+            width: 350,
+            sortOrder: "asc",
+        },
+        {
+            caption: "Description",
+            dataField: 'description',
             width: 180
+        },
+        {
+            caption: "Old System Desc",
+            dataField: 'descOldSystem',
+            width: 180
+        },
+        {
+            caption: " New System Desc",
+            dataField: 'descNewSystem',
+            width: 180
+        },
+        {
+            caption: "Purpose",
+            dataField: 'purpose',
+            width: 180
+        },
+        { 
+			dataField: "requester_name",
+            caption: 'Creator Name',
+            width: 120
+        },
+        {
+            caption: "Priority",
+            dataField: 'priority',
+            width: 100
+        },
+        {
+            caption: "Expected Date",
+            dataField: 'expecteddate',
+            dataType: 'date',
+            format: 'yyyy-MM-dd', 
+            width: 100
+        },
+        {
+            caption: "Progress",
+            dataField: 'progress',
+            customizeText: function(cellInfo) {
+                return `${cellInfo.value}%`;
+            },
+            width: 100
         },
         {
             dataField: 'requestStatus',
+            width: 180,
             encodeHtml: false,
             allowFiltering: false,
             allowHeaderFiltering: true,
             customizeText: function (e) {
                 var arrText = [
-                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                    "Draft",
+                    "Waiting Approval",
+                    "Rework",
+                    "Approved",
+                    "Rejected",
                 ];
                 return arrText[e.value];
             },
-        },     
-        {
-            dataField: 'ticketStatus',
-            encodeHtml: false,
-            width: 180,
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Immediately') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Immediately</span>"
-                } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>On Queue</span>"
-                }
-            },
+            // width: 110
         },
         {
-            dataField: 'confirmationStatus',
-            encodeHtml: false,
+            dataField: 'projectStatus',
             width: 180,
+            encodeHtml: false,
+            sortOrder: "desc",
             customizeText: function (e) {
                 if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Reworked') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Reworked</span>"
+                    return "Completed"
+                } else if(e.value == 'Progress') {
+                    return "Progress"
                 } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>"
+                    return "Waiting"
                 }
             },
+            // width: 110
         },
       
     ],
-    export: {
+    columnChooser: {
+        enabled: true,
+      },
+      export: {
         enabled: true,
         fileName: modname,
         excelFilterEnabled: true,
@@ -252,6 +240,11 @@ const accordionItems = [
         visible: false
     },
     {
+        ID: 6,
+        Title: '<i class="fas fa-list-ul"> Stakeholders </i>',
+        visible: true
+    },
+    {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
         visible: true
@@ -279,19 +272,7 @@ const updateVisibleById = (itemId, visible) => {
 const popupContentTemplate = function (reqid,mode,options) {
 
     var isMine = options.data.isMine;
-    var isMineCompleted = (isMine == 1 && options.data.ticketStatus == 'Completed') ? 0 : 1;
-    var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
     var isPendingOnMe = options.data.isPendingOnMe;
-    var completed = (options.data.ticketStatus == 'Completed' && options.data.confirmationStatus == 'Completed') ? 1 : 0;
-
-    // console.log(options.data)
-    // console.log('isMine :' + isMine)
-    // console.log('isMineCompleted :' + isMineCompleted)
-    console.log('isPIC :' + isPIC)
-    // console.log('completed :' + completed)
-    // console.log(mode)
-
-    var validationRules = [];
 
     popupid = reqid;
 
@@ -348,23 +329,19 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    if(options.data.requestStatus == 3 || isPendingOnMe) {
+    if(options.data.requestStatus == 3) {
         updateVisibleById(5, true);
     } else {
         updateVisibleById(5, false);
     }
 
-    var dataSector = [
-        { bu: 'IHM', sector: 'NKL' },
-        { bu: 'IHM', sector: 'TRN' },
-        { bu: 'IHM', sector: 'SPU' },
-        { bu: 'IHM', sector: 'SNI' },
-        { bu: 'IHM', sector: 'HO' },
-        { bu: 'AHL', sector: 'SNI' },
-        { bu: 'AHL', sector: 'SBS' },
-        { bu: 'AHL', sector: 'SSP' },
-        { bu: 'AHL', sector: 'HO' },
-    ];
+    const syncTreeViewSelection = function (treeViewInstance, value) {
+        if (!value) {
+          treeViewInstance.unselectAll();
+        } else {
+          treeViewInstance.selectItem(value);
+        }
+    };
 
     scrollView.append("<hr>"),
 
@@ -381,10 +358,10 @@ const popupContentTemplate = function (reqid,mode,options) {
             },
             itemTemplate: function (data) {
                 var container = $("<div>");
+                if (mode == 'add' || mode == 'edit'){
+                    $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                }
                 if(data.ID == 1) {
-                    if (mode == 'add' || mode == 'edit'){
-                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
-                    }
                     var formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
@@ -409,7 +386,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 || isPIC == 1 || isMineCompleted == 0 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -426,122 +403,73 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                caption: 'BU',
-                                dataField: 'bu',
-                                validationRules: [{ type: "required" }],
+                                caption: 'Parent System',
+                                dataField: 'parentID',
                                 lookup: {
-                                    dataSource: [{bu:'IHM'},{bu:'AHL'}],
-                                    valueExpr: 'bu',
-                                    displayExpr: 'bu',
-                                },
-                                setCellValue: function (rowData, value) {
-                                    rowData.bu = value;
-                                    if (value === "IHM") {
-                                        rowData.sector = "HO";
-                                    } else if (value === "AHL") {
-                                        rowData.sector = "HO";
-                                    }
-                                },
-                                editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
-                                }
-                            },
-                            {
-                                caption: 'Sector',
-                                dataField: 'sector',
-                                lookup: {
-                                    dataSource: function (options) {
-                                        return {
-                                            store: {
-                                                type: 'array',
-                                                data: dataSector
-                                            },
-                                            filter: options.data ? ["bu", "=", options.data.bu] : null
-                                        };
-                                    },
-                                    valueExpr: 'sector',
-                                    displayExpr: 'sector',
-                                },
-                                validationRules: [{ type: "required" }],
-                                editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
-                                },
-                            },
-                            {
-                                dataField: 'location',
-                                dataType: 'string',
-                                validationRules: [{ type: "required" }],
-                                editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true
-                                }
-                            },
-                            {
-                                caption: 'Category',
-                                dataField: 'hrsc_category_id',
-                                lookup: {
-                                    dataSource: listOption('/list-categoryhrsc','id','name'),  
+                                    dataSource: listOption('/list-parentproject','id','nameSystem'),  
                                     valueExpr: 'id',
-                                    displayExpr: 'name',
+                                    displayExpr: 'nameSystem',
                                 },
                                 width: 200,
-                                validationRules: [{ type: "required" }],
-                                editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true
-                                }
+                            },
+                            {
+                                dataField: 'nameSystem',
+                                dataType: 'string',
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 dataField: 'description',
                                 dataType: 'string',
-                                validationRules: [{ type: "required" }],
-                                editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true
-                                }
+                                validationRules: [{ type: "required" }]
                             },
                             {
-                                dataField: 'ticketStatus',
+                                caption: 'Old System Desc',
+                                dataField: 'descOldSystem',
                                 dataType: 'string',
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'New System Desc',
+                                dataField: 'descNewSystem',
+                                dataType: 'string',
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'purpose',
+                                dataType: 'string',
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'Expected Date',
+                                dataField: 'expecteddate',
+                                dataType: 'date',
+                                format: "yyyy-MM-dd",
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: 'priority',
+                                dataType: 'string',
+                                visible: false,
                                 lookup: {
-                                    dataSource: ['On Queue','Immediately','Completed'],  
+                                    dataSource: ['Low','Middle','High'],  
                                 },
-                                editorOptions: { 
-                                    readOnly: (isPIC == 1) ? false : true
-                                }
                             },
                             {
-                                dataField: 'confirmationStatus',
+                                dataField: 'progress',
+                                caption: 'Progress %',
                                 dataType: 'string',
+                                visible: false,
                                 lookup: {
-                                    dataSource: ['Waiting','Reworked','Completed'],  
-                                },
-                                setCellValue: function (rowData, value) {
-                                    rowData.confirmationStatus = value;
-                                    // console.log(value)
-                                    // console.log(validationRules)
-                                    if (value == "Reworked") {
-                                        validationRules.length = 0;
-                                        validationRules.push({
-                                            type: "required", 
-                                            message: "Confirmation remarks are required"
-                                        });
-                                        rowData.confirmationRemarks = null;
-                                    } else {
-                                        validationRules.length = 0;
-                                        rowData.confirmationRemarks = null;
-                                    }
-                                },
-                                visible: (options.data.ticketStatus == 'Completed') ? true : false,
-                                editorOptions: { 
-                                    readOnly: (isPIC == 0 && isMine == 1 && options.data.confirmationStatus == 'Waiting') ? false : true
+                                    dataSource: [0,10,20,30,40,50,60,70,80,90,100],  
                                 },
                             },
                             {
-                                dataField: 'confirmationRemarks',
+                                dataField: 'projectStatus',
                                 dataType: 'string',
-                                visible: (options.data.ticketStatus == 'Completed' && (options.data.confirmationStatus != 'Completed')) ? true : false,
-                                editorOptions: { 
-                                    readOnly: (isPIC == 0 && isMine == 1 && options.data.confirmationStatus == 'Waiting') ? false : true
+                                visible: false,
+                                lookup: {
+                                    dataSource: ['Waiting','Progress','Completed'],  
                                 },
-                                validationRules: validationRules,
                             },
                             {
                                 dataField: "created_at",
@@ -580,112 +508,46 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onEditorPreparing: function (e) {
-                            if (e.dataField == "hrsc_category_id" && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";            
-                                e.editorOptions.dropDownOptions = {                
+                            if (e.dataField == "parentID" && e.parentType == "dataRow") {
+                                e.editorName = "dxDropDownBox";                
+                                e.editorOptions.dropDownOptions = {        
                                     height: 500,
                                     width: 600
                                 };
                                 e.editorOptions.contentTemplate = function (args, container) {
-                    
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
+
+                                        const $dataGrid = $("<div>").dxTreeView({
                                             dataSource: args.component.option("dataSource"),
+                                            dataStructure: 'plain',
                                             keyExpr: "id",
-                                            // columns: ["category","name","remarks"],
-                                            columns: [
-                                                { 
-                                                    dataField: "category",
-                                                    sortOrder: "asc",
-                                                },
-                                                { 
-                                                    dataField: "name",
-                                                    sortOrder: "asc",
-                                                },
-                                                { 
-                                                    dataField: "remarks",
-                                                },
-                                            ],
-                                            hoverStateEnabled: true,
-                                            // paging: { enabled: true, pageSize: 5 },
-                                            scrolling: {
-                                                mode: "virtual"
-                                            },
-                                            pager: {
-                                                visible: false,
-                                                showInfo: true,
-                                            },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: args.component.option("value"),
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const hasSelection = keys.length;
-                                                args.component.option('value', hasSelection ? keys[0] : null);
+                                            parentIdExpr: 'parentID',
+                                            selectionMode: 'single',
+                                            displayExpr: 'nameSystem',
+                                            selectByClick: true,
+                                            selectNodesRecursive: false,
+                                            onItemSelectionChanged(selectedItems) {
+                                                const selectedKeys = selectedItems.component.getSelectedNodeKeys();
+                                                const hasSelection = selectedKeys.length;
+
+                                                args.component.option('value', hasSelection ? selectedKeys[0] : null);
                                                 if(hasSelection !== 0) {
                                                     args.component.close();
                                                 }
-                                            }
+                                            },
                                         });
                     
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                                    var dataGrid = $dataGrid.dxTreeView("instance");
                     
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
-                    
-                                        dataGrid.selectRows(value, false);
+                                    args.component.on("valueChanged", function (e) {
+                                        
+                                        var value = e.value;
+                                        dataGrid.selectItem(value);
+                                        e.component.close();
                                     });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
-                    
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
+                                    
+                                    return $dataGrid;
                     
                                 };
-                            }
-                        },
-                        onRowUpdating: function(e) {
-                            var newTicketStatus = e.newData.ticketStatus;
-                            var newConfirmationStatus = e.newData.confirmationStatus;
-                            if (newTicketStatus === "Completed") {
-                                if (!confirm("Are you sure you want to mark this ticket as completed?")) {
-                                    e.cancel = true; // Cancel the update operation
-                                } else {
-                                    e.newData.confirmationStatus = 'Waiting'; // Update the confirmationStatus to 'Waiting'
-                                    e.component.columnOption("ticketStatus", "allowEditing", false);
-                                }
-                            }
-                            if (newConfirmationStatus === "Reworked") {
-                                if (!confirm("Are you sure you want to mark this confirmation status as reworked?")) {
-                                    e.cancel = true; // Cancel the update operation
-                                } else {
-                                    e.newData.ticketStatus = 'On Queue'; // Update the ticket status to 'On Queue'
-                                    e.component.columnOption("confirmationStatus", "allowEditing", false);
-                                    e.component.columnOption("confirmationRemarks", "allowEditing", false);
-                                }
-                            }
-                            if (newConfirmationStatus === "Completed") {
-                                if (!confirm("Are you sure you want to mark this confirmation status as completed?")) {
-                                    e.cancel = true; // Cancel the update operation
-                                } else {
-                                    e.component.columnOption("confirmationStatus", "allowEditing", false);
-                                    e.component.columnOption("confirmationRemarks", "allowEditing", false);
-                                }
                             }
                         },
                         onCellPrepared: function (e) {
@@ -696,7 +558,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index>0 && e.column.index<6)) {
+                            if (e.column.index == 0 && e.rowType == "data") {
+                                if(e.data.requestStatus == 3) {
+                                    $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
+                                    $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
+                                    $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
+                                }
+                            }
+                            if ( e.rowType == "data" && (e.column.index>1 && e.column.index<8)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -735,14 +604,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowDeleting: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
                             { 
-                                caption: 'Attachment',
+                                caption: 'Proposal File',
                                 dataField: "path",
                                 allowFiltering: false,
                                 allowSorting: false,
@@ -789,6 +658,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGridAttachment.refresh();
                         }
                     })
+
+                    var downloadButton = $("<button>")
+                        .text("Download Proposal Guide Template")
+                        .addClass("btn btn-danger btn-xs")
+                        .appendTo(supporting);
+
+                    downloadButton.click(function() {
+                        var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
+                        var link = document.createElement("a");
+                        link.href = fileUrl;
+                        link.download = "Proposal Pengajuan System.pptx";
+                        link.click();
+                    });
 
                     return supporting;
                 }
@@ -1077,19 +959,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "cell",
-                            allowAdding: (admin == 1 || isPendingOnMe == 1) ? true : false,
-                            allowUpdating: (admin == 1 || isPendingOnMe == 1) ? true : false,
-                            allowDeleting: (admin == 1 || isPendingOnMe == 1) ? true : false,
+                            allowAdding: (admin == 1 || developer ) ? true : false,
+                            allowUpdating: (admin == 1 || developer ) ? true : false,
+                            allowDeleting: (admin == 1 || developer ) ? true : false,
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
                             {
-                                caption: "PIC Name",
-                                dataField: "employee_id",
+                                caption: "Developer Name",
+                                dataField: "developer_id",
                                 lookup: {
-                                    dataSource: listOption('/list-employeeall','id','fullname'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'fullname',
+                                    dataSource: listOption('/list-developer','id','developerName'),
+                                    displayExpr: "developerName",
+                                    valueExpr: "id",
                                 },
                                 validationRules: [{ type: "required" }]
                             },
@@ -1102,6 +984,85 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         onInitialized: function(e) {
                             dataGridAssignmentto = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridAssignmentto.refresh();
+                                    }
+                                }
+                            })
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (5):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridAssignmentto.refresh();
+                        }
+                    })
+                }
+                else if(data.ID == 6) {
+                    return $("<div id='formstackholders'>").dxDataGrid({    
+                        dataSource: storewithmodule('stackholders',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "batch",
+                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                            allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                        },
+                        scrolling: {
+                            mode: "virtual"
+                        },
+                        columns: [
+                            {
+                                caption: "Fullname",
+                                dataField: "employee_id",
+                                lookup: {
+                                    dataSource: listOptionWeb('/list-getemployee/','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: 'fullname',
+                                },
+                                validationRules: [
+                                    { 
+                                        type: "required" 
+                                    }
+                                ]
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridStackholders = e.component;
                         },
                         onContentReady: function(e){
                             moveEditColumnToLeft(e.component);
@@ -1122,7 +1083,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             width: '100%',
                                             dataSource: args.component.option("dataSource"),
                                             keyExpr: "id",
-                                            columns: ["sapid","fullname","companycode","departmentname"],
+                                            columns: ["companycode","fullname","departmentname"],
                                             hoverStateEnabled: true,
                                             paging: { enabled: true, pageSize: 10 },
                                             filterRow: { visible: true },
@@ -1142,7 +1103,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 const keys = selectedItems.selectedRowKeys;
                                                 const hasSelection = keys.length;
                                                 args.component.option('value', hasSelection ? keys[0] : null);
-                                                // console.log(hasSelection)
                                                 if(hasSelection !== 0) {
                                                     args.component.close();
                                                 }
@@ -1177,19 +1137,20 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     hint: "Refresh Data",
                                     icon: "refresh",
                                     onClick: function() {
-                                        dataGridAssignmentto.refresh();
+                                        dataGridStackholders.refresh();
                                     }
                                 }
                             })
                         },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (5):", e.error.message);
+                        // onDataErrorOccurred: function(e) {
+                        //     // Menampilkan pesan kesalahan
+                        //     console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGridAssignmentto.refresh();
-                        }
+                        //     // Memuat ulang DataGrid
+                        //     dataGridStackholders.refresh();
+                        // }
                     })
+
                 }
             }
         })
@@ -1229,68 +1190,25 @@ function btnreqsubmit(reqid,mode) {
 
     var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
 
-    // var result = confirm('Are you sure you want to send this submission ?');
-    // if (result) {
-    //     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-    //         requestStatus:1,
-    //         action: actionForm,
-    //         approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-    //         approvalType: valApprovalType,
-    //         remarks: valremarks
-    //     }).then(function(response){
-    //         if(response.status == 'error') {
-    //             btnSubmit.prop('disabled', false);
-    //         } else {
-    //             popup.hide();
-    //         }
-    //     });
-    // } else {
-    //     btnSubmit.prop('disabled', false);
-    //     alert('Cancelled.');
-    // }
-
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "Are you sure you want to send this submission?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, send it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-            showLoadingScreen();
-            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                requestStatus:1,
-                action: actionForm,
-                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                approvalType: valApprovalType,
-                remarks: valremarks
-          }).then(function(response){
-                if(response.status == 'error') {
-                    btnSubmit.prop('disabled', false);
-                    hideLoadingScreen();
-                } else {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Saved',
-                        text: 'The submission has been submited.',
-                    });
-                    popup.hide();
-                    hideLoadingScreen();
-                }
-          });
-        } else {
-            btnSubmit.prop('disabled', false);
-            Swal.fire({
-                icon: 'error',
-                title: 'Cancelled',
-                text: 'The submission has been cancelled.',
-                confirmButtonColor: '#3085d6'
-            });
-            hideLoadingScreen();
-        }
-      });
+    var result = confirm('Are you sure you want to send this submission ?');
+    if (result) {
+        sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+            requestStatus:1,
+            action: actionForm,
+            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+            approvalType: valApprovalType,
+            remarks: valremarks
+        }).then(function(response){
+            if(response.status == 'error') {
+                btnSubmit.prop('disabled', false);
+            } else {
+                popup.hide();
+            }
+        });
+    } else {
+        btnSubmit.prop('disabled', false);
+        alert('Cancelled.');
+    }
 
 }
 

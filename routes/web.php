@@ -11,6 +11,7 @@ Route::get('/check-session',[App\Http\Controllers\SessionCheckController::class,
 
 // dashboard
 Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestController::class, 'dashboard'])->name('dashboardproject'); //Dashboard project
+// Route::get('pmreport',[App\Http\Controllers\Submission\ProjectReportController::class, 'bird']); //Dashboard report
 Route::get('cvaf',[App\Http\Controllers\Submission\CvafRequestController::class, 'showEvaluationForm'])->name('cvaf'); //cvaf
 Route::post('calculate-score', [App\Http\Controllers\Submission\CvafRequestController::class, 'calculateScore']);
 
@@ -38,6 +39,5 @@ Route::get('/gen-pdf/material/{id}', [App\Http\Controllers\Submission\Ecatalog\M
 Route::get('/gen-pdf/mmf28/{id}', [App\Http\Controllers\Submission\MMF\M28RequestController::class, 'genPdfMmfReq'])->name('gen-pdf-28');
 Route::get('/gen-pdf/mmf30/{id}', [App\Http\Controllers\Submission\MMF\M30RequestController::class, 'genPdfMmfReq'])->name('gen-pdf-m30');
 Route::get('/gen-pdf/hcrf/{id}', [App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class, 'genPdfHcrfReq'])->name('gen-pdf-hcrf');
-
 
 });

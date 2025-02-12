@@ -41,6 +41,9 @@ class HrscRequestController extends Controller
             $module_id = $this->getModuleId($this->modulename);
             $isAdmin = $this->getAuth()->isAdmin;
             $isDeveloper = $this->isDeveloper();
+            $requestData = $request->all();
+
+            
 
             $dataquery = $this->model->query();
 
@@ -141,7 +144,8 @@ class HrscRequestController extends Controller
                 $data->save();
             }
 
-            return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
+            return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 
+            'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
 
@@ -182,15 +186,12 @@ class HrscRequestController extends Controller
                     $requestData['confirmationStatus'] = $request->confirmationStatus;
                 }
             }
-            // ($data->ticketStatus == 'On Queue' || $data->ticketStatus == 'Immediately') ? $requestData['confirmationStatus'] = 'Waiting' : $requestData['confirmationStatus'];
-
-            $ticketStatus = (isset($requestData['ticketStatus'])) ? $requestData['ticketStatus'] : $data->ticketStatus;
-            $confirmationStatus = (isset($requestData['confirmationStatus'])) ? $requestData['confirmationStatus'] : $data->confirmationStatus;
-
             //start save history perubahan
             $fields = [
                 'ticketStatus' => $request->ticketStatus,
-                'confirmationStatus' => ($data->ticketStatus == 'Completed' && ($request->confirmationStatus != 'Waiting')) ? $request->confirmationStatus .' - '. $request->confirmationRemarks : null,
+                'confirmationStatus' => ($data->ticketStatus == 'Completed' && 
+                ($request->confirmationStatus != 'Waiting')) ? 
+                $request->confirmationStatus .' - '. $request->confirmationRemarks : null,
             ];
             
             foreach ($fields as $key => $value) {
@@ -201,7 +202,8 @@ class HrscRequestController extends Controller
             //end save history perubahan
 
             $data->update($requestData);
-            $notificationMessage = $this->generateNotificationMessage($data, $this->modulename, $id, $ticketStatus, $confirmationStatus);
+            $notificationMessage = $this->generateNotificationMessage
+            ($data, $this->modulename, $id, $ticketStatus, $confirmationStatus);
 
             if($request->confirmationStatus != 'Waiting') {
                 $newData['confirmationRemarks'] = null;
