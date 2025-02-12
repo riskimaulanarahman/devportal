@@ -51,7 +51,7 @@ class HrscReportController extends Controller
                 
                 (SELECT STRING_AGG(emp.fullname, ', ' )
                 FROM tbl_assignment AS assign
-                LEFT JOIN archive._tbl_employee AS emp
+                LEFT JOIN employee.tbl_employee AS emp
                 ON emp.id = assign.employee_id
                 WHERE assign.req_id = request_hrsc.id) AS pic_name,
 
@@ -87,11 +87,10 @@ class HrscReportController extends Controller
                 "
                 )        
                 ->leftjoin('tbl_assignment', 'tbl_assignment.req_id', '=', 'request_hrsc.id')
-                ->leftjoin('archive._tbl_employee', 'archive._tbl_employee.id', '=', 'tbl_assignment.employee_id')
+                ->leftjoin('employee.tbl_employee', 'employee.tbl_employee.id', '=', 'tbl_assignment.employee_id')
                 ->leftJoin('codes','request_hrsc.code_id','codes.id')        
                 ->leftjoin('tbl_approverListHistory', 'tbl_approverListHistory.req_id', '=', 'request_hrsc.id') 
                 ->where('requestStatus', 3)      
-                // ->groupBy('request_hrsc.id', 'codes.code', 'tbl_approverListHistory.approvalDate','tbl_approverListHistory.approvalType','request_hrsc.requestStatus','request_hrsc.bu') 
                 ->groupBy('request_hrsc.id', 'codes.code', 'request_hrsc.user_id') 
                 ->orderByDesc("codes.code") 
                 ->with(['user'])
