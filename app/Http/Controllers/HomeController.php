@@ -100,6 +100,7 @@ class HomeController extends Controller
             'request_it_activedirectory' => $this->getModuleId('ActiveDirectory'),
             'request_mmf' => $this->getModuleId('Mmf'),
             'request_material' => $this->getModuleId('MaterialReq'),
+            'request_ccm' => $this->getModuleId('Ccm'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -169,6 +170,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_material':
                                 $url = 'material_request';
+                                break;
+                            case 'request_ccm':
+                                $url = 'ccm_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }
@@ -250,6 +254,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_material':
                                 $url = 'material_request';
+                                break;
+                            case 'request_ccm':
+                                $url = 'ccm_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }
