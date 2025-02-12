@@ -48,6 +48,72 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 140,
             sortOrder: "desc"
         },
+        { 
+            dataField: "user.fullname",
+            caption: 'Creator Name',
+            width: 160,
+        },  
+        { 
+            dataField: "description",
+            width: 200
+        },  
+        {
+            caption: "PIC Name",
+            dataField: 'pic_name',
+            width: 180,            
+        },       
+        {
+            caption: "BU",
+            dataField: 'bu',
+            width: 60
+        },
+        {
+            caption: "Sector",
+            dataField: 'sector',
+            width: 60
+        },
+        {
+            caption: "Location",
+            dataField: 'location',
+            width: 100
+        },
+        {
+            caption: 'Category',
+            dataField: 'hrsc_category_id',
+            width: 120,
+            lookup: {
+                dataSource: listOption('/list-categoryhrsc','id','name'),  
+                valueExpr: 'id',
+                displayExpr: 'name',
+            },
+        },               
+        {
+            dataField: 'requestStatus',
+            width: 120,
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "Submit",
+                    "Waiting Aprroval",
+                    "Rework",
+                    "Completed",
+                    "Rejected",
+                ];
+                return arrText[e.value];
+            },
+        },
+        { 
+            dataField: "ticketStatus",
+            caption: 'Ticket Status',
+            width: 120
+        },
+        { 
+            dataField: "confirmationStatus",
+            caption: 'Confirmation Status',
+            width: 120
+        },
         {caption: "Submit Date", 
             dataField: 'Submitted', 
             cellTemplate: function(container, options) {
@@ -129,74 +195,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'submitted_to_cs', 
             width: 100,
         },
-        // {caption: "Completed Time", dataField: 'assignment_to_complete', dataType: 'date', width: 90, },
-        {
-            caption: "PIC Name",
-            dataField: 'pic_name',
-            width: 180,            
-        },
-        { 
-            dataField: "description",
-            width: 200
-        },         
-        {
-            caption: "BU",
-            dataField: 'bu',
-            width: 60
-        },
-        {
-            caption: "Sector",
-            dataField: 'sector',
-            width: 60
-        },
-        {
-            caption: "Location",
-            dataField: 'location',
-            width: 100
-        },
-        {
-            caption: 'Category',
-            dataField: 'hrsc_category_id',
-            width: 120,
-            lookup: {
-                dataSource: listOption('/list-categoryhrsc','id','name'),  
-                valueExpr: 'id',
-                displayExpr: 'name',
-            },
-        },               
-        { 
-            dataField: "user.fullname",
-            caption: 'Creator Name',
-            width: 160,
-        },  
-        {
-            dataField: 'requestStatus',
-            width: 120,
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "Submit",
-                    "Waiting Aprroval",
-                    "Rework",
-                    "Completed",
-                    "Rejected",
-                ];
-                return arrText[e.value];
-            },
-        },
-        { 
-            dataField: "ticketStatus",
-            caption: 'Ticket Status',
-            width: 120
-        },
-        { 
-            dataField: "confirmationStatus",
-            caption: 'Confirmation Status',
-            width: 120
-        },
-        
       
     ],
     export: {
@@ -219,17 +217,19 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
 
-        e.toolbarOptions.items.unshift({						
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function() {
-                    dataGrid.refresh();
+        e.toolbarOptions.items.unshift(
+            {						
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    hint: "Refresh Data",
+                    icon: "refresh",
+                    onClick: function() {
+                        dataGrid.refresh();
+                    }
                 }
             }
-        })
+        )
     },
     onDataErrorOccurred: function(e) {
         // Menampilkan pesan kesalahan

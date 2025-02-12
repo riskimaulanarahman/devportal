@@ -28,11 +28,7 @@ class ProjectReportController extends Controller
     
     public function index(Request $request)
     {
-        // (SELECT STRING_AGG(reference.tbl_developer.developerName, ', ' )
-        //         FROM request_project
-        //         LEFT JOIN tbl_assignment ON request_project.id = tbl_assignment.req_id
-        //         LEFT JOIN reference.tbl_developer ON tbl_assignment.developer_id = tbl_developer.id
-        //         LEFT JOIN users ON tbl_developer.user_id = users.id) AS developer_name, 
+
         try {
             
             $id = $request->id;
@@ -97,7 +93,7 @@ class ProjectReportController extends Controller
                 ->leftJoin('reference.tbl_developer', 'reference.tbl_developer.id','=', 'tbl_assignment.developer_id')
                 ->leftJoin('codes','request_project.code_id','codes.id')
                 ->where('requestStatus', 3)
-                // ->groupBy('request_project.created_at', 'request_project.requestStatus', 'codes.code', 'users.username', 'request_project.id')
+                ->where('isParent', 0)
                 ->groupBy('users.username', 'request_project.id', 'codes.code', 'request_project.user_id')
                 ->orderByDesc("codes.code")
                 ->with(['user'])
@@ -125,11 +121,6 @@ class ProjectReportController extends Controller
         }
     }
     
-    public function bird()
-    {
-        return view('dashboard.dashboardreport');
-    }
-
     public function create()
     {
         //

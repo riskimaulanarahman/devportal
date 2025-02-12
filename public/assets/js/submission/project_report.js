@@ -47,6 +47,94 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'code',
             width: 210
         },
+        { 
+			dataField: "requester_name",
+            caption: 'Creator Name',
+            width: 120
+        },
+        {
+            dataField: 'nameSystem',
+            width: 350,
+            sortOrder: "asc",
+        },
+        { 
+            caption: 'Developer Name',
+            width: 200,
+			dataField: "developer_name",
+            
+        },
+        {
+            caption: "Priority",
+            dataField: 'priority',
+            width: 100
+        },
+        {
+            caption: "Progress",
+            dataField: 'progress',
+            customizeText: function(cellInfo) {
+                return `${cellInfo.value}%`;
+            },
+            width: 100
+        },
+        {
+            dataField: 'requestStatus',
+            width: 180,
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "Draft",
+                    "Waiting Approval",
+                    "Rework",
+                    "Approved",
+                    "Rejected",
+                ];
+                return arrText[e.value];
+            },
+        },
+        {
+            dataField: 'projectStatus',
+            width: 180,
+            encodeHtml: false,
+            sortOrder: "desc",
+            customizeText: function (e) {
+                if(e.value == 'Completed') {
+                    return "Completed"
+                } else if(e.value == 'Progress') {
+                    return "Progress"
+                } else {
+                    return "Waiting"
+                }
+            },
+        }, 
+        {
+            caption: "Description",
+            dataField: 'description',
+            width: 180
+        },
+        {
+            caption: "Old System Desc",
+            dataField: 'descOldSystem',
+            width: 180
+        },
+        {
+            caption: "New System Desc",
+            dataField: 'descNewSystem',
+            width: 180
+        },
+        {
+            caption: "Purpose",
+            dataField: 'purpose',
+            width: 180
+        },
+        {
+            caption: "Expected Date",
+            dataField: 'expecteddate',
+            dataType: 'date',
+            format: 'yyyy-MM-dd', 
+            width: 100
+        },
         {
             caption: "Submit Date",
             dataField: 'Submitted',
@@ -79,96 +167,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Approver Name",
             dataField: "approver_name",
             width: 120,
-        },
-        { 
-            caption: 'Developer Name',
-            width: 200,
-			dataField: "developer_name",
-            
-        },           
-        {
-            dataField: 'nameSystem',
-            width: 350,
-            sortOrder: "asc",
-        },
-        {
-            caption: "Description",
-            dataField: 'description',
-            width: 180
-        },
-        {
-            caption: "Old System Desc",
-            dataField: 'descOldSystem',
-            width: 180
-        },
-        {
-            caption: " New System Desc",
-            dataField: 'descNewSystem',
-            width: 180
-        },
-        {
-            caption: "Purpose",
-            dataField: 'purpose',
-            width: 180
-        },
-        { 
-			dataField: "requester_name",
-            caption: 'Creator Name',
-            width: 120
-        },
-        {
-            caption: "Priority",
-            dataField: 'priority',
-            width: 100
-        },
-        {
-            caption: "Expected Date",
-            dataField: 'expecteddate',
-            dataType: 'date',
-            format: 'yyyy-MM-dd', 
-            width: 100
-        },
-        {
-            caption: "Progress",
-            dataField: 'progress',
-            customizeText: function(cellInfo) {
-                return `${cellInfo.value}%`;
-            },
-            width: 100
-        },
-        {
-            dataField: 'requestStatus',
-            width: 180,
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "Draft",
-                    "Waiting Approval",
-                    "Rework",
-                    "Approved",
-                    "Rejected",
-                ];
-                return arrText[e.value];
-            },
-            // width: 110
-        },
-        {
-            dataField: 'projectStatus',
-            width: 180,
-            encodeHtml: false,
-            sortOrder: "desc",
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "Completed"
-                } else if(e.value == 'Progress') {
-                    return "Progress"
-                } else {
-                    return "Waiting"
-                }
-            },
-            // width: 110
         },
       
     ],
