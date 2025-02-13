@@ -931,6 +931,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         }
                                     }).appendTo(container);
                                 },
+                                setCellValue: function (rowData, value) {
+                                    rowData.sevenWaste = value;
+                                    console.log(value.length)
+                                    if (value.length > 0) {
+                                        validationRules2.length = 0;
+                                        validationRules2.push({
+                                            type: "required", 
+                                            message: "This item is required"
+                                        });
+                                    } else {
+                                        validationRules2.length = 0;
+                                    }
+                                },
                                 validationRules: validationRules2,
                             },
                             {
