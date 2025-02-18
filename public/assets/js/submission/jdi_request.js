@@ -109,6 +109,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'noRegistration',
             width: 180,
         },
+        {
+            caption: 'BU',
+            dataField: 'bu',
+        },
         { 
             caption: 'Creator Name',
 			dataField: "user.fullname",
@@ -173,6 +177,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     }).appendTo(container);
                 }
             }
+        },
+        {
+            dataField: "created_at",
+            dataType: "date",
+            format: "dd-MM-yyyy", 
         },
       
     ],
@@ -287,6 +296,7 @@ var dataSector = [
         { bu: 'AHL', sector: 'SNI' },
         { bu: 'AHL', sector: 'SBS' },
         { bu: 'AHL', sector: 'SSP' },
+        { bu: 'AHL', sector: 'NURSERY' },
         { bu: 'AHL', sector: 'HO' },
         { bu: 'NKL', sector: 'NKL' },
     ];
