@@ -183,9 +183,11 @@ class JdiRequestController extends Controller
 
             if(isset($request->isSaving)) {
                 if($request->isSaving == 1) {
-                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
+                    // $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
+                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $data->bu);
                 } else {
-                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
+                    // $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
+                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $data->bu);
                 }
             }
 
