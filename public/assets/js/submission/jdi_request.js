@@ -839,7 +839,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         { id: 6, name: "Transportation" },
                         { id: 7, name: "Waiting" }
                     ];
-                    if (mode == 'add' || mode == 'edit'){
+                    if (mode == 'add' || mode == 'edit' || mode == 'approval'){
                         $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span><br><a href="'+baseurl+'/public/assets/images/jdiguide.jpg" target="_blank"><img src="'+baseurl+'/public/assets/images/jdiguide.jpg" width="500"></a><br>').appendTo(infoContent3);
                     }
 
