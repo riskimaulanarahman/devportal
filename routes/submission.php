@@ -19,6 +19,9 @@ Route::group(['prefix' => 'api'], function () {
         //HRSC
         'hrscrequest' => App\Http\Controllers\Submission\HrscRequestController::class,
         'hrscreport' => App\Http\Controllers\Submission\HrscReportController::class,
+        //ghm
+        'ghmrequest' => App\Http\Controllers\Submission\GhmRequestController::class,
+        'ghm_booking' => App\Http\Controllers\Submission\GhmRequestController::class,
         // BCID - JDI
         'jdirequest' => App\Http\Controllers\Submission\JdiRequestController::class,
         'jdireport' => App\Http\Controllers\Submission\JdiReportController::class,

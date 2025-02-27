@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.dx-scheduler .name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.dx-scheduler .name h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: #fff;
+}
+.scheduler {
+  height: 100vh;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.dx-scheduler .dx-scheduler-date-table .dx-scheduler-date-table-row .dx-scheduler-date-table-cell {
+  position: relative;
+  padding: 10px;
+}
+
+.dx-template-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.day-cell {
+  text-align: center;
+}
+
+.employee-weekend-1 {
+  background-color: #f0f0f0;
+}
+
+.employee-weekend-2 {
+  background-color: #e0e0e0;
+}
+
+.employee-weekend-3 {
+  background-color: #d0d0d0;
+}
+
+.training-background-0 {
+  background-color: #ffcccc;
+}
+
+.training-background-1 {
+  background-color: #ccffcc;
+}
+
+.training-background-2 {
+  background-color: #ccccff;
+}

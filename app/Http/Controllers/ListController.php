@@ -25,6 +25,7 @@ use App\Models\Approvaltype;
 use App\Models\Developer;
 use App\Models\Approvaluser;
 use App\Models\CategoryForm;
+use App\Models\Ghm_room;
 use App\Models\Submission\Project;
 use App\Models\UavAsset;
 use App\Models\Categoryhrsc;
@@ -218,6 +219,9 @@ class ListController extends Controller
 
     public function listCategoryHrsc() {
         return Categoryhrsc::all();
+    }
+    public function listroomghm() {
+        return ghm_room::all();
     }
 
     public function listUnit() {

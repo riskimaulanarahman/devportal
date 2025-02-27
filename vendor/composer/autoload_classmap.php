@@ -60,6 +60,7 @@ return array(
     'App\\Http\\Controllers\\SessionCheckController' => $baseDir . '/app/Http/Controllers/SessionCheckController.php',
     'App\\Http\\Controllers\\StackholdersController' => $baseDir . '/app/Http/Controllers/StackholdersController.php',
     'App\\Http\\Controllers\\Submission\\HrscRequestController' => $baseDir . '/app/Http/Controllers/Submission/HrscRequestController.php',
+    'App\\Http\\Controllers\\Submission\\GhmRequestController' => $baseDir . '/app/Http/Controllers/Submission/GhmRequestController.php',
     'App\\Http\\Controllers\\Submission\\HrscReportController' => $baseDir . '/app/Http/Controllers/Submission/HrscReportController.php',
     'App\\Http\\Controllers\\Submission\\IT\\ADRequestController' => $baseDir . '/app/Http/Controllers/Submission/IT/ADRequestController.php',
     'App\\Http\\Controllers\\Submission\\JdiReportController' => $baseDir . '/app/Http/Controllers/Submission/JdiReportController.php',
