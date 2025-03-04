@@ -9,9 +9,9 @@ function serializeToJSON(employeeIds) {
 }
 
 // Function to deserialize JSON to employee_id array
-// function deserializeFromJSON(jsonString) {
-//     return JSON.parse(jsonString);
-// }
+function deserializeFromJSON(jsonString) {
+    return JSON.parse(jsonString);
+}
 
 $(function() {
     function submitFormData() {
@@ -20,7 +20,7 @@ $(function() {
         dataSubmitted = true;
         const formData = $('#booking-form').serializeArray();
         const employeeIdsField = formData.find(field => field.name === 'employee_id');
-        employeeIdsField.value = serializeToJSON(employeeIdsField.value.split(',').map(Number));
+        // employeeIdsField.value = serializeToJSON(employeeIdsField.value.split(',').map(Number));
 
         const guestField = formData.find(field => field.name === 'guest');
         guestField.value = (guestField.value.split(',').map(name => name.trim()));
@@ -78,6 +78,110 @@ function updateRoomSelector(location) {
 
     updateScheduler(location, null);
 }
+// Fungsi untuk mengecek apakah dua rentang tanggal beririsan
+function isDateOverlap(start1, end1, start2, end2) {
+    return (new Date(start1) <= new Date(end2)) && (new Date(start2) <= new Date(end1));
+}
+// Fungsi untuk memastikan array selalu valid (menghindari null/undefined)
+function safeArray(arr) {
+    return Array.isArray(arr) ? arr : [];
+}
+// Fungsi untuk menghitung total tamu pada tanggal yang beririsan dengan booking baru
+function getTotalGuestsForDateLocally(scheduler, roomId, startDate, endDate) {
+    let appointments = scheduler.getDataSource().items(); // Ambil semua booking yang sudah ada
+    let totalGuests = 0;
+
+    appointments.forEach(appointment => {
+        if (
+            appointment.ghm_room_id === roomId &&
+            isDateOverlap(appointment.startDate, appointment.endDate, startDate, endDate)
+        ) {
+            let guestCount = safeArray(appointment.guest).length;
+            let familyCount = safeArray(appointment.family).length;
+            let employeeCount = safeArray(appointment.employee_id).length;
+            totalGuests += guestCount + familyCount + employeeCount;
+        }
+    });
+
+    return totalGuests;
+}
+// Fungsi untuk menghitung jumlah tamu per hari dalam rentang booking
+function getTotalGuestsPerDay(scheduler, roomId, startDate, endDate) {
+    let appointments = scheduler.getDataSource().items(); // Ambil semua booking yang sudah ada
+    let dailyGuestCount = {}; // Objek untuk menyimpan jumlah tamu per tanggal
+
+    appointments.forEach(appointment => {
+        if (appointment.ghm_room_id === roomId) {
+            let bookingStart = new Date(appointment.startDate);
+            let bookingEnd = new Date(appointment.endDate);
+
+            for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+                let dateKey = d.toISOString().split("T")[0]; // Format YYYY-MM-DD
+                let guestCount = safeArray(appointment.guest).length;
+                let familyCount = safeArray(appointment.family).length;
+                let employeeCount = safeArray(appointment.employee_id).length;
+                let totalGuests = guestCount + familyCount + employeeCount;
+
+                dailyGuestCount[dateKey] = (dailyGuestCount[dateKey] || 0) + totalGuests;
+            }
+        }
+    });
+
+    return dailyGuestCount;
+}
+// Fungsi validasi booking saat membuka form
+function validateBooking(form) {
+    let guestCount = safeArray(form.getEditor("guest")?.option("value")).length;
+    let familyCount = safeArray(form.getEditor("family")?.option("value")).length;
+    let employeeCount = safeArray(form.getEditor("employee_id")?.option("value")).length;
+    let totalGuests = guestCount + familyCount + employeeCount;
+
+    let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
+    let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomAccupancy || 0;
+
+    let doneButton = $(".dx-popup-bottom .dx-button.dx-popup-done");
+
+    if (totalGuests > roomCapacity) {
+        DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
+    }
+}
+
+
+function getTotalGuestsForDateLocally(scheduler, roomId, checkDate) {
+    let appointments = scheduler.getDataSource().items(); // Ambil semua booking yang ada
+    let totalGuests = 0;
+    
+    console.log(`📆 Mencari booking di kamar ${roomId} untuk tanggal ${checkDate}`);
+
+    appointments.forEach(appointment => {
+        let start = new Date(appointment.startDate);
+        let end = new Date(appointment.endDate);
+        let check = new Date(checkDate);
+
+        console.log(`🕒 Booking Room ID: ${appointment.ghm_room_id}, Start: ${start}, End: ${end}`);
+
+        // Cek apakah checkDate berada dalam rentang startDate - endDate
+        if (appointment.ghm_room_id === roomId && check >= start && check <= end) {
+            let guestCount = safeArray(appointment.guest).length;
+            let familyCount = safeArray(appointment.family).length;
+            let employeeCount = safeArray(appointment.employee_id).length;
+
+            console.log(`✔️ Ditemukan booking dalam rentang tanggal: Guest=${guestCount}, Family=${familyCount}, Employee=${employeeCount}`);
+
+            totalGuests += guestCount + familyCount + employeeCount;
+        }
+    });
+
+    console.log(`✅ Total tamu di kamar ${roomId} pada ${checkDate}: ${totalGuests}`);
+    return totalGuests;
+}
+
+// Fungsi untuk membandingkan tanggal tanpa memperhitungkan waktu
+function isSameDate(date1, date2) {
+    let d1 = new Date(date1);
+    let d2 = new Date(date2);
+    return d1.toDateString() === d2.toDateString();
+}
 
 function updateScheduler(location, roomId) {
     let dataSource = roomsWithLocations.filter(emp => emp.location === location);
@@ -94,6 +198,9 @@ function updateScheduler(location, roomId) {
         currentView: 'month',
         currentDate: new Date(),
         firstDayOfWeek: 1,
+        startDayHour: 10,
+        endDayHour: 22,
+        // firstDayOfWeek: 1,
         showAllDayPanel: false,
         height: 710,
         groups: ['ghm_room_id'],
@@ -115,55 +222,58 @@ function updateScheduler(location, roomId) {
             const booking = model.appointmentData;
             const room = roomsWithLocations.find(room => room.id === booking.ghm_room_id);
             const roomAccupancy = room?.roomAccupancy || 0;
-
-            const totalPeople = booking.totalPeople ?? 0;
-            const remainingCapacity = roomAccupancy - totalPeople;
-
-            const formatDate = (date) => {
-                if (!date) return "No Date";
-                const d = new Date(date);
-                return isNaN(d.getTime()) ? "No Date" : d.toISOString().split("T")[0];
-            };
+        
+            // Hitung total orang
+            const guestCount = (booking.guest && Array.isArray(booking.guest)) ? booking.guest.length : 0;
+            const familyCount = (booking.family && Array.isArray(booking.family)) ? booking.family.length : 0;
+            const employeeCount = (booking.employee_id && Array.isArray(booking.employee_id)) ? booking.employee_id.length : 0;
+            const totalPeople = guestCount + familyCount + employeeCount;
+        
+            // Hitung sisa kapasitas kamar
+            const remainingCapacity = Math.max(roomAccupancy - totalPeople, 0);
+        
+            // Format tanggal
+            const formatDate = (date) => date ? new Date(date).toLocaleDateString("en-CA") : "No Date";
         
             // ID unik untuk tombol delete
+            if (!booking.id) return `<div><b>Invalid Booking</b></div>`;
             const deleteButtonId = `delete-btn-${booking.id}`;
+        
+            // Tooltip HTML
             const tooltipHtml = `
                 <div>
-                    <b>Subject : ${booking.text || "No Title"}</b><br>
+                    <b>Subject: ${booking.text || "No Title"}</b><br>
                     ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
-                    Accupancy: ${roomAccupancy} Person"<br>
-                    Person: ${booking.totalPeople || "No Name"} Person<br>
-                    remaining: ${remainingCapacity} Person<br>                    
-                    Created By: ${booking.creator || "No Name"}<br><br>
+                    <b>Accupancy:</b> ${roomAccupancy} Person<br>
+                    <b>Booked:</b> ${totalPeople} Person<br>
+                    <b>Remaining:</b> ${remainingCapacity} Person<br>
+                    <b>Created By:</b> ${booking.creator || "No Name"}<br><br>
                     <button id="${deleteButtonId}" class="btn btn-danger btn-sm">Delete</button>
-                    <button id="${deleteButtonId}" class="btn btn-primary btn-sm">Approve</button>
-                    <button id="${deleteButtonId}" class="btn btn-dark btn-sm">Reject</button>
                 </div>
             `;
         
-            // Event listener harus ditambahkan setelah tooltip muncul
+            // Tambahkan event listener dengan pengecekan elemen ada atau tidak
             setTimeout(() => {
                 const deleteButton = document.getElementById(deleteButtonId);
-                if (deleteButton) {
-                    deleteButton.addEventListener("click", function (event) {
-                        event.stopPropagation(); // Mencegah popup scheduler terbuka
-                        if (confirm("Are you sure you want to delete this booking?")) {
-                            sendRequest(apiurl + "/" + modname + "/" + booking.id, "DELETE")
-                                .then(function (response) {
-                                    if (response.status === "success") {
-                                        alert("Booking deleted successfully!");
-                                        $("#scheduler").dxScheduler("instance").getDataSource().reload();
-                                    } else {
-                                        alert("Error: " + (response.message || "Failed to delete booking."));
-                                    }
-                                })
-                                .catch(function (error) {
-                                    alert("Error: " + (error.responseText || "Unknown error."));
-                                });
-                        }
-                    });
-                }
-            }, 500); // Timeout agar DOM siap
+                if (!deleteButton) return;
+                deleteButton.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    if (confirm("Are you sure you want to delete this booking?")) {
+                        sendRequest(apiurl + "/" + modname + "/" + booking.id, "DELETE")
+                            .then((response) => {
+                                if (response.status === "success") {
+                                    alert("Booking deleted successfully!");
+                                    $("#scheduler").dxScheduler("instance").getDataSource().reload();
+                                } else {
+                                    alert("Error: " + (response.message || "Failed to delete booking."));
+                                }
+                            })
+                            .catch((error) => {
+                                alert("Error: " + (error.responseText || "Unknown error."));
+                            });
+                    }
+                });
+            }, 100);
         
             return tooltipHtml;
         },
@@ -187,45 +297,63 @@ function updateScheduler(location, roomId) {
             const name = $('<div>')
                 .addClass('name')                    
                 .append($('<h2>').text(cellData.text));
-            
+        
             const roomAccupancy = $('<div>')
                 .addClass('roomAccupancy')
                 .html(`Bed: ${cellData.data.roomAccupancy}`);
         
-            // Create a parent div to combine name and roomAccupancy into a single column
-            const combinedColumn = $('<div>')
-            .addClass('combined-column')
-            .append(name, roomAccupancy)
-            .css({ backgroundColor: cellData.color });
+            // Tentukan warna berdasarkan jumlah bed
+            let bgColor;
+            if (cellData.data.roomAccupancy == 4) {
+                bgColor = "#4caf50"; // Hijau untuk kamar dengan banyak bed
+            } else if (cellData.data.roomAccupancy == 3) {
+                bgColor = "#ff9800"; // Oranye untuk kamar dengan kapasitas sedang            
+            } else if (cellData.data.roomAccupancy == 2) {
+                bgColor = "#ff9800"; // Oranye untuk kamar dengan kapasitas sedang
+            } else {
+                bgColor = "#f44336"; // Merah untuk kamar dengan kapasitas sedikit
+            }
         
+            const combinedColumn = $('<div>')
+                .addClass('combined-column')
+                .append(name, roomAccupancy)
+                .css({
+                    backgroundColor: bgColor,
+                    padding: '10px',
+                    borderRadius: '5px',
+                    color: '#fff',
+                    textAlign: 'center'
+            });
+
             return combinedColumn;
         },
         onCellPrepared: function(e) {
-            if (e.column.index == 0 && e.rowType == "data") {
-                if (e.data.code === null) {
-                    $("#formdata").dxDataGrid('columnOption', 'code', 'visible', false);
-                } else {
-                    $("#formdata").dxDataGrid('columnOption', 'code', 'visible', true);
-                }
+            // **Sembunyikan kolom 'code' jika null**
+            if (e.rowType == "data" && e.column.dataField === "code") {
+                const isCodeVisible = e.data.code !== null;
+                $("#formdata").dxDataGrid('columnOption', 'code', 'visible', isCodeVisible);
             }
+        
+            // **Tandai sel kosong dengan warna merah muda**
             if (e.rowType == "data" && (e.column.index > 0 && e.column.index < 6)) {
-                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                if (!e.value || /^\s*$/.test(e.value)) {
                     e.cellElement.css({
                         "backgroundColor": "#ffe6e6",
                         "border": "0.5px solid #f56e6e"
                     });
                 }
             }
-            if (e.rowType == "data") {
-                if (e.data.isParent === 1) {
-                    e.cellElement.css('background', 'rgba(128, 128, 0,0.1)');
-                }
+        
+            // **Tandai baris dengan `isParent === 1`**
+            if (e.rowType == "data" && e.data.isParent === 1) {
+                e.cellElement.css('background', 'rgba(128, 128, 0, 0.1)');
             }
         },
         onAppointmentFormOpening: function(e) {
             const form = e.form;
             const appointmentData = e.appointmentData;
-            const isNewAppointment = !appointmentData.id;
+            // const isNewAppointment = !appointmentData.id;
+
             console.log('Appointment Data:', appointmentData); // Debug log
 
             if (appointmentData.employee_id && typeof appointmentData.employee_id === 'string') {
@@ -245,10 +373,27 @@ function updateScheduler(location, roomId) {
             } else if (!appointmentData.family) {
                 appointmentData.family = []; // Inisialisasi dengan string kosong jika nilai `family` adalah `null` atau `undefined`
             }
-            // Define the groupCaptionTemplate function
-            function groupCaptionTemplate(param) {
-                // Function implementation here
-                return `Group Caption for ${param}`;
+
+            function validateBooking() {
+                let guestCount = (form.getEditor("guest")?.option("value") || []).length;
+                let familyCount = (form.getEditor("family")?.option("value") || []).length;
+                let employeeCount = (form.getEditor("employee_id")?.option("value") || []).length;
+
+                let totalGuests = guestCount + familyCount + employeeCount;
+                console.log("total guest",totalGuests);
+                let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
+                // let roomAccupancy = room?.roomAccupancy || 0;
+                let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomAccupancy || 0;
+                console.log("total Kaps",roomCapacity);
+        
+                let doneButton = $(".dx-popup-bottom .dx-button.dx-popup-done");
+        
+                if (totalGuests > roomCapacity) {
+                    // doneButton.addClass("dx-state-disabled");
+                    DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
+                // } else { 
+                    // doneButton.removeClass("dx-state-disabled");
+                }
             }
             
             form.option('items', [
@@ -283,7 +428,7 @@ function updateScheduler(location, roomId) {
                             }
                         },                            
                     ]
-                },                
+                },
                 {
                     itemType: 'group',
                     caption: 'Room & Date',
@@ -296,7 +441,8 @@ function updateScheduler(location, roomId) {
                                 dataSource: roomsWithLocations,
                                 displayExpr: 'text',
                                 valueExpr: 'id',
-                                value: appointmentData.ghm_room_id || null
+                                value: appointmentData.ghm_room_id || null,
+                                onValueChanged: validateBooking
                             }
                         },
                         {
@@ -305,7 +451,7 @@ function updateScheduler(location, roomId) {
                             dataField: 'startDate',
                             editorOptions: {
                                 type: 'datetime',
-                                value: appointmentData.startDate || new Date(),
+                                value: appointmentData.startDate,
                                 displayFormat: 'yyyy-MM-dd HH:mm:ss',
                                 dateSerializationFormat: 'yyyy-MM-ddTHH:mm:ssZ'
                             }
@@ -316,11 +462,12 @@ function updateScheduler(location, roomId) {
                             dataField: 'endDate',
                             editorOptions: {
                                 type: 'datetime',
-                                value: appointmentData.endDate || new Date(),
+                                value: appointmentData.endDate,
                                 displayFormat: 'yyyy-MM-dd HH:mm:ss',
                                 dateSerializationFormat: 'yyyy-MM-ddTHH:mm:ssZ'
                             }
                         },
+                                                
                     ]
                 },
                 {
@@ -338,21 +485,22 @@ function updateScheduler(location, roomId) {
                                 displayExpr: function(item) {
                                     if (!item) return "";
                                     const department = departments.find(dept => dept.id === item.department_id);
-                                    return `${item.FullName} | ${item.SAPID} | ${department ? department.DepartmentName : "Failed"}`;
+                                    return `${item.FullName} | ${item.SAPID} | ${department ? department.DepartmentName : "Failed"}`;                                    
                                 },
-                                valueExpr: 'FullName',
+                                valueExpr: 'id',
                                 value: Array.isArray (appointmentData.employee_id) ? appointmentData.employee_id : [],
                                 showSelectionControls: true,
                                 applyValueMode: 'useButtons',
-                                searchEnabled: true
-                            }
-                            
+                                searchEnabled: true,
+                                onValueChanged: validateBooking
+                            }                            
                         },
                         {                                        
                             title: 'Guest',
                             editorType: 'dxTagBox',
                             dataField: 'guest',
                             editorOptions: {
+                                dataSource: [],
                                 value: Array.isArray(appointmentData.guest) ? appointmentData.guest : [],
                                 acceptCustomValue: true,
                                 searchEnabled: true,
@@ -368,7 +516,11 @@ function updateScheduler(location, roomId) {
                                         args.customItem = null;
                                     }
                                     // appointmentData.guest = guests;
+                                    // let newFormData = { ...form.option('fromData'), guest: newGuestList } ;
+                                    // form.option('formData', newFormData);
                                     form.updateData('guest', guests);
+                                    validateBooking();
+                                    // form.repaint();
                                 }
                             }
                         },                            
@@ -378,6 +530,7 @@ function updateScheduler(location, roomId) {
                             editorType: 'dxTagBox',
                             dataField: 'family',
                             editorOptions: {
+                                dataSource: [],
                                 value: Array.isArray(appointmentData.family) ? appointmentData.family : [],
                                 acceptCustomValue: true,
                                 searchEnabled: true,
@@ -393,80 +546,118 @@ function updateScheduler(location, roomId) {
                                         args.customItem = null;
                                     }
                                     // appointmentData.family = familys;
+                                    // let newFormData = { ...form.option('fromData'), guest: newGuestList } ;
+                                    // form.option('formData', newFormData);
                                     form.updateData('family', familys);
+                                    // form.repaint();
+                                    validateBooking();
                                 }
                             }
                         } 
                     ]
-                },
-                {
-                    itemType: 'group',
-                    colSpan: 2,
-                    caption: 'Guest Type',
-                    items: [
-                            {
-                            label: { text: "Status" },
-                            template: function(data, itemElement) {
-                                $("<div>").attr("id", "radio-group-popup").appendTo(itemElement);
-                                $("#radio-group-popup").dxRadioGroup({
-                                    items: [
-                                        { text: "Submit", value: "submit", disabled: booking.requestStatus == 1 },
-                                        { text: "Approve", value: "approve1", disabled: booking.requestStatus == 2 },
-                                        { text: "Reject", value: "approve2", disabled: booking.requestStatus == 3 }
-                                    ],
-                                    value: "submit",
-                                    layout: "horizontal",
-                                    onValueChanged: function(e) {
-                                        var value = e.value;
-                                        switch (value) {
-                                            case "submit":
-                                                approveBooking(booking.id);
-                                                break;
-                                            case "approve1":
-                                                approveBooking(booking.id);
-                                                break;
-                                            case "approve2":
-                                                approveBooking(booking.id);
-                                                break;
-                                        }
-                                    }
-                                });
-                            } 
-                        }  
-                    ]
-                }            
+                }                         
             ]);
+
+            setTimeout(validateBooking,100);
         },
-        onAppointmentAdding: function(e) {
-            const appointmentData = e.appointmentData;
-            appointmentData.employee_id = serializeToJSON(appointmentData.employee_id);
-            appointmentData.guest = serializeToJSON(appointmentData.guest);
-            appointmentData.family = serializeToJSON(appointmentData.family);
-            sendRequest(apiurl + "/" + modname, "POST", {
-                requestStatus: 0,
-                text: appointmentData.text,
-                description: appointmentData.description,
-                startDate: appointmentData.startDate,
-                endDate: appointmentData.endDate,
-                ghm_room_id: appointmentData.ghm_room_id,
-                employee_id: appointmentData.employee_id,
-                guest: appointmentData.guest,
-                family: appointmentData.family
-            }).then(function(response) {
-                if (response.status === 'success') {
-                    e.component._dataSource.reload();
-                    alert('Booking created successfully!');
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            }).catch(function(error) {
-                alert('Error: ' + error.responseText);
-            });
-        },
+        // Event saat user ingin menambahkan booking baru
+    onAppointmentAdding: function(e) {
+        const appointmentData = e.appointmentData;
+        let scheduler = e.component;
+
+        let guestCount = safeArray(appointmentData.guest).length;
+        let familyCount = safeArray(appointmentData.family).length;
+        let employeeCount = safeArray(appointmentData.employee_id).length;
+        let totalNewGuests = guestCount + familyCount + employeeCount;
+
+        let selectedRoom = appointmentData.ghm_room_id;
+        let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomAccupancy || 0;
+
+        // Hitung total tamu per hari dalam rentang booking baru
+        let dailyGuestCount = getTotalGuestsPerDay(scheduler, selectedRoom, appointmentData.startDate, appointmentData.endDate);
+
+        // Cek apakah ada hari di mana jumlah tamu melebihi kapasitas kamar
+        let bookingStart = new Date(appointmentData.startDate);
+        let bookingEnd = new Date(appointmentData.endDate);
+
+        for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+            let dateKey = d.toISOString().split("T")[0]; // Format YYYY-MM-DD
+            let totalGuestsAfterAdding = (dailyGuestCount[dateKey] || 0) + totalNewGuests;
+
+            if (totalGuestsAfterAdding > roomCapacity) {
+                e.cancel = true; // Batalkan booking
+                DevExpress.ui.notify(`Kapasitas penuh pada ${dateKey}! (${dailyGuestCount[dateKey] || 0}/${roomCapacity})`, "error", 3000);
+                return;
+            }
+        }
+
+        // Serialize array sebelum dikirim
+        appointmentData.guest = JSON.stringify(appointmentData.guest);
+        appointmentData.family = JSON.stringify(appointmentData.family);
+
+        // Kirim data booking ke server
+        sendRequest(apiurl + "/" + modname, "POST", {
+            requestStatus: 0,
+            text: appointmentData.text,
+            description: appointmentData.description,
+            startDate: appointmentData.startDate,
+            endDate: appointmentData.endDate,
+            ghm_room_id: appointmentData.ghm_room_id,
+            employee_id: appointmentData.employee_id,
+            guest: appointmentData.guest,
+            family: appointmentData.family
+        }).then(function(response) {
+            if (response.status === 'success') {
+                e.component._dataSource.reload();
+                DevExpress.ui.notify("Booking berhasil dibuat!", "success", 2000);
+            } else {
+                DevExpress.ui.notify("Error: " + response.message, "error", 3000);
+            }
+        }).catch(function(error) {
+            DevExpress.ui.notify("Error: " + error.responseText, "error", 3000);
+        });
+    },
+
+        // Event saat user ingin mengupdate booking
+        // onAppointmentUpdating: function(e) {
+        //     const appointmentData = e.newData;
+        //     appointmentData.id = e.oldData.id;
+
+        //     appointmentData.guest = JSON.stringify(appointmentData.guest);
+        //     appointmentData.family = JSON.stringify(appointmentData.family);
+
+        //     sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
+        //         text: appointmentData.text,
+        //         description: appointmentData.description,
+        //         startDate: appointmentData.startDate,
+        //         endDate: appointmentData.endDate,
+        //         ghm_room_id: appointmentData.ghm_room_id,
+        //         employee_id: appointmentData.employee_id,
+        //         guest: appointmentData.guest,
+        //         family: appointmentData.family,
+        //         id: appointmentData.id
+        //     }).then(function(response) {
+        //         if (response.status === 'success') {
+        //             e.component._dataSource.reload();
+        //             alert('Booking updated successfully!');
+        //         } else {
+        //             alert('Error: ' + response.message);
+        //         }
+        //     }).catch(function(error) {
+        //         alert('Error: ' + error.responseText);
+        //     });
+        // },
         onAppointmentUpdating: function(e) {
             const appointmentData = e.newData;
-            appointmentData.id = e.oldData.id; // Ensure id is included in appointmentData for updating
-            appointmentData.employee_id = serializeToJSON(appointmentData.employee_id);
+            const formatDateForDB = (date) => {
+                const d = new Date(date);
+                return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+            };
+            appointmentData.startDate = formatDateForDB(appointmentData.startDate);
+            appointmentData.endDate = formatDateForDB(appointmentData.endDate);
+            appointmentData.id = e.oldData.id; // Ensure id is included in appointmentData for updating            
+            // appointmentData.employee_id = serializeToJSON(appointmentData.employee_id);
+            // appointmentData.employee_id = Array.isArray(appointmentData.employee_id) ? JSON.stringify(appointmentData.employee_id):appointmentData.employee_id;
             appointmentData.guest = Array.isArray(appointmentData.guest) ? JSON.stringify(appointmentData.guest):appointmentData.guest;
             appointmentData.family = Array.isArray(appointmentData.family) ? JSON.stringify(appointmentData.family):appointmentData.family;
             console.log('Updating appointment with data:', appointmentData); // Debug log
@@ -483,7 +674,7 @@ function updateScheduler(location, roomId) {
             }).then(function(response) {
                 console.log('Response from updating appointment:', response); // Debug log
                 if (response.status === 'success') {
-                    e.component._dataSource.reload();
+                    e.component.repaint();
                     alert('Booking updated successfully!');
                 } else {
                     alert('Error: ' + response.message);
@@ -521,3 +712,651 @@ updateRoomSelector(uniqueLocations[0]);
         });
     });
 });
+
+
+===============
+public function dashboard()
+{
+    $user = auth()->user();
+    if (!$user) {
+        return redirect()->route('login');
+    }
+
+    $userId = $user->id;
+    $isAdmin = $user->isAdmin ?? false;
+    $employeeId = $user->employee_id ?? null;
+
+    $requests = Ghm::query()
+        ->where(function ($query) use ($userId, $isAdmin, $employeeId) {
+            if ($isAdmin) {
+                $query->where("request_ghm.user_id", "!=", $userId)
+                    ->whereIn("request_ghm.requestStatus", [0, 1, 3, 4]);
+            } else {
+                $query->where("tbl_assignment.employee_id", $employeeId)
+                    ->whereIn("request_ghm.requestStatus", [3]);
+            }
+        })
+        ->orWhere("request_ghm.user_id", $userId)
+        ->with(['User', 'code', 'ghm_room'])
+        ->get();
+
+    $rooms = Ghm_room::all();
+    $locations = Location::all();
+    $employees = Employee::with('Department')->get();
+    $departments = Department::all();
+
+    $totalPeopleData = DB::table('request_ghm')
+        ->selectRaw('id, COALESCE(SUM(employee_count + guest_count + family_count), 0) as totalAll')
+        ->groupBy('id')
+        ->get();
+
+    $totalPeopleArray = $totalPeopleData->mapWithKeys(function ($item) {
+        return [$item->id => $item->totalAll];
+    });
+
+    // Handle case when there are no bookings
+    if ($requests->isEmpty()) {
+        $booking = [];
+    } else {
+        $booking = $requests->map(function ($request) use ($rooms, $locations, $totalPeopleArray) {
+            $room = $rooms->firstWhere('id', $request->ghm_room_id);
+            $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
+            $totalPeople = $totalPeopleArray[$request->id] ?? 0;
+
+            return [
+                'id' => $request->id,
+                'text' => $request->text ?? '',
+                'guest' => $request->guest ?? 0,
+                'family' => $request->family ?? 0,
+                'employee_id' => $request->employee_id ?? null,
+                'ticketstatus' => $request->ticketStatus ?? null,
+                'completeddate' => $request->completeddate ?? null,
+                'confirmationStatus' => $request->confirmationStatus ?? null,
+                'description' => $request->description ?? '',
+                'requestStatus' => $request->requestStatus ?? 0,
+                'startDate' => optional($request->startDate)->toIso8601String(),
+                'endDate' => optional($request->endDate)->toIso8601String(),
+                'code' => optional($request->code)->code ?? null,
+                'creator' => optional($request->User)->fullname ?? null,
+                'ghm_room_id' => $request->ghm_room_id,
+                'roomName' => optional($room)->roomName ?? null,
+                'location' => optional($location)->Location ?? null,
+                'totalPeople' => $totalPeople,
+            ];
+        });
+    }
+
+    $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
+        $location = $locations->firstWhere('id', optional($room)->location_id);
+        return [
+            'text' => optional($room)->roomName ?? 'N/A',
+            'id' => optional($room)->id ?? null,
+            'roomAccupancy' => optional($room)->roomAccupancy ?? 0,
+            'location' => optional($location)->Location ?? 'N/A',
+            'color' => '#' . substr(md5(optional($room)->roomName ?? 'default'), 0, 6),
+        ];
+    });
+
+    $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
+
+    return view('dashboard.ghm_booking', [
+        'booking' => $booking,
+        'roomsWithLocations' => $roomsWithLocations,
+        'uniqueLocations' => $uniqueLocations,
+        'emplo' => $employees,
+        'departments' => $departments,
+    ]);
+}
+
+<?php
+
+namespace App\Http\Controllers\Submission;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Submission\Ghm;
+use App\Models\Ghm_room;
+use App\Models\location;
+use App\Models\code;
+use App\Models\ApproverListReq;
+use App\Models\ApproverListHistory;
+use App\Models\Approvaluser;
+use App\Models\Module;
+use App\Models\User;
+use App\Models\Employee;
+use App\Models\Assignmentto;
+use DB;
+use Illuminate\Support\Facades\Log;
+use App\Mail\SubmissionMail;
+use App\Models\Department;
+
+class GhmRequestController extends Controller
+{
+    public $model;
+    public $modulename;
+    public $module;
+
+    public function __construct()
+    {
+        $this->model = new Ghm();
+        $this->modulename = 'Ghm';
+        $this->module = new Module();
+    }
+    public function dashboard()
+    {
+        $userId = auth()->user()->id;
+        $requests = Ghm::where('requestStatus', 3)
+        ->orWhere('user_id', $userId)
+        ->with('User')
+        ->get();
+        $rooms = Ghm_room::all();
+        $locations = Location::all();
+        $code = code::all();
+        $emplo= Employee::with('Department')->get();
+        $departments = Department::all();
+
+        $emplomapped = $emplo->map(function($emp) {
+            return [
+                'id' => $emp->id,
+                'FullName' => $emp->FullName,
+                'SAPID' => $emp->SAPID,
+                'department_id' => $emp->department_id,
+            ];
+        });
+
+        $departmentsMapped = $departments->map(function ($dept) {
+            return [
+                'id' => $dept->id,
+                'DepartmentName' => $dept->DepartmentName
+            ];
+        });
+
+        $totalPeopleData = DB::select("
+        SELECT 
+            request_ghm.id,
+            COALESCE(SUM(EmployeeCount), 0) AS totalEmployee,
+            COALESCE(SUM(GuestCount), 0) AS totalGuest,
+            COALESCE(SUM(FamilyCount), 0) AS totalFamily,
+            COALESCE(SUM(EmployeeCount + GuestCount + FamilyCount), 0) AS totalAll
+        FROM 
+            request_ghm
+        CROSS APPLY (SELECT COUNT(*) AS EmployeeCount FROM OPENJSON(employee_id)) AS EmpData
+        CROSS APPLY (SELECT COUNT(*) AS GuestCount FROM OPENJSON(guest)) AS GuestData
+        CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData
+        GROUP BY id
+        ");
+        
+        // Konversi hasil query ke associative array dengan ID sebagai key
+        $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
+            return [$item->id => $item->totalAll];
+        });
+
+        // Mapping booking
+        $booking = $requests->map(function ($request) use ($rooms, $locations, $totalPeopleArray) {
+            $room = $rooms->firstWhere('id', $request->ghm_room_id);
+            $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
+
+        // Ambil totalPeople berdasarkan ID request
+        $totalPeople = $totalPeopleArray[$request->id] ?? 0;
+            return [                
+                'id' => $request->id,
+                'text' => $request->text,
+                'guest' => $request->guest,
+                'family' => $request->family,
+                'employee_id' =>$request->employee_id,
+                'ticketstatus'=> $request->ticketStatus,
+                'completeddate' => $request->completeddate,
+                'confirmationStatus' =>$request->confirmationStatus,
+                'description' => $request->description,
+                'requestStatus' => $request->requestStatus,
+                'startDate' => $request->startDate ? $request->startDate->toIso8601String() : null,
+                'endDate' => $request->endDate ? $request->endDate->toIso8601String() : null,
+                'code' => $request->code ? $request->code->code : null,
+                'creator' => $request->User ? $request->User->fullname : null,
+                'ghm_room_id' => $request->ghm_room_id,
+                'roomName' => $room ? $room->roomName : null,
+                'location' => $location ? $location->Location : null,
+                'totalPeople' => $totalPeople
+            ];
+        });
+        
+        $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
+            $location = $locations->firstWhere('id', $room->location_id);
+            return [
+                'text' => $room->roomName,
+                'id' => $room->id,
+                'roomAccupancy' => $room->roomAccupancy,
+                'location' => $location ? $location->Location : null,
+                'color' => '#'.substr(md5($room->roomName), 0, 6) // Generate color based on room name hash
+            ];
+        });
+
+        // Getting unique locations
+        $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
+
+        return view('dashboard.ghm_booking', [
+            'booking' => $booking,
+            'roomsWithLocations' => $roomsWithLocations,
+            'uniqueLocations' => $uniqueLocations,
+            'emplo' => $emplomapped,
+            'departments' =>$departmentsMapped,
+        ]);
+        // return response()->json([
+        //     'booking' => $booking,
+        //     'roomsWithLocations' => $roomsWithLocations,
+        //     'uniqueLocations' => $uniqueLocations,
+        //     'emplo' => $emplo
+        // ]);
+        // dd($booking);
+
+    }
+    public function userstore(Request $request)
+    {
+        try {
+            // Ambil semua data dari request
+            $requestData = $request->all();
+            // Tambahkan user_id ke dalam data request
+            $requestData['user_id'] = $this->getAuth()->id;
+            $requestData['requestStatus'] = 0;            
+            // Buat data baru pada tabel utama
+            $newData = $this->model->create($requestData);
+            // Simpan id dari data baru
+            $req_id = $newData->id;
+            // dd($req_id)
+            // $this->createApprover($this->modulename, $req_id, null, null);
+            $requests = Ghm::all();
+            $rooms = Ghm_room::all();
+            $locations = Location::all();
+            
+            $booking = $requests->map(function ($request) use ($rooms, $locations) {
+                $room = $rooms->firstWhere('id', $request->ghm_room_id);
+                $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
+                return [
+                    'name' => $request->name,
+                    'description' => $request->description,
+                    'requestStatus' => $request->requestStatus,
+                    'startDate' => $request->startDate ? $request->startDate->toIso8601String() : null,
+                    'endDate' => $request->endDate ? $request->endDate->toIso8601String() : null,
+                    'ghm_room_id' => $request->ghm_room_id,
+                    'roomName' => $room ? $room->roomName : null,
+                    'location' => $location ? $location->Location : null
+                ];
+            });
+            $rooms = Ghm_room::all();
+            $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
+                $location = $locations->firstWhere('id', $room->location_id);
+                return [
+                    'text' => $room->roomName,
+                    'id' => $room->id,
+                    'location' => $location ? $location->Location : null,
+                    'color' => '#'.substr(md5($room->roomName), 0, 6) // Generate color based on room name hash
+                ];
+            });            
+            $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
+            return view('dashboard.ghm_booking', [
+                'booking' => $booking,
+                'roomsWithLocations' => $roomsWithLocations,
+                'uniqueLocations' => $uniqueLocations
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public function index(Request $request)
+    {
+        try {
+            
+            $id = $request->id;
+            $user_id = $this->getAuth()->id;
+            $employeeid = $this->getEmployeeID()->id;
+            $module_id = $this->getModuleId($this->modulename);
+            $isAdmin = $this->getAuth()->isAdmin;
+            $requestData = $request->all();
+
+            $dataquery = $this->model->query();
+
+            // $userId = $user_id;
+            // $moduleId = $module_id;
+            $subquery = "(select TOP 1 
+                CASE WHEN a.user_id='".$user_id."' 
+                then 1 else 0 end 
+                from tbl_approverListReq l
+                left join tbl_approver a on l.approver_id=a.id
+                left join tbl_approvaltype r on a.approvaltype_id = r.id 
+                where l.ApprovalAction='1' 
+                and l.req_id = request_ghm.id and l.module_id = '".$module_id."' 
+                and request_ghm.requestStatus='1'
+                order by a.sequence)";
+
+            if(!$isAdmin) {
+                $dataquery->leftJoin('tbl_assignment',function($join) use ( $user_id, $module_id){
+                    $join->on('request_ghm.id','=','tbl_assignment.req_id')
+                        ->where("request_ghm.user_id", "!=", $user_id)
+                        ->where('tbl_assignment.module_id',$module_id);
+                });
+            }
+
+            $data = $dataquery
+                ->selectRaw("request_ghm.id,
+                codes.code, 
+                request_ghm.user_id,
+                request_ghm.description,
+                request_ghm_room.roomName,
+                request_ghm_room.bu,
+                request_ghm_room.sector,
+                request_ghm.ghm_room_id,            
+                request_ghm.text,
+                request_ghm.description,
+                request_ghm.requestStatus,
+                request_ghm.completeddate,
+                request_ghm.ticketStatus,
+                request_ghm.confirmationStatus,
+                request_ghm.confirmationRemarks,
+                request_ghm.startDate,
+                request_ghm.endDate,
+                request_ghm.created_at,
+                request_ghm.updated_at,
+                (SELECT STRING_AGG(emp.fullname, ', ')
+                FROM OPENJSON(request_ghm.employee_id) 
+                WITH (employee_id INT '$')
+                LEFT JOIN employee.tbl_employee AS emp
+                ON emp.id = employee_id
+                ) AS employee_fullname,
+                (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.guest)) AS guest,
+                (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.family)) AS family,
+                request_ghm_room.location_id, 
+                employee.tbl_location.Location, 
+
+              
+
+                    CASE WHEN request_ghm.user_id='".$user_id."' then 1 else 0 end as isMine,
+                    ".$subquery." as isPendingOnMe
+                ")
+                ->leftJoin('codes', 'request_ghm.code_id', '=', 'codes.id')
+                ->leftJoin('request_ghm_room', 'request_ghm.ghm_room_id', '=', 'request_ghm_room.id')
+                ->leftJoin('employee.tbl_location', 'request_ghm_room.location_id', '=', 'employee.tbl_location.id')
+                ->with(['user', 'approverlist'])
+                ->where(function ($query) use ($subquery, $user_id, $isAdmin, $employeeid, $module_id) {
+                    $query->whereRaw($subquery . " = 1")
+                        ->orWhere(function ($query) use ($user_id, $isAdmin, $employeeid, $module_id) {
+                            if ($isAdmin) {
+                                $query->where("request_ghm.user_id", "!=", $user_id)
+                                    ->whereIn("request_ghm.requestStatus", [0,1,3,4]);
+                            }
+                             else {
+                                $query->where("tbl_assignment.employee_id",$employeeid)
+                                    ->whereIn("request_ghm.requestStatus", [3]);
+                            }
+                        })
+                        ->orWhere("request_ghm.user_id", $user_id);
+                })
+                ->orderBy(DB::raw($subquery), 'DESC')
+                ->orderByRaw("CASE WHEN request_ghm.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_ghm.created_at desc")
+                ->get();
+
+            return response()->json([
+                'status' => "show",
+                'message' => $this->getMessage()['show'],
+                'data' => $data,
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $dataquery = $this->model->query();
+            
+
+            $data = $dataquery
+                ->selectRaw("request_ghm.id,
+            codes.code, 
+            request_ghm.user_id,
+            request_ghm.description,
+            request_ghm.ghm_room_id,   
+            request_ghm_room.bu,
+            request_ghm_room.sector,          
+            request_ghm.text,
+            request_ghm.description,
+            request_ghm.requestStatus,
+            request_ghm.completeddate,
+            request_ghm.ticketStatus,
+            request_ghm.confirmationStatus,
+            request_ghm.confirmationRemarks,
+            request_ghm.startDate,
+            request_ghm.endDate,
+            request_ghm.created_at,
+            request_ghm.updated_at,
+            (SELECT STRING_AGG(emp.fullname, ', ')
+                FROM OPENJSON(request_ghm.employee_id) 
+                WITH (employee_id INT '$')
+                LEFT JOIN employee.tbl_employee AS emp
+                ON emp.id = employee_id
+                ) AS employee_fullname,
+            (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.guest)) AS guest,
+            (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.family)) AS family,
+            request_ghm_room.location_id, 
+            employee.tbl_location.Location               
+            ")
+            ->leftJoin('codes', 'request_ghm.code_id', '=', 'codes.id')
+            ->leftJoin('request_ghm_room', 'request_ghm.ghm_room_id', '=', 'request_ghm_room.id')
+            ->leftJoin('employee.tbl_location', 'request_ghm_room.location_id', '=', 'employee.tbl_location.id')
+            ->where('request_ghm.id',$id)
+            ->first();
+
+            if($data->code_id == null) {
+                $data->code_id = $this->generateCode($this->modulename);
+                $data->save();
+            }
+            // dd($data);
+
+            return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 
+            'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            // Ambil semua data dari request
+            $requestData = $request->all();
+
+            // Tambahkan user_id ke dalam data request
+            $requestData['user_id'] = $this->getAuth()->id;
+            // $requestData['requestStatus'] = 0;
+            $requestData['code_id'] = $this->generateCode($this->modulename);
+
+            // Buat data baru pada tabel utama
+            $newData = $this->model->create($requestData);
+
+            // Simpan id dari data baru
+            $req_id = $newData->id;           
+           
+
+            // $this->createApprover($this->modulename, $req_id, null, null);
+            
+            return response()->json([
+                "status" => "success",
+                "message" => $this->getMessage()['store'],
+                "data" => $newData
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }    
+
+    public function update(Request $request, $id)
+{
+    try {
+        // Validasi ID
+        $id = intval($id);
+        if ($id <= 0) {
+            return response()->json(["status" => "error", "message" => "Invalid ID"]);
+        }
+
+        // Mengambil semua data dari request
+        $module_id = $this->getModuleId($this->modulename);
+        $requestData = $request->all();
+
+        // Pastikan ticketStatus memiliki nilai default
+        $requestData['ticketStatus'] = $request->input('ticketStatus', 'On Queue');
+        $requestData['confirmationStatus'] = $request->input('confirmationStatus', null);
+
+        // Tambahkan 1 hari ke tanggal yang relevan
+        // $this->addOneDayToDate($requestData);
+
+        $data = $this->model->findOrFail($id);
+
+        if ($data->ticketStatus === null) {
+            $requestData['ticketStatus'] = 'On Queue';
+            $requestData['confirmationStatus'] = null;
+        } else if ($data->ticketStatus === 'On Queue' || $data->ticketStatus === 'Immediately') {
+            $requestData['confirmationStatus'] = 'Waiting';
+        } else if ($data->ticketStatus === 'Completed') {
+            if ($requestData['confirmationStatus'] === null || $requestData['confirmationStatus'] === 'Waiting') {
+                $requestData['confirmationStatus'] = 'Waiting';
+                $requestData['ticketStatus'] = $data->ticketStatus;
+            } else if ($requestData['confirmationStatus'] === 'Reworked') {
+                $requestData['ticketStatus'] = 'On Queue';
+            }
+        }
+
+        // Start save history perubahan
+        $fields = [
+            'ticketStatus' => $requestData['ticketStatus'],
+            'confirmationStatus' => ($data->ticketStatus === 'Completed' && $requestData['confirmationStatus'] !== 'Waiting')
+                ? $requestData['confirmationStatus'] . ' - ' . $request->input('confirmationRemarks', '') 
+                : null,
+        ];
+
+        foreach ($fields as $key => $value) {
+            if ($value) {
+                $this->approverAction($this->modulename, $id, $key, 1, $value, null);
+            }
+        }
+
+        // Update data di database
+        $data->update($requestData);
+
+        // Generate notifikasi
+        $notificationMessage = $this->generateNotificationMessage(
+            $data,
+            $this->modulename,
+            $id,
+            $requestData['ticketStatus'],
+            $requestData['confirmationStatus']
+        );
+
+        // Jika confirmationStatus bukan 'Waiting', kosongkan confirmationRemarks
+        if ($requestData['confirmationStatus'] !== 'Waiting') {
+            $data->update(['confirmationRemarks' => null]);
+        }
+
+        // Mengembalikan response JSON
+        return response()->json([
+            'status' => "success",
+            'message' => $this->getMessage()['update']
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json(["status" => "error", "message" => $e->getMessage()]);
+    }
+}
+
+    private function generateNotificationMessage($data, $modulename, $id, $ticketStatus, $confirmationStatus) {
+        $locModel = "App\Models\Submission\\".$modulename;
+        $model = new $locModel;
+        $tableName = $model->getTableName();
+        $module_id = $this->getModuleId($modulename);
+
+        $getSubmissionData = DB::table($tableName)->where('id', $id)->first();
+        $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
+        $assignmentdata = Assignmentto::leftJoin('employee.tbl_employee','tbl_assignment.employee_id','=','employee.tbl_employee.id')
+                        ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
+                        ->select('employee.tbl_employee.*','users.email')
+                        ->where('req_id',$getSubmissionData->id)
+                        ->where('module_id',$module_id)
+                        ->get();
+
+        if ($ticketStatus === 'Completed') {
+            $mailData = [
+                "id" => 5, //notif status
+                "action_id" => 0,
+                "submission" => $getSubmissionData,
+                "email" => $getCreator->email,
+                "fullname" => $getCreator->fullname,
+                "message" => $this->mailMessage()['ghmTicketCompleted'],
+            ]; // send to creator
+            Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,0));
+        }
+        if ($confirmationStatus === 'Completed') {
+            foreach ($assignmentdata as $getPIC){
+                $mailData = [
+                    "id" => 5, //notif status
+                    "action_id" => 0,
+                    "submission" => $getSubmissionData,
+                    "email" => $getPIC->email,
+                    "fullname" => $getPIC->FullName,
+                    "message" => $this->mailMessage()['ghmConfirmStatusCompleted'],
+                ]; // send to PIC
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,0));
+            }
+        }
+        if ($confirmationStatus === 'Reworked') {
+            foreach ($assignmentdata as $getPIC){
+                $mailData = [
+                    "id" => 5, //notif status
+                    "action_id" => 0,
+                    "submission" => $getSubmissionData,
+                    "email" => $getPIC->email,
+                    "fullname" => $getPIC->FullName,
+                    "message" => $this->mailMessage()['ghmConfirmStatusReworked'],
+                ]; // send to PIC
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,0));
+            }
+        }
+
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $module = $this->module->select('id', 'module')->where('module', $this->modulename)->first();
+            $user_id = $this->getAuth()->id;
+            if ($module) {
+                DB::transaction(function () use ($id, $module, $user_id) {
+                    ApproverListReq::where('req_id', $id)
+                        ->where('module_id', $module->id)
+                        ->delete();
+                    ApproverListHistory::where('req_id', $id)
+                        ->where('module_id', $module->id)
+                        ->delete();
+                    $data = $this->model->where('id',$id)->where('requestStatus',0)->where('user_id',$user_id)->first();
+                    if ($data) {
+                        $data->delete();
+                    } else {
+                        throw new \Exception($this->getMessage()['errordestroysubmission']);
+                    }
+                });
+                return  response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
+            } else {
+                return  response()->json(["status" => "error", "message" => $this->getMessage()['modulenotfound']]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+}

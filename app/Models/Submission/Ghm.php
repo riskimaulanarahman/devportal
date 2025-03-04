@@ -21,12 +21,11 @@ class Ghm extends Model
 
     protected $fillable = [
         'user_id',
+        'code_id',
         'requestStatus',
         'ghm_room_id',
         'employee_id',
         'description',
-        'bu',
-        'sector',
         'text',
         'guest',
         'family',

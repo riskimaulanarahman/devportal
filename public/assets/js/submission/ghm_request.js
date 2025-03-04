@@ -50,7 +50,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
         { 
             dataField: "description",
-            caption: "Subject",
+            caption: "Purpose",
             width: 180
         },
         {
@@ -370,17 +370,17 @@ const popupContentTemplate = function (reqid,mode,options) {
     } else {
         updateVisibleById(5, false);
     }
-    var dataSector = [
-        { bu: 'IHM', sector: 'NKL' },
-        { bu: 'IHM', sector: 'TRN' },
-        { bu: 'IHM', sector: 'SPU' },
-        { bu: 'IHM', sector: 'SNI' },
-        { bu: 'IHM', sector: 'HO' },
-        { bu: 'AHL', sector: 'SNI' },
-        { bu: 'AHL', sector: 'SBS' },
-        { bu: 'AHL', sector: 'SSP' },
-        { bu: 'AHL', sector: 'HO' },
-    ];
+    // var dataSector = [
+    //     { bu: 'IHM', sector: 'NKL' },
+    //     { bu: 'IHM', sector: 'TRN' },
+    //     { bu: 'IHM', sector: 'SPU' },
+    //     { bu: 'IHM', sector: 'SNI' },
+    //     { bu: 'IHM', sector: 'HO' },
+    //     { bu: 'AHL', sector: 'SNI' },
+    //     { bu: 'AHL', sector: 'SBS' },
+    //     { bu: 'AHL', sector: 'SSP' },
+    //     { bu: 'AHL', sector: 'HO' },
+    // ];
     scrollView.append("<hr>"),
     scrollView.append(
         $("<div>").dxAccordion({
@@ -441,7 +441,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
                                 editorOptions: { 
-                                    readOnly: true
+                                    readOnly: true,
+                                    customConfig: function(options) {
+                                        if (options.value === null || options.value === undefined || options.value === '') {
+                                            options.text = 'tidak ada data';
+                                        }
+                                    }
                                 }
                             },
                             {
@@ -450,60 +455,46 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
                                 editorOptions: { 
-                                    readOnly: true
+                                    readOnly: true,
+                                    customConfig: function(options) {
+                                        if (options.value === null || options.value === undefined || options.value === '') {
+                                            options.text = 'tidak ada data';
+                                        }
+                                    }
                                 }
                             },
                             {
-                                caption: 'employee_id',
+                                caption: 'employee',
                                 dataField: 'employee_fullname',
+                                allowFiltering: false,
+                                allowHeaderFiltering: false,
+                                editorOptions: { 
+                                    readOnly: true,
+                                    customConfig: function(options) {
+                                        if (options.value === null || options.value === undefined || options.value === '') {
+                                            options.text = 'tidak ada data';
+                                        }
+                                    }
+                                }
+                            },                            
+                            {
+                                caption: 'BU',
+                                dataField: 'bu',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
                                 editorOptions: { 
                                     readOnly: true
                                 }
-                            },
+                            } , 
                             {
-                                caption: 'BU',
-                                dataField: 'bu',
-                                validationRules: [{ type: "required" }],
-                                lookup: {
-                                    dataSource: [{bu:'IHM'},{bu:'AHL'}],
-                                    valueExpr: 'bu',
-                                    displayExpr: 'bu',
-                                },
-                                setCellValue: function (rowData, value) {
-                                    rowData.bu = value;
-                                    if (value === "IHM") {
-                                        rowData.sector = "HO";
-                                    } else if (value === "AHL") {
-                                        rowData.sector = "HO";
-                                    }
-                                },
-                                editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
-                                }
-                            },
-                            {
-                                caption: 'Sector',
+                                caption: 'Lokasi',
                                 dataField: 'sector',
-                                lookup: {
-                                    dataSource: function (options) {
-                                        return {
-                                            store: {
-                                                type: 'array',
-                                                data: dataSector
-                                            },
-                                            filter: options.data ? ["bu", "=", options.data.bu] : null
-                                        };
-                                    },
-                                    valueExpr: 'sector',
-                                    displayExpr: 'sector',
-                                },
-                                validationRules: [{ type: "required" }],
+                                allowFiltering: false,
+                                allowHeaderFiltering: false,
                                 editorOptions: { 
-                                    readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
-                                },
-                            },  
+                                    readOnly: true
+                                }
+                            } , 
                             {
                                 caption: 'Room',
                                 dataField: 'ghm_room_id', // Pastikan struktur data benar

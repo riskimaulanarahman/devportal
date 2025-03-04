@@ -231,7 +231,7 @@
 
 </style>
 {{-- @php
-    dd($emplo);
+    dd($booking);
 @endphp --}}
 <div class="row">
     <div class="col-xl-12">
