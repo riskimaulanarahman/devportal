@@ -248,6 +248,8 @@ function reloadScheduler() {
         
         appointmentTooltipTemplate: function(model) {
             const booking = model.appointmentData;
+            console.log("Booking Data:", booking); // Debugging
+        
             const room = roomsWithLocations.find(room => room.id === booking.ghm_room_id);
             const roomAccupancy = room?.roomAccupancy || 0;
         
@@ -267,64 +269,103 @@ function reloadScheduler() {
                 return isNaN(d.getTime()) ? "No Date" : d.toISOString().split("T")[0];
             };
         
-            // ID unik untuk tombol delete
-            const deleteButtonId = `delete-btn-${booking.id}`;
+            // ID unik untuk tombol
+            const actionButtonId = `action-btn-${booking.id}`;
+            const isCancelable = Number(booking.requestStatus) === 1 || Number(booking.requestStatus) === 2;
+            console.log("isCancelable:", isCancelable, "requestStatus:", booking.requestStatus); // Debugging
+        
+            const buttonLabel = isCancelable ? "Cancel" : "Delete";
+            const buttonClass = isCancelable ? "btn-warning" : "btn-danger";
+        
             const tooltipHtml = `
                 <div>
-                    <b>purpose: ${booking.text || "No Title"}</b><br>
+                    <b>Purpose: ${booking.text || "No Title"}</b><br>
                     ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
                     <b>Accupancy:</b> ${roomAccupancy} Person<br>
                     <b>Booked:</b> ${totalPeople} Person<br>
                     <b>Remaining:</b> ${remainingCapacity} Person<br>
                     <b>Created By:</b> ${booking.creator || "No Name"}<br><br>
-                    <button id="${deleteButtonId}" class="btn btn-danger btn-sm">Delete</button>
+                    <button id="${actionButtonId}" class="btn ${buttonClass} btn-sm">${buttonLabel}</button>
                 </div>
             `;
         
             // Gunakan MutationObserver untuk memastikan tombol tersedia di DOM
             const observer = new MutationObserver((mutations) => {
-                const deleteButton = document.getElementById(deleteButtonId);
-                if (deleteButton) {
-                    deleteButton.addEventListener("click", function(event) {
+                const actionButton = document.getElementById(actionButtonId);
+                if (actionButton) {
+                    actionButton.addEventListener("click", function(event) {
                         event.stopPropagation(); // Mencegah popup scheduler terbuka
                         event.preventDefault();
         
                         Swal.fire({
-                            title: 'Are you sure?',
-                            text: "Do you really want to delete this booking?",
-                            icon: 'warning',
+                            title: isCancelable ? 'Cancel Booking?' : 'Are you sure?',
+                            text: isCancelable 
+                                ? "Do you really want to cancel this booking?"
+                                : "Do you really want to delete this booking?",
+                            icon: isCancelable ? 'warning' : 'error',
                             showCancelButton: true,
-                            confirmButtonText: 'Yes, delete it!',
+                            confirmButtonText: isCancelable ? 'Yes, cancel it!' : 'Yes, delete it!',
                             cancelButtonText: 'No, keep it'
                         }).then((result) => {
                             if (!result.isConfirmed) return;
         
-                            sendRequest(apiurl + "/" + modname + "/" + booking.id, "DELETE")
-                                .then(response => {
-                                    if (response.status === "success") {
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: 'Deleted!',
-                                            text: 'Booking deleted successfully!',
-                                            timer: 2000,
-                                            showConfirmButton: false
-                                        });
-                                        // reloadScheduler(); // Panggil fungsi untuk reload scheduler
-                                    } else {
+                            if (isCancelable) {
+                                // Kirim request ke API Update
+                                sendRequest(apiurl + "/" + modname + "/" + booking.id, "PATCH", { requestStatus: 0 })
+                                    .then(response => {
+                                        if (response.status === "success") {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Booking Canceled!',
+                                                text: 'Booking has been successfully set to Canceled.',
+                                                timer: 2000,
+                                                showConfirmButton: false
+                                            });
+                                            // reloadScheduler(); // Panggil fungsi untuk reload scheduler
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: response.message || "Failed to update booking."
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
                                         Swal.fire({
                                             icon: 'error',
                                             title: 'Error',
-                                            text: response.message || "Failed to delete booking."
+                                            text: error.responseText || "Unknown error."
                                         });
-                                    }
-                                })
-                                .catch(error => {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: error.responseText || "Unknown error."
                                     });
-                                });
+                            } else {
+                                // Kirim request DELETE untuk menghapus booking
+                                sendRequest(apiurl + "/" + modname + "/" + booking.id, "DELETE")
+                                    .then(response => {
+                                        if (response.status === "success") {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Deleted!',
+                                                text: 'Booking deleted successfully!',
+                                                timer: 2000,
+                                                showConfirmButton: false
+                                            });
+                                            // reloadScheduler(); // Panggil fungsi untuk reload scheduler
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: response.message || "Failed to delete booking."
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: error.responseText || "Unknown error."
+                                        });
+                                    });
+                            }
                         });
                     });
                     observer.disconnect(); // Hentikan observer setelah tombol ditemukan
@@ -417,23 +458,23 @@ function reloadScheduler() {
 
             console.log('Appointment Data:', appointmentData); // Debug log
 
-            if (appointmentData.employee_id && typeof appointmentData.employee_id === 'string') {
-                appointmentData.employee_id = deserializeFromJSON(appointmentData.employee_id);
-            }
-            if (appointmentData.guest && typeof appointmentData.guest === 'string') {
-                // console.log(appointmentData.guest)
-                appointmentData.guest = deserializeFromJSON(appointmentData.guest);
-                // console.log(appointmentData.guest)
-            } else if (!appointmentData.guest) {
-                appointmentData.guest = []; // Inisialisasi dengan string kosong jika nilai `guest` adalah `null` atau `undefined`
-            }
-            if (appointmentData.family && typeof appointmentData.family === 'string') {
-                // console.log(appointmentData.family)
-                appointmentData.family = deserializeFromJSON(appointmentData.family);
-                // console.log(appointmentData.family)
-            } else if (!appointmentData.family) {
-                appointmentData.family = []; // Inisialisasi dengan string kosong jika nilai `family` adalah `null` atau `undefined`
-            }
+            // if (appointmentData.employee_id && typeof appointmentData.employee_id === 'string') {
+            //     appointmentData.employee_id = deserializeFromJSON(appointmentData.employee_id);
+            // }
+            // if (appointmentData.guest && typeof appointmentData.guest === 'string') {
+            //     // console.log(appointmentData.guest)
+            //     appointmentData.guest = deserializeFromJSON(appointmentData.guest);
+            //     // console.log(appointmentData.guest)
+            // } else if (!appointmentData.guest) {
+            //     appointmentData.guest = []; // Inisialisasi dengan string kosong jika nilai `guest` adalah `null` atau `undefined`
+            // }
+            // if (appointmentData.family && typeof appointmentData.family === 'string') {
+            //     // console.log(appointmentData.family)
+            //     appointmentData.family = deserializeFromJSON(appointmentData.family);
+            //     // console.log(appointmentData.family)
+            // } else if (!appointmentData.family) {
+            //     appointmentData.family = []; // Inisialisasi dengan string kosong jika nilai `family` adalah `null` atau `undefined`
+            // }
 
             function validateBooking() {
                 let guestCount = (form.getEditor("guest")?.option("value") || []).length;
@@ -652,8 +693,8 @@ function reloadScheduler() {
         }
 
         // Serialize array sebelum dikirim
-        appointmentData.guest = JSON.stringify(appointmentData.guest);
-        appointmentData.family = JSON.stringify(appointmentData.family);
+        // appointmentData.guest = JSON.stringify(appointmentData.guest);
+        // appointmentData.family = JSON.stringify(appointmentData.family);
 
         // Kirim data booking ke server
         Swal.fire({
@@ -713,8 +754,8 @@ function reloadScheduler() {
         appointmentData.id = e.oldData.id; // Pastikan id disertakan
     
         // Serialisasi array (jika ada)
-        appointmentData.guest = Array.isArray(appointmentData.guest) ? JSON.stringify(appointmentData.guest) : null;
-        appointmentData.family = Array.isArray(appointmentData.family) ? JSON.stringify(appointmentData.family) : null;
+        // appointmentData.guest = Array.isArray(appointmentData.guest) ? JSON.stringify(appointmentData.guest) : null;
+        // appointmentData.family = Array.isArray(appointmentData.family) ? JSON.stringify(appointmentData.family) : null;
     
         console.log('Data yang akan dikirim:', appointmentData);
     

@@ -44,6 +44,8 @@ class Ghm extends Model
         'completeddate' => 'date',
         'ghm_room_id' => 'integer',
         'employee_id' => 'array',
+        'guest' => 'array',
+        'family' => 'array',
         // 'startDate' => 'date',
         // 'endDate' => 'date'
     ];
