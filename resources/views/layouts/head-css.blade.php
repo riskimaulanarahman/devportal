@@ -5,9 +5,10 @@
 <link href="{{ URL::asset('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css" />
 <!-- App Css-->
 <link href="{{ URL::asset('assets/css/app.min.css')}}" id="app-style" rel="stylesheet" type="text/css" />
+{{-- scheduler --}}
+{{-- <link href="{{ URL::asset('assets/css/schd.min.css')}}" rel="stylesheet" type="text/css" /> --}}
 <!-- sweetalert2 Css-->
 <link href="{{ URL::asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet">
-
 <link href="{{ URL::asset('assets/libs/choices.js/choices.js.min.css') }}" rel="stylesheet">
 
 <link rel="stylesheet" href="{{ asset('assets/css/dx.common.css') }}">

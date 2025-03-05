@@ -156,6 +156,9 @@ class HomeController extends Controller
                             case 'request_hrsc':
                                 $url = 'hrsc_request';
                                 break;
+                            case 'request_ghm':
+                                $url = 'ghm_request';
+                                break;
                             case 'request_mom':
                                 $url = 'mom_request';
                                 break;
@@ -239,6 +242,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_hrsc':
                                 $url = 'hrsc_request';
+                                break;
+                            case 'request_ghm':
+                                $url = 'ghm_request';
                                 break;
                             case 'request_mom':
                                 $url = 'mom_request';

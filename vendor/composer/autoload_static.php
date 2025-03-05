@@ -612,6 +612,7 @@ class ComposerStaticInitc0ab960a98edb137ab2e98b6663cdd78
         'App\\Http\\Controllers\\SessionCheckController' => __DIR__ . '/../..' . '/app/Http/Controllers/SessionCheckController.php',
         'App\\Http\\Controllers\\StackholdersController' => __DIR__ . '/../..' . '/app/Http/Controllers/StackholdersController.php',
         'App\\Http\\Controllers\\Submission\\HrscRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/HrscRequestController.php',
+        'App\\Http\\Controllers\\Submission\\GhmRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/GhmRequestController.php',
         'App\\Http\\Controllers\\Submission\\HrscReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/HrscReportController.php',
         'App\\Http\\Controllers\\Submission\\IT\\ADRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/IT/ADRequestController.php',
         'App\\Http\\Controllers\\Submission\\JdiReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/JdiReportController.php',

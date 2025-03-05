@@ -31,6 +31,7 @@ Route::post('list-categoryform/{modulename}',[App\Http\Controllers\ListControlle
 Route::post('list-categoryform',[App\Http\Controllers\ListController::class, 'listCategoryForm']);
 Route::post('list-uavasset',[App\Http\Controllers\ListController::class, 'listUavAsset']);
 Route::post('list-categoryhrsc',[App\Http\Controllers\ListController::class, 'listCategoryHrsc']);
+Route::post('list-room',[App\Http\Controllers\ListController::class, 'listroomghm']);
 Route::post('list-unit',[App\Http\Controllers\ListController::class, 'listUnit']);
 Route::post('list-currency',[App\Http\Controllers\ListController::class, 'listCurrency']);
 Route::post('list-buyer',[App\Http\Controllers\ListController::class, 'listBuyer']);

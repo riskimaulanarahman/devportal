@@ -11,7 +11,7 @@ class Categoryhrsc extends Model
 
     protected $table = 'request_hrsc_category';
     
-    protected $guarded = ['id'];
+    protected $guarded = ['id']; 
     
     public $timestamps = false;
 }

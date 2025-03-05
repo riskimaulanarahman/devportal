@@ -55,8 +55,6 @@ class HrscReportController extends Controller
                 ON emp.id = assign.employee_id
                 WHERE assign.req_id = request_hrsc.id) AS pic_name,
 
-
-
                 (SELECT TOP 1 tbl_approverListHistory.approvalDate 
                 FROM tbl_approverListHistory 
                 WHERE tbl_approverListHistory.req_id = request_hrsc.id 

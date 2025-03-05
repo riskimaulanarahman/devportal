@@ -202,6 +202,7 @@ class SubmissionController extends Controller
                     'Mmf', 
                     'MaterialReq',
                     'Hris',
+                    'ghm'
                 ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {

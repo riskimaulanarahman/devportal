@@ -178,6 +178,8 @@
         '/ticket_request': 'submission/ticket_request.js',
         '/uavmission_request': 'submission/uavmission_request.js',
         '/hrsc_request': 'submission/hrsc_request.js',
+        '/ghm_request': 'submission/ghm_request.js',
+        // '/ghm_booking': 'submission/ghm_booking.js',
         '/hrsc_report': 'submission/hrsc_report.js',
         '/mom_request': 'submission/mom_request.js',
         '/jdi_request': 'submission/jdi_request.js',
