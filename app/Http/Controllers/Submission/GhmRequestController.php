@@ -36,123 +36,117 @@ class GhmRequestController extends Controller
     }
     
     public function dashboard()
-{
-    $user = auth()->user();
-    if (!$user) {
-        return redirect()->route('login');
-    }
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
-    $userId = $user->id;
-    $isAdmin = $user->isAdmin ?? false;
-    $employeeId = $user->employee_id ?? null;
+        $userId = $user->id;
+        $isAdmin = $user->isAdmin ?? false;
+        $employeeId = $user->employee_id ?? null;
 
-    $requests = Ghm::query()
-        ->where(function ($query) use ($userId, $isAdmin, $employeeId) {
-            if ($isAdmin) {
-                $query->where("request_ghm.user_id", "!=", $userId)
-                    ->whereIn("request_ghm.requestStatus", [0, 1, 3, 4]);
-            } else {
-                $query->where("tbl_assignment.employee_id", $employeeId)
-                    ->whereIn("request_ghm.requestStatus", [3]);
-            }
-        })
-        ->orWhere("request_ghm.user_id", $userId)
-        ->with(['User', 'code', 'ghm_room'])
-        ->get();
+        $requests = Ghm::query()
+            ->where(function ($query) use ($userId, $isAdmin, $employeeId) {
+                if ($isAdmin) {
+                    $query->where("request_ghm.user_id", "!=", $userId)
+                        ->whereIn("request_ghm.requestStatus", [0, 1, 3, 4]);
+                } else {
+                    $query->whereIn("request_ghm.requestStatus", [3]);
+                }
+            })
+            ->orWhere("request_ghm.user_id", $userId)
+            ->with(['User', 'code', 'ghm_room'])
+            ->get();
 
-    $rooms = Ghm_room::all();
-    $locations = Location::all();
-    $employees = Employee::with('Department')->get();
-    $departments = Department::all();
+        $rooms = Ghm_room::all();
+        $locations = Location::all();
+        $employees = Employee::with('Department')->get();
+        $departments = Department::all();
 
-    
-    $totalPeopleData = DB::select("
-        SELECT 
-            request_ghm.id,
-            COALESCE(SUM(EmployeeCount), 0) AS totalEmployee,
-            COALESCE(SUM(GuestCount), 0) AS totalGuest,
-            COALESCE(SUM(FamilyCount), 0) AS totalFamily,
-            COALESCE(SUM(EmployeeCount + GuestCount + FamilyCount), 0) AS totalAll
-        FROM 
-            [request_ghm]
-        CROSS APPLY (SELECT COUNT(*) AS EmployeeCount FROM OPENJSON(employee_id)) AS EmpData
-        CROSS APPLY (SELECT COUNT(*) AS GuestCount FROM OPENJSON(guest)) AS GuestData
-        CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData
-        GROUP BY id
-        ");
         
-        // Konversi hasil query ke associative array dengan ID sebagai key
-        $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
-            return [$item->id => $item->totalAll];
-        });
-        // Konversi hasil query ke associative array dengan ID sebagai key
-        $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
-            return [$item->id => $item->totalAll];
-        });
+        $totalPeopleData = DB::select("
+            SELECT 
+                request_ghm.id,
+                COALESCE(SUM(EmployeeCount), 0) AS totalEmployee,
+                COALESCE(SUM(GuestCount), 0) AS totalGuest,
+                COALESCE(SUM(FamilyCount), 0) AS totalFamily,
+                COALESCE(SUM(EmployeeCount + GuestCount + FamilyCount), 0) AS totalAll
+            FROM 
+                [request_ghm]
+            CROSS APPLY (SELECT COUNT(*) AS EmployeeCount FROM OPENJSON(employee_id)) AS EmpData
+            CROSS APPLY (SELECT COUNT(*) AS GuestCount FROM OPENJSON(guest)) AS GuestData
+            CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData
+            GROUP BY id
+            ");
+            
+            // Konversi hasil query ke associative array dengan ID sebagai key
+            $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
+                return [$item->id => $item->totalAll];
+            });
+            // Konversi hasil query ke associative array dengan ID sebagai key
+            $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
+                return [$item->id => $item->totalAll];
+            });
 
-        $statusColors = [
-            0 => '#6C757D', // Que (Abu)6C757D-ECEFF1
-            1 => '#007BFF', // Pending (Biru)007BFF-81D4FA
-            2 => '#FFC107', // Approved (Kuning)FFC107-FFF59D
-            3 => '#28A745', // Rejected (Hijau)28A745-C8E6C9
-            4 => '#DC3545', // Completed (Merah)DC3545-FFCDD2
-        ];
-    // Handle case when there are no bookings
-    if ($requests->isEmpty()) {
-        $booking = [];
-    } else {
-        $booking = $requests->map(function ($request) use ($rooms, $locations, $totalPeopleArray, $statusColors) {
-            $room = $rooms->firstWhere('id', $request->ghm_room_id);
-            $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
-            $totalPeople = $totalPeopleArray[$request->id] ?? 0;
+            $statusColors = [
+                0 => '#6C757D', // Que (Abu)6C757D-ECEFF1
+                1 => '#007BFF', // Pending (Biru)007BFF-81D4FA
+                2 => '#FFC107', // Approved (Kuning)FFC107-FFF59D
+                3 => '#28A745', // Rejected (Hijau)28A745-C8E6C9
+                4 => '#DC3545', // Completed (Merah)DC3545-FFCDD2
+            ];
+        // Handle case when there are no bookings
+        if ($requests->isEmpty()) {
+            $booking = [];
+        } else {
+            $booking = $requests->map(function ($request) use ($rooms, $locations, $totalPeopleArray, $statusColors) {
+                $room = $rooms->firstWhere('id', $request->ghm_room_id);
+                $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
+                $totalPeople = $totalPeopleArray[$request->id] ?? 0;
 
+                return [
+                    'id' => $request->id,
+                    'text' => $request->text ?? '',
+                    'guest' => $request->guest ?? 0,
+                    'family' => $request->family ?? 0,
+                    'employee_id' => $request->employee_id ?? null,
+                    'description' => $request->description ?? '',
+                    'requestStatus' => $request->requestStatus ?? 0,
+                    'startDate' => optional($request->startDate)->toIso8601String(),
+                    'endDate' => optional($request->endDate)->toIso8601String(),
+                    'code' => optional($request->code)->code ?? null,
+                    'creator' => optional($request->User)->fullname ?? null,
+                    'ghm_room_id' => $request->ghm_room_id,
+                    'roomName' => optional($room)->roomName ?? null,
+                    'location' => optional($location)->Location ?? null,
+                    'totalPeople' => $totalPeople,
+                    'requestColor' => isset($statusColors[$request->requestStatus]) ? $statusColors[$request->requestStatus] : '#6C757D', // Default warna abu-abu
+                ];
+            });
+        }
+
+        $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
+            $location = $locations->firstWhere('id', optional($room)->location_id);
             return [
-                'id' => $request->id,
-                'text' => $request->text ?? '',
-                'guest' => $request->guest ?? 0,
-                'family' => $request->family ?? 0,
-                'employee_id' => $request->employee_id ?? null,
-                'ticketstatus' => $request->ticketStatus ?? null,
-                'completeddate' => $request->completeddate ?? null,
-                'confirmationStatus' => $request->confirmationStatus ?? null,
-                'description' => $request->description ?? '',
-                'requestStatus' => $request->requestStatus ?? 0,
-                'startDate' => optional($request->startDate)->toIso8601String(),
-                'endDate' => optional($request->endDate)->toIso8601String(),
-                'code' => optional($request->code)->code ?? null,
-                'creator' => optional($request->User)->fullname ?? null,
-                'ghm_room_id' => $request->ghm_room_id,
-                'roomName' => optional($room)->roomName ?? null,
-                'location' => optional($location)->Location ?? null,
-                'totalPeople' => $totalPeople,
-                'requestColor' => isset($statusColors[$request->requestStatus]) ? $statusColors[$request->requestStatus] : '#6C757D', // Default warna abu-abu
-            ];
+                'text' => optional($room)->roomName ?? 'N/A',
+                'id' => optional($room)->id ?? null,
+                'roomAccupancy' => optional($room)->roomAccupancy ?? 0,
+                'location' => optional($location)->Location ?? 'N/A',
+                'roomColor' => '#F0F0F0', // Warna default untuk room, tidak dipengaruhi requestStatus
+                ];
         });
+
+        $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
+        // dd($booking);
+        return view('dashboard.ghm_booking', [
+            'booking' => $booking,
+            'roomsWithLocations' => $roomsWithLocations,
+            'uniqueLocations' => $uniqueLocations,
+            'emplo' => $employees,
+            'departments' => $departments,
+        ]);
     }
-
-    $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
-        $location = $locations->firstWhere('id', optional($room)->location_id);
-        return [
-            'text' => optional($room)->roomName ?? 'N/A',
-            'id' => optional($room)->id ?? null,
-            'roomAccupancy' => optional($room)->roomAccupancy ?? 0,
-            'location' => optional($location)->Location ?? 'N/A',
-            'roomColor' => '#F0F0F0', // Warna default untuk room, tidak dipengaruhi requestStatus
-            ];
-    });
-
-    $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
-    // dd($booking);
-    return view('dashboard.ghm_booking', [
-        'booking' => $booking,
-        'roomsWithLocations' => $roomsWithLocations,
-        'uniqueLocations' => $uniqueLocations,
-        'emplo' => $employees,
-        'departments' => $departments,
-    ]);
-}
-
-    
 
     public function index(Request $request)
     {
@@ -200,10 +194,6 @@ class GhmRequestController extends Controller
                 request_ghm.text,
                 request_ghm.description,
                 request_ghm.requestStatus,
-                request_ghm.completeddate,
-                request_ghm.ticketStatus,
-                request_ghm.confirmationStatus,
-                request_ghm.confirmationRemarks,
                 request_ghm.startDate,
                 request_ghm.endDate,
                 request_ghm.created_at,
@@ -264,7 +254,15 @@ class GhmRequestController extends Controller
             $requestData = $request->all();
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
-            $requestData['requestStatus'] = 0;            
+            $requestData['requestStatus'] = 0;
+
+            // $employee = $this->getEmployeeID();
+
+            // if ($employee->companycode === 'KPSI') {
+            //     $employee->companycode = 'IHM';
+            // }
+
+            // $requestData['bu'] = $employee->companycode;
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
             // Simpan id dari data baru
@@ -327,10 +325,6 @@ class GhmRequestController extends Controller
             request_ghm.text,
             request_ghm.description,
             request_ghm.requestStatus,
-            request_ghm.completeddate,
-            request_ghm.ticketStatus,
-            request_ghm.confirmationStatus,
-            request_ghm.confirmationRemarks,
             request_ghm.startDate,
             request_ghm.endDate,
             request_ghm.created_at,
@@ -377,7 +371,13 @@ class GhmRequestController extends Controller
             $requestData['user_id'] = $this->getAuth()->id;
             // $requestData['requestStatus'] = 0;
             $requestData['code_id'] = $this->generateCode($this->modulename);
+            $employee = $this->getEmployeeID();
 
+            if ($employee->companycode === 'KPSI') {
+                $employee->companycode = 'IHM';
+            }
+
+            $requestData['bu'] = $employee->companycode;
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
 

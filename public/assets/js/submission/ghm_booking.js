@@ -1,5 +1,5 @@
 var modname = 'ghmrequest';
-var modelclass = 'ghm';
+var modelclass = 'Ghm';
 var popupmode;
 var dataSubmitted = false; // Flag to track if data has been submitted
 

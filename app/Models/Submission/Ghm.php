@@ -23,15 +23,14 @@ class Ghm extends Model
         'user_id',
         'code_id',
         'requestStatus',
+        'bu',
+        'sector',
         'ghm_room_id',
         'employee_id',
         'description',
         'text',
         'guest',
         'family',
-        'ticketStatus',
-        'confirmationStatus',
-        'confirmationRemarks',
         'startDate',
         'endDate'
     ];
@@ -41,19 +40,16 @@ class Ghm extends Model
     ];
 
     protected $casts = [
-        'completeddate' => 'date',
         'ghm_room_id' => 'integer',
         'employee_id' => 'array',
         'guest' => 'array',
         'family' => 'array',
-        // 'startDate' => 'date',
-        // 'endDate' => 'date'
     ];
 
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['completeddate','ticketStatus','codeno','confirmationStatus','confirmationRemarks']);
+        $fillable = array_diff($fillable, ['codeno']);
         return $fillable;
     }
 
@@ -70,39 +66,6 @@ class Ghm extends Model
     {
         return $this->belongsTo(Employee::class);
     }
-    // Accessor to deserialize employee_id from XML to array
-    // public function getEmployeeIdAttribute($value)
-    // {
-    //     return $this->deserializeFromXML($value);
-    // }
-
-    // // Mutator to serialize employee_id from array to XML
-    // public function setEmployeeIdAttribute($value)
-    // {
-    //     $this->attributes['employee_id'] = $this->serializeToXML($value);
-    // }
-
-    // // Method to serialize array to XML
-    // private function serializeToXML($employeeIds)
-    // {
-    //     $xmlString = '<Employees>';
-    //     foreach ($employeeIds as $id) {
-    //         $xmlString .= "<EmployeeId>{$id}</EmployeeId>";
-    //     }
-    //     $xmlString .= '</Employees>';
-    //     return $xmlString;
-    // }
-
-    // // Method to deserialize XML to array
-    // private function deserializeFromXML($xmlString)
-    // {
-    //     $employeeIds = [];
-    //     $xml = simplexml_load_string($xmlString);
-    //     foreach ($xml->EmployeeId as $id) {
-    //         $employeeIds[] = (int) $id;
-    //     }
-    //     return $employeeIds;
-    // }
 
     public function approverlist()
     {

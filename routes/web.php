@@ -11,9 +11,7 @@ Route::get('/check-session',[App\Http\Controllers\SessionCheckController::class,
 
 // dashboard
 Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestController::class, 'dashboard'])->name('dashboardproject'); //Dashboard project
-Route::get('ghm_booking',[App\Http\Controllers\Submission\GhmRequestController::class, 'dashboard'])->name('ghm_booking'); //Ghm_request
-// Route::get('ghm_booking',[App\Http\Controllers\Submission\GhmRequestController::class, 'userstore'])->name('ghm_booking'); //Ghm_request
-// Route::get('pmreport',[App\Http\Controllers\Submission\ProjectReportController::class, 'bird']); //Dashboard report
+
 Route::get('cvaf',[App\Http\Controllers\Submission\CvafRequestController::class, 'showEvaluationForm'])->name('cvaf'); //cvaf
 Route::post('calculate-score', [App\Http\Controllers\Submission\CvafRequestController::class, 'calculateScore']);
 
