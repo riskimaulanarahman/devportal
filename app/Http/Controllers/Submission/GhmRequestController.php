@@ -90,7 +90,7 @@ class GhmRequestController extends Controller
             });
 
             $statusColors = [
-                0 => '#6C757D', // Que (Abu)6C757D-ECEFF1
+                0 => '#6C757D', // Draft (Abu)6C757D-ECEFF1
                 1 => '#007BFF', // Pending (Biru)007BFF-81D4FA
                 2 => '#FFC107', // Approved (Kuning)FFC107-FFF59D
                 3 => '#28A745', // Rejected (Hijau)28A745-C8E6C9
@@ -107,6 +107,8 @@ class GhmRequestController extends Controller
 
                 return [
                     'id' => $request->id,
+                    'bu' => $request->bu,
+                    'sector' => $request->sector,
                     'text' => $request->text ?? '',
                     'guest' => $request->guest ?? 0,
                     'family' => $request->family ?? 0,
@@ -131,6 +133,8 @@ class GhmRequestController extends Controller
             return [
                 'text' => optional($room)->roomName ?? 'N/A',
                 'id' => optional($room)->id ?? null,
+                'bu' => optional($room)->bu ?? null,
+                'sector' => optional($room)->sector ?? null,
                 'roomAccupancy' => optional($room)->roomAccupancy ?? 0,
                 'location' => optional($location)->Location ?? 'N/A',
                 'roomColor' => '#F0F0F0', // Warna default untuk room, tidak dipengaruhi requestStatus

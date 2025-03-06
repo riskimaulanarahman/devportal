@@ -1,5 +1,5 @@
 var modname = 'ghmrequest';
-var modelclass = 'ghm';
+var modelclass = 'Ghm';
 var popupmode;
 var dataSubmitted = false; // Flag to track if data has been submitted
 
@@ -188,6 +188,22 @@ function updateScheduler(location, roomId) {
     if (roomId) {
         dataSource = dataSource.filter(emp => emp.id === roomId);
     }
+// Fungsi untuk reload scheduler
+function reloadScheduler() {
+    setTimeout(() => {
+        const schedulerElement = document.querySelector("#scheduler");
+        if (schedulerElement) {
+            const scheduler = $("#scheduler").dxScheduler("instance");
+            if (scheduler) {
+                scheduler.getDataSource().reload().done(() => scheduler.repaint());
+            } else {
+                console.error("Scheduler instance is undefined.");
+            }
+        } else {
+            console.error("Scheduler element not found in DOM.");
+        }
+    }, 500); // Delay agar DOM diperbarui dulu
+}
 
     console.log('Booking Data:', booking); // Debug log for bookings
 
@@ -200,6 +216,7 @@ function updateScheduler(location, roomId) {
         firstDayOfWeek: 1,
         startDayHour: 10,
         endDayHour: 22,
+        colorExpr: "color",
         // firstDayOfWeek: 1,
         showAllDayPanel: false,
         height: 710,
@@ -210,7 +227,6 @@ function updateScheduler(location, roomId) {
                 allowMultiple: false,
                 dataSource: dataSource,
                 label: 'Room Name',
-                useColorAsDefault: true
             },
         ],
         editing: {
@@ -218,65 +234,149 @@ function updateScheduler(location, roomId) {
             allowUpdating: true,
             allowDeleting: true,
         },
+        // console.log(schedulerInstance.option("dataSource"))
+        onAppointmentRendered: function(e) {
+            // console.log("Rendered Appointment Data:", e.appointmentData); // Debugging Warna
+        
+            if (e.appointmentData.requestColor) {
+                e.appointmentElement.css("background-color", e.appointmentData.requestColor);
+                e.appointmentElement.css("color", "#fff"); // Kontras teks agar terlihat jelas
+            } else {
+                e.appointmentElement.css("background-color", "#6C757D"); // Default abu-abu jika warna tidak ditemukan
+            }
+        },
+        
         appointmentTooltipTemplate: function(model) {
             const booking = model.appointmentData;
+            console.log("Booking Data:", booking); // Debugging
+        
             const room = roomsWithLocations.find(room => room.id === booking.ghm_room_id);
             const roomAccupancy = room?.roomAccupancy || 0;
         
-            // Hitung total orang
-            const guestCount = (booking.guest && Array.isArray(booking.guest)) ? booking.guest.length : 0;
-            const familyCount = (booking.family && Array.isArray(booking.family)) ? booking.family.length : 0;
-            const employeeCount = (booking.employee_id && Array.isArray(booking.employee_id)) ? booking.employee_id.length : 0;
+            // Hitung total orang di booking
+            const guestCount = safeArray(booking.guest).length;
+            const familyCount = safeArray(booking.family).length;
+            const employeeCount = safeArray(booking.employee_id).length;
             const totalPeople = guestCount + familyCount + employeeCount;
         
             // Hitung sisa kapasitas kamar
-            const remainingCapacity = Math.max(roomAccupancy - totalPeople, 0);
+            const remainingCapacity = roomAccupancy - totalPeople;
         
-            // Format tanggal
-            const formatDate = (date) => date ? new Date(date).toLocaleDateString("en-CA") : "No Date";
+            // Format tanggal dengan aman
+            const formatDate = (date) => {
+                if (!date) return "No Date";
+                const d = new Date(date);
+                return isNaN(d.getTime()) ? "No Date" : d.toISOString().split("T")[0];
+            };
         
-            // ID unik untuk tombol delete
-            if (!booking.id) return `<div><b>Invalid Booking</b></div>`;
-            const deleteButtonId = `delete-btn-${booking.id}`;
+            // ID unik untuk tombol
+            const actionButtonId = `action-btn-${booking.id}`;
+            const isCancelable = Number(booking.requestStatus) === 1 || Number(booking.requestStatus) === 2;
+            console.log("isCancelable:", isCancelable, "requestStatus:", booking.requestStatus); // Debugging
         
-            // Tooltip HTML
+            const buttonLabel = isCancelable ? "Cancel" : "Delete";
+            const buttonClass = isCancelable ? "btn-warning" : "btn-danger";
+        
             const tooltipHtml = `
                 <div>
-                    <b>Subject: ${booking.text || "No Title"}</b><br>
+                    <b>Purpose: ${booking.text || "No Title"}</b><br>
                     ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
                     <b>Accupancy:</b> ${roomAccupancy} Person<br>
                     <b>Booked:</b> ${totalPeople} Person<br>
                     <b>Remaining:</b> ${remainingCapacity} Person<br>
                     <b>Created By:</b> ${booking.creator || "No Name"}<br><br>
-                    <button id="${deleteButtonId}" class="btn btn-danger btn-sm">Delete</button>
+                    <button id="${actionButtonId}" class="btn ${buttonClass} btn-sm">${buttonLabel}</button>
                 </div>
             `;
         
-            // Tambahkan event listener dengan pengecekan elemen ada atau tidak
-            setTimeout(() => {
-                const deleteButton = document.getElementById(deleteButtonId);
-                if (!deleteButton) return;
-                deleteButton.addEventListener("click", function(event) {
-                    event.stopPropagation();
-                    if (confirm("Are you sure you want to delete this booking?")) {
-                        sendRequest(apiurl + "/" + modname + "/" + booking.id, "DELETE")
-                            .then((response) => {
-                                if (response.status === "success") {
-                                    alert("Booking deleted successfully!");
-                                    $("#scheduler").dxScheduler("instance").getDataSource().reload();
-                                } else {
-                                    alert("Error: " + (response.message || "Failed to delete booking."));
-                                }
-                            })
-                            .catch((error) => {
-                                alert("Error: " + (error.responseText || "Unknown error."));
-                            });
-                    }
-                });
-            }, 100);
+            // Gunakan MutationObserver untuk memastikan tombol tersedia di DOM
+            const observer = new MutationObserver((mutations) => {
+                const actionButton = document.getElementById(actionButtonId);
+                if (actionButton) {
+                    actionButton.addEventListener("click", function(event) {
+                        event.stopPropagation(); // Mencegah popup scheduler terbuka
+                        event.preventDefault();
+        
+                        Swal.fire({
+                            title: isCancelable ? 'Cancel Booking?' : 'Are you sure?',
+                            text: isCancelable 
+                                ? "Do you really want to cancel this booking?"
+                                : "Do you really want to delete this booking?",
+                            icon: isCancelable ? 'warning' : 'error',
+                            showCancelButton: true,
+                            confirmButtonText: isCancelable ? 'Yes, cancel it!' : 'Yes, delete it!',
+                            cancelButtonText: 'No, keep it'
+                        }).then((result) => {
+                            if (!result.isConfirmed) return;
+        
+                            if (isCancelable) {
+                                // Kirim request ke API Update
+                                sendRequest(apiurl + "/" + modname + "/" + booking.id, "PATCH", { requestStatus: 0 })
+                                    .then(response => {
+                                        if (response.status === "success") {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Booking Canceled!',
+                                                text: 'Booking has been successfully set to Canceled.',
+                                                timer: 2000,
+                                                showConfirmButton: false
+                                            });
+                                            // reloadScheduler(); // Panggil fungsi untuk reload scheduler
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: response.message || "Failed to update booking."
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: error.responseText || "Unknown error."
+                                        });
+                                    });
+                            } else {
+                                // Kirim request DELETE untuk menghapus booking
+                                sendRequest(apiurl + "/" + modname + "/" + booking.id, "DELETE")
+                                    .then(response => {
+                                        if (response.status === "success") {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Deleted!',
+                                                text: 'Booking deleted successfully!',
+                                                timer: 2000,
+                                                showConfirmButton: false
+                                            });
+                                            // reloadScheduler(); // Panggil fungsi untuk reload scheduler
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: response.message || "Failed to delete booking."
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: error.responseText || "Unknown error."
+                                        });
+                                    });
+                            }
+                        });
+                    });
+                    observer.disconnect(); // Hentikan observer setelah tombol ditemukan
+                }
+            });
+        
+            observer.observe(document.body, { childList: true, subtree: true });
         
             return tooltipHtml;
         },
+        
         dataCellTemplate: function(cellData, index, container) {
             const { ghm_room_id } = cellData.groups;
             const currentTraining = getCurrentTraining(cellData.startDate.getDate(), ghm_room_id);
@@ -294,35 +394,37 @@ function updateScheduler(location, roomId) {
                 .addClass('day-cell'));
         },
         resourceCellTemplate: function(cellData) {
+            // console.log(`Room: ${cellData.text}, Status: ${cellData.data.requestStatus}, Request Color: ${cellData.data.requestColor}, Room Color: ${cellData.data.roomColor}`);
+            
             const name = $('<div>')
-                .addClass('name')                    
+                .addClass('name')
                 .append($('<h2>').text(cellData.text));
         
             const roomAccupancy = $('<div>')
                 .addClass('roomAccupancy')
                 .html(`Bed: ${cellData.data.roomAccupancy}`);
-        
             // Tentukan warna berdasarkan jumlah bed
             let bgColor;
             if (cellData.data.roomAccupancy == 4) {
-                bgColor = "#4caf50"; // Hijau untuk kamar dengan banyak bed
+                bgColor = "#B0BEC5"; // Hijau untuk kamar dengan banyak bed
             } else if (cellData.data.roomAccupancy == 3) {
-                bgColor = "#ff9800"; // Oranye untuk kamar dengan kapasitas sedang            
+                bgColor = "#90A4AE"; // Oranye untuk kamar dengan kapasitas sedang            
             } else if (cellData.data.roomAccupancy == 2) {
-                bgColor = "#ff9800"; // Oranye untuk kamar dengan kapasitas sedang
+                bgColor = "#A5D6A7"; // Oranye untuk kamar dengan kapasitas sedang
             } else {
-                bgColor = "#f44336"; // Merah untuk kamar dengan kapasitas sedikit
+                bgColor = "#FFCCBC"; // Merah untuk kamar dengan kapasitas sedikit
             }
+            
         
             const combinedColumn = $('<div>')
-                .addClass('combined-column')
-                .append(name, roomAccupancy)
-                .css({
-                    backgroundColor: bgColor,
-                    padding: '10px',
-                    borderRadius: '5px',
-                    color: '#fff',
-                    textAlign: 'center'
+            .addClass('combined-column')
+            .append(name, roomAccupancy)
+            .css({
+                backgroundColor: bgColor,
+                padding: '10px',
+                borderRadius: '5px',
+                color: '#fff',
+                textAlign: 'center'
             });
 
             return combinedColumn;
@@ -356,23 +458,23 @@ function updateScheduler(location, roomId) {
 
             console.log('Appointment Data:', appointmentData); // Debug log
 
-            if (appointmentData.employee_id && typeof appointmentData.employee_id === 'string') {
-                appointmentData.employee_id = deserializeFromJSON(appointmentData.employee_id);
-            }
-            if (appointmentData.guest && typeof appointmentData.guest === 'string') {
-                // console.log(appointmentData.guest)
-                appointmentData.guest = deserializeFromJSON(appointmentData.guest);
-                // console.log(appointmentData.guest)
-            } else if (!appointmentData.guest) {
-                appointmentData.guest = []; // Inisialisasi dengan string kosong jika nilai `guest` adalah `null` atau `undefined`
-            }
-            if (appointmentData.family && typeof appointmentData.family === 'string') {
-                // console.log(appointmentData.family)
-                appointmentData.family = deserializeFromJSON(appointmentData.family);
-                // console.log(appointmentData.family)
-            } else if (!appointmentData.family) {
-                appointmentData.family = []; // Inisialisasi dengan string kosong jika nilai `family` adalah `null` atau `undefined`
-            }
+            // if (appointmentData.employee_id && typeof appointmentData.employee_id === 'string') {
+            //     appointmentData.employee_id = deserializeFromJSON(appointmentData.employee_id);
+            // }
+            // if (appointmentData.guest && typeof appointmentData.guest === 'string') {
+            //     // console.log(appointmentData.guest)
+            //     appointmentData.guest = deserializeFromJSON(appointmentData.guest);
+            //     // console.log(appointmentData.guest)
+            // } else if (!appointmentData.guest) {
+            //     appointmentData.guest = []; // Inisialisasi dengan string kosong jika nilai `guest` adalah `null` atau `undefined`
+            // }
+            // if (appointmentData.family && typeof appointmentData.family === 'string') {
+            //     // console.log(appointmentData.family)
+            //     appointmentData.family = deserializeFromJSON(appointmentData.family);
+            //     // console.log(appointmentData.family)
+            // } else if (!appointmentData.family) {
+            //     appointmentData.family = []; // Inisialisasi dengan string kosong jika nilai `family` adalah `null` atau `undefined`
+            // }
 
             function validateBooking() {
                 let guestCount = (form.getEditor("guest")?.option("value") || []).length;
@@ -396,7 +498,7 @@ function updateScheduler(location, roomId) {
                 }
             }
             
-            form.option('items', [
+            form.option('items', [                
                 {
                     itemType: 'group',
                     colCount: 1,
@@ -404,15 +506,15 @@ function updateScheduler(location, roomId) {
                     items: [
                         {
                             label: { text: 'Code' },
-                            editorType: 'dxTextBox',
+                            // editorType: 'dxTextBox',
                             dataField: 'code',
-                            disabled: true,
                             editorOptions: {
+                                readOnly: true,
                                 value: appointmentData.code || ''
                             }
                         },
                         {
-                            label: { text: 'Subject' },
+                            label: { text: 'Purpose' },
                             editorType: 'dxTextBox',
                             dataField: 'text',
                             editorOptions: {
@@ -420,13 +522,13 @@ function updateScheduler(location, roomId) {
                             }
                         },
                         {
-                            label: { text: 'Description' },
+                            label: { text: 'Details' },
                             editorType: 'dxTextArea',
                             dataField: 'description',
                             editorOptions: {
                                 value: appointmentData.description || ''
                             }
-                        },                            
+                        }                           
                     ]
                 },
                 {
@@ -525,7 +627,6 @@ function updateScheduler(location, roomId) {
                             }
                         },                            
                         {
-                            // label: { text: 'Family' },
                             title: 'Family',
                             editorType: 'dxTagBox',
                             dataField: 'family',
@@ -555,13 +656,13 @@ function updateScheduler(location, roomId) {
                             }
                         } 
                     ]
-                }                         
+                }                                       
             ]);
 
             setTimeout(validateBooking,100);
         },
         // Event saat user ingin menambahkan booking baru
-    onAppointmentAdding: function(e) {
+        onAppointmentAdding: function(e) {
         const appointmentData = e.appointmentData;
         let scheduler = e.component;
 
@@ -592,75 +693,137 @@ function updateScheduler(location, roomId) {
         }
 
         // Serialize array sebelum dikirim
-        appointmentData.guest = JSON.stringify(appointmentData.guest);
-        appointmentData.family = JSON.stringify(appointmentData.family);
+        // appointmentData.guest = JSON.stringify(appointmentData.guest);
+        // appointmentData.family = JSON.stringify(appointmentData.family);
 
-        // Kirim data booking ke server
-        sendRequest(apiurl + "/" + modname, "POST", {
-            requestStatus: 0,
-            text: appointmentData.text,
-            description: appointmentData.description,
-            startDate: appointmentData.startDate,
-            endDate: appointmentData.endDate,
-            ghm_room_id: appointmentData.ghm_room_id,
-            employee_id: appointmentData.employee_id,
-            guest: appointmentData.guest,
-            family: appointmentData.family
-        }).then(function(response) {
-            if (response.status === 'success') {
-                e.component._dataSource.reload();
-                DevExpress.ui.notify("Booking berhasil dibuat!", "success", 2000);
-            } else {
-                DevExpress.ui.notify("Error: " + response.message, "error", 3000);
-            }
-        }).catch(function(error) {
-            DevExpress.ui.notify("Error: " + error.responseText, "error", 3000);
-        });
+        // Kirim data booking ke server-tambahkan metode btn-req-cancel gunakan dari modul lain
+        Swal.fire({
+            title: 'What do you want to do?',
+            text: 'Choose an option for this booking',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Submit Now',
+            cancelButtonText: 'Save as Draft',
+            reverseButtons: true
+        }).then((result) => {
+            console.log("Swal result:", result); // Log the result object
+            let requestStatus = result.isConfirmed ? 1 : 0; // Menentukan status request
+            let actionText = result.isConfirmed ? 'submitted' : 'saved as draft';
+        
+            console.log("Request Status:", requestStatus);
+        
+            // Jalankan POST pertama
+            return sendRequest(apiurl + "/" + modname, "POST", {
+                requestStatus: requestStatus,
+                text: appointmentData.text,
+                description: appointmentData.description,
+                startDate: appointmentData.startDate,
+                endDate: appointmentData.endDate,
+                ghm_room_id: appointmentData.ghm_room_id,
+                employee_id: appointmentData.employee_id,
+                guest: appointmentData.guest,
+                family: appointmentData.family
+            }).then((response) => {
+                console.log("Response from first request:", response);
+                
+                // Ambil reqid dari response pertama
+                let reqid = response.data.id;
+                
+                // Jika pengguna memilih "Submit Now", jalankan POST kedua
+                if (result.isConfirmed) {
+                    return sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                        requestStatus: 1,
+                        action: actionForm,
+                        approvalAction: isNaN(parseInt(valapprovalAction)) ? 1 : parseInt(valapprovalAction),
+                        approvalType: valApprovalType,
+                    });
+                } else {
+                    return null; // Tidak ada request kedua jika memilih "Save as Draft"
+                }
+            }).then((response) => {
+                // Jika POST kedua dilakukan dan sukses
+                if (response && response.status === 'success') {
+                    e.component._dataSource.reload();
+                }
+        
+                // Tampilkan pesan sukses setelah semua proses selesai
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: `Booking has been ${actionText}.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }).catch((error) => {
+                // Tangani error untuk POST pertama atau kedua
+                console.error("Error occurred:", error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.responseText || 'An error occurred' });
+            });
+        });      
     },
-
-        // Event saat user ingin mengupdate booking
-        // onAppointmentUpdating: function(e) {
-        //     const appointmentData = e.newData;
-        //     appointmentData.id = e.oldData.id;
-
-        //     appointmentData.guest = JSON.stringify(appointmentData.guest);
-        //     appointmentData.family = JSON.stringify(appointmentData.family);
-
-        //     sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
-        //         text: appointmentData.text,
-        //         description: appointmentData.description,
-        //         startDate: appointmentData.startDate,
-        //         endDate: appointmentData.endDate,
-        //         ghm_room_id: appointmentData.ghm_room_id,
-        //         employee_id: appointmentData.employee_id,
-        //         guest: appointmentData.guest,
-        //         family: appointmentData.family,
-        //         id: appointmentData.id
-        //     }).then(function(response) {
-        //         if (response.status === 'success') {
-        //             e.component._dataSource.reload();
-        //             alert('Booking updated successfully!');
-        //         } else {
-        //             alert('Error: ' + response.message);
-        //         }
-        //     }).catch(function(error) {
-        //         alert('Error: ' + error.responseText);
-        //     });
-        // },
-        onAppointmentUpdating: function(e) {
-            const appointmentData = e.newData;
-            const formatDateForDB = (date) => {
-                const d = new Date(date);
-                return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
-            };
-            appointmentData.startDate = formatDateForDB(appointmentData.startDate);
-            appointmentData.endDate = formatDateForDB(appointmentData.endDate);
-            appointmentData.id = e.oldData.id; // Ensure id is included in appointmentData for updating            
-            // appointmentData.employee_id = serializeToJSON(appointmentData.employee_id);
-            // appointmentData.employee_id = Array.isArray(appointmentData.employee_id) ? JSON.stringify(appointmentData.employee_id):appointmentData.employee_id;
-            appointmentData.guest = Array.isArray(appointmentData.guest) ? JSON.stringify(appointmentData.guest):appointmentData.guest;
-            appointmentData.family = Array.isArray(appointmentData.family) ? JSON.stringify(appointmentData.family):appointmentData.family;
-            console.log('Updating appointment with data:', appointmentData); // Debug log
+    onAppointmentUpdating: function(e) {
+        const appointmentData = e.newData;
+    
+        // Format tanggal untuk database
+        const formatDateForDB = (date) => {
+            const d = new Date(date);
+            return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+        };
+    
+        appointmentData.startDate = formatDateForDB(appointmentData.startDate);
+        appointmentData.endDate = formatDateForDB(appointmentData.endDate);
+        appointmentData.id = e.oldData.id; // Pastikan id disertakan
+    
+        // Serialisasi array (jika ada)
+        // appointmentData.guest = Array.isArray(appointmentData.guest) ? JSON.stringify(appointmentData.guest) : null;
+        // appointmentData.family = Array.isArray(appointmentData.family) ? JSON.stringify(appointmentData.family) : null;
+    
+        console.log('Data yang akan dikirim:', appointmentData);
+    
+        // Logika untuk status tiket dan konfirmasi
+        var newTicketStatus = e.newData.ticketStatus;
+        var newConfirmationStatus = e.newData.confirmationStatus;
+    
+        if (newTicketStatus === "Completed") {
+            if (!confirm("Are you sure you want to mark this ticket as completed?")) {
+                e.cancel = true;
+            } else {
+                e.newData.confirmationStatus = 'Waiting';
+                e.component.columnOption("ticketStatus", "allowEditing", false);
+            }
+        }
+    
+        if (newConfirmationStatus === "Reworked") {
+            if (!confirm("Are you sure you want to mark this confirmation status as reworked?")) {
+                e.cancel = true;
+            } else {
+                e.newData.ticketStatus = 'On Queue';
+                e.component.columnOption("confirmationStatus", "allowEditing", false);
+                e.component.columnOption("confirmationRemarks", "allowEditing", false);
+            }
+        }
+    
+        if (newConfirmationStatus === "Completed") {
+            if (!confirm("Are you sure you want to mark this confirmation status as completed?")) {
+                e.cancel = true;
+            } else {
+                e.component.columnOption("confirmationStatus", "allowEditing", false);
+                e.component.columnOption("confirmationRemarks", "allowEditing", false);
+            }
+        }
+    
+        // Konfirmasi dengan SweetAlert
+        Swal.fire({
+            title: 'What do you want to do?',
+            text: 'Choose an option for this booking',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Submit Now',
+            cancelButtonText: 'Save as Draft',
+            reverseButtons: true
+        }).then((result) => {
+            let actionText = result.isConfirmed ? 'submitted' : 'saved as draft';
+    
             sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
                 text: appointmentData.text,
                 description: appointmentData.description,
@@ -670,20 +833,25 @@ function updateScheduler(location, roomId) {
                 employee_id: appointmentData.employee_id,
                 guest: appointmentData.guest,
                 family: appointmentData.family,
-                id: appointmentData.id // Ensure id is included in the request body
+                id: appointmentData.id
             }).then(function(response) {
-                console.log('Response from updating appointment:', response); // Debug log
                 if (response.status === 'success') {
-                    e.component.repaint();
-                    alert('Booking updated successfully!');
+                    e.component._dataSource.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: `Booking has been ${actionText}.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 } else {
-                    alert('Error: ' + response.message);
+                    Swal.fire({ icon: 'error', title: 'Error', text: response.message });
                 }
             }).catch(function(error) {
-                console.error('Error from updating appointment:', error); // Debug log
-                alert('Error: ' + error.responseText);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.responseText });
             });
-        }
+        });
+    }
     });
 }
 
@@ -712,6 +880,140 @@ updateRoomSelector(uniqueLocations[0]);
         });
     });
 });
+// jalankan ini kawan
+function btnreqsubmit(reqid, mode) {
+    var btnSubmit = $('#btn-submit');
+    btnSubmit.prop('disabled', true);
+    var actionForm = (mode == 'approval') ? 'approval' : 'submission';
+    
+    var valapprovalAction = $('input[name="approvalaction"]:checked').val() || null;
+
+    if (mode == 'approval' && !valapprovalAction) {
+        alert('Please select approval action.');
+        btnSubmit.prop('disabled', false);
+        return false;
+    }
+
+    var valApprovalType = (valapprovalAction == 3) ? 'Approved' :
+                          (valapprovalAction == 2) ? 'Reworked' :
+                          (valapprovalAction == 4) ? 'Rejected' : '';
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Are you sure you want to send this submission?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, send it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoadingScreen();
+
+            if (typeof apiurl === "undefined" || typeof modelclass === "undefined") {
+                alert("API URL atau modelclass tidak tersedia!");
+                btnSubmit.prop('disabled', false);
+                hideLoadingScreen();
+                return;
+            }
+
+            sendRequest(apiurl + "/" + modname, "POST", {
+                requestStatus: requestStatus,
+                text: appointmentData.text,
+                description: appointmentData.description,
+                startDate: appointmentData.startDate,
+                endDate: appointmentData.endDate,
+                ghm_room_id: appointmentData.ghm_room_id,
+                employee_id: appointmentData.employee_id,
+                guest: appointmentData.guest,
+                family: appointmentData.family
+            })
+            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                requestStatus: 1,
+                action: actionForm,
+                approvalAction: parseInt(valapprovalAction) || 1,
+                approvalType: valApprovalType,
+            }).then(function(response) {
+                btnSubmit.prop('disabled', false);
+                hideLoadingScreen();
+                
+                if (response.status === 'error') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'An error occurred.',
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved',
+                        text: 'The submission has been submitted.',
+                    });
+                    popup.hide();
+                }
+            });
+        } else {
+            btnSubmit.prop('disabled', false);
+            Swal.fire({
+                icon: 'error',
+                title: 'Cancelled',
+                text: 'The submission has been cancelled.',
+                confirmButtonColor: '#3085d6'
+            });
+            hideLoadingScreen();
+        }
+    });
+}
+function runpopup() {
+    popup = $('#popup').dxPopup({
+        contentTemplate: popupContentTemplate,
+        container: '.content',
+        showTitle: true,
+        title: 'Submission Detail',
+        visible: false,
+        dragEnabled: false,
+        hideOnOutsideClick: false,
+        showCloseButton: true,
+        fullScreen : false,
+        onShowing: function(e) {
+        },
+        onShown: function(e) {
+        },
+        onHidden: function(e) {
+            dataGrid.refresh();
+        },
+        toolbarItems: [
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',  // Set the button to the bottom toolbar
+                location: 'after',
+                options: {
+                    text: "Fullscreen",
+                    onClick: function() {
+                        if (popup.option("fullScreen")) {
+                            popup.option("fullScreen", false);
+                            this.option("text", "Enable Fullscreen");
+                        } else {
+                            popup.option("fullScreen", true);
+                            this.option("text", "Disable Fullscreen");
+                        }
+                    }
+                }
+            },
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                    text: 'Close',
+                    onClick() {
+                        popup.hide();
+                    },
+                },
+            }
+        ]
+    }).dxPopup('instance');
+}
 
 
 // =====================================

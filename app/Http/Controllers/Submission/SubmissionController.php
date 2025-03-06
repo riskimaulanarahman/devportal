@@ -202,7 +202,7 @@ class SubmissionController extends Controller
                     'Mmf', 
                     'MaterialReq',
                     'Hris',
-                    'ghm'
+                    'Ghm'
                 ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {
@@ -468,7 +468,7 @@ class SubmissionController extends Controller
                     break;
                 }
             }
-            // dd($mailData);
+            dd($mailData);
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
             }

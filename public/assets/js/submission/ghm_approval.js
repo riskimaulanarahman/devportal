@@ -1,5 +1,5 @@
 var modname = 'ghmrequest';
-var modelclass = 'ghm';
+var modelclass = 'Ghm';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {

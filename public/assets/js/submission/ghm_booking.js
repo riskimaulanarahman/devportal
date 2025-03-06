@@ -454,50 +454,21 @@ function reloadScheduler() {
         onAppointmentFormOpening: function(e) {
             const form = e.form;
             const appointmentData = e.appointmentData;
-            // const isNewAppointment = !appointmentData.id;
-
-            console.log('Appointment Data:', appointmentData); // Debug log
-
-            // if (appointmentData.employee_id && typeof appointmentData.employee_id === 'string') {
-            //     appointmentData.employee_id = deserializeFromJSON(appointmentData.employee_id);
-            // }
-            // if (appointmentData.guest && typeof appointmentData.guest === 'string') {
-            //     // console.log(appointmentData.guest)
-            //     appointmentData.guest = deserializeFromJSON(appointmentData.guest);
-            //     // console.log(appointmentData.guest)
-            // } else if (!appointmentData.guest) {
-            //     appointmentData.guest = []; // Inisialisasi dengan string kosong jika nilai `guest` adalah `null` atau `undefined`
-            // }
-            // if (appointmentData.family && typeof appointmentData.family === 'string') {
-            //     // console.log(appointmentData.family)
-            //     appointmentData.family = deserializeFromJSON(appointmentData.family);
-            //     // console.log(appointmentData.family)
-            // } else if (!appointmentData.family) {
-            //     appointmentData.family = []; // Inisialisasi dengan string kosong jika nilai `family` adalah `null` atau `undefined`
-            // }
-
+            console.log('Appointment Data:', appointmentData);
             function validateBooking() {
                 let guestCount = (form.getEditor("guest")?.option("value") || []).length;
                 let familyCount = (form.getEditor("family")?.option("value") || []).length;
                 let employeeCount = (form.getEditor("employee_id")?.option("value") || []).length;
-
                 let totalGuests = guestCount + familyCount + employeeCount;
                 console.log("total guest",totalGuests);
                 let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
-                // let roomAccupancy = room?.roomAccupancy || 0;
                 let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomAccupancy || 0;
-                console.log("total Kaps",roomCapacity);
-        
+                console.log("total Kaps",roomCapacity);        
                 let doneButton = $(".dx-popup-bottom .dx-button.dx-popup-done");
-        
                 if (totalGuests > roomCapacity) {
-                    // doneButton.addClass("dx-state-disabled");
                     DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
-                // } else { 
-                    // doneButton.removeClass("dx-state-disabled");
                 }
-            }
-            
+            }            
             form.option('items', [                
                 {
                     itemType: 'group',
@@ -506,7 +477,6 @@ function reloadScheduler() {
                     items: [
                         {
                             label: { text: 'Code' },
-                            // editorType: 'dxTextBox',
                             dataField: 'code',
                             editorOptions: {
                                 readOnly: true,
@@ -617,12 +587,8 @@ function reloadScheduler() {
                                     } else {
                                         args.customItem = null;
                                     }
-                                    // appointmentData.guest = guests;
-                                    // let newFormData = { ...form.option('fromData'), guest: newGuestList } ;
-                                    // form.option('formData', newFormData);
                                     form.updateData('guest', guests);
                                     validateBooking();
-                                    // form.repaint();
                                 }
                             }
                         },                            
@@ -646,11 +612,7 @@ function reloadScheduler() {
                                     } else {
                                         args.customItem = null;
                                     }
-                                    // appointmentData.family = familys;
-                                    // let newFormData = { ...form.option('fromData'), guest: newGuestList } ;
-                                    // form.option('formData', newFormData);
                                     form.updateData('family', familys);
-                                    // form.repaint();
                                     validateBooking();
                                 }
                             }
@@ -658,88 +620,109 @@ function reloadScheduler() {
                     ]
                 }                                       
             ]);
-
             setTimeout(validateBooking,100);
         },
-        // Event saat user ingin menambahkan booking baru
         onAppointmentAdding: function(e) {
-        const appointmentData = e.appointmentData;
-        let scheduler = e.component;
-
-        let guestCount = safeArray(appointmentData.guest).length;
-        let familyCount = safeArray(appointmentData.family).length;
-        let employeeCount = safeArray(appointmentData.employee_id).length;
-        let totalNewGuests = guestCount + familyCount + employeeCount;
-
-        let selectedRoom = appointmentData.ghm_room_id;
-        let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomAccupancy || 0;
-
-        // Hitung total tamu per hari dalam rentang booking baru
-        let dailyGuestCount = getTotalGuestsPerDay(scheduler, selectedRoom, appointmentData.startDate, appointmentData.endDate);
-
-        // Cek apakah ada hari di mana jumlah tamu melebihi kapasitas kamar
-        let bookingStart = new Date(appointmentData.startDate);
-        let bookingEnd = new Date(appointmentData.endDate);
-
-        for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
-            let dateKey = d.toISOString().split("T")[0]; // Format YYYY-MM-DD
-            let totalGuestsAfterAdding = (dailyGuestCount[dateKey] || 0) + totalNewGuests;
-
-            if (totalGuestsAfterAdding > roomCapacity) {
-                e.cancel = true; // Batalkan booking
-                DevExpress.ui.notify(`Kapasitas penuh pada ${dateKey}! (${dailyGuestCount[dateKey] || 0}/${roomCapacity})`, "error", 3000);
+            console.log("onAppointmentAdding triggered", e);
+            const appointmentData = e.appointmentData;
+            ;
+            let scheduler = e.component;
+            let guestCount = safeArray(appointmentData.guest).length;
+            let familyCount = safeArray(appointmentData.family).length;
+            let employeeCount = safeArray(appointmentData.employee_id).length;
+            let totalNewGuests = guestCount + familyCount + employeeCount;
+            let selectedRoom = appointmentData.ghm_room_id;
+            let roomData = roomsWithLocations.find(room=>room.id === selectedRoom);
+            if (!roomData) {
+                DevExpress.ui.notify("Room not Found", "error", 3000);
+                e.cancel = true;
                 return;
             }
-        }
-
-        // Serialize array sebelum dikirim
-        // appointmentData.guest = JSON.stringify(appointmentData.guest);
-        // appointmentData.family = JSON.stringify(appointmentData.family);
-
-        // Kirim data booking ke server
-        Swal.fire({
-            title: 'What do you want to do?',
-            text: 'Choose an option for this booking',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Submit Now',
-            cancelButtonText: 'Save as Draft',
-            reverseButtons: true
-        }).then((result) => {
-            console.log("Swal result:", result); // Log the result object
-            let requestStatus = result.isConfirmed ? 1 : 0; // Correct assignment
-            let actionText = result.isConfirmed ? 'submitted' : 'saved as draft';
-        
-            console.log("Request Status:", requestStatus); // Cek apakah status benar
-        
-            sendRequest(apiurl + "/" + modname, "POST", {
-                requestStatus: requestStatus,
-                text: appointmentData.text,
-                description: appointmentData.description,
-                startDate: appointmentData.startDate,
-                endDate: appointmentData.endDate,
-                ghm_room_id: appointmentData.ghm_room_id,
-                employee_id: appointmentData.employee_id,
-                guest: appointmentData.guest,
-                family: appointmentData.family
-            }).then(function(response) {
-                if (response.status === 'success') {
-                    e.component._dataSource.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: `Booking has been ${actionText}.`,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+            let sector = roomData.sector;
+            let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomAccupancy || 0;
+            let dailyGuestCount = getTotalGuestsPerDay(scheduler, selectedRoom, appointmentData.startDate, appointmentData.endDate);
+            let bookingStart = new Date(appointmentData.startDate);
+            let bookingEnd = new Date(appointmentData.endDate);
+            
+            console.log("Total new guests:", totalNewGuests);
+            console.log("Room capacity:", roomCapacity);
+            console.log("Daily guest count:", dailyGuestCount);
+            
+            for (let d = new Date(bookingStart); d <= bookingEnd; d.setDate(d.getDate() + 1)) {
+                let dateKey = d.toISOString().split("T")[0]; // Format YYYY-MM-DD
+                let totalGuestsAfterAdding = (dailyGuestCount[dateKey] || 0) + totalNewGuests;
+                
+                console.log(`Checking capacity for ${dateKey}: ${totalGuestsAfterAdding}/${roomCapacity}`);
+                
+                if (totalGuestsAfterAdding > roomCapacity) {
+                    e.cancel = true; // Batalkan booking
+                    DevExpress.ui.notify(`Kapasitas penuh pada ${dateKey}! (${dailyGuestCount[dateKey] || 0}/${roomCapacity})`, "error", 3000);
+                    return;
                 }
-            }).catch(function(error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: error.responseText });
-            });
-        });        
+            }
+            
+            console.log("Capacity check passed. Proceeding with submission...");
+            
+            Swal.fire({
+                title: 'What do you want to do?',
+                text: 'Choose an option for this booking',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Submit Now',
+                cancelButtonText: 'Save as Draft',
+                reverseButtons: true
+            }).then((result) => {
+                console.log("Swal result:", result);
+                let requestStatus = result.isConfirmed ? 1 : 0;
+                
+                return sendRequest(apiurl + "/" + modname, "POST", {
+                    requestStatus: requestStatus,
+                    text: appointmentData.text,
+                    description: appointmentData.description,
+                    startDate: appointmentData.startDate,
+                    endDate: appointmentData.endDate,
+                    ghm_room_id: appointmentData.ghm_room_id,
+                    employee_id: appointmentData.employee_id,
+                    guest: appointmentData.guest,
+                    family: appointmentData.family,
+                    sector: sector,
+                    // supportingDocument: null/
+                });
+            }).then((response) => {
+                console.log("Response from first request:", response);
+                if (!response || !response.data || !response.data.id) {
+                    throw new Error("Invalid response from first request");
+                }
+                let reqid = response.data.id;
+                console.log("Received reqid:", reqid);
+                
+                if (!reqid) return;
+                
+                return sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                    requestStatus: 1,
+                    action: 'submission'  // Disederhanakan karena hanya submission
+                });
+            }).then((response) => {
+                if (response) {
+                    console.log("Response from second request:", response);
+                    if (response.status === 'success') {
+                        e.component._dataSource.reload();
+                    }
+                }
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: `Booking has been submitted successfully.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }).catch((error) => {
+                console.error("Error occurred:", error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.responseText || 'An error occurred' });
+            });      
     },
+
     onAppointmentUpdating: function(e) {
         const appointmentData = e.newData;
     
@@ -860,78 +843,89 @@ updateRoomSelector(uniqueLocations[0]);
     });
 });
 // jalankan ini kawan
-function btnreqsubmit(reqid, mode) {
-    var btnSubmit = $('#btn-submit');
-    btnSubmit.prop('disabled', true);
-    var actionForm = (mode == 'approval') ? 'approval' : 'submission';
+// function btnreqsubmit(reqid, mode) {
+//     var btnSubmit = $('#btn-submit');
+//     btnSubmit.prop('disabled', true);
+//     var actionForm = (mode == 'approval') ? 'approval' : 'submission';
     
-    var valapprovalAction = $('input[name="approvalaction"]:checked').val() || null;
+//     var valapprovalAction = $('input[name="approvalaction"]:checked').val() || null;
 
-    if (mode == 'approval' && !valapprovalAction) {
-        alert('Please select approval action.');
-        btnSubmit.prop('disabled', false);
-        return false;
-    }
+//     if (mode == 'approval' && !valapprovalAction) {
+//         alert('Please select approval action.');
+//         btnSubmit.prop('disabled', false);
+//         return false;
+//     }
 
-    var valApprovalType = (valapprovalAction == 3) ? 'Approved' :
-                          (valapprovalAction == 2) ? 'Reworked' :
-                          (valapprovalAction == 4) ? 'Rejected' : '';
+//     var valApprovalType = (valapprovalAction == 3) ? 'Approved' :
+//                           (valapprovalAction == 2) ? 'Reworked' :
+//                           (valapprovalAction == 4) ? 'Rejected' : '';
 
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "Are you sure you want to send this submission?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, send it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            showLoadingScreen();
+//     Swal.fire({
+//         title: 'Are you sure?',
+//         text: "Are you sure you want to send this submission?",
+//         icon: 'question',
+//         showCancelButton: true,
+//         confirmButtonColor: '#3085d6',
+//         cancelButtonColor: '#d33',
+//         confirmButtonText: 'Yes, send it!'
+//     }).then((result) => {
+//         if (result.isConfirmed) {
+//             showLoadingScreen();
 
-            if (typeof apiurl === "undefined" || typeof modelclass === "undefined") {
-                alert("API URL atau modelclass tidak tersedia!");
-                btnSubmit.prop('disabled', false);
-                hideLoadingScreen();
-                return;
-            }
+//             if (typeof apiurl === "undefined" || typeof modelclass === "undefined") {
+//                 alert("API URL atau modelclass tidak tersedia!");
+//                 btnSubmit.prop('disabled', false);
+//                 hideLoadingScreen();
+//                 return;
+//             }
 
-            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                requestStatus: 1,
-                action: actionForm,
-                approvalAction: parseInt(valapprovalAction) || 1,
-                approvalType: valApprovalType,
-            }).then(function(response) {
-                btnSubmit.prop('disabled', false);
-                hideLoadingScreen();
+//             sendRequest(apiurl + "/" + modname, "POST", {
+//                 requestStatus: requestStatus,
+//                 text: appointmentData.text,
+//                 description: appointmentData.description,
+//                 startDate: appointmentData.startDate,
+//                 endDate: appointmentData.endDate,
+//                 ghm_room_id: appointmentData.ghm_room_id,
+//                 employee_id: appointmentData.employee_id,
+//                 guest: appointmentData.guest,
+//                 family: appointmentData.family
+//             })
+//             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+//                 requestStatus: 1,
+//                 action: actionForm,
+//                 approvalAction: parseInt(valapprovalAction) || 1,
+//                 approvalType: valApprovalType,
+//             }).then(function(response) {
+//                 btnSubmit.prop('disabled', false);
+//                 hideLoadingScreen();
                 
-                if (response.status === 'error') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message || 'An error occurred.',
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Saved',
-                        text: 'The submission has been submitted.',
-                    });
-                    popup.hide();
-                }
-            });
-        } else {
-            btnSubmit.prop('disabled', false);
-            Swal.fire({
-                icon: 'error',
-                title: 'Cancelled',
-                text: 'The submission has been cancelled.',
-                confirmButtonColor: '#3085d6'
-            });
-            hideLoadingScreen();
-        }
-    });
-}
+//                 if (response.status === 'error') {
+//                     Swal.fire({
+//                         icon: 'error',
+//                         title: 'Error',
+//                         text: response.message || 'An error occurred.',
+//                     });
+//                 } else {
+//                     Swal.fire({
+//                         icon: 'success',
+//                         title: 'Saved',
+//                         text: 'The submission has been submitted.',
+//                     });
+//                     popup.hide();
+//                 }
+//             });
+//         } else {
+//             btnSubmit.prop('disabled', false);
+//             Swal.fire({
+//                 icon: 'error',
+//                 title: 'Cancelled',
+//                 text: 'The submission has been cancelled.',
+//                 confirmButtonColor: '#3085d6'
+//             });
+//             hideLoadingScreen();
+//         }
+//     });
+// }
 function runpopup() {
     popup = $('#popup').dxPopup({
         contentTemplate: popupContentTemplate,
