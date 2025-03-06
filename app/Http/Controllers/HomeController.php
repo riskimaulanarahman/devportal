@@ -101,6 +101,7 @@ class HomeController extends Controller
             'request_mmf' => $this->getModuleId('Mmf'),
             'request_material' => $this->getModuleId('MaterialReq'),
             'request_ccm' => $this->getModuleId('Ccm'),
+            'request_ghm' => $this->getModuleId('Ghm'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -156,9 +157,6 @@ class HomeController extends Controller
                             case 'request_hrsc':
                                 $url = 'hrsc_request';
                                 break;
-                            case 'request_ghm':
-                                $url = 'ghm_request';
-                                break;
                             case 'request_mom':
                                 $url = 'mom_request';
                                 break;
@@ -176,6 +174,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_ccm':
                                 $url = 'ccm_request';
+                                break;
+                            case 'request_ghm':
+                                $url = 'ghm_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }
@@ -243,9 +244,6 @@ class HomeController extends Controller
                             case 'request_hrsc':
                                 $url = 'hrsc_request';
                                 break;
-                            case 'request_ghm':
-                                $url = 'ghm_request';
-                                break;
                             case 'request_mom':
                                 $url = 'mom_request';
                                 break;
@@ -263,6 +261,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_ccm':
                                 $url = 'ccm_request';
+                                break;
+                            case 'request_ghm':
+                                $url = 'ghm_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }

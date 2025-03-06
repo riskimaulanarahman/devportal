@@ -3,12 +3,12 @@ var modelclass = 'Ghm';
 var popupmode;
 var dataSubmitted = false; // Flag to track if data has been submitted
 
-// Function to serialize employee_id to JSON
+// Function to serialize employee to JSON
 function serializeToJSON(employeeIds) {
     return JSON.stringify(employeeIds);
 }
 
-// Function to deserialize JSON to employee_id array
+// Function to deserialize JSON to employee array
 function deserializeFromJSON(jsonString) {
     return JSON.parse(jsonString);
 }
@@ -19,7 +19,7 @@ $(function() {
 
         dataSubmitted = true;
         const formData = $('#booking-form').serializeArray();
-        const employeeIdsField = formData.find(field => field.name === 'employee_id');
+        const employeeIdsField = formData.find(field => field.name === 'employee');
         // employeeIdsField.value = serializeToJSON(employeeIdsField.value.split(',').map(Number));
 
         const guestField = formData.find(field => field.name === 'guest');
@@ -98,7 +98,7 @@ function getTotalGuestsForDateLocally(scheduler, roomId, startDate, endDate) {
         ) {
             let guestCount = safeArray(appointment.guest).length;
             let familyCount = safeArray(appointment.family).length;
-            let employeeCount = safeArray(appointment.employee_id).length;
+            let employeeCount = safeArray(appointment.employee).length;
             totalGuests += guestCount + familyCount + employeeCount;
         }
     });
@@ -119,7 +119,7 @@ function getTotalGuestsPerDay(scheduler, roomId, startDate, endDate) {
                 let dateKey = d.toISOString().split("T")[0]; // Format YYYY-MM-DD
                 let guestCount = safeArray(appointment.guest).length;
                 let familyCount = safeArray(appointment.family).length;
-                let employeeCount = safeArray(appointment.employee_id).length;
+                let employeeCount = safeArray(appointment.employee).length;
                 let totalGuests = guestCount + familyCount + employeeCount;
 
                 dailyGuestCount[dateKey] = (dailyGuestCount[dateKey] || 0) + totalGuests;
@@ -133,7 +133,7 @@ function getTotalGuestsPerDay(scheduler, roomId, startDate, endDate) {
 function validateBooking(form) {
     let guestCount = safeArray(form.getEditor("guest")?.option("value")).length;
     let familyCount = safeArray(form.getEditor("family")?.option("value")).length;
-    let employeeCount = safeArray(form.getEditor("employee_id")?.option("value")).length;
+    let employeeCount = safeArray(form.getEditor("employee")?.option("value")).length;
     let totalGuests = guestCount + familyCount + employeeCount;
 
     let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
@@ -164,7 +164,7 @@ function getTotalGuestsForDateLocally(scheduler, roomId, checkDate) {
         if (appointment.ghm_room_id === roomId && check >= start && check <= end) {
             let guestCount = safeArray(appointment.guest).length;
             let familyCount = safeArray(appointment.family).length;
-            let employeeCount = safeArray(appointment.employee_id).length;
+            let employeeCount = safeArray(appointment.employee).length;
 
             console.log(`✔️ Ditemukan booking dalam rentang tanggal: Guest=${guestCount}, Family=${familyCount}, Employee=${employeeCount}`);
 
@@ -256,7 +256,7 @@ function reloadScheduler() {
             // Hitung total orang di booking
             const guestCount = safeArray(booking.guest).length;
             const familyCount = safeArray(booking.family).length;
-            const employeeCount = safeArray(booking.employee_id).length;
+            const employeeCount = safeArray(booking.employee).length;
             const totalPeople = guestCount + familyCount + employeeCount;
         
             // Hitung sisa kapasitas kamar
@@ -279,7 +279,7 @@ function reloadScheduler() {
         
             const tooltipHtml = `
                 <div>
-                    <b>Purpose: ${booking.text || "No Title"}</b><br>
+                    <b>Purpose (Text): ${booking.text || "No Title"}</b><br>
                     ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
                     <b>Accupancy:</b> ${roomAccupancy} Person<br>
                     <b>Booked:</b> ${totalPeople} Person<br>
@@ -349,6 +349,7 @@ function reloadScheduler() {
                                                 timer: 2000,
                                                 showConfirmButton: false
                                             });
+                                            window.location.reload();
                                             // reloadScheduler(); // Panggil fungsi untuk reload scheduler
                                         } else {
                                             Swal.fire({
@@ -458,7 +459,7 @@ function reloadScheduler() {
             function validateBooking() {
                 let guestCount = (form.getEditor("guest")?.option("value") || []).length;
                 let familyCount = (form.getEditor("family")?.option("value") || []).length;
-                let employeeCount = (form.getEditor("employee_id")?.option("value") || []).length;
+                let employeeCount = (form.getEditor("employee")?.option("value") || []).length;
                 let totalGuests = guestCount + familyCount + employeeCount;
                 console.log("total guest",totalGuests);
                 let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
@@ -489,7 +490,8 @@ function reloadScheduler() {
                             dataField: 'text',
                             editorOptions: {
                                 value: appointmentData.text || ''
-                            }
+                            },
+                            validationRules: [{ type: "required", message: 'Purpose is required',}],
                         },
                         {
                             label: { text: 'Details' },
@@ -497,7 +499,8 @@ function reloadScheduler() {
                             dataField: 'description',
                             editorOptions: {
                                 value: appointmentData.description || ''
-                            }
+                            },
+                            validationRules: [{ type: "required", message: 'Details is required',}],
                         }                           
                     ]
                 },
@@ -509,7 +512,9 @@ function reloadScheduler() {
                             label: { text: 'Room' },
                             editorType: 'dxSelectBox',
                             dataField: 'ghm_room_id',
+                            helpText: 'Occupancy : ? | Booked : ? | Remaining : ?',
                             editorOptions: {
+                                readOnly: true,
                                 dataSource: roomsWithLocations,
                                 displayExpr: 'text',
                                 valueExpr: 'id',
@@ -526,7 +531,8 @@ function reloadScheduler() {
                                 value: appointmentData.startDate,
                                 displayFormat: 'yyyy-MM-dd HH:mm:ss',
                                 dateSerializationFormat: 'yyyy-MM-ddTHH:mm:ssZ'
-                            }
+                            },
+                            validationRules: [{ type: "required", message: 'startDate is required',}],
                         },
                         {
                             label: { text: 'End Date' },
@@ -537,7 +543,8 @@ function reloadScheduler() {
                                 value: appointmentData.endDate,
                                 displayFormat: 'yyyy-MM-dd HH:mm:ss',
                                 dateSerializationFormat: 'yyyy-MM-ddTHH:mm:ssZ'
-                            }
+                            },
+                            validationRules: [{ type: "required", message: 'endDate is required',}],
                         },
                                                 
                     ]
@@ -551,7 +558,7 @@ function reloadScheduler() {
                             title: 'Employee',
                             label: { text: 'Employee' },
                             editorType: 'dxTagBox',
-                            dataField: 'employee_id',
+                            dataField: 'employee',
                             editorOptions: {                                                
                                 dataSource: emplo,
                                 displayExpr: function(item) {
@@ -560,7 +567,7 @@ function reloadScheduler() {
                                     return `${item.FullName} | ${item.SAPID} | ${department ? department.DepartmentName : "Failed"}`;                                    
                                 },
                                 valueExpr: 'id',
-                                value: Array.isArray (appointmentData.employee_id) ? appointmentData.employee_id : [],
+                                value: Array.isArray (appointmentData.employee) ? appointmentData.employee : [],
                                 showSelectionControls: true,
                                 applyValueMode: 'useButtons',
                                 searchEnabled: true,
@@ -629,7 +636,7 @@ function reloadScheduler() {
             let scheduler = e.component;
             let guestCount = safeArray(appointmentData.guest).length;
             let familyCount = safeArray(appointmentData.family).length;
-            let employeeCount = safeArray(appointmentData.employee_id).length;
+            let employeeCount = safeArray(appointmentData.employee).length;
             let totalNewGuests = guestCount + familyCount + employeeCount;
             let selectedRoom = appointmentData.ghm_room_id;
             let roomData = roomsWithLocations.find(room=>room.id === selectedRoom);
@@ -673,54 +680,65 @@ function reloadScheduler() {
                 reverseButtons: true
             }).then((result) => {
                 console.log("Swal result:", result);
-                let requestStatus = result.isConfirmed ? 1 : 0;
-                
-                return sendRequest(apiurl + "/" + modname, "POST", {
-                    requestStatus: requestStatus,
-                    text: appointmentData.text,
-                    description: appointmentData.description,
-                    startDate: appointmentData.startDate,
-                    endDate: appointmentData.endDate,
-                    ghm_room_id: appointmentData.ghm_room_id,
-                    employee_id: appointmentData.employee_id,
-                    guest: appointmentData.guest,
-                    family: appointmentData.family,
-                    sector: sector,
-                    // supportingDocument: null/
-                });
-            }).then((response) => {
-                console.log("Response from first request:", response);
-                if (!response || !response.data || !response.data.id) {
-                    throw new Error("Invalid response from first request");
+                let requestStatus = 0;
+
+                if(!result.isConfirmed) {
+                    console.log('Draft');
+                    sendRequest(apiurl + "/" + modname, "POST", {
+                        requestStatus: requestStatus,
+                        text: appointmentData.text,
+                        description: appointmentData.description,
+                        startDate: appointmentData.startDate,
+                        endDate: appointmentData.endDate,
+                        ghm_room_id: appointmentData.ghm_room_id,
+                        employee: appointmentData.employee,
+                        guest: appointmentData.guest,
+                        family: appointmentData.family,
+                        sector: sector,
+                    }); 
+                } else {
+                    console.log('Submit');
+                    sendRequest(apiurl + "/" + modname, "POST", {
+                        requestStatus: requestStatus,
+                        text: appointmentData.text,
+                        description: appointmentData.description,
+                        startDate: appointmentData.startDate,
+                        endDate: appointmentData.endDate,
+                        ghm_room_id: appointmentData.ghm_room_id,
+                        employee: appointmentData.employee,
+                        guest: appointmentData.guest,
+                        family: appointmentData.family,
+                        sector: sector,
+                    }).then(function(response){
+
+                        let valapprovalAction = null;
+                        let actionForm = 'submission';
+                        let valApprovalType = '';
+                        let valremarks = '';
+
+                        if(response.status == 'success') {
+                            const reqid = response.data.id;
+                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                requestStatus:1,
+                                action: actionForm,
+                                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                approvalType: valApprovalType,
+                                remarks: valremarks
+                            }).then(function(response){
+                                    if(response.status == 'success') {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Saved',
+                                            text: 'The submission has been submited.',
+                                        });
+                                    }
+                            });
+                        }
+                    });
                 }
-                let reqid = response.data.id;
-                console.log("Received reqid:", reqid);
                 
-                if (!reqid) return;
-                
-                return sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                    requestStatus: 1,
-                    action: 'submission'  // Disederhanakan karena hanya submission
-                });
-            }).then((response) => {
-                if (response) {
-                    console.log("Response from second request:", response);
-                    if (response.status === 'success') {
-                        e.component._dataSource.reload();
-                    }
-                }
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: `Booking has been submitted successfully.`,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            }).catch((error) => {
-                console.error("Error occurred:", error);
-                Swal.fire({ icon: 'error', title: 'Error', text: error.responseText || 'An error occurred' });
-            });      
+            });
+               
     },
 
     onAppointmentUpdating: function(e) {
@@ -740,41 +758,11 @@ function reloadScheduler() {
         // appointmentData.guest = Array.isArray(appointmentData.guest) ? JSON.stringify(appointmentData.guest) : null;
         // appointmentData.family = Array.isArray(appointmentData.family) ? JSON.stringify(appointmentData.family) : null;
     
-        console.log('Data yang akan dikirim:', appointmentData);
-    
-        // Logika untuk status tiket dan konfirmasi
-        var newTicketStatus = e.newData.ticketStatus;
-        var newConfirmationStatus = e.newData.confirmationStatus;
-    
-        if (newTicketStatus === "Completed") {
-            if (!confirm("Are you sure you want to mark this ticket as completed?")) {
-                e.cancel = true;
-            } else {
-                e.newData.confirmationStatus = 'Waiting';
-                e.component.columnOption("ticketStatus", "allowEditing", false);
-            }
-        }
-    
-        if (newConfirmationStatus === "Reworked") {
-            if (!confirm("Are you sure you want to mark this confirmation status as reworked?")) {
-                e.cancel = true;
-            } else {
-                e.newData.ticketStatus = 'On Queue';
-                e.component.columnOption("confirmationStatus", "allowEditing", false);
-                e.component.columnOption("confirmationRemarks", "allowEditing", false);
-            }
-        }
-    
-        if (newConfirmationStatus === "Completed") {
-            if (!confirm("Are you sure you want to mark this confirmation status as completed?")) {
-                e.cancel = true;
-            } else {
-                e.component.columnOption("confirmationStatus", "allowEditing", false);
-                e.component.columnOption("confirmationRemarks", "allowEditing", false);
-            }
-        }
-    
-        // Konfirmasi dengan SweetAlert
+        console.log('Data update yang akan dikirim:', appointmentData);
+
+        console.log('Start Update Submit');
+        let requestStatus = 0;
+
         Swal.fire({
             title: 'What do you want to do?',
             text: 'Choose an option for this booking',
@@ -784,35 +772,134 @@ function reloadScheduler() {
             cancelButtonText: 'Save as Draft',
             reverseButtons: true
         }).then((result) => {
-            let actionText = result.isConfirmed ? 'submitted' : 'saved as draft';
-    
-            sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
-                text: appointmentData.text,
-                description: appointmentData.description,
-                startDate: appointmentData.startDate,
-                endDate: appointmentData.endDate,
-                ghm_room_id: appointmentData.ghm_room_id,
-                employee_id: appointmentData.employee_id,
-                guest: appointmentData.guest,
-                family: appointmentData.family,
-                id: appointmentData.id
-            }).then(function(response) {
-                if (response.status === 'success') {
-                    e.component._dataSource.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: `Booking has been ${actionText}.`,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: response.message });
-                }
-            }).catch(function(error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: error.responseText });
-            });
+            console.log("Swal result:", result);
+
+            if(!result.isConfirmed) {
+                console.log('Draft');
+                sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
+                    requestStatus: requestStatus,
+                    text: appointmentData.text,
+                    description: appointmentData.description,
+                    startDate: appointmentData.startDate,
+                    endDate: appointmentData.endDate,
+                    ghm_room_id: appointmentData.ghm_room_id,
+                    employee: appointmentData.employee,
+                    guest: appointmentData.guest,
+                    family: appointmentData.family,
+                    // sector: sector,
+                }); 
+            } else {
+                sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
+                    requestStatus: requestStatus,
+                    text: appointmentData.text,
+                    description: appointmentData.description,
+                    startDate: appointmentData.startDate,
+                    endDate: appointmentData.endDate,
+                    ghm_room_id: appointmentData.ghm_room_id,
+                    employee: appointmentData.employee,
+                    guest: appointmentData.guest,
+                    family: appointmentData.family,
+                    // sector: sector,
+                }).then(function(response){
+
+                    let valapprovalAction = null;
+                    let actionForm = 'submission';
+                    let valApprovalType = '';
+                    let valremarks = '';
+
+                    if(response.status == 'success') {
+                        const reqid = appointmentData.id;
+                        sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                            requestStatus:1,
+                            action: actionForm,
+                            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                            approvalType: valApprovalType,
+                            remarks: valremarks
+                        }).then(function(response){
+                                if(response.status == 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Saved',
+                                        text: 'The submission has been submited.',
+                                    });
+                                }
+                        });
+                    }
+                });
+            }
         });
+    
+        // Logika untuk status tiket dan konfirmasi
+        // var newTicketStatus = e.newData.ticketStatus;
+        // var newConfirmationStatus = e.newData.confirmationStatus;
+    
+        // if (newTicketStatus === "Completed") {
+        //     if (!confirm("Are you sure you want to mark this ticket as completed?")) {
+        //         e.cancel = true;
+        //     } else {
+        //         e.newData.confirmationStatus = 'Waiting';
+        //         e.component.columnOption("ticketStatus", "allowEditing", false);
+        //     }
+        // }
+    
+        // if (newConfirmationStatus === "Reworked") {
+        //     if (!confirm("Are you sure you want to mark this confirmation status as reworked?")) {
+        //         e.cancel = true;
+        //     } else {
+        //         e.newData.ticketStatus = 'On Queue';
+        //         e.component.columnOption("confirmationStatus", "allowEditing", false);
+        //         e.component.columnOption("confirmationRemarks", "allowEditing", false);
+        //     }
+        // }
+    
+        // if (newConfirmationStatus === "Completed") {
+        //     if (!confirm("Are you sure you want to mark this confirmation status as completed?")) {
+        //         e.cancel = true;
+        //     } else {
+        //         e.component.columnOption("confirmationStatus", "allowEditing", false);
+        //         e.component.columnOption("confirmationRemarks", "allowEditing", false);
+        //     }
+        // }
+    
+        // Konfirmasi dengan SweetAlert
+        // Swal.fire({
+        //     title: 'What do you want to do?',
+        //     text: 'Choose an option for this booking',
+        //     icon: 'question',
+        //     showCancelButton: true,
+        //     confirmButtonText: 'Submit Now',
+        //     cancelButtonText: 'Save as Draft',
+        //     reverseButtons: true
+        // }).then((result) => {
+        //     let actionText = result.isConfirmed ? 'submitted' : 'saved as draft';
+    
+        //     sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
+        //         text: appointmentData.text,
+        //         description: appointmentData.description,
+        //         startDate: appointmentData.startDate,
+        //         endDate: appointmentData.endDate,
+        //         ghm_room_id: appointmentData.ghm_room_id,
+        //         employee: appointmentData.employee,
+        //         guest: appointmentData.guest,
+        //         family: appointmentData.family,
+        //         id: appointmentData.id
+        //     }).then(function(response) {
+        //         if (response.status === 'success') {
+        //             e.component._dataSource.reload();
+        //             Swal.fire({
+        //                 icon: 'success',
+        //                 title: 'Success!',
+        //                 text: `Booking has been ${actionText}.`,
+        //                 timer: 2000,
+        //                 showConfirmButton: false
+        //             });
+        //         } else {
+        //             Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+        //         }
+        //     }).catch(function(error) {
+        //         Swal.fire({ icon: 'error', title: 'Error', text: error.responseText });
+        //     });
+        // });
     }
     });
 }
@@ -886,7 +973,7 @@ updateRoomSelector(uniqueLocations[0]);
 //                 startDate: appointmentData.startDate,
 //                 endDate: appointmentData.endDate,
 //                 ghm_room_id: appointmentData.ghm_room_id,
-//                 employee_id: appointmentData.employee_id,
+//                 employee: appointmentData.employee,
 //                 guest: appointmentData.guest,
 //                 family: appointmentData.family
 //             })

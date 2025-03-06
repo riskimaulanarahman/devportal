@@ -34,7 +34,7 @@ class GhmRequestController extends Controller
         $this->modulename = 'Ghm';
         $this->module = new Module();
     }
-    
+
     public function dashboard()
     {
         $user = auth()->user();
@@ -50,7 +50,7 @@ class GhmRequestController extends Controller
             ->where(function ($query) use ($userId, $isAdmin, $employeeId) {
                 if ($isAdmin) {
                     $query->where("request_ghm.user_id", "!=", $userId)
-                        ->whereIn("request_ghm.requestStatus", [0, 1, 3, 4]);
+                        ->whereIn("request_ghm.requestStatus", [1, 3, 4]);
                 } else {
                     $query->whereIn("request_ghm.requestStatus", [3]);
                 }
@@ -74,7 +74,7 @@ class GhmRequestController extends Controller
                 COALESCE(SUM(EmployeeCount + GuestCount + FamilyCount), 0) AS totalAll
             FROM 
                 [request_ghm]
-            CROSS APPLY (SELECT COUNT(*) AS EmployeeCount FROM OPENJSON(employee_id)) AS EmpData
+            CROSS APPLY (SELECT COUNT(*) AS EmployeeCount FROM OPENJSON(employee)) AS EmpData
             CROSS APPLY (SELECT COUNT(*) AS GuestCount FROM OPENJSON(guest)) AS GuestData
             CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData
             GROUP BY id
@@ -112,7 +112,7 @@ class GhmRequestController extends Controller
                     'text' => $request->text ?? '',
                     'guest' => $request->guest ?? 0,
                     'family' => $request->family ?? 0,
-                    'employee_id' => $request->employee_id ?? null,
+                    'employee' => $request->employee ?? null,
                     'description' => $request->description ?? '',
                     'requestStatus' => $request->requestStatus ?? 0,
                     'startDate' => optional($request->startDate)->toIso8601String(),
@@ -203,7 +203,7 @@ class GhmRequestController extends Controller
                 request_ghm.created_at,
                 request_ghm.updated_at,
                 (SELECT STRING_AGG(emp.fullname, ', ')
-                FROM OPENJSON(request_ghm.employee_id) 
+                FROM OPENJSON(request_ghm.employee) 
                 WITH (employee_id INT '$')
                 LEFT JOIN employee.tbl_employee AS emp
                 ON emp.id = employee_id
@@ -229,10 +229,9 @@ class GhmRequestController extends Controller
                                 $query->where("request_ghm.user_id", "!=", $user_id)
                                     ->whereIn("request_ghm.requestStatus", [1,3,4]);
                             }
-                             else {
-                                $query->where("tbl_assignment.employee_id",$employeeid)
-                                    ->whereIn("request_ghm.requestStatus", [3]);
-                            }
+                            //  else {
+                            //     $query->whereIn("request_ghm.requestStatus", [3]);
+                            // }
                         })
                         ->orWhere("request_ghm.user_id", $user_id);
                 })
@@ -334,7 +333,7 @@ class GhmRequestController extends Controller
             request_ghm.created_at,
             request_ghm.updated_at,
             (SELECT STRING_AGG(emp.fullname, ', ')
-                FROM OPENJSON(request_ghm.employee_id) 
+                FROM OPENJSON(request_ghm.employee) 
                 WITH (employee_id INT '$')
                 LEFT JOIN employee.tbl_employee AS emp
                 ON emp.id = employee_id
@@ -369,13 +368,15 @@ class GhmRequestController extends Controller
     {
         try {
             // Ambil semua data dari request
+            $employee = $this->getEmployeeID();
+
             $requestData = $request->all();
 
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
+            $requestData['employee_id'] = $employee->id;
             // $requestData['requestStatus'] = 0;
             $requestData['code_id'] = $this->generateCode($this->modulename);
-            $employee = $this->getEmployeeID();
 
             if ($employee->companycode === 'KPSI') {
                 $employee->companycode = 'IHM';
@@ -404,136 +405,29 @@ class GhmRequestController extends Controller
     }    
 
     public function update(Request $request, $id)
-{
-    try {
-        // Validasi ID
-        $id = intval($id);
-        if ($id <= 0) {
-            return response()->json(["status" => "error", "message" => "Invalid ID"]);
+    {
+        try {
+
+            // Mengambil semua data dari request
+            $requestData = $request->all();
+
+            
+            // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
+            // $this->addOneDayToDate($requestData);
+
+            $data = $this->model->findOrFail($id);
+            $data->update($requestData);
+
+            // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
+            return response()->json([
+                'status' => "success",
+                'message' => $this->getMessage()['update']
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
-
-        // Mengambil semua data dari request
-        $module_id = $this->getModuleId($this->modulename);
-        $requestData = $request->all();
-
-        // Pastikan ticketStatus memiliki nilai default
-        $requestData['ticketStatus'] = $request->input('ticketStatus', 'On Queue');
-        $requestData['confirmationStatus'] = $request->input('confirmationStatus', null);
-
-        // Tambahkan 1 hari ke tanggal yang relevan
-        // $this->addOneDayToDate($requestData);
-
-        $data = $this->model->findOrFail($id);
-
-        if ($data->ticketStatus === null) {
-            $requestData['ticketStatus'] = 'On Queue';
-            $requestData['confirmationStatus'] = null;
-        } else if ($data->ticketStatus === 'On Queue' || $data->ticketStatus === 'Immediately') {
-            $requestData['confirmationStatus'] = 'Waiting';
-        } else if ($data->ticketStatus === 'Completed') {
-            if ($requestData['confirmationStatus'] === null || $requestData['confirmationStatus'] === 'Waiting') {
-                $requestData['confirmationStatus'] = 'Waiting';
-                $requestData['ticketStatus'] = $data->ticketStatus;
-            } else if ($requestData['confirmationStatus'] === 'Reworked') {
-                $requestData['ticketStatus'] = 'On Queue';
-            }
-        }
-
-        // Start save history perubahan
-        $fields = [
-            'ticketStatus' => $requestData['ticketStatus'],
-            'confirmationStatus' => ($data->ticketStatus === 'Completed' && $requestData['confirmationStatus'] !== 'Waiting')
-                ? $requestData['confirmationStatus'] . ' - ' . $request->input('confirmationRemarks', '') 
-                : null,
-        ];
-
-        foreach ($fields as $key => $value) {
-            if ($value) {
-                $this->approverAction($this->modulename, $id, $key, 1, $value, null);
-            }
-        }
-
-        // Update data di database
-        $data->update($requestData);
-
-        // Generate notifikasi
-        $notificationMessage = $this->generateNotificationMessage(
-            $data,
-            $this->modulename,
-            $id,
-            $requestData['ticketStatus'],
-            $requestData['confirmationStatus']
-        );
-
-        // Jika confirmationStatus bukan 'Waiting', kosongkan confirmationRemarks
-        if ($requestData['confirmationStatus'] !== 'Waiting') {
-            $data->update(['confirmationRemarks' => null]);
-        }
-
-        // Mengembalikan response JSON
-        return response()->json([
-            'status' => "success",
-            'message' => $this->getMessage()['update']
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json(["status" => "error", "message" => $e->getMessage()]);
-    }
-}
-
-    private function generateNotificationMessage($data, $modulename, $id, $ticketStatus, $confirmationStatus) {
-        $locModel = "App\Models\Submission\\".$modulename;
-        $model = new $locModel;
-        $tableName = $model->getTableName();
-        $module_id = $this->getModuleId($modulename);
-
-        $getSubmissionData = DB::table($tableName)->where('id', $id)->first();
-        $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
-        $assignmentdata = Assignmentto::leftJoin('employee.tbl_employee','tbl_assignment.employee_id','=','employee.tbl_employee.id')
-                        ->leftJoin('users','employee.tbl_employee.LoginName','=','users.username')
-                        ->select('employee.tbl_employee.*','users.email')
-                        ->where('req_id',$getSubmissionData->id)
-                        ->where('module_id',$module_id)
-                        ->get();
-
-        if ($ticketStatus === 'Completed') {
-            $mailData = [
-                "id" => 5, //notif status
-                "action_id" => 0,
-                "submission" => $getSubmissionData,
-                "email" => $getCreator->email,
-                "fullname" => $getCreator->fullname,
-                "message" => $this->mailMessage()['ghmTicketCompleted'],
-            ]; // send to creator
-            Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,0));
-        }
-        if ($confirmationStatus === 'Completed') {
-            foreach ($assignmentdata as $getPIC){
-                $mailData = [
-                    "id" => 5, //notif status
-                    "action_id" => 0,
-                    "submission" => $getSubmissionData,
-                    "email" => $getPIC->email,
-                    "fullname" => $getPIC->FullName,
-                    "message" => $this->mailMessage()['ghmConfirmStatusCompleted'],
-                ]; // send to PIC
-                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,0));
-            }
-        }
-        if ($confirmationStatus === 'Reworked') {
-            foreach ($assignmentdata as $getPIC){
-                $mailData = [
-                    "id" => 5, //notif status
-                    "action_id" => 0,
-                    "submission" => $getSubmissionData,
-                    "email" => $getPIC->email,
-                    "fullname" => $getPIC->FullName,
-                    "message" => $this->mailMessage()['ghmConfirmStatusReworked'],
-                ]; // send to PIC
-                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,0));
-            }
-        }
-
     }
 
     public function destroy($id)

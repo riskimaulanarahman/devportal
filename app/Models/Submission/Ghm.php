@@ -21,12 +21,13 @@ class Ghm extends Model
 
     protected $fillable = [
         'user_id',
+        'employee_id',
         'code_id',
         'requestStatus',
         'bu',
         'sector',
         'ghm_room_id',
-        'employee_id',
+        'employee',
         'description',
         'text',
         'guest',
@@ -41,7 +42,7 @@ class Ghm extends Model
 
     protected $casts = [
         'ghm_room_id' => 'integer',
-        'employee_id' => 'array',
+        'employee' => 'array',
         'guest' => 'array',
         'family' => 'array',
     ];

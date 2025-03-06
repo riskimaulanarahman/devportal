@@ -231,6 +231,7 @@ class SubmissionController extends Controller
             $mailData = [];
 
             // get and update approver list
+            // dd($getSubmissionData);
             if($getSubmissionData->requestStatus == 0 || $getSubmissionData->requestStatus == 2) {
                 $company = null;
                 $category = null;
@@ -256,7 +257,7 @@ class SubmissionController extends Controller
                     $bu = $getSubmissionData->bu;
                     $company = $bu;
                 }
-            
+                    // dd($company);
                     $this->createApprover($modulename, $id, $company, $category);
 
             }
@@ -384,7 +385,10 @@ class SubmissionController extends Controller
                 ->where('id', $id)
                 ->update($dataToUpdate);
 
+            // dd($approverlist);
+
             foreach($approverlist as $getappr) {
+                // dd($getappr);
                 if($request->approvalAction == 0 && $getappr->approvalAction == 0) { // cancel pengajuan
                     $mailData = [
                         "id" => 0,
@@ -468,7 +472,7 @@ class SubmissionController extends Controller
                     break;
                 }
             }
-            dd($mailData);
+            // dd($mailData);
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
             }

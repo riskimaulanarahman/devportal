@@ -178,8 +178,6 @@
         '/ticket_request': 'submission/ticket_request.js',
         '/uavmission_request': 'submission/uavmission_request.js',
         '/hrsc_request': 'submission/hrsc_request.js',
-        '/ghm_approval': 'submission/ghm_approval.js',
-        // '/ghm_booking': 'submission/ghm_booking.js',
         '/hrsc_report': 'submission/hrsc_report.js',
         '/mom_request': 'submission/mom_request.js',
         '/jdi_request': 'submission/jdi_request.js',
@@ -197,6 +195,8 @@
         '/hcrf_request': 'submission/HRIS/Hcrf/hcrf_request.js',
         //submission/CCM
         '/ccm_request': 'submission/Financial/Ccm/ccm_request.js',
+        //submission/GHM
+        '/ghm_request': 'submission/ghm_request.js',
     }
     
     const pathname = window.location.pathname;
