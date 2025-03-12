@@ -520,6 +520,8 @@ class M30RequestController extends Controller
 					$Worksheet->Range("H".$a)->Value = $dataDetails[$a-16]->Currency;
 					$Worksheet->Range("I".$a)->Value = formatCurrency($dataDetails[$a-16]->UnitPrice);
 					$Worksheet->Range("J".$a)->Value = formatCurrency($dataDetails[$a-16]->ExtendedPrice);
+					$Worksheet->Range("K".$a)->Value = $dataDetails[$a-16]->Remarks;
+
 
                     // Enable text wrapping for the MaterialDescr cell
                     $Worksheet->Cells($a, 3)->WrapText = true;
