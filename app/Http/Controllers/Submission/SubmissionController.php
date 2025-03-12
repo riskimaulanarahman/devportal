@@ -35,6 +35,8 @@ class SubmissionController extends Controller
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
         ];
+
+        $modulesUsingId = ['JDI'];
         
         $baseNamespace = "App\Models\Submission";
         $locModel = $baseNamespace . "\\" . $modulename;
@@ -56,9 +58,11 @@ class SubmissionController extends Controller
                 return response()->json(['status' => 'show']);
             }
 
+            // Determine the column to use based on the module name
+            $columnToCheck = in_array($modulename, $modulesUsingId) ? 'id' : 'req_id';
+
             // Fetch the data for the given reqid
-            $record =DB::table($tableName)->where('req_id', $reqid)->first(); // Replace with your actual logic to get the record
-            // dd($record);
+            $record =DB::table($tableName)->where($columnToCheck, $reqid)->first();
             if (!$record) {
                 return response()->json(['status' => 'error', 'message' => 'Record not found.'], 404);
             }

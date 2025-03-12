@@ -81,15 +81,22 @@ class SubmissionMail extends Mailable
             ->where('isActive', 1);
 
         // Check if employee_id exists in $mailData['submission']
-        if (isset($mailData['submission']->employee_id)) {
+        if (isset($mailData['submission']->employee_id) || isset($mailData['submission']->bu)) {
             // Retrieve the employee's company code directly
-            $companyCode = DB::table('employee.tbl_employee')
-                ->where('id', $mailData['submission']->employee_id)
-                ->value('companycode');
-
+            $companyCode = isset($mailData['submission']->employee_id) 
+                ? DB::table('employee.tbl_employee')
+                    ->where('id', $mailData['submission']->employee_id)
+                    ->value('companycode')
+                : null;
+        
             // If company code is found, add the company_list condition
             if ($companyCode) {
                 $queryMr->where('company_list', 'like', '%' . $companyCode . '%');
+            }
+        
+            // If bu is set, add the company_list condition for bu
+            if (isset($mailData['submission']->bu)) {
+                $queryMr->where('company_list', 'like', '%' . $mailData['submission']->bu . '%');
             }
         }
 

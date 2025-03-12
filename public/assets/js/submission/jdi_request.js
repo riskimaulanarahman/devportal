@@ -474,6 +474,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     dataSource: [
                                         'Register',
                                         'Awarded',
+                                        'On Progress Awarded',
                                     ],
                                     searchEnabled: false
                                 },
@@ -1436,54 +1437,102 @@ const popupContentTemplate = function (reqid,mode,options) {
 };
 
 function btnreqsubmit(reqid,mode) {
-
+    console.log('submit')
     var btnSubmit = $('#btn-submit');
-    btnSubmit.prop('disabled', true);
-    var actionForm = (mode == 'approval') ? 'approval' : 'submission';
-
-    if(mode == 'approval') {
-        var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
-        var valremarks = $('#remarks').val(); // mengambil nilai dari text area
-        if (!valapprovalAction) {
-            alert('Please select approval action.')
-            btnSubmit.prop('disabled', false);
-            return false;
-        }
-        else if (!valremarks) {
-            alert('Please enter remarks.')
-            btnSubmit.prop('disabled', false);
-            return false;
-        }
-        
+    var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
+    var valremarks = $('#remarks').val(); // mengambil nilai dari text area
+    
+    // if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
+    if(mode == 'approval' && isBCIDv == 1 && valapprovalAction == 3) {
+        var fieldsToCheckGrid = [
+            { field: 'objective', name: 'Objective' },
+            { field: 'ranking', name: 'Category' },
+            { field: 'status_jdi', name: 'Status JDI' },
+        ]
     }
 
-    var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
+    sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/JDI", "POST", {
+        fieldsToCheckGrid
+    }).then(function(response){
+        if(response.status !== 'error') {
 
-    var result = confirm('Are you sure you want to send this submission ?');
-    if (result) {
-        showLoadingScreen();
-        sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-            requestStatus:1,
-            action: actionForm,
-            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-            approvalType: valApprovalType,
-            remarks: valremarks
-        }).then(function(response){
-            if(response.status == 'error') {
-                btnSubmit.prop('disabled', false);
-                hideLoadingScreen();
-            } else {
-                popup.hide();
-                hideLoadingScreen();
+            btnSubmit.prop('disabled', true);
+
+            var actionForm = (mode == 'approval') ? 'approval' : 'submission';
+
+            if(mode == 'approval') {
+                
+                if (!valapprovalAction) {
+                    DevExpress.ui.dialog.alert("Please select approval action.", "Warning");
+                    btnSubmit.prop('disabled', false);
+                    return false;
+                }
+                else if (!valremarks) {
+                    DevExpress.ui.dialog.alert("Please enter remarks.", "Warning");
+                    btnSubmit.prop('disabled', false);
+                    return false;
+                }
+                
             }
-        });
-    } else {
-        btnSubmit.prop('disabled', false);
-        alert('Cancelled.');
-        hideLoadingScreen();
-    }
+
+            var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
+
+            confirmAndSendSubmission(reqid, modelclass, actionForm, valapprovalAction, valApprovalType, valremarks);
+       
+        }
+    });
 
 }
+
+// function btnreqsubmit(reqid,mode) {
+
+//     var btnSubmit = $('#btn-submit');
+//     btnSubmit.prop('disabled', true);
+//     var actionForm = (mode == 'approval') ? 'approval' : 'submission';
+
+//     if(mode == 'approval') {
+//         var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
+//         var valremarks = $('#remarks').val(); // mengambil nilai dari text area
+//         if (!valapprovalAction) {
+//             alert('Please select approval action.')
+//             btnSubmit.prop('disabled', false);
+//             return false;
+//         }
+//         else if (!valremarks) {
+//             alert('Please enter remarks.')
+//             btnSubmit.prop('disabled', false);
+//             return false;
+//         }
+        
+//     }
+
+//     var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
+
+//     var result = confirm('Are you sure you want to send this submission ?');
+//     if (result) {
+//         showLoadingScreen();
+//         sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+//             requestStatus:1,
+//             action: actionForm,
+//             approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+//             approvalType: valApprovalType,
+//             remarks: valremarks
+//         }).then(function(response){
+//             if(response.status == 'error') {
+//                 btnSubmit.prop('disabled', false);
+//                 hideLoadingScreen();
+//             } else {
+//                 popup.hide();
+//                 hideLoadingScreen();
+//             }
+//         });
+//     } else {
+//         btnSubmit.prop('disabled', false);
+//         alert('Cancelled.');
+//         hideLoadingScreen();
+//     }
+
+// }
 
 function runpopup() {
     popup = $('#popup').dxPopup({

@@ -34,10 +34,12 @@ class JdiReportController extends Controller
     public function index(Request $request)
     {
         try {
-            
+            $companycode = $this->getEmployeeID()->companycode;
+            $isAdmin = $this->getAuth()->isAdmin;
+
             $dataquery = $this->model->query();
 
-            $data = $dataquery
+            $dataquery = $dataquery
                 ->selectRaw("request_jdi.*,
                     codes.code,
                     dept.DepartmentName as department,
@@ -59,9 +61,20 @@ class JdiReportController extends Controller
                 ->leftJoin('employee.tbl_employee as emp2','request_jdi.anggota2_id','emp2.id') //anggota 2
                 ->leftJoin('employee.tbl_level as lvl2','emp2.level_id','lvl2.id') //anggota 2
                 ->with(['user'])
-                ->where('request_jdi.requestStatus',3)
-                ->orderByRaw("request_jdi.submitDate desc")
-                ->get();
+                ->where('request_jdi.requestStatus',3);
+            
+                // Jika bukan admin, tambahkan kondisi where untuk companycode
+                if (!$isAdmin) {
+                    if ($companycode == 'IHM') {
+                        $dataquery = $dataquery->whereIn('request_jdi.bu', ['IHM', 'NKL']);
+                    } else {
+                        $dataquery = $dataquery->where('request_jdi.bu', $companycode);
+                    }
+                }
+
+                $data = $dataquery
+                    ->orderByRaw("request_jdi.submitDate desc")
+                    ->get();
 
             return response()->json([
                 'status' => "show",
