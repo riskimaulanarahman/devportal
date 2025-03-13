@@ -29,6 +29,7 @@ return array(
     'App\\Http\\Controllers\\Admin\\UavAssetController' => $baseDir . '/app/Http/Controllers/Admin/UavAssetController.php',
     'App\\Http\\Controllers\\Admin\\UserController' => $baseDir . '/app/Http/Controllers/Admin/UserController.php',
     'App\\Http\\Controllers\\Admin\\UseraccessController' => $baseDir . '/app/Http/Controllers/Admin/UseraccessController.php',
+    'App\\Http\\Controllers\\Admin\\GhmAdminController' => $baseDir . '/app/Http/Controllers/Admin/GhmAdminController.php',
     'App\\Http\\Controllers\\ApproverHistoryController' => $baseDir . '/app/Http/Controllers/ApproverHistoryController.php',
     'App\\Http\\Controllers\\ApproverListController' => $baseDir . '/app/Http/Controllers/ApproverListController.php',
     'App\\Http\\Controllers\\AssignmenttoController' => $baseDir . '/app/Http/Controllers/AssignmenttoController.php',

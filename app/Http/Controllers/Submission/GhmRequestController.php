@@ -34,25 +34,33 @@ class GhmRequestController extends Controller
         $this->modulename = 'Ghm';
         $this->module = new Module();
     }
-
-    public function dashboard()
+////////// GHM Booking - Scheduler \\\\\\\\\\\
+    public function dashboard(Request $request)
     {
         $user = auth()->user();
         if (!$user) {
             return redirect()->route('login');
         }
-
         $userId = $user->id;
         $isAdmin = $user->isAdmin ?? false;
+        $module_id = $this->getModuleId($this->modulename);
         $employeeId = $user->employee_id ?? null;
-
+        $gethrsl = "(select TOP 1 CASE WHEN a.user_id='".$userId."'  then 1 else 0 end 
+            from tbl_approverListReq l
+            left join tbl_approver a on l.approver_id=a.id
+            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            where l.req_id = request_ghm.id and l.module_id = '".$module_id."' and r.ApprovalType='HR Service Leader' and r.isactive='1'
+            order by a.sequence)";
         $requests = Ghm::query()
-            ->where(function ($query) use ($userId, $isAdmin, $employeeId) {
+            ->where(function ($query) use ($userId, $isAdmin, $employeeId, $gethrsl) {
                 if ($isAdmin) {
                     $query->where("request_ghm.user_id", "!=", $userId)
                         ->whereIn("request_ghm.requestStatus", [1, 3, 4]);
+                } else if ($gethrsl) {
+                    $query->where("request_ghm.user_id", "!=", $userId)
+                        ->whereIn("request_ghm.requestStatus", [1,3]);
                 } else {
-                    $query->whereIn("request_ghm.requestStatus", [3]);
+                    $query->where("request_ghm.user_id", "=", $userId);
                 }
             })
             ->orWhere("request_ghm.user_id", $userId)
@@ -63,8 +71,13 @@ class GhmRequestController extends Controller
         $locations = Location::all();
         $employees = Employee::with('Department')->get();
         $departments = Department::all();
-
-        
+        $statusColors = [
+            0 => '#6C757D', // Draft (Abu)6C757D-ECEFF1
+            1 => '#007BFF', // Pending (Biru)007BFF-81D4FA
+            2 => '#FFC107', // Approved (Kuning)FFC107-FFF59D
+            3 => '#28A745', // Rejected (Hijau)28A745-C8E6C9
+            4 => '#DC3545', // Completed (Merah)DC3545-FFCDD2
+        ];        
         $totalPeopleData = DB::select("
             SELECT 
                 request_ghm.id,
@@ -78,25 +91,10 @@ class GhmRequestController extends Controller
             CROSS APPLY (SELECT COUNT(*) AS GuestCount FROM OPENJSON(guest)) AS GuestData
             CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData
             GROUP BY id
-            ");
-            
-            // Konversi hasil query ke associative array dengan ID sebagai key
+            ");            
             $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
                 return [$item->id => $item->totalAll];
-            });
-            // Konversi hasil query ke associative array dengan ID sebagai key
-            $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
-                return [$item->id => $item->totalAll];
-            });
-
-            $statusColors = [
-                0 => '#6C757D', // Draft (Abu)6C757D-ECEFF1
-                1 => '#007BFF', // Pending (Biru)007BFF-81D4FA
-                2 => '#FFC107', // Approved (Kuning)FFC107-FFF59D
-                3 => '#28A745', // Rejected (Hijau)28A745-C8E6C9
-                4 => '#DC3545', // Completed (Merah)DC3545-FFCDD2
-            ];
-        // Handle case when there are no bookings
+            });        
         if ($requests->isEmpty()) {
             $booking = [];
         } else {
@@ -104,7 +102,6 @@ class GhmRequestController extends Controller
                 $room = $rooms->firstWhere('id', $request->ghm_room_id);
                 $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
                 $totalPeople = $totalPeopleArray[$request->id] ?? 0;
-
                 return [
                     'id' => $request->id,
                     'bu' => $request->bu,
@@ -127,7 +124,6 @@ class GhmRequestController extends Controller
                 ];
             });
         }
-
         $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
             $location = $locations->firstWhere('id', optional($room)->location_id);
             return [
@@ -135,14 +131,18 @@ class GhmRequestController extends Controller
                 'id' => optional($room)->id ?? null,
                 'bu' => optional($room)->bu ?? null,
                 'sector' => optional($room)->sector ?? null,
-                'roomAccupancy' => optional($room)->roomAccupancy ?? 0,
+                'roomOccupancy' => optional($room)->roomOccupancy ?? 0,
                 'location' => optional($location)->Location ?? 'N/A',
                 'roomColor' => '#F0F0F0', // Warna default untuk room, tidak dipengaruhi requestStatus
-                ];
+            ];
         });
-
         $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
-        // dd($booking);
+        if ($request->ajax()) {
+            return response()->json([
+                'booking' => $booking,
+                'roomsWithLocations' => $roomsWithLocations
+            ]);
+        }
         return view('dashboard.ghm_booking', [
             'booking' => $booking,
             'roomsWithLocations' => $roomsWithLocations,
@@ -151,22 +151,17 @@ class GhmRequestController extends Controller
             'departments' => $departments,
         ]);
     }
-
+////////////// GHM Request - list Booking \\\\\\\\\\\\\\\\\\\\
     public function index(Request $request)
     {
-        try {
-            
+        try {            
             $id = $request->id;
             $user_id = $this->getAuth()->id;
             $employeeid = $this->getEmployeeID()->id;
             $module_id = $this->getModuleId($this->modulename);
             $isAdmin = $this->getAuth()->isAdmin;
             $requestData = $request->all();
-
             $dataquery = $this->model->query();
-
-            // $userId = $user_id;
-            // $moduleId = $module_id;
             $subquery = "(select TOP 1 
                 CASE WHEN a.user_id='".$user_id."' 
                 then 1 else 0 end 
@@ -176,7 +171,14 @@ class GhmRequestController extends Controller
                 where l.ApprovalAction='1' 
                 and l.req_id = request_ghm.id and l.module_id = '".$module_id."' 
                 and request_ghm.requestStatus='1'
-                order by a.sequence)";
+                order by a.sequence)";          
+               
+                $gethrsl = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+            from tbl_approverListReq l
+            left join tbl_approver a on l.approver_id=a.id
+            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            where l.req_id = request_ghm.id and l.module_id = '".$module_id."' and r.ApprovalType='HR Service Leader' and r.isactive='1'
+            order by a.sequence)";
 
             if(!$isAdmin) {
                 $dataquery->leftJoin('tbl_assignment',function($join) use ( $user_id, $module_id){
@@ -185,7 +187,6 @@ class GhmRequestController extends Controller
                         ->where('tbl_assignment.module_id',$module_id);
                 });
             }
-
             $data = $dataquery
                 ->selectRaw("request_ghm.id,
                 codes.code, 
@@ -208,15 +209,12 @@ class GhmRequestController extends Controller
                 LEFT JOIN employee.tbl_employee AS emp
                 ON emp.id = employee_id
                 ) AS employee_fullname,
-                (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.guest)) AS guest,
-                (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.family)) AS family,
-                request_ghm_room.location_id, 
+                COALESCE(request_ghm.guest, '[]') AS guest,
+                COALESCE(request_ghm.family, '[]') AS family,
                 employee.tbl_location.Location, 
-
-              
-
                     CASE WHEN request_ghm.user_id='".$user_id."' then 1 else 0 end as isMine,
-                    ".$subquery." as isPendingOnMe
+                    ".$subquery." as isPendingOnMe,
+                    ".$gethrsl." as isGHM
                 ")
                 ->leftJoin('codes', 'request_ghm.code_id', '=', 'codes.id')
                 ->leftJoin('request_ghm_room', 'request_ghm.ghm_room_id', '=', 'request_ghm_room.id')
@@ -229,141 +227,100 @@ class GhmRequestController extends Controller
                                 $query->where("request_ghm.user_id", "!=", $user_id)
                                     ->whereIn("request_ghm.requestStatus", [1,3,4]);
                             }
-                            //  else {
-                            //     $query->whereIn("request_ghm.requestStatus", [3]);
-                            // }
+                             else {
+                                $query->where("request_ghm.user_id", "!=", $user_id)
+                                ->whereIn("request_ghm.requestStatus", [1,3,4]);
+                                // ->where("bu",$this->getEmployeeID()->companycode);                        
+                            }
                         })
                         ->orWhere("request_ghm.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("CASE WHEN request_ghm.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_ghm.created_at desc")
                 ->get();
+                $data->transform(function ($item) {
+                    if (is_array($item->guest)) {
+                        $item->guest = implode(', ', $item->guest);
+                    }
+                    if (is_array($item->family)) {
+                        $item->family = implode(', ', $item->family);
+                    }                
+                    return $item;
+                });
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
                 'data' => $data,
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
-        } catch (\Exception $e) {
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-        }
-    }
-
-    public function userstore(Request $request)
-    {
-        try {
-            // Ambil semua data dari request
-            $requestData = $request->all();
-            // Tambahkan user_id ke dalam data request
-            $requestData['user_id'] = $this->getAuth()->id;
-            $requestData['requestStatus'] = 0;
-
-            // $employee = $this->getEmployeeID();
-
-            // if ($employee->companycode === 'KPSI') {
-            //     $employee->companycode = 'IHM';
-            // }
-
-            // $requestData['bu'] = $employee->companycode;
-            // Buat data baru pada tabel utama
-            $newData = $this->model->create($requestData);
-            // Simpan id dari data baru
-            $req_id = $newData->id;
-            // dd($req_id)
-            // $this->createApprover($this->modulename, $req_id, null, null);
-            $requests = Ghm::all();
-            $rooms = Ghm_room::all();
-            $locations = Location::all();
-            
-            $booking = $requests->map(function ($request) use ($rooms, $locations) {
-                $room = $rooms->firstWhere('id', $request->ghm_room_id);
-                $location = $room ? $locations->firstWhere('id', $room->location_id) : null;
-                return [
-                    'name' => $request->name,
-                    'description' => $request->description,
-                    'requestStatus' => $request->requestStatus,
-                    'startDate' => $request->startDate ? $request->startDate->toIso8601String() : null,
-                    'endDate' => $request->endDate ? $request->endDate->toIso8601String() : null,
-                    'ghm_room_id' => $request->ghm_room_id,
-                    'roomName' => $room ? $room->roomName : null,
-                    'location' => $location ? $location->Location : null
-                ];
-            });
-            $rooms = Ghm_room::all();
-            $roomsWithLocations = $rooms->map(function ($room) use ($locations) {
-                $location = $locations->firstWhere('id', $room->location_id);
-                return [
-                    'text' => $room->roomName,
-                    'id' => $room->id,
-                    'location' => $location ? $location->Location : null,
-                    'color' => '#'.substr(md5($room->roomName), 0, 6) // Generate color based on room name hash
-                ];
-            });            
-            $uniqueLocations = $roomsWithLocations->pluck('location')->unique()->values();
-            return view('dashboard.ghm_booking', [
-                'booking' => $booking,
-                'roomsWithLocations' => $roomsWithLocations,
-                'uniqueLocations' => $uniqueLocations
-            ]);
         } catch (\Exception $e) {
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-
-    public function show($id)
-    {
-        try {
-            $dataquery = $this->model->query();
-            
-
-            $data = $dataquery
-                ->selectRaw("request_ghm.id,
-            codes.code, 
-            request_ghm.user_id,
-            request_ghm.description,
-            request_ghm.ghm_room_id,   
-            request_ghm_room.bu,
-            request_ghm_room.sector,          
-            request_ghm.text,
-            request_ghm.description,
-            request_ghm.requestStatus,
-            request_ghm.startDate,
-            request_ghm.endDate,
-            request_ghm.created_at,
-            request_ghm.updated_at,
-            (SELECT STRING_AGG(emp.fullname, ', ')
-                FROM OPENJSON(request_ghm.employee) 
-                WITH (employee_id INT '$')
-                LEFT JOIN employee.tbl_employee AS emp
-                ON emp.id = employee_id
+////////// GHM Reqeust - Action Modal  \\\\\\\\\\\\\\\\\\\
+public function show($id)
+{
+    try {
+        $dataquery = $this->model->query();
+        $data = $dataquery
+            ->selectRaw("request_ghm.id,
+                codes.code, 
+                request_ghm.user_id,
+                request_ghm.description,
+                request_ghm.ghm_room_id,   
+                request_ghm_room.bu,
+                request_ghm_room.sector,          
+                request_ghm.text,
+                request_ghm.description,
+                request_ghm.requestStatus,
+                request_ghm.startDate,
+                request_ghm.endDate,
+                request_ghm.created_at,
+                request_ghm.updated_at,
+                (SELECT STRING_AGG(emp.fullname, ', ')
+                    FROM OPENJSON(request_ghm.employee) 
+                    WITH (employee_id INT '$')
+                    LEFT JOIN employee.tbl_employee AS emp
+                    ON emp.id = employee_id
                 ) AS employee_fullname,
-            (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.guest)) AS guest,
-            (SELECT STRING_AGG(value, ', ') FROM OPENJSON(request_ghm.family)) AS family,
-            request_ghm_room.location_id, 
-            employee.tbl_location.Location               
+                COALESCE(request_ghm.guest, '[]') AS guest,
+                COALESCE(request_ghm.family, '[]') AS family,
+                request_ghm_room.location_id, 
+                employee.tbl_location.Location               
             ")
             ->leftJoin('codes', 'request_ghm.code_id', '=', 'codes.id')
             ->leftJoin('request_ghm_room', 'request_ghm.ghm_room_id', '=', 'request_ghm_room.id')
             ->leftJoin('employee.tbl_location', 'request_ghm_room.location_id', '=', 'employee.tbl_location.id')
-            ->where('request_ghm.id',$id)
+            ->where('request_ghm.id', $id)
             ->first();
 
-            if($data->code_id == null) {
-                $data->code_id = $this->generateCode($this->modulename);
-                $data->save();
-            }
-            // dd($data);
-
-            return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 
-            'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
-        } catch (\Exception $e) {
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        if (!$data) {
+            return response()->json(["status" => "error", "message" => "Data tidak ditemukan"]);
         }
-    }
 
+        if ($data->code_id == null) {
+            $data->code_id = $this->generateCode($this->modulename);
+            $data->save();
+        }
+
+        // Cek apakah guest & family adalah array
+        if (!is_string($data->guest)) {
+            $data->guest = implode(', ', (array) $data->guest);
+        }
+
+        if (!is_string($data->family)) {
+            $data->family = implode(', ', (array) $data->family);
+        }
+        return response()->json([
+            'status' => "show",
+            'message' => $this->getMessage()['show'],
+            'data' => $data
+        ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+    } catch (\Exception $e) {
+        return response()->json(["status" => "error", "message" => $e->getMessage()]);
+    }
+}
+/////////// STORE GHM Request & GHM Booking \\\\\\\\\\\\\\\\\\\\\
     public function store(Request $request)
     {
         try {
@@ -403,14 +360,13 @@ class GhmRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }    
-
+/////////////// GHM Booking & Request UPDATE \\\\\\\\\\\\\\\\\\\\
     public function update(Request $request, $id)
     {
         try {
 
             // Mengambil semua data dari request
             $requestData = $request->all();
-
             
             // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
             // $this->addOneDayToDate($requestData);
@@ -429,7 +385,7 @@ class GhmRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-
+///////////////////// GHM Request & Booking Delete \\\\\\\\\\\\\\\\\\\
     public function destroy($id)
     {
         try {

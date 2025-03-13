@@ -149,14 +149,36 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         { 
             dataField: "startDate",
             caption: "Check in",
-            dataType: "date",
-            width: 120
+            cellTemplate: function(container, options) {
+                if (!options.value || isNaN(new Date(options.value).getTime())) {
+                    container.text("N/A"); // Tampilkan "N/A" jika tanggal tidak valid
+                } else {
+                    const date = new Date(options.value);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    const formattedTime = date.toTimeString().split(' ')[0];
+                    container.html(`
+                        <div>${formattedDate}</div>
+                        <div>${formattedTime}</div>                    
+                    `);
+                }
+            },
         },
         { 
             dataField: "endDate",
             caption: "Check out",
-            dataType: "date",
-            width: 120
+            cellTemplate: function(container, options) {
+                if (!options.value || isNaN(new Date(options.value).getTime())) {
+                    container.text("N/A"); // Tampilkan "N/A" jika tanggal tidak valid
+                } else {
+                    const date = new Date(options.value);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    const formattedTime = date.toTimeString().split(' ')[0];
+                    container.html(`
+                        <div>${formattedDate}</div>
+                        <div>${formattedTime}</div>                    
+                    `);
+                }
+            },
         },
         { 
             dataField: "guest",
@@ -433,7 +455,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 lookup: {
                                     dataSource: listOption('/list-room','id','roomName'),  
                                     valueExpr: 'id',
-                                    displayExpr: 'roomName',
+                                    displayExpr: function(data) {
+                                        return data ? data.roomName + ' ' + data.sector : '';
+                                    }
+
                                 },
                                 validationRules: [{ type: "required" }],
                                 // editorOptions: {
@@ -459,20 +484,38 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 // }
                             },
                             {
-                                dataField: 'startDate',
-                                dataType: 'datetime',   
+                                dataField: 'startDate',                                 
                                 validationRules: [{ type: "required" }],
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
+                                cellTemplate: function(container, options) {
+                                    if (!options.value) {
+                                        container.text(" ");
+                                    } else {
+                                    const date = new Date(options.value);
+                                    const formattedDate = date.toISOString().split('T') [0];
+                                    const formattedTime = date.toTimeString().split(' ') [0];
+                                    container.html(`
+                                        <div>${formattedDate}</div>
+                                        <div>${formattedTime}</div>                    
+                                        `);
+                                    }
+                                }
                             },
                             {
                                 dataField: 'endDate',
-                                dataType: 'datetime',
                                 validationRules: [{ type: "required" }],
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
+                                cellTemplate: function(container, options) {
+                                    if (!options.value) {
+                                        container.text(" ");
+                                    } else {
+                                    const date = new Date(options.value);
+                                    const formattedDate = date.toISOString().split('T') [0];
+                                    const formattedTime = date.toTimeString().split(' ') [0];
+                                    container.html(`
+                                        <div>${formattedDate}</div>
+                                        <div>${formattedTime}</div>                    
+                                        `);
+                                    }
+                                }
                             },
                             {
                                 caption: 'family',
