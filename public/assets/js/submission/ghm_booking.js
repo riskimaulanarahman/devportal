@@ -666,6 +666,7 @@ $(function () {
                             }).then(function () {
                                 loadData();
                             });
+                            //fetch
                         } else {
                             sendRequest(apiurl + "/" + modname, "POST", {
                                 requestStatus: requestStatus,
@@ -778,6 +779,7 @@ $(function () {
                                 guest: appointmentData.guest,
                                 family: appointmentData.family,
                             });
+                            loadData();
                         } else {
                             sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
                                 requestStatus: requestStatus,
