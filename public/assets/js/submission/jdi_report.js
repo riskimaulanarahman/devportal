@@ -60,20 +60,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: 'year',
             width: 120,
+			visible: false,
         },
         {
             dataField: 'month',
             width: 80,
+			visible: false,
         },
-        {
-            dataField: 'department',
-            width: 180,
-        },
-        {
-            dataField: 'title',
-            width: 200,
-        },
-        {
+		{
             dataField: 'bu',
             width: 120,
         },
@@ -82,8 +76,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 120,
         },
         {
+            dataField: 'department',
+            width: 180,
+        },
+        {
+            dataField: 'title'
+        },
+        {
             dataField: 'sapid',
             width: 120,
+			visible: false,
         },
         {
             caption: 'Originator',
@@ -98,28 +100,34 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: 'level',
             width: 120,
+			visible: false,
         },
         {
             dataField: 'anggota1',
             width: 120,
+			visible: false,
         },
         {
             caption: 'Level Anggota 1',
             dataField: 'anggota1level',
             width: 120,
+			visible: false,
         },
         {
             dataField: 'anggota2',
             width: 120,
+			visible: false,
         },
         {
             caption: 'Level Anggota 2',
             dataField: 'anggota2level',
             width: 120,
+			visible: false,
         },
         {
             dataField: 'objective',
             width: 120,
+			visible: false,
         },
         {
             caption: 'Category',
@@ -135,6 +143,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: 'Saving(IDR)',
             dataField: 'totalSaving',
             width: 180,
+			visible: false,
         },
         {
             dataField: "approveddoc",

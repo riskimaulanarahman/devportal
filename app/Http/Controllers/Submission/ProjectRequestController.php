@@ -231,10 +231,6 @@ class ProjectRequestController extends Controller
     }
 
     public function dashboard() {
-        $data = [
-            'name' => 'John Doe',
-            'email' => 'johndoe@example.com'
-        ];
         return view('dashboard.dashboardproject')->with('project', $this->processProjects());
     }
 }

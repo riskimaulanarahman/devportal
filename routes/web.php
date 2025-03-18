@@ -12,15 +12,16 @@ Route::get('/check-session',[App\Http\Controllers\SessionCheckController::class,
 // dashboard
 Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestController::class, 'dashboard'])->name('dashboardproject'); //Dashboard project
 
-Route::get('cvaf',[App\Http\Controllers\Submission\CvafRequestController::class, 'showEvaluationForm'])->name('cvaf'); //cvaf
-Route::post('calculate-score', [App\Http\Controllers\Submission\CvafRequestController::class, 'calculateScore']);
-
 Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
 // GH & Mess Booking
 Route::get('ghm_booking',[App\Http\Controllers\Submission\GhmRequestController::class, 'dashboard'])->name('ghm_booking'); //Ghm_request
 
+
 Route::middleware(['session.check'])->group(function () {
+    // Import
+    Route::get('import-mcop',[App\Http\Controllers\Submission\HRIS\MCOP\McopMonitoringController::class, 'import'])->name('import-mcop');
+    Route::post('import-mcop-csv', [App\Http\Controllers\Submission\HRIS\MCOP\McopMonitoringController::class, 'importCsv'])->name('import.mcopcsv');
 
     if(Schema::hasTable('reference.side_menus')) {
         $sidemenu = SideMenu::select('route')->where('route','!=','api')->get();

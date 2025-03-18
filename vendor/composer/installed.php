@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '2ae788d7edf34bc2b611814f606ef7cf45990896',
+        'reference' => 'a2858800db8fe920cee499ad4c3c22ee9df40f6f',
         'name' => 'laravel/laravel',
         'dev' => true,
     ),
@@ -436,7 +436,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '2ae788d7edf34bc2b611814f606ef7cf45990896',
+            'reference' => 'a2858800db8fe920cee499ad4c3c22ee9df40f6f',
             'dev_requirement' => false,
         ),
         'laravel/sail' => array(
@@ -500,6 +500,15 @@
             'install_path' => __DIR__ . '/../league/config',
             'aliases' => array(),
             'reference' => '754b3604fb2984c71f4af4a9cbe7b57f346ec1f3',
+            'dev_requirement' => false,
+        ),
+        'league/csv' => array(
+            'pretty_version' => '8.0.0',
+            'version' => '8.0.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../league/csv',
+            'aliases' => array(),
+            'reference' => '0a1b535df48507f58ed3c7ab44e72272b11163ac',
             'dev_requirement' => false,
         ),
         'league/flysystem' => array(
