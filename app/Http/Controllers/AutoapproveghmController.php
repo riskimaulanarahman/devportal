@@ -23,10 +23,8 @@ class AutoapproveghmController extends Controller
                 DB::raw("FORMAT(tbl_approverListHistory.approvalDate, 'yyyy-MM-dd HH:mm:ss') as submittedDate"),
                 DB::raw("CASE 
                     WHEN tbl_approverListHistory.approvalDate >= DATEADD(DAY, -2, request_ghm.startDate) 
-                    THEN '0:00:00:00'
-                    ELSE 
-                        CAST(DATEDIFF(SECOND, tbl_approverListHistory.approvalDate, DATEADD(DAY, -2, request_ghm.startDate)) / 86400 AS VARCHAR) + ':' +
-                        FORMAT(DATEADD(SECOND, DATEDIFF(SECOND, tbl_approverListHistory.approvalDate, DATEADD(DAY, -2, request_ghm.startDate)) % 86400, 0), 'HH:mm:ss')
+                    THEN '0'
+                    ELSE CAST(DATEDIFF(DAY, tbl_approverListHistory.approvalDate, DATEADD(DAY, -2, request_ghm.startDate)) AS VARCHAR)
                 END AS time_left")
             )
             ->where('request_ghm.requestStatus', 1)
@@ -56,10 +54,8 @@ class AutoapproveghmController extends Controller
                 DB::raw("FORMAT(tbl_approverListHistory.approvalDate, 'yyyy-MM-dd HH:mm:ss') as submittedDate"),
                 DB::raw("CASE 
                     WHEN tbl_approverListHistory.approvalDate >= DATEADD(DAY, -2, request_ghm.startDate) 
-                    THEN '0:00:00:00'
-                    ELSE 
-                        CAST(DATEDIFF(SECOND, tbl_approverListHistory.approvalDate, DATEADD(DAY, -2, request_ghm.startDate)) / 86400 AS VARCHAR) + ':' +
-                        FORMAT(DATEADD(SECOND, DATEDIFF(SECOND, tbl_approverListHistory.approvalDate, DATEADD(DAY, -2, request_ghm.startDate)) % 86400, 0), 'HH:mm:ss')
+                    THEN '0'
+                    ELSE CAST(DATEDIFF(DAY, tbl_approverListHistory.approvalDate, DATEADD(DAY, -2, request_ghm.startDate)) AS VARCHAR)
                 END AS time_left")
             )
             ->where('request_ghm.id', $id)
