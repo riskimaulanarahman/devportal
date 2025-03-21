@@ -15,7 +15,6 @@ Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestCon
 Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
 // GH & Mess Booking
-Route::get('ghm_booking',[App\Http\Controllers\Submission\GhmRequestController::class, 'dashboard'])->name('ghm_booking'); //Ghm_request
 Route::get('ghm-autoappr',[App\Http\Controllers\Submission\GhmRequestController::class, 'ghmautoapproved'])->name('ghm-autoappr');
 
 Route::middleware(['session.check'])->group(function () {
@@ -29,6 +28,8 @@ Route::middleware(['session.check'])->group(function () {
                 Route::get('{menu_item}', [App\Http\Controllers\GeneratemenuController::class, 'index'])->name('index');
             }
     }
+
+    Route::get('ghm_booking',[App\Http\Controllers\Submission\GhmRequestController::class, 'dashboard'])->name('ghm_booking'); //Ghm_request
 
     // Scheduler
     Route::get('/mom-reminder/{mode}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'reminderNotificationMessage'])->name('mom-reminder');
