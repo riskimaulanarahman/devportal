@@ -228,11 +228,69 @@
     padding: 0;
     color: #555;
 }
+.selectir {
+    display: flex;
+    align-items: center;
+}
+
+.selectir > div {
+    margin-right: 10px;
+}
+#button-container {
+    margin-left: auto; /* Menempatkan kontainer tombol di ujung kanan */
+    display: flex;
+}
+
+#button-container > div {
+    margin-right: 10px; /* Menambahkan jarak antar tombol */
+}
+/* .legend */
+.legend {
+    /* display: flex; */
+    align-items: center;
+    padding: 0.5rem;
+}
+
+/* #legend-container */
+#legend-container {
+    margin-left: auto; /* Menempatkan kontainer di ujung kanan */
+    display: flex;
+}
+
+/* .column */
+.column {
+    flex: 1;
+    height: 3vh; /* Adjust the height as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white; /* Font color for better visibility */
+    font-size: 1.8vh;
+}
+
+/* Different colors for each column */
+#desc1 {
+    background-color: #6C757D;
+}
+#desc2 {
+    background-color: #007BFF;
+}
+#desc3 {
+    background-color: #FFC107;
+    color: black; /* Better readability on yellow */
+}
+#desc4 {
+    background-color: #28A745;
+}
+#desc5 {
+    background-color: #DC3545;
+}
 
 </style>
-{{-- @php
-    dd($roomsWithLocations);
-@endphp --}}
+@php
+    // dd($booking);
+    // dd($roomsWithLocations);
+@endphp
 <div class="row">
     <div class="col-xl-12">
         <div class="card">
@@ -240,18 +298,36 @@
                 <h4 class="card-title">Scheduler Room Booking</h4>
             </div>
             <div class="card-body">
+                
                 <script>
-                    const booking = @json($booking);                
+                    const booking = @json($booking);
                     const roomsWithLocations = @json($roomsWithLocations);
                     const uniqueLocations = @json($uniqueLocations);
                     const emplo = @json($emplo);
                     const departments = @json($departments);
                 </script>
-                <div class="selectors">
+                <div class="selectir">
                     <div id="location-selector"></div>
                     <div id="room-selector"></div>
+                    <div id="button-container">
+                        <div id="btn-help"></div>                 
+                        <div id="popup-container"></div>
+                        <div id="btn-refresh"></div>
+                    </div>
                 </div>
+                <div class="legend">
+                    <div id="legend-container">
+                        <div class="column" id="desc1">Draft</div>
+                        <div class="column" id="desc2">Pending</div>
+                        <div class="column" id="desc3">Rework</div>
+                        <div class="column" id="desc4">Completed</div>
+                        <div class="column" id="desc5">Reject</div>
+                    </div>
+                </div>
+                <div id="scheduler"></div>
                 <div class="scheduler"></div>
+                <div class="reloadScheduler"></div>
+                
             </div>
         </div>
     </div>

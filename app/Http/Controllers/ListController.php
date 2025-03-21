@@ -25,7 +25,6 @@ use App\Models\Approvaltype;
 use App\Models\Developer;
 use App\Models\Approvaluser;
 use App\Models\CategoryForm;
-use App\Models\Ghm_room;
 use App\Models\Submission\Project;
 use App\Models\UavAsset;
 use App\Models\Categoryhrsc;
@@ -34,6 +33,7 @@ use App\Models\Currency;
 use App\Models\Ecatalog;
 use App\Models\Purchasinguser;
 use App\Models\RekeningCcm;
+use App\Models\Ghm_room;
 use Auth;
 
 class ListController extends Controller
@@ -220,10 +220,7 @@ class ListController extends Controller
 
     public function listCategoryHrsc() {
         return Categoryhrsc::all();
-    }
-    public function listroomghm() {
-        return ghm_room::all();
-    }
+    }    
 
     public function listUnit() {
         return Unit::select('*')->orderBy('nama','asc')->get();
@@ -231,6 +228,10 @@ class ListController extends Controller
 
     public function listCurrency() {
         return Currency::select('*')->orderBy('nama','asc')->get();
+    }
+
+    public function listroomghm() {
+        return ghm_room::all();
     }
 
     public function listBuyer() { // MMF

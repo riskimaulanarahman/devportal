@@ -15,7 +15,7 @@ Route::group(['prefix' => 'api'], function () {
         'sequence' => App\Http\Controllers\Admin\SequenceController::class,
         'theme' => App\Http\Controllers\Admin\ThemeController::class,
         'company' => App\Http\Controllers\Admin\CompanyController::class,
-        'department' => App\Http\Controllers\Admin\DepartmentController::class,
+        'department' => App\Http\Controllers\Admin\DepartmentController::class,        
         'grade' => App\Http\Controllers\Admin\GradeController::class,
         'level' => App\Http\Controllers\Admin\LevelController::class,
         'location' => App\Http\Controllers\Admin\LocationController::class,
@@ -28,6 +28,7 @@ Route::group(['prefix' => 'api'], function () {
         'developer' => App\Http\Controllers\Admin\DeveloperController::class,
         'uavasset' => App\Http\Controllers\Admin\UavAssetController::class,
         'categoryhrsc' => App\Http\Controllers\Admin\CategoryhrscController::class,
+        'ghm_admin' => App\Http\Controllers\Admin\GhmAdminController::class,
     ]);
     Route::post('/update-profilepicture', [App\Http\Controllers\HomeController::class, 'updateProfilePicture']);    
 });

@@ -166,6 +166,7 @@
         '/developer': 'admin/developer.js',
         '/uavasset': 'admin/uavasset.js',
         '/categoryhrsc': 'admin/category_hrsc.js',
+        '/ghm_admin': 'admin/ghm_admin.js',
         //module
         '/headcounts': 'module/headcounts.js',
         '/employeedata': 'module/employeedata.js',
