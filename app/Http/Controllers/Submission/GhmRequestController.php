@@ -17,6 +17,7 @@ use App\Models\Module;
 use App\Models\User;
 use App\Models\Employee;
 use App\Models\Assignmentto;
+use App\Models\Attachment;
 use DB;
 use Illuminate\Support\Facades\Log;
 use App\Mail\SubmissionMail;
@@ -35,7 +36,7 @@ class GhmRequestController extends Controller
         $this->module = new Module();
     }
 ////////// GHM Booking - Scheduler \\\\\\\\\\\
-    public function dashboard(Request $request)
+   public function dashboard(Request $request)
     {
         $user = auth()->user();
         if (!$user) {
@@ -45,25 +46,30 @@ class GhmRequestController extends Controller
         $isAdmin = $user->isAdmin ?? false;
         $module_id = $this->getModuleId($this->modulename);
         $employeeId = $user->employee_id ?? null;
-        $gethrsl = "(select TOP 1 CASE WHEN a.user_id='".$userId."'  then 1 else 0 end 
+        $gethrslQuery = "(select TOP 1 CASE WHEN a.user_id='".$userId."' then 1 else 0 end 
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
             where l.req_id = request_ghm.id and l.module_id = '".$module_id."' and r.ApprovalType='HR Service Leader' and r.isactive='1'
             order by a.sequence)";
+
         $requests = Ghm::query()
-            ->where(function ($query) use ($userId, $isAdmin, $employeeId, $gethrsl) {
+            ->where(function ($query) use ($userId, $isAdmin, $gethrslQuery) {
                 if ($isAdmin) {
+                    // Admin melihat semua request kecuali miliknya, dengan status 1, 3, 4
                     $query->where("request_ghm.user_id", "!=", $userId)
                         ->whereIn("request_ghm.requestStatus", [1, 3, 4]);
-                } else if ($gethrsl) {
-                    $query->where("request_ghm.user_id", "!=", $userId)
-                        ->whereIn("request_ghm.requestStatus", [1,3]);
                 } else {
-                    $query->where("request_ghm.user_id", "=", $userId);
+                    // Subquery untuk menentukan apakah user adalah HRSL
+                    $query->whereRaw("$gethrslQuery = 1", [])
+                        ->whereIn("request_ghm.requestStatus", [1, 2, 3, 4])
+                        ->orWhere(function ($q) use ($userId) {
+                            // User biasa hanya bisa melihat request miliknya sendiri atau request status = 3
+                            $q->where("request_ghm.user_id", "=", $userId)
+                            ->orWhere("request_ghm.requestStatus", 3);
+                        });
                 }
             })
-            ->orWhere("request_ghm.user_id", $userId)
             ->with(['User', 'code', 'ghm_room'])
             ->get();
 
@@ -89,8 +95,9 @@ class GhmRequestController extends Controller
                 [request_ghm]
             CROSS APPLY (SELECT COUNT(*) AS EmployeeCount FROM OPENJSON(employee)) AS EmpData
             CROSS APPLY (SELECT COUNT(*) AS GuestCount FROM OPENJSON(guest)) AS GuestData
-            CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData
-            GROUP BY id
+            CROSS APPLY (SELECT COUNT(*) AS FamilyCount FROM OPENJSON(family)) AS FamilyData    
+            WHERE requestStatus = 3
+            GROUP BY request_ghm.id, request_ghm.ghm_room_id, request_ghm.startDate, request_ghm.endDate
             ");            
             $totalPeopleArray = collect($totalPeopleData)->mapWithKeys(function ($item) {
                 return [$item->id => $item->totalAll];
@@ -229,7 +236,7 @@ class GhmRequestController extends Controller
                             }
                              else {
                                 $query->where("request_ghm.user_id", "!=", $user_id)
-                                ->whereIn("request_ghm.requestStatus", [1,3,4]);
+                                ->whereIn("request_ghm.requestStatus", [3]);
                                 // ->where("bu",$this->getEmployeeID()->companycode);                        
                             }
                         })
@@ -256,13 +263,17 @@ class GhmRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
 ////////// GHM Reqeust - Action Modal  \\\\\\\\\\\\\\\\\\\
 public function show($id)
 {
     try {
         $dataquery = $this->model->query();
+
+        // Ambil data utama booking berdasarkan ID
         $data = $dataquery
-            ->selectRaw("request_ghm.id,
+            ->selectRaw("
+                request_ghm.id,
                 codes.code, 
                 request_ghm.user_id,
                 request_ghm.description,
@@ -270,22 +281,21 @@ public function show($id)
                 request_ghm_room.bu,
                 request_ghm_room.sector,          
                 request_ghm.text,
-                request_ghm.description,
                 request_ghm.requestStatus,
                 request_ghm.startDate,
                 request_ghm.endDate,
                 request_ghm.created_at,
                 request_ghm.updated_at,
-                (SELECT STRING_AGG(emp.fullname, ', ')
-                    FROM OPENJSON(request_ghm.employee) 
-                    WITH (employee_id INT '$')
-                    LEFT JOIN employee.tbl_employee AS emp
-                    ON emp.id = employee_id
-                ) AS employee_fullname,
                 COALESCE(request_ghm.guest, '[]') AS guest,
                 COALESCE(request_ghm.family, '[]') AS family,
                 request_ghm_room.location_id, 
-                employee.tbl_location.Location               
+                employee.tbl_location.Location,
+                (SELECT STRING_AGG(emp.fullname, ', ')
+                 FROM OPENJSON(request_ghm.employee) 
+                 WITH (employee_id INT '$')
+                 LEFT JOIN employee.tbl_employee AS emp
+                 ON emp.id = employee_id
+                ) AS employee_fullname
             ")
             ->leftJoin('codes', 'request_ghm.code_id', '=', 'codes.id')
             ->leftJoin('request_ghm_room', 'request_ghm.ghm_room_id', '=', 'request_ghm_room.id')
@@ -297,22 +307,72 @@ public function show($id)
             return response()->json(["status" => "error", "message" => "Data tidak ditemukan"]);
         }
 
+        // Jika code_id null, generate dan simpan code baru
         if ($data->code_id == null) {
             $data->code_id = $this->generateCode($this->modulename);
             $data->save();
         }
 
-        // Cek apakah guest & family adalah array
-        if (!is_string($data->guest)) {
-            $data->guest = implode(', ', (array) $data->guest);
-        }
+        // Pastikan guest dan family dalam bentuk array
+        $data->guest = is_string($data->guest) ? json_decode($data->guest, true) : (array) $data->guest;
+        $data->family = is_string($data->family) ? json_decode($data->family, true) : (array) $data->family;
 
-        if (!is_string($data->family)) {
-            $data->family = implode(', ', (array) $data->family);
-        }
+        // Cek booking yang mengalami overlapping
+        $overlappingBookings = $this->model->query()
+            ->selectRaw("
+                request_ghm.id,
+                request_ghm.description,
+                request_ghm_room.bu,
+                request_ghm.text,
+                request_ghm.ghm_room_id,
+                request_ghm.startDate,
+                request_ghm.endDate,
+                codes.code,
+                request_ghm_room.bu,
+                request_ghm_room.sector,
+                request_ghm.created_at,
+                (SELECT STRING_AGG(emp.fullname, ', ')
+                 FROM OPENJSON(request_ghm.employee) 
+                 WITH (employee_id INT '$')
+                 LEFT JOIN employee.tbl_employee AS emp
+                 ON emp.id = employee_id
+                ) AS employee_fullname,
+                COALESCE(request_ghm.guest, '[]') AS guest,
+                COALESCE(request_ghm.family, '[]') AS family
+            ")
+            ->leftJoin('codes', 'request_ghm.code_id', '=', 'codes.id')
+            ->leftJoin('request_ghm_room', 'request_ghm.ghm_room_id', '=', 'request_ghm_room.id')
+            ->where('request_ghm.ghm_room_id', $data->ghm_room_id)
+            ->where('request_ghm.requestStatus', 3)
+            ->where('request_ghm.id', '!=', $data->id)
+            ->where('request_ghm.startDate', '<=', $data->endDate)
+            ->where('request_ghm.endDate', '>=', $data->startDate)
+            ->get();
+
+        // Format hasil overlapping booking
+        $overlappingData = $overlappingBookings->map(function ($booking) {
+            return [
+                'code' => $booking->code,
+                'bu' => $booking->bu,
+                'sector' => $booking->sector,
+                'ghm_room_id' => $booking->ghm_room_id,
+                'description' => $booking->description,
+                'text' => $booking->text,
+                'startDate' => $booking->startDate,
+                'endDate' => $booking->endDate,
+                'created_at' => $booking->created_at,
+                'guest' => is_string($booking->guest) ? json_decode($booking->guest, true) : (array) $booking->guest,
+                'employee_fullname' => $booking->employee_fullname, // Ensure employee_fullname is included
+                'family' => is_string($booking->family) ? json_decode($booking->family, true) : (array) $booking->family
+            ];
+        });
+
+        // Masukkan overlappingData ke dalam data
+        $data->overlappingData = $overlappingData;
+
         return response()->json([
             'status' => "show",
-            'message' => $this->getMessage()['show'],
+            'message' => "The data is being displayed.",
             'data' => $data
         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 

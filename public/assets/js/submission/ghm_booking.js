@@ -18,7 +18,13 @@ $(function () {
         guestField.value = (guestField.value.split(',').map(name => name.trim()));
         const familyField = formData.find(field => field.name === 'family');
         familyField.value = serializeToJSON(familyField.value.split(',').map(name => name.trim()));
-        sendRequest(apiurl + "/" + modname, "POST")
+        // Tambahkan logika untuk mendukung dokumen pendukung
+        const supportingDocumentField = formData.find(field => field.name === 'supportingDocument');
+        if (supportingDocumentField && supportingDocumentField.value.length > 0) {
+            formData.push({ name: 'supportingDocument', value: supportingDocumentField.value });
+        }
+
+        sendRequest(apiurl + "/" + modname, "POST", formData)
         .then(function (response) {
             if (response.status === 'success') {
                 alert('Booking created successfully!');
@@ -124,7 +130,7 @@ $(function () {
                         </tr>
                         <tr>
                             <td style="background-color: #28A745; color: #fff; border: 1px solid #dddddd; padding: 8px;"></td>
-                            <td style="border: 1px solid #dddddd; padding: 8px;">Completed</td>
+                            <td style="border: 1px solid #dddddd; padding: 8px;">Approve</td>
                             <td style="border: 1px solid #dddddd; padding: 8px;">Your submission has been accepted</td>
                         </tr>
                         <tr>                    
@@ -184,9 +190,11 @@ $(function () {
             let bookingStart = new Date(startDate);
             let bookingEnd = new Date(endDate);
 
-            if ((appointment.ghm_room_id === roomId) && (((new Date (appointment.startDate) <= bookingEnd) && (new Date (appointment.startDate) > bookingStart)) || ((new Date (appointment.endDate) <= bookingEnd) && (new Date (appointment.endDate) > bookingStart)))) {                
-                console.log("appointment", appointment);
-
+            if ((appointment.ghm_room_id === roomId) && ((
+                (new Date (appointment.startDate) <= bookingEnd) && (new Date (appointment.startDate) > bookingStart)
+                ) || ((new Date (appointment.endDate) <= bookingEnd) && (new Date (appointment.endDate) > bookingStart))
+            )) 
+            {                
                 let guestCount = safeArray(appointment.guest).length;
                     let familyCount = safeArray(appointment.family).length;
                     let employeeCount = safeArray(appointment.employee).length;
@@ -197,6 +205,12 @@ $(function () {
             }
         });
         return dailyGuestCount;
+    }
+    function moveEditColumnToLeft(dataGrid) {
+        dataGrid.columnOption("command:edit", { 
+            visibleIndex: -1,
+            width: 80 
+        });
     }
     function updateScheduler(location, roomId) {
         let dataSource = roomsWithLocations.filter(emp => emp.location === location);
@@ -248,8 +262,9 @@ $(function () {
                     const guestCount = safeArray(booking.guest).length;
                     const familyCount = safeArray(booking.family).length;
                     const employeeCount = safeArray(booking.employee).length;
-                    const totalPeople = guestCount + familyCount + employeeCount;
-                    const remainingCapacity = roomOccupancy - totalPeople;
+                    const totalPeople = booking.totalPeople;
+                    const totalGuests = guestCount + familyCount + employeeCount;
+                    const remainingCapacity = roomOccupancy - totalGuests;
                     const formatDate = (date) => {
                         if (!date) return "No Date";
                         const d = new Date(date);
@@ -264,7 +279,8 @@ $(function () {
                             <b>Purpose (Text): ${booking.text || "No Title"}</b><br>
                             ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
                             <b>Occupancy:</b> ${roomOccupancy} Person<br>
-                            <b>Booked:</b> ${totalPeople} Person<br>
+                            <b>Booked:</b> ${totalGuests} Person<br>
+                            <b>Approve:</b> ${totalPeople} Person<br>
                             <b>Remaining:</b> ${remainingCapacity} Person<br>
                             <b>Created By:</b> ${booking.creator || "No Name"}<br><br>
                             <button id="${actionButtonId}" class="btn ${buttonClass} btn-sm">${buttonLabel}</button>
@@ -376,20 +392,38 @@ $(function () {
                     if (e.rowType == "data" && e.data.isParent === 1) {
                         e.cellElement.css('background', 'rgba(128, 128, 0, 0.1)');
                     }
-                },
+                },  
                 onAppointmentFormOpening: function (e) {
+                    e.popup.option({
+                        width: 700,
+                        height: 800,
+                        onHiding: function () {
+                            cleanupForm();
+                        },
+                        onHidden: function () {
+                            cleanupForm();
+                        }
+                    });
+                
                     const form = e.form;
                     const appointmentData = e.appointmentData;
+                    const reqid = (appointmentData.id) || 0;
+                    let selectedRoom = appointmentData.ghm_room_id || null;
+                    let newStartDate = new Date(appointmentData.startDate);
+                    let newEndDate = new Date(appointmentData.endDate);
+                    let appointments = e.component.option("dataSource") || [];
+                    let totalBooked = appointments
+                        .filter(a =>
+                            a.ghm_room_id === selectedRoom &&
+                            new Date(a.startDate) <= newEndDate &&
+                            new Date(a.endDate) >= newStartDate
+                        )
+                        .reduce((sum, a) => sum + (Number(a.totalPeople) || 0), 0);
+                
                     function validateBooking() {
-                        let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
-                        let guestCount = (form.getEditor("guest")?.option("value") || []).length;
-                        let familyCount = (form.getEditor("family")?.option("value") || []).length;
-                        let employeeCount = (form.getEditor("employee")?.option("value") || []).length;
-                        let totalGuests = guestCount + familyCount + employeeCount;
                         let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;
-                        let totalBooked = booking?.find(b => b.room_id === selectedRoom)?.totalPeople || 0;  
-                        let remainingCapacity = roomCapacity - (totalGuests + totalBooked);
-                        if (totalGuests > roomCapacity) {
+                        let remainingCapacity = roomCapacity - totalBooked;
+                        if (totalBooked > roomCapacity) {
                             DevExpress.ui.notify({
                                 type: "error",
                                 displayTime: 3000,
@@ -402,11 +436,34 @@ $(function () {
                                     `);
                                 }
                             });
-                        }                    
-                        return { roomCapacity, totalGuests, remainingCapacity, totalBooked };
+                        }
+                        let formData = form.option("formData");
+                        let hasGuestOrFamily = (formData.guest && formData.guest.length > 0) || (formData.family && formData.family.length > 0);
+                        form.itemOption("supportingDocument", "isRequired", hasGuestOrFamily);
+                        let warningMessage = $("#supportingDocumentWarning");
+                        if (hasGuestOrFamily) {
+                            if (warningMessage.length === 0) {
+                                $("#formattachment").after(
+                                    "<div id='supportingDocumentWarning' style='color: red; margin-top: 5px;'>* Supporting Document is required for Guest or Family.</div>"
+                                );
+                            }
+                        } else {
+                            warningMessage.remove();
+                        }
+                        return { roomCapacity, remainingCapacity, totalBooked };
                     }
-                    console.log('Appointment Data:', appointmentData);
-                    const { roomCapacity, totalGuests, remainingCapacity } = validateBooking();
+                
+                    function cleanupForm() {
+                        console.log("Cleaning up form...");
+                        form.option("formData", {});
+                        let dataGridAttachment = $("#formattachment").dxDataGrid("instance");
+                        if (dataGridAttachment) {
+                            console.log("Resetting data source...");
+                            dataGridAttachment.option("dataSource", []);
+                        }
+                    }
+                
+                    const { roomCapacity, remainingCapacity } = validateBooking();
                     form.option('items', [
                         {
                             itemType: 'group',
@@ -449,7 +506,7 @@ $(function () {
                                     label: { text: 'Room' },
                                     editorType: 'dxSelectBox',
                                     dataField: 'ghm_room_id',
-                                    helpText: `Occupancy: ${roomCapacity} | Booked: ${totalGuests} | Remaining: ${remainingCapacity}`,
+                                    helpText: `Occupancy: ${roomCapacity} | Booked: ${totalBooked} | Remaining: ${remainingCapacity}`,
                                     editorOptions: {
                                         readOnly: true,
                                         dataSource: roomsWithLocations,
@@ -459,7 +516,6 @@ $(function () {
                                         },
                                         valueExpr: 'id',
                                         value: appointmentData.ghm_room_id || null,
-                                        onValueChanged: validateBooking()
                                     }
                                 },
                                 {
@@ -580,10 +636,111 @@ $(function () {
                                             validateBooking();
                                         }
                                     }
+                                },
+                            ]
+                        },
+                        {
+                            itemType: 'group',
+                            caption: 'Supporting Document',
+                            colSpan: 2,
+                            items: [
+                                {
+                                    itemType: 'simple',
+                                    name: "supportingDocument",
+                                    template: function (data, container) {
+                                        var supporting = $("<div id='formattachment'>").dxDataGrid({
+                                            dataSource: storewithmodule('attachmentrequest', modelclass, reqid),
+                                            allowColumnReordering: true,
+                                            allowColumnResizing: true,
+                                            columnsAutoWidth: true,
+                                            rowAlternationEnabled: true,
+                                            wordWrapEnabled: true,
+                                            showBorders: true,
+                                            filterRow: { visible: false },
+                                            filterPanel: { visible: false },
+                                            headerFilter: { visible: false },
+                                            searchPanel: {
+                                                visible: true,
+                                                width: 240,
+                                                placeholder: 'Search...',
+                                            },
+                                            editing: {
+                                                useIcons: true,
+                                                mode: "popup",
+                                                allowAdding: true,
+                                                allowUpdating: true,
+                                                allowDeleting: true,
+                                            },
+                                            paging: { enabled: true, pageSize: 10 },
+                                            columns: [
+                                                {
+                                                    caption: 'Attachment',
+                                                    dataField: "path",
+                                                    allowFiltering: false,
+                                                    allowSorting: false,
+                                                    cellTemplate: cellTemplate,
+                                                    editCellTemplate: editCellTemplate,
+                                                    validationRules: [
+                                                        {
+                                                            type: "custom",
+                                                            validationCallback: function (params) {
+                                                                let formData = form.option("formData");
+                                                                let hasGuestOrFamily =
+                                                                    (formData.guest && formData.guest.length > 0) ||
+                                                                    (formData.family && formData.family.length > 0);
+                
+                                                                return !hasGuestOrFamily || (params.value && params.value.length > 0);
+                                                            },
+                                                            message: "Attachment is required when Guest or Family is selected."
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    dataField: "remarks"
+                                                },
+                                            ],
+                                            export: {
+                                                enabled: false,
+                                                fileName: modname,
+                                                excelFilterEnabled: true,
+                                                allowExportSelectedData: true
+                                            },
+                                            onInitialized: function (e) {
+                                                dataGridAttachment = e.component;
+                                            },
+                                            onContentReady: function (e) {
+                                                moveEditColumnToLeft(e.component);
+                                            },
+                                            onToolbarPreparing: function (e) {
+                                                e.toolbarOptions.items.unshift({
+                                                    location: "after",
+                                                    widget: "dxButton",
+                                                    options: {
+                                                        hint: "Refresh Data",
+                                                        icon: "refresh",
+                                                        onClick: function () {
+                                                            dataGridAttachment.refresh();
+                                                        }
+                                                    }
+                                                });
+                                            },
+                                            onDataErrorOccurred: function (e) {
+                                                console.log("Error loading data:", e.error.message);
+                                                dataGridAttachment.refresh();
+                                            }
+                                        });
+                
+                                        return supporting;
+                                    }
                                 }
                             ]
                         }
                     ]);
+                    form.on("fieldDataChanged", function (e) {
+                        if (e.dataField === "guest" || e.dataField === "family") {
+                            validateBooking();
+                        }
+                    });
                 },
                 onAppointmentAdding: async function (e) {
                     const appointmentData = e.appointmentData;
@@ -592,8 +749,9 @@ $(function () {
                     let familyCount = safeArray(appointmentData.family).length;
                     let employeeCount = safeArray(appointmentData.employee).length;
                     let totalNewGuests = guestCount + familyCount + employeeCount;
-                    if (totalNewGuests < 1) {   
-                        DevExpress.ui.notify({                           
+                
+                    if (totalNewGuests < 1) {
+                        DevExpress.ui.notify({
                             type: "error",
                             displayTime: 3000,
                             contentTemplate: (e) => {
@@ -608,6 +766,7 @@ $(function () {
                         e.cancel = true;
                         return;
                     }
+                
                     let selectedRoom = appointmentData.ghm_room_id;
                     let roomData = roomsWithLocations.find(room => room.id === selectedRoom);
                     if (!roomData) {
@@ -615,11 +774,12 @@ $(function () {
                         e.cancel = true;
                         return;
                     }
+                
                     let sector = roomData.sector;
                     let bookingData = await loadNewData();
                     let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;
                     let dailyGuestCount = await getTotalGuestsPerDay(
-                        bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2), // 🔥 Abaikan booking rejected, pending, dan confirmed
+                        bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2),
                         selectedRoom,
                         appointmentData.startDate,
                         appointmentData.endDate
@@ -634,13 +794,14 @@ $(function () {
                                     kamar sudah penuh, silahkan pilih kamar lain atau tanggal lain!
                                 </div>
                             `,
-                            // icon: 'error',
+                            icon: 'error',
                             confirmButtonText: 'OK',
                         });
-                        e.cancel = true;        
+                        e.cancel = true;
                         loadData();
                         return;
-                        }
+                    }
+                
                     Swal.fire({
                         title: 'What do you want to do?',
                         text: 'Choose an option for this booking',
@@ -666,7 +827,6 @@ $(function () {
                             }).then(function () {
                                 loadData();
                             });
-                            //fetch
                         } else {
                             sendRequest(apiurl + "/" + modname, "POST", {
                                 requestStatus: requestStatus,
@@ -698,9 +858,8 @@ $(function () {
                                             Swal.fire({
                                                 icon: 'success',
                                                 title: 'Saved',
-                                                text: 'The submission has been submited.',
+                                                text: 'The submission has been submitted.',
                                             });
-                                            
                                         }
                                     });
                                 }
@@ -723,7 +882,7 @@ $(function () {
                     let selectedRoom = appointmentData.ghm_room_id;
                     let bookingData = await loadNewData();
                     let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;                    
-                     let dailyGuestCount = await getTotalGuestsPerDay(
+                    let dailyGuestCount = await getTotalGuestsPerDay(
                         bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2),
                         selectedRoom,
                         appointmentData.startDate,
@@ -743,7 +902,7 @@ $(function () {
                                     kamar sudah penuh, silahkan pilih kamar lain atau tanggal lain!
                                 </div>
                             `,
-                            // icon: 'error',
+                            icon: 'error',
                             confirmButtonText: 'OK',
                         });
                         e.cancel = true;
@@ -844,4 +1003,77 @@ $(function () {
             popup.show();
         });
     });
+    function cellTemplate(container, options) {
+        container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
+    }
+    
+    function editCellTemplate(cellElement, cellInfo) {
+        let buttonElement = document.createElement("div");
+        buttonElement.classList.add("retryButton");
+        let retryButton = $(buttonElement).dxButton({
+          text: "Retry",
+          visible: false,
+          onClick: function() {
+            // The retry UI/API is not implemented. Use a private API as shown at T611719.
+            for (var i = 0; i < fileUploader._files.length; i++) {
+              delete fileUploader._files[i].uploadStarted;
+            }
+            fileUploader.upload();
+          }
+        }).dxButton("instance");
+    
+        $path = "";
+        $adafile = "";
+        let fileUploaderElement = document.createElement("div");
+        let fileUploader = $(fileUploaderElement).dxFileUploader({
+          multiple: false,
+          accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
+          uploadMode: "instantly",
+          name: "myFile",
+          uploadUrl: apiurl + "/upload-berkas/"+modname,
+          onValueChanged: function(e) {
+            let reader = new FileReader();
+            reader.onload = function(args) {
+              imageElement.setAttribute('src', args.target.result);
+            }
+            reader.readAsDataURL(e.value[0]); // convert to base64 string
+          },
+          onUploaded: function(e){
+           
+            let path = e.request.response;
+    
+            const unsafeCharacters = /[#"%<>\\^`{|}]/g;
+            let unsafeFound = path.match(unsafeCharacters);
+    
+            if (unsafeFound) {
+                let unsafeCharactersString = unsafeFound.join(', ');
+                DevExpress.ui.dialog.alert(
+                    `The file name contains these unsafe characters: ${unsafeCharactersString}. Please rename the file to continue.`,
+                    "error"
+                );
+            
+                path = "";
+                retryButton.option("visible", true);
+            } else {
+                cellInfo.setValue(e.request.responseText);
+                retryButton.option("visible", false);
+            }
+    
+          },
+          onUploadError: function(e){
+              $path = "";
+              DevExpress.ui.notify(e.request.response,"error");
+          }
+        }).dxFileUploader("instance");
+      
+        // let imageElement = document.createElement("img");
+        //     imageElement.classList.add("uploadedImage");
+        //     imageElement.setAttribute('src', "upload/" +cellInfo.value);
+        //     imageElement.setAttribute('height', "50");
+            
+        //     cellElement.append(imageElement);
+            cellElement.append(fileUploaderElement);
+            cellElement.append(buttonElement);
+      
+    }
 });

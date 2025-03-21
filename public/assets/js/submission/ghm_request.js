@@ -7,8 +7,7 @@ function moveEditColumnToLeft(dataGrid) {
         visibleIndex: -1,
         width: 80 
     });
-}
-   
+}  
 
 var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
@@ -246,14 +245,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         })
     },
     onDataErrorOccurred: function(e) {
-        // Menampilkan pesan kesalahan
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-        // Memuat ulang Page
         location.reload();
     }
 }).dxDataGrid("instance");
-
 $('#btnadd').on('click',function(){
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
@@ -270,6 +265,11 @@ const accordionItems = [
     {
         ID: 1,
         Title: '<i class="far fa-newspaper"> Form Data </i>',
+        visible: true
+    },
+    {
+        ID: 2,
+        Title: '<i class="fas fa-file"> Supporting Document</i>',
         visible: true
     },
     {
@@ -293,21 +293,12 @@ const updateVisibleById = (itemId, visible) => {
   };
 
 const popupContentTemplate = function (reqid,mode,options) {
-
     var isMine = options.data.isMine;
-    // var isMineCompleted = (isMine == 1 && options.data.ticketStatus == 'Completed') ? 0 : 1;
     var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
     var isPendingOnMe = options.data.isPendingOnMe;
-    // var completed = (options.data.ticketStatus == 'Completed' && options.data.confirmationStatus == 'Completed') ? 1 : 0;
-
     console.log('isPIC :' + isPIC)
-
-    // var validationRules = [];
-
     popupid = reqid;
-
     const scrollView = $('<div />');
-
     if ((isMine == 1 || isPendingOnMe == 1) && (mode == 'add' || mode == 'edit' || mode == 'approval')) {
         if((isPendingOnMe == 1) && (mode == 'approval')) {
             var approvalOptions = 
@@ -389,7 +380,7 @@ const popupContentTemplate = function (reqid,mode,options) {
             itemTemplate: function (data) {
                 var container = $("<div>");
                 if(data.ID == 1) {
-                    var formData = $("<div id='formdata'>").dxDataGrid({    
+                    var formData = $("<div id='formdata'>").dxDataGrid({
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -416,6 +407,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                             allowUpdating: (admin == 1 || isPendingOnMe == 1 ? true : false),
                             allowDeleting: false,
                         },
+                        cellTemplate: function(container, options) {
+                            const guestList = options.data.overlappingData.map(d => d.guest).flat().join(', ');
+                            const tooltipText = guestList ? `Juga menginap: ${guestList}` : 'Tidak ada orang lain yang menginap';
+                            $('<div>')
+                                .text(options.value)
+                                .attr('title', tooltipText)
+                                .appendTo(container);
+                        },
                         scrolling: {
                             mode: "virtual"
                         },
@@ -425,32 +424,22 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'code',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
-                            },
-                                                   
+                            },                                                   
                             {
                                 caption: 'BU',
                                 dataField: 'bu',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
                             } , 
                             {
-                                caption: 'Lokasi',
+                                caption: 'Location',
                                 dataField: 'sector',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
                             } , 
                             {
                                 caption: 'Room',
-                                dataField: 'ghm_room_id', // Pastikan struktur data benar
+                                dataField: 'ghm_room_id',
                                 width: 200,
                                 lookup: {
                                     dataSource: listOption('/list-room','id','roomName'),  
@@ -460,28 +449,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }
 
                                 },
-                                validationRules: [{ type: "required" }],
-                                // editorOptions: {
-                                //     readOnly: true,
-                                // },
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Purpose',
                                 dataField: 'text',
                                 dataType: 'string',
-                                validationRules: [{ type: "required" }],
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Detail',
                                 dataField: 'description',
                                 dataType: 'string',
-                                validationRules: [{ type: "required" }],
-                                // editorOptions: { 
-                                //     readOnly: true
-                                // }
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 dataField: 'startDate',                                 
@@ -518,7 +498,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                caption: 'family',
+                                caption: 'Family',
                                 dataField: 'family',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
@@ -529,34 +509,58 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             options.text = 'tidak ada data';
                                         }
                                     }
+                                },
+                                cellTemplate: function(container, options) {
+                                    const guestList = options.data.overlappingData.map(d => d.guest).flat().join(', ');
+                                    const tooltipText = guestList ? `Juga menginap: ${guestList}` : 'Tidak ada orang lain yang menginap';
+                                    $('<div>')
+                                        .text(options.value)
+                                        .attr('title', tooltipText)
+                                        .appendTo(container);
                                 }
                             },
                             {
-                                caption: 'guest',
+                                caption: 'Guest',
                                 dataField: 'guest',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
-                                editorOptions: { 
+                                editorOptions: {
                                     readOnly: true,
                                     customConfig: function(options) {
                                         if (options.value === null || options.value === undefined || options.value === '') {
                                             options.text = 'tidak ada data';
                                         }
                                     }
+                                },
+                                cellTemplate: function(container, options) {
+                                    const guestList = options.data.overlappingData.map(d => d.guest).flat().join(', ');
+                                    const tooltipText = guestList ? `Juga menginap: ${guestList}` : 'Tidak ada orang lain yang menginap';
+                                    $('<div>')
+                                        .text(options.value)
+                                        .attr('title', tooltipText)
+                                        .appendTo(container);
                                 }
                             },
                             {
-                                caption: 'employee',
+                                caption: 'Employee',
                                 dataField: 'employee_fullname',
                                 allowFiltering: false,
                                 allowHeaderFiltering: false,
-                                editorOptions: { 
+                                editorOptions: {
                                     readOnly: true,
                                     customConfig: function(options) {
                                         if (options.value === null || options.value === undefined || options.value === '') {
                                             options.text = 'tidak ada data';
                                         }
                                     }
+                                },
+                                cellTemplate: function(container, options) {
+                                    const guestList = options.data.overlappingData.map(d => d.guest).flat().join(', ');
+                                    const tooltipText = guestList ? `Juga menginap: ${guestList}` : 'Tidak ada orang lain yang menginap';
+                                    $('<div>')
+                                        .text(options.value)
+                                        .attr('title', tooltipText)
+                                        .appendTo(container);
                                 }
                             },    
                             {
@@ -568,6 +572,89 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                         ],
+                        masterDetail: {
+                            enabled: true,
+                            template: function(container, options) {
+                                const data = options.data.overlappingData;
+                                $("<div>")
+                                    .addClass("master-detail-caption")
+                                    .text("Other people in this room: ")
+                                    .appendTo(container);
+                
+                                $("<div>")
+                                    .dxDataGrid({
+                                        dataSource: data,
+                                        keyExpr: "code",
+                                        columns: [
+                                            { dataField: "code", caption: "Code" },
+                                            { dataField: "bu", caption: "BU" },
+                                            { dataField: "sector", caption: "Location" },
+                                            { dataField: "ghm_room_id", caption: "Room", width: 200, lookup: {
+                                                
+                                                dataSource: listOption('/list-room','id','roomName'),  
+                                                valueExpr: 'id',
+                                                displayExpr: function(data) {
+                                                    return data ? data.roomName + ' ' + data.sector : '';
+                                                }            
+                                             },
+                                            },
+                                            { dataField: "text", caption: "Purpose" },
+                                            { dataField: "description", caption: "Details" },
+                                            {
+                                                dataField: 'startDate',                                 
+                                                validationRules: [{ type: "required" }],
+                                                cellTemplate: function(container, options) {
+                                                    if (!options.value) {
+                                                        container.text(" ");
+                                                    } else {
+                                                    const date = new Date(options.value);
+                                                    const formattedDate = date.toISOString().split('T') [0];
+                                                    const formattedTime = date.toTimeString().split(' ') [0];
+                                                    container.html(`
+                                                        <div>${formattedDate}</div>
+                                                        <div>${formattedTime}</div>                    
+                                                        `);
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                dataField: 'endDate',
+                                                validationRules: [{ type: "required" }],
+                                                cellTemplate: function(container, options) {
+                                                    if (!options.value) {
+                                                        container.text(" ");
+                                                    } else {
+                                                    const date = new Date(options.value);
+                                                    const formattedDate = date.toISOString().split('T') [0];
+                                                    const formattedTime = date.toTimeString().split(' ') [0];
+                                                    container.html(`
+                                                        <div>${formattedDate}</div>
+                                                        <div>${formattedTime}</div>                    
+                                                        `);
+                                                    }
+                                                }
+                                            },
+                                            { dataField: "family", caption: "Family" },
+                                            { dataField: "guest", caption: "Guest" },
+                                            { dataField: "employee_fullname", caption: "Employee" },
+                                            { dataField: "created_at", caption: "Created At", dataType: "datetime",cellTemplate: function(container, options) {
+                                                if (!options.value) {
+                                                    container.text(" ");
+                                                } else {
+                                                const date = new Date(options.value);
+                                                const formattedDate = date.toISOString().split('T') [0];
+                                                const formattedTime = date.toTimeString().split(' ') [0];
+                                                container.html(`
+                                                    <div>${formattedDate}</div>
+                                                    <div>${formattedTime}</div>                    
+                                                    `);
+                                                }
+                                            }
+                                            }
+                                        ]
+                                    }).appendTo(container);
+                            }
+                        },
                         export: {
                             enabled: false,
                             fileName: modname,
@@ -596,32 +683,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onRowUpdating: function(e) {
-                            // var newTicketStatus = e.newData.ticketStatus;
-                            // var newConfirmationStatus = e.newData.confirmationStatus;
-                            // if (newTicketStatus === "Completed") {
-                            //     if (!confirm("Are you sure you want to mark this ticket as completed?")) {
-                            //         e.cancel = true; // Cancel the update operation
-                            //     } else {
-                            //         e.newData.confirmationStatus = 'Waiting'; // Update the confirmationStatus to 'Waiting'
-                            //         e.component.columnOption("ticketStatus", "allowEditing", false);                                }
-                            // }
-                            // if (newConfirmationStatus === "Reworked") {
-                            //     if (!confirm("Are you sure you want to mark this confirmation status as reworked?")) {
-                            //         e.cancel = true; // Cancel the update operation
-                            //     } else {
-                            //         e.newData.ticketStatus = 'On Queue'; // Update the ticket status to 'On Queue'
-                            //         e.component.columnOption("confirmationStatus", "allowEditing", false);
-                            //         e.component.columnOption("confirmationRemarks", "allowEditing", false);
-                            //     }
-                            // }
-                            // if (newConfirmationStatus === "Completed") {
-                            //     if (!confirm("Are you sure you want to mark this confirmation status as completed?")) {
-                            //         e.cancel = true; // Cancel the update operation
-                            //     } else {
-                            //         e.component.columnOption("confirmationStatus", "allowEditing", false);
-                            //         e.component.columnOption("confirmationRemarks", "allowEditing", false);
-                            //     }
-                            // }
                         },
                         onCellPrepared: function (e) {
                             if (e.column.index == 0 && e.rowType == "data") {
@@ -641,14 +702,86 @@ const popupContentTemplate = function (reqid,mode,options) {
                             }
                         },
                         onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);                    
-                            // Memuat ulang DataGrid
+                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message); 
                             dataGrid1.refresh();
                         }
                     }).appendTo(container)
                     return container
-                }                 
+                }      
+                else if(data.ID == 2) {
+                    var supporting = $("<div id='formattachment'>").dxDataGrid({    
+                        dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "popup",
+                            allowAdding: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                        },
+                        paging: { enabled: true, pageSize: 10 },
+                        columns: [
+                            { 
+                                caption: 'Attachment',
+                                dataField: "path",
+                                allowFiltering: false,
+                                allowSorting: false,
+                                cellTemplate: cellTemplate,
+                                editCellTemplate: editCellTemplate,
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: "remarks"
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridAttachment = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridAttachment.refresh();
+                                    }
+                                }
+                            })
+                        },
+                        onDataErrorOccurred: function(e) {
+                            console.log("Terjadi kesalahan saat memuat data (2):", e.error.message);
+                            dataGridAttachment.refresh();
+                        }
+                    })
+
+                    return supporting;
+                }           
                 else if(data.ID == 3) {
                     return $("<div id='formapproverlist'>").dxDataGrid({    
                         dataSource: storewithmodule('approverlistrequest',modelclass,reqid),
@@ -1032,3 +1165,66 @@ function runpopup() {
 function cellTemplate(container, options) {
     container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
 }
+
+function editCellTemplate(cellElement, cellInfo) {
+    let buttonElement = document.createElement("div");
+    buttonElement.classList.add("retryButton");
+    let retryButton = $(buttonElement).dxButton({
+      text: "Retry",
+      visible: false,
+      onClick: function() {
+        // The retry UI/API is not implemented. Use a private API as shown at T611719.
+        for (var i = 0; i < fileUploader._files.length; i++) {
+          delete fileUploader._files[i].uploadStarted;
+        }
+        fileUploader.upload();
+      }
+    }).dxButton("instance");
+
+    $path = "";
+    $adafile = "";
+    let fileUploaderElement = document.createElement("div");
+    let fileUploader = $(fileUploaderElement).dxFileUploader({
+      multiple: false,
+      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
+      uploadMode: "instantly",
+      name: "myFile",
+      uploadUrl: apiurl + "/upload-berkas/"+modname,
+      onValueChanged: function(e) {
+        let reader = new FileReader();
+        reader.onload = function(args) {
+          imageElement.setAttribute('src', args.target.result);
+        }
+        reader.readAsDataURL(e.value[0]); // convert to base64 string
+      },
+      onUploaded: function(e){
+       
+        let path = e.request.response;
+
+        const unsafeCharacters = /[#"%<>\\^`{|}]/g;
+        let unsafeFound = path.match(unsafeCharacters);
+
+        if (unsafeFound) {
+            let unsafeCharactersString = unsafeFound.join(', ');
+            DevExpress.ui.dialog.alert(
+                `The file name contains these unsafe characters: ${unsafeCharactersString}. Please rename the file to continue.`,
+                "error"
+            );
+        
+            path = "";
+            retryButton.option("visible", true);
+        } else {
+            cellInfo.setValue(e.request.responseText);
+            retryButton.option("visible", false);
+        }
+
+      },
+      onUploadError: function(e){
+          $path = "";
+          DevExpress.ui.notify(e.request.response,"error");
+      }
+    }).dxFileUploader("instance");
+        cellElement.append(fileUploaderElement);
+        cellElement.append(buttonElement);
+  
+  }

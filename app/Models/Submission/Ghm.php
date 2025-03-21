@@ -31,6 +31,7 @@ class Ghm extends Model
         'description',
         'text',
         'guest',
+        // 'approveddoc',
         'family',
         'startDate',
         'endDate'

@@ -248,6 +248,7 @@
 .legend {
     /* display: flex; */
     align-items: center;
+    padding: 0.5rem;
 }
 
 /* #legend-container */
@@ -264,7 +265,7 @@
     justify-content: center;
     align-items: center;
     color: white; /* Font color for better visibility */
-    /* font-weight: bold; */
+    font-size: 1.8vh;
 }
 
 /* Different colors for each column */
@@ -297,6 +298,7 @@
                 <h4 class="card-title">Scheduler Room Booking</h4>
             </div>
             <div class="card-body">
+                
                 <script>
                     const booking = @json($booking);
                     const roomsWithLocations = @json($roomsWithLocations);
@@ -308,23 +310,24 @@
                     <div id="location-selector"></div>
                     <div id="room-selector"></div>
                     <div id="button-container">
-                        <div id="btn-help"></div>                        
+                        <div id="btn-help"></div>                 
                         <div id="popup-container"></div>
                         <div id="btn-refresh"></div>
+                    </div>
+                </div>
+                <div class="legend">
+                    <div id="legend-container">
+                        <div class="column" id="desc1">Draft</div>
+                        <div class="column" id="desc2">Pending</div>
+                        <div class="column" id="desc3">Rework</div>
+                        <div class="column" id="desc4">Completed</div>
+                        <div class="column" id="desc5">Reject</div>
                     </div>
                 </div>
                 <div id="scheduler"></div>
                 <div class="scheduler"></div>
                 <div class="reloadScheduler"></div>
-            </div>
-            <div class="legend">
-                <div id="legend-container">
-                    <div class="column" id="desc1">Draft</div>
-                    <div class="column" id="desc2">Pending</div>
-                    <div class="column" id="desc3">Rework</div>
-                    <div class="column" id="desc4">Completed</div>
-                    <div class="column" id="desc5">Reject</div>
-                </div>
+                
             </div>
         </div>
     </div>
