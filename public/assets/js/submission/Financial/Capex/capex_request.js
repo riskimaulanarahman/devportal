@@ -1,5 +1,5 @@
-var modname = 'ccmrequest';
-var modelclass = 'Ccm';
+var modname = 'capexrequest';
+var modelclass = 'Capex';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -127,6 +127,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             sortOrder: "desc"
         },
         { 
+			dataField: "bu",
+            caption: 'BU',
+            width: 180
+        },
+        { 
+			dataField: "sector",
+            caption: 'Sector',
+            width: 180
+        },
+        { 
 			dataField: "user.fullname",
             caption: 'Creator Name',
             width: 180
@@ -186,7 +196,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        location.reload();
+        // location.reload();
     }
 }).dxDataGrid("instance");
 
@@ -237,6 +247,19 @@ const updateVisibleById = (itemId, visible) => {
       }
     });
   };
+
+  var dataSector = [
+    // { bu: 'IHM', sector: 'NKL' },
+    { bu: 'IHM', sector: 'TRN' },
+    { bu: 'IHM', sector: 'SPU' },
+    { bu: 'IHM', sector: 'SNI' },
+    { bu: 'IHM', sector: 'HO' },
+    { bu: 'AHL', sector: 'SBG' },
+    { bu: 'AHL', sector: 'SBS' },
+    { bu: 'AHL', sector: 'SSP' },
+    { bu: 'AHL', sector: 'HO' },
+    { bu: 'NKL', sector: 'NKL' },
+];
 
 const popupContentTemplate = function (reqid,mode,options) {
 
@@ -370,6 +393,80 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
+                                caption: 'BU',
+                                dataField: 'bu',
+                                validationRules: [{ type: "required" }],
+                                lookup: {
+                                    dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'}],
+                                    valueExpr: 'bu',
+                                    displayExpr: 'bu',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                }
+                            },
+                            {
+                                caption: 'Sector',
+                                dataField: 'sector',
+                                lookup: {
+                                    dataSource: function (options) {
+                                        return {
+                                            store: {
+                                                type: 'array',
+                                                data: dataSector
+                                            },
+                                            filter: options.data ? ["bu", "=", options.data.bu] : null
+                                        };
+                                    },
+                                    valueExpr: 'sector',
+                                    displayExpr: 'sector',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'Form Type',
+                                dataField: 'form_type',
+                                lookup: {
+                                    dataSource: [
+                                        {value:'Contract Apporoval'},
+                                        {value:'Land Claim Settlement/Land Recovery'},
+                                        {value:'Low Value Asset'},
+                                        {value:'Operating/Maintenance Capex'},
+                                        {value:'Planting Capex'},
+                                        {value:'Progress Payment Approval Include Planting'},
+                                        {value:'Project Capex'},
+                                        {value:'Unbudgeted Planting'},
+                                    ],
+                                    valueExpr: 'value',
+                                    displayExpr: 'value',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Project Type',
+                                dataField: 'project_type',
+                                lookup: {
+                                    dataSource: [
+                                        {value:'New'},
+                                        {value:'Modification'},
+                                        {value:'Repair'},
+                                        {value:'Replace'},
+                                    ],
+                                    valueExpr: 'value',
+                                    displayExpr: 'value',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
                                 caption: 'Request Type',
                                 dataField: 'request_type',
                                 lookup: {
@@ -387,25 +484,21 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }],
                             },
                             {
-                                caption: 'BU',
-                                dataField: 'bu',
-                                validationRules: [{ type: "required" }],
-                                lookup: {
-                                    dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'},{bu:'KPSI'}],
-                                    valueExpr: 'bu',
-                                    displayExpr: 'bu',
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            {
-                                dataField: 'intermediary',
+                                dataField: 'equipment',
                                 dataType: 'string',
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
                                 }
                             },
+                            {
+                                dataField: 'cost_center',
+                                dataType: 'string',
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                }
+                            },
+                            
+                            
                             {
                                 caption: 'Payment From',
                                 dataField: 'payment_from',

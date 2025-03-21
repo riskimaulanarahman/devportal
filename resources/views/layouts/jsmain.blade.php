@@ -197,6 +197,8 @@
         '/ccm_request': 'submission/Financial/Ccm/ccm_request.js',
         //submission/GHM
         '/ghm_request': 'submission/ghm_request.js',
+        //submission/Capex
+        '/capex_request': 'submission/Financial/Capex/capex_request.js',
     }
     
     const pathname = window.location.pathname;

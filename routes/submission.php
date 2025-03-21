@@ -43,6 +43,9 @@ Route::group(['prefix' => 'api'], function () {
         // financial - CCM
         'ccmrequest' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestController::class,
         'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
+        // financial - Capex
+        'capexrequest' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class,
+        // 'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
