@@ -101,7 +101,7 @@ class HomeController extends Controller
             'request_mmf' => $this->getModuleId('Mmf'),
             'request_material' => $this->getModuleId('MaterialReq'),
             'request_ccm' => $this->getModuleId('Ccm'),
-            // 'request_ghm' => $this->getModuleId('Ghm'),
+            'request_ghm' => $this->getModuleId('Ghm'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -175,8 +175,8 @@ class HomeController extends Controller
                             case 'request_ccm':
                                 $url = 'ccm_request';
                                 break;
-                            // case 'request_ghm':
-                            //     $url = 'ghm_request';
+                            case 'request_ghm':
+                                $url = 'ghm_request';
                             //     break;
                             // Tambahkan case sesuai dengan url module
                         }
@@ -262,8 +262,8 @@ class HomeController extends Controller
                             case 'request_ccm':
                                 $url = 'ccm_request';
                                 break;
-                            // case 'request_ghm':
-                            //     $url = 'ghm_request';
+                            case 'request_ghm':
+                                $url = 'ghm_request';
                             //     break;
                             // Tambahkan case sesuai dengan url module
                         }
