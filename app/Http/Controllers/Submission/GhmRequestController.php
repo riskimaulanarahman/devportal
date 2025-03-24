@@ -266,6 +266,66 @@ class GhmRequestController extends Controller
     }
 
     ////////// GHM Reqeust - Action Modal  \\\\\\\\\\\\\\\\\\\
+    
+    public function checkattachmentghm(Request $request)
+    {
+        try {
+            $hasKTP = false;
+            $hasKK = false;
+
+            if ($request->countfamily > 0 ) {
+                $data = DB::table('tbl_attachment')
+                    ->where('req_id', $request->req_id)
+                    ->where('module_id', $this->getModuleId($request->modelname))
+                    ->where(function($query) {
+                        $query->where('remarks', 'like', 'KTP')
+                              ->orWhere('remarks', 'like', 'KK');
+                    })
+                    // ->where('remarks', 'like', 'KTP')
+                    // ->where('remarks','like', 'KK')
+                    ->get();
+                    // $message = "KK, KTP is Required!";
+            } else {
+                $data = DB::table('tbl_attachment')
+                    ->where('req_id', $request->req_id)
+                    ->where('module_id', $this->getModuleId($request->modelname))
+                    ->get();
+                    $message = "Supporting document is required!";
+            }
+
+            foreach ($data as $attc) {
+                // $countattfamily = ?
+                if ($attc->remarks === 'KTP') {
+                    // if($request->countfamily == $countattfamily) {
+                    //     $hasKTP = true;
+                    // }
+                    $hasKTP = true;
+                }
+                if ($attc->remarks === 'KK') {
+                    $hasKK = true;
+                }
+            }
+
+            if (!$hasKTP) {
+                return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
+            }
+
+            if (!$hasKK) {
+                return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
+            }
+        
+            // $data = $this->model->all();
+            if (count($data) > 0) {
+                return response()->json(["status" => "success"]);
+            } else {
+                return response()->json(["status" => "error", "message" => $message]);
+            }
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        } 
+    }
     public function show($id)
     {
         try {

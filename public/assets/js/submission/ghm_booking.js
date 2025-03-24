@@ -159,7 +159,7 @@ $(function () {
         showTitle: true,
         title: "Help",
         visible: false,
-        dragEnabled: true,
+        dragEnabled: false,
         hideOnOutsideClick: true
     });
     function updateRoomSelector(location) {
@@ -232,6 +232,9 @@ $(function () {
                 colorExpr: "color",
                 showAllDayPanel: false,
                 height: 710,          
+                onCanceled : function (e) {
+                    console.log("loadData();");
+                },
                 onCellClick: async function(e) {
                     const cellDate = new Date(e.cellData.startDate); // Retrieve the selected date and convert to Date object
                     let today = new Date();
@@ -268,6 +271,8 @@ $(function () {
                     allowAdding: true,
                     allowUpdating: true,
                     allowDeleting: true,
+                    allowDragging: false,
+                    allowResizing: false,
                 },
                 onAppointmentRendered: function (e) {
                     if (e.appointmentData.requestColor) {
@@ -421,12 +426,15 @@ $(function () {
                     if (e.rowType == "data" && e.data.isParent === 1) {
                         e.cellElement.css('background', 'rgba(128, 128, 0, 0.1)');
                     }
-                },  
-                onAppointmentFormOpening: async function (e) {
+                }, 
+                onAppointmentFormOpening: async function (e) {                    
                     e.popup.option({
                         width: 500,
                         height: 800,
-                    });                
+                        onHiding: function () {
+                            loadData(); // Memanggil loadData() ketika form dibatalkan
+                        }
+                    });               
                     const form = e.form;
                     const appointmentData = e.appointmentData;
                     let reqid = appointmentData.id;
@@ -579,6 +587,7 @@ $(function () {
                                     editorType: 'dxDateBox',
                                     dataField: 'startDate',
                                     editorOptions: {
+                                        min: new Date(),
                                         type: 'datetime',
                                         value: appointmentData.startDate,
                                         displayFormat: 'dd-MM-yyyy HH:mm:ss',
@@ -720,6 +729,7 @@ $(function () {
                                                 width: 240,
                                                 placeholder: 'Search...',
                                             },
+                                            //tambahkan allow adding - admin bisa menambah dokument
                                             editing: {
                                                 useIcons: true,
                                                 mode: "popup",
@@ -752,7 +762,12 @@ $(function () {
                                                     ]
                                                 },
                                                 {
-                                                    dataField: "remarks"
+                                                    dataField: "remarks",
+                                                    lookup: {
+                                                        dataSource: ['KTP','KK','Supporting Document'],
+                                                        searchEnabled: false
+                                                    },
+                                                    validationRules: [{ type: "required" }]
                                                 },
                                             ],
                                             export: {
@@ -904,24 +919,44 @@ $(function () {
                                 let actionForm = 'submission';
                                 let valApprovalType = '';
                                 let valremarks = '';
+                                let guestCount = safeArray(appointmentData.guest).length;
+                                let familyCount = safeArray(appointmentData.family).length;
+                                
                                 if (response.status == 'success') {
                                     console.log("reqid", reqid);
-                                    sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                        requestStatus: 1,
-                                        action: actionForm,
-                                        approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                                        approvalType: valApprovalType,
-                                        remarks: valremarks
-                                    }).then(function (response) {
-                                        if (response.status == 'success') {
-                                            loadData();
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Saved',
-                                                text: 'The submission has been submitted.',
-                                            });
-                                        }
-                                    });
+                                    console.log("family", familyCount);
+                                    console.log("guestCount", guestCount);
+                                    if (familyCount > 0 || guestCount > 0) {
+                                        
+                                        sendRequest(apiurl + "/checkattachmentghm", "POST",{
+                                            req_id: reqid,
+                                            modelname: modelclass,
+                                            countfamily: familyCount,
+                                            countguest: guestCount
+                                        }).then(function (response) {
+                                            console.log("respon", response);
+                                            if (response.status == 'success') {
+                                                sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                    requestStatus: 1,
+                                                    action: actionForm,
+                                                    approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                                    approvalType: valApprovalType,
+                                                    remarks: valremarks
+                                                }).then(function (response) {
+                                                    if (response.status == 'success') {
+                                                        loadData();
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Saved',
+                                                            text: 'The submission has been submitted.',
+                                                        });
+                                                    }
+                                                });
+                                            } 
+                                        })
+                                    }                                    
+                                    
+                                    
                                 }
                             });
                         }
@@ -983,6 +1018,8 @@ $(function () {
                     appointmentData.endDate = formatDateForDB(appointmentData.endDate);
                     appointmentData.id = e.oldData.id;
                     let requestStatus = 0;
+                    let reqid = appointmentData.id;
+                
                     Swal.fire({
                         title: 'What do you want to do?',
                         text: 'Choose an option for this booking',
@@ -992,8 +1029,9 @@ $(function () {
                         cancelButtonText: 'Save as Draft',
                         reverseButtons: true
                     }).then((result) => {
+                        let requestStatus = 0;
                         if (!result.isConfirmed) {
-                            sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
+                            sendRequest(apiurl + "/"+modname+"/"+reqid, "PUT", {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
@@ -1003,48 +1041,72 @@ $(function () {
                                 employee: appointmentData.employee,
                                 guest: appointmentData.guest,
                                 family: appointmentData.family,
-                            });
-                            loadData();
-                        } else {
-                            sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
-                                requestStatus: requestStatus,
-                                text: appointmentData.text,
-                                description: appointmentData.description,
-                                startDate: appointmentData.startDate,
-                                endDate: appointmentData.endDate,
-                                ghm_room_id: appointmentData.ghm_room_id,
-                                employee: appointmentData.employee,
-                                guest: appointmentData.guest,
-                                family: appointmentData.family,
-                            }).then(function (response) {
+                                sector: sector,
+                                id:appointmentData.id
+                            }).then(function () {
                                 loadData();
+                            });
+                        } else {
+                            sendRequest(apiurl + "/"+modname+"/"+reqid, "PUT", {
+                                requestStatus: requestStatus,
+                                text: appointmentData.text,
+                                description: appointmentData.description,
+                                startDate: appointmentData.startDate,
+                                endDate: appointmentData.endDate,
+                                ghm_room_id: appointmentData.ghm_room_id,
+                                employee: appointmentData.employee,
+                                guest: appointmentData.guest,
+                                family: appointmentData.family,
+                                id:appointmentData.id
+                            }).then(function (response) {
                                 let valapprovalAction = null;
                                 let actionForm = 'submission';
                                 let valApprovalType = '';
                                 let valremarks = '';
+                                let guestCount = safeArray(appointmentData.guest).length;
+                                let familyCount = safeArray(appointmentData.family).length;
+                                
                                 if (response.status == 'success') {
-                                    const reqid = appointmentData.id;
-                                    sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                        requestStatus: 1,
-                                        action: actionForm,
-                                        approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                                        approvalType: valApprovalType,
-                                        remarks: valremarks
-                                    }).then(function (response) {
-                                        if (response.status == 'success') {
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Saved',
-                                                text: 'The submission has been submitted.',
-                                            });
-                                            loadData();
-                                        }
-                                    });
+                                    console.log("reqid", reqid);
+                                    console.log("family", familyCount);
+                                    console.log("guestCount", guestCount);
+                                    if (familyCount > 0 || guestCount > 0) {
+                                        
+                                        sendRequest(apiurl + "/checkattachmentghm", "POST",{
+                                            req_id: reqid,
+                                            modelname: modelclass,
+                                            countfamily: familyCount,
+                                            countguest: guestCount
+                                        }).then(function (response) {
+                                            console.log("respon", response);
+                                            if (response.status == 'success') {
+                                                sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                    requestStatus: 1,
+                                                    action: actionForm,
+                                                    approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                                    approvalType: valApprovalType,
+                                                    remarks: valremarks
+                                                }).then(function (response) {
+                                                    if (response.status == 'success') {
+                                                        loadData();
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Saved',
+                                                            text: 'The submission has been submitted.',
+                                                        });
+                                                    }
+                                                });
+                                            } 
+                                        })
+                                    }                                    
+                                    
+                                    
                                 }
                             });
                         }
-                    })
+                    });
                 }
+                    
             }).dxScheduler("instance");
         });
     }
