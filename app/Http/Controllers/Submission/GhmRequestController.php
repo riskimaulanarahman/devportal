@@ -511,13 +511,10 @@ class GhmRequestController extends Controller
         }
         
         DB::commit();
-
         // Check if the update was successful
         return response()->json([
             'status' => "success",
             'message' => "Record updated successfully",
         ]);
-    
     }
-
 }
