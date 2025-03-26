@@ -75,6 +75,7 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('mmf30report',[App\Http\Controllers\Submission\MMF\M30RequestController::class, 'report']); //get list report of module
     // procurement - material (eCatalog)
     Route::get('materialdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Ecatalog\MaterialRequestDetailController::class, 'getList']); //get list material req by req_id of module
+    
     // financial - advance
     Route::get('advancedetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class, 'getList']); //get list advance by req_id of module
     Route::get('advancehistoryApp',[App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class, 'historyApprover']); //get list advancehistoryApp of module
@@ -89,7 +90,10 @@ Route::group(['prefix' => 'api'], function () {
 
     // financial - capex
     Route::get('capexdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestDetailController::class, 'getList']); //get list ccm by req_id of module
-
+    
+    //Ghm
+    Route::post('checkattachmentghm',[App\Http\Controllers\Submission\GhmRequestController::class, 'checkattachmentghm']); //get ghm checkattachmentghm
+    
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request
     Route::post('submissioncheckfields/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'checkFields']); //submit submission request

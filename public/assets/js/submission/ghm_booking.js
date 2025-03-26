@@ -159,7 +159,7 @@ $(function () {
         showTitle: true,
         title: "Help",
         visible: false,
-        dragEnabled: true,
+        dragEnabled: false,
         hideOnOutsideClick: true
     });
     function updateRoomSelector(location) {
@@ -225,12 +225,37 @@ $(function () {
                 views: ['month'],
                 currentView: 'month',
                 currentDate: new Date(),
+                min: new Date(),
                 firstDayOfWeek: 1,
                 startDayHour: 8,
                 endDayHour: 23,
                 colorExpr: "color",
                 showAllDayPanel: false,
-                height: 710,
+                height: 710,          
+                onCanceled : function (e) {
+                    console.log("loadData();");
+                },
+                onCellClick: async function(e) {
+                    const cellDate = new Date(e.cellData.startDate); // Retrieve the selected date and convert to Date object
+                    let today = new Date();
+                    today.setHours(0, 0, 0, 0); // Clear time for accurate date comparison
+                
+                    if (cellDate < today) { // Check if the selected date is earlier than today
+                        e.cancel = true; // Disable the interaction
+                        DevExpress.ui.notify({
+                            type: "warning",
+                            displayTime: 3000,
+                            contentTemplate: (element) => {
+                                element.append(`
+                                    <div style="white-space: pre-line;">
+                                    Tidak bisa memilih tanggal yang sudah lewat!\n
+                                    You cannot select a past date!!\n
+                                    </div>
+                                `);
+                            }
+                        });
+                    }
+                },                       
                 groups: ['ghm_room_id'],
                 resources: [
                     {
@@ -246,6 +271,8 @@ $(function () {
                     allowAdding: true,
                     allowUpdating: true,
                     allowDeleting: true,
+                    allowDragging: false,
+                    allowResizing: false,
                 },
                 onAppointmentRendered: function (e) {
                     if (e.appointmentData.requestColor) {
@@ -271,12 +298,19 @@ $(function () {
                         return isNaN(d.getTime()) ? "No Date" : d.toISOString().split("T")[0];
                     };
                     const actionButtonId = `action-btn-${booking.id}`;
-                    const isCancelable = Number(booking.requestStatus) === 1 || Number(booking.requestStatus) === 2 || Number(booking.requestStatus) === 3;
-                    const buttonLabel = isCancelable ? "Cancel" : "Delete";
-                    const buttonClass = isCancelable ? "btn-warning" : "btn-danger";
+                    const requestStatus = Number(booking.requestStatus);
+                    let buttonLabel = "";
+                    let buttonClass = "";
+                    if (requestStatus === 0) {
+                        buttonLabel = "Delete";
+                        buttonClass = "btn-danger";
+                    } else if (requestStatus === 1 || requestStatus === 2 || requestStatus === 3) {
+                        buttonLabel = "Cancel";
+                        buttonClass = "btn-warning";
+                    }
                     const tooltipHtml = `
                         <div>
-                            <b>Purpose (Text): ${booking.text || "No Title"}</b><br>
+                            <b>Purpose: ${booking.text || "No Title"}</b><br>
                             ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
                             <b>Occupancy:</b> ${roomOccupancy} Person<br>
                             <b>Booked:</b> ${totalGuests} Person<br>
@@ -293,27 +327,27 @@ $(function () {
                                 event.stopPropagation();
                                 event.preventDefault();
                                 Swal.fire({
-                                    title: isCancelable ? 'Cancel Booking?' : 'Are you sure?',
-                                    text: isCancelable
+                                    title: buttonLabel === "Cancel" ? 'Cancel Booking?' : 'Are you sure?',
+                                    text: buttonLabel === "Cancel"
                                         ? "Do you really want to cancel this booking?"
                                         : "Do you really want to delete this booking?",
-                                    icon: isCancelable ? 'warning' : 'error',
+                                    icon: buttonLabel === "Cancel" ? 'warning' : 'error',
                                     showCancelButton: true,
-                                    confirmButtonText: isCancelable ? 'Yes, cancel it!' : 'Yes, delete it!',
+                                    confirmButtonText: buttonLabel === "Cancel" ? 'Yes, cancel it!' : 'Yes, delete it!',
                                     cancelButtonText: 'No, keep it'
                                 }).then((result) => {
                                     if (!result.isConfirmed) return;
-                                    let requestType = isCancelable ? "PATCH" : "DELETE";
-                                    let requestData = isCancelable ? { requestStatus: 0 } : {};
+                                    let requestType = buttonLabel === "Cancel" ? "PATCH" : "DELETE";
+                                    let requestData = buttonLabel === "Cancel" ? { requestStatus: 0 } : {};
                                     sendRequest(apiurl + "/" + modname + "/" + booking.id, requestType, requestData)
                                         .then(response => {
                                             if (response.status === "success") {
                                                 Swal.fire({
                                                     icon: 'success',
-                                                    title: isCancelable ? 'Booking Canceled!' : 'Deleted!',
-                                                    text: isCancelable ?
-                                                        'Booking has been successfully set to Canceled.' :
-                                                        'Booking deleted successfully!',
+                                                    title: buttonLabel === "Cancel" ? 'Booking Canceled!' : 'Deleted!',
+                                                    text: buttonLabel === "Cancel"
+                                                        ? 'Booking has been successfully set to Canceled.'
+                                                        : 'Booking deleted successfully!',
                                                     timer: 2000,
                                                     showConfirmButton: false
                                                 });
@@ -353,7 +387,7 @@ $(function () {
                         .append($('<h2>').text(cellData.text));
                     const roomOccupancy = $('<div>')
                         .addClass('roomOccupancy')
-                        .html(`Bed: ${cellData.data.roomOccupancy}`);
+                        .html(`Occupancy: ${cellData.data.roomOccupancy}`);
                     let bgColor;
                     if (cellData.data.roomOccupancy == 4) {
                         bgColor = "#B0BEC5"; // Hijau untuk kamar dengan banyak bed
@@ -392,22 +426,63 @@ $(function () {
                     if (e.rowType == "data" && e.data.isParent === 1) {
                         e.cellElement.css('background', 'rgba(128, 128, 0, 0.1)');
                     }
-                },  
-                onAppointmentFormOpening: function (e) {
+                }, 
+                onAppointmentFormOpening: async function (e) {                    
                     e.popup.option({
-                        width: 700,
+                        width: 500,
                         height: 800,
                         onHiding: function () {
-                            cleanupForm();
-                        },
-                        onHidden: function () {
-                            cleanupForm();
+                            loadData(); // Memanggil loadData() ketika form dibatalkan
                         }
-                    });
-                
+                    });               
                     const form = e.form;
                     const appointmentData = e.appointmentData;
-                    const reqid = (appointmentData.id) || 0;
+                    let reqid = appointmentData.id;
+                    console.log("Appointment Data Before:", appointmentData);
+                    if (!reqid) { 
+                        let cellData = e.cellData || {};
+                        let ghm_room_id = cellData.ghm_room_id || appointmentData.ghm_room_id;
+                        let roomData = roomsWithLocations.find(room => room.id === ghm_room_id);
+                        let sector = roomData ? roomData.sector : null;
+                        let startDate = cellData.startDate || appointmentData.startDate;
+                        let endDate = cellData.endDate || appointmentData.endDate;
+                        if (ghm_room_id && startDate && endDate) {
+                            const response = await sendRequest(apiurl + "/" + modname, "POST", {
+                                requestStatus: 0,
+                                ghm_room_id: ghm_room_id,
+                                startDate: startDate,
+                                endDate: endDate,
+                                sector: sector,
+                                employee: cellData.employee || appointmentData.employee || [],
+                                guest: cellData.guest || appointmentData.guest || [],
+                                family: cellData.family || appointmentData.family || []
+                            }).then(function(response) {
+                                console.log("Response from POST request:", response);                                
+                                if (response.status === 'success') {
+                                    reqid = response.data.id;
+                                    appointmentData.id = reqid; 
+                                    e.component.updateAppointment(appointmentData, { id: reqid });
+                                    form.option("formData", appointmentData);
+                                    form.repaint();
+                                } else {
+                                    DevExpress.ui.notify("Gagal mendapatkan ID!", "error", 3000);
+                                }
+                            }).catch(function(error) {
+                                console.error("Error during POST request:", error);
+                            });
+                        } else {
+                            console.error("Required data is missing");
+                        }
+
+                        dataSubmitted = false;
+                        if (e.event) {
+                            e.event.preventDefault();
+                        } else {
+                            console.error("event is undefined");
+                        }
+                    }
+                    console.log("Updated Appointment Data:", appointmentData);
+                    console.log("Final Req ID:", appointmentData.id);
                     let selectedRoom = appointmentData.ghm_room_id || null;
                     let newStartDate = new Date(appointmentData.startDate);
                     let newEndDate = new Date(appointmentData.endDate);
@@ -451,18 +526,7 @@ $(function () {
                             warningMessage.remove();
                         }
                         return { roomCapacity, remainingCapacity, totalBooked };
-                    }
-                
-                    function cleanupForm() {
-                        console.log("Cleaning up form...");
-                        form.option("formData", {});
-                        let dataGridAttachment = $("#formattachment").dxDataGrid("instance");
-                        if (dataGridAttachment) {
-                            console.log("Resetting data source...");
-                            dataGridAttachment.option("dataSource", []);
-                        }
-                    }
-                
+                    }                
                     const { roomCapacity, remainingCapacity } = validateBooking();
                     form.option('items', [
                         {
@@ -523,6 +587,7 @@ $(function () {
                                     editorType: 'dxDateBox',
                                     dataField: 'startDate',
                                     editorOptions: {
+                                        min: new Date(),
                                         type: 'datetime',
                                         value: appointmentData.startDate,
                                         displayFormat: 'dd-MM-yyyy HH:mm:ss',
@@ -664,6 +729,7 @@ $(function () {
                                                 width: 240,
                                                 placeholder: 'Search...',
                                             },
+                                            //tambahkan allow adding - admin bisa menambah dokument
                                             editing: {
                                                 useIcons: true,
                                                 mode: "popup",
@@ -696,7 +762,12 @@ $(function () {
                                                     ]
                                                 },
                                                 {
-                                                    dataField: "remarks"
+                                                    dataField: "remarks",
+                                                    lookup: {
+                                                        dataSource: ['KTP','KK','Supporting Document'],
+                                                        searchEnabled: false
+                                                    },
+                                                    validationRules: [{ type: "required" }]
                                                 },
                                             ],
                                             export: {
@@ -779,7 +850,7 @@ $(function () {
                     let bookingData = await loadNewData();
                     let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;
                     let dailyGuestCount = await getTotalGuestsPerDay(
-                        bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2),
+                        bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2 && b.requestStatus != 1),
                         selectedRoom,
                         appointmentData.startDate,
                         appointmentData.endDate
@@ -802,6 +873,8 @@ $(function () {
                         return;
                     }
                 
+                    let reqid = appointmentData.id;
+                
                     Swal.fire({
                         title: 'What do you want to do?',
                         text: 'Choose an option for this booking',
@@ -813,7 +886,7 @@ $(function () {
                     }).then((result) => {
                         let requestStatus = 0;
                         if (!result.isConfirmed) {
-                            sendRequest(apiurl + "/" + modname, "POST", {
+                            sendRequest(apiurl + "/"+modname+"/"+reqid, "PUT", {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
@@ -824,11 +897,12 @@ $(function () {
                                 guest: appointmentData.guest,
                                 family: appointmentData.family,
                                 sector: sector,
+                                id:appointmentData.id
                             }).then(function () {
                                 loadData();
                             });
                         } else {
-                            sendRequest(apiurl + "/" + modname, "POST", {
+                            sendRequest(apiurl + "/"+modname+"/"+reqid, "PUT", {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
@@ -839,43 +913,88 @@ $(function () {
                                 guest: appointmentData.guest,
                                 family: appointmentData.family,
                                 sector: sector,
+                                id:appointmentData.id
                             }).then(function (response) {
                                 let valapprovalAction = null;
                                 let actionForm = 'submission';
                                 let valApprovalType = '';
                                 let valremarks = '';
+                                let guestCount = safeArray(appointmentData.guest).length;
+                                let familyCount = safeArray(appointmentData.family).length;
+                                
                                 if (response.status == 'success') {
-                                    const reqid = response.data.id;
-                                    sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                        requestStatus: 1,
-                                        action: actionForm,
-                                        approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                                        approvalType: valApprovalType,
-                                        remarks: valremarks
-                                    }).then(function (response) {
-                                        if (response.status == 'success') {
-                                            loadData();
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Saved',
-                                                text: 'The submission has been submitted.',
-                                            });
-                                        }
-                                    });
-                                }
-                                if (response.status === 'success') {
-                                    loadData();
+                                    console.log("reqid", reqid);
+                                    console.log("family", familyCount);
+                                    console.log("guestCount", guestCount);
+                                    if (familyCount > 0 || guestCount > 0) {
+                                        
+                                        sendRequest(apiurl + "/checkattachmentghm", "POST",{
+                                            req_id: reqid,
+                                            modelname: modelclass,
+                                            countfamily: familyCount,
+                                            countguest: guestCount
+                                        }).then(function (response) {
+                                            console.log("respon", response);
+                                            if (response.status == 'success') {
+                                                sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                    requestStatus: 1,
+                                                    action: actionForm,
+                                                    approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                                    approvalType: valApprovalType,
+                                                    remarks: valremarks
+                                                }).then(function (response) {
+                                                    if (response.status == 'success') {
+                                                        loadData();
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Saved',
+                                                            text: 'The submission has been submitted.',
+                                                        });
+                                                    }
+                                                });
+                                            } 
+                                        })
+                                    }else {
+                                        sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                            requestStatus: 1,
+                                            action: actionForm,
+                                            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                            approvalType: valApprovalType,
+                                            remarks: valremarks
+                                        }).then(function (response) {
+                                            if (response.status == 'success') {
+                                                loadData();
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Saved',
+                                                    text: 'The submission has been submitted.',
+                                                });
+                                            }
+                                        });
+                                    }
+
+                                    
+                                    
                                 }
                             });
                         }
                     });
                 },
                 onAppointmentUpdating: async function (e) {
+                    $('#btnadd').on('click',function(){
+                        sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
+                            const reqid = response.data.id;
+                            const mode = 'add';
+                            popup.option({
+                                contentTemplate: () => popupContentTemplate(reqid),
+                            });
+                            popup.show();
+                        });
+                    })
                     const appointmentData = e.newData;
                     const oldAppointmentData = e.oldData;
                     const currentStatus = oldAppointmentData.requestStatus;
-                    if (!["0", "1", "2"].includes(currentStatus)) {
-                        DevExpress.ui.notify("Booking dengan status ini tidak dapat diperbarui!", "error", 3000);
+                    if (!["0", "1", "2"].includes(currentStatus)) {                        
                         e.cancel = true;
                         return;
                     }
@@ -883,7 +1002,7 @@ $(function () {
                     let bookingData = await loadNewData();
                     let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;                    
                     let dailyGuestCount = await getTotalGuestsPerDay(
-                        bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2),
+                        bookingData.filter(b => b.requestStatus != 4 && b.requestStatus != 0 && b.requestStatus != 2 && b.requestStatus != 1),
                         selectedRoom,
                         appointmentData.startDate,
                         appointmentData.endDate
@@ -917,6 +1036,8 @@ $(function () {
                     appointmentData.endDate = formatDateForDB(appointmentData.endDate);
                     appointmentData.id = e.oldData.id;
                     let requestStatus = 0;
+                    let reqid = appointmentData.id;
+                
                     Swal.fire({
                         title: 'What do you want to do?',
                         text: 'Choose an option for this booking',
@@ -926,8 +1047,9 @@ $(function () {
                         cancelButtonText: 'Save as Draft',
                         reverseButtons: true
                     }).then((result) => {
+                        let requestStatus = 0;
                         if (!result.isConfirmed) {
-                            sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
+                            sendRequest(apiurl + "/"+modname+"/"+reqid, "PUT", {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
@@ -937,48 +1059,87 @@ $(function () {
                                 employee: appointmentData.employee,
                                 guest: appointmentData.guest,
                                 family: appointmentData.family,
-                            });
-                            loadData();
-                        } else {
-                            sendRequest(apiurl + "/" + modname + "/" + appointmentData.id, "PUT", {
-                                requestStatus: requestStatus,
-                                text: appointmentData.text,
-                                description: appointmentData.description,
-                                startDate: appointmentData.startDate,
-                                endDate: appointmentData.endDate,
-                                ghm_room_id: appointmentData.ghm_room_id,
-                                employee: appointmentData.employee,
-                                guest: appointmentData.guest,
-                                family: appointmentData.family,
-                            }).then(function (response) {
+                                sector: sector,
+                                id:appointmentData.id
+                            }).then(function () {
                                 loadData();
+                            });
+                        } else {
+                            sendRequest(apiurl + "/"+modname+"/"+reqid, "PUT", {
+                                requestStatus: requestStatus,
+                                text: appointmentData.text,
+                                description: appointmentData.description,
+                                startDate: appointmentData.startDate,
+                                endDate: appointmentData.endDate,
+                                ghm_room_id: appointmentData.ghm_room_id,
+                                employee: appointmentData.employee,
+                                guest: appointmentData.guest,
+                                family: appointmentData.family,
+                                id:appointmentData.id
+                            }).then(function (response) {
                                 let valapprovalAction = null;
                                 let actionForm = 'submission';
                                 let valApprovalType = '';
                                 let valremarks = '';
+                                let guestCount = safeArray(appointmentData.guest).length;
+                                let familyCount = safeArray(appointmentData.family).length;
+                                
                                 if (response.status == 'success') {
-                                    const reqid = appointmentData.id;
-                                    sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                        requestStatus: 1,
-                                        action: actionForm,
-                                        approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                                        approvalType: valApprovalType,
-                                        remarks: valremarks
-                                    }).then(function (response) {
-                                        if (response.status == 'success') {
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Saved',
-                                                text: 'The submission has been submitted.',
-                                            });
-                                            loadData();
-                                        }
-                                    });
+                                    console.log("reqid", reqid);
+                                    console.log("family", familyCount);
+                                    console.log("guestCount", guestCount);
+                                    if (familyCount > 0 || guestCount > 0) {                                        
+                                        sendRequest(apiurl + "/checkattachmentghm", "POST",{
+                                            req_id: reqid,
+                                            modelname: modelclass,
+                                            countfamily: familyCount,
+                                            countguest: guestCount
+                                        }).then(function (response) {
+                                            console.log("respon", response);
+                                            if (response.status == 'success') {
+                                                sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                    requestStatus: 1,
+                                                    action: actionForm,
+                                                    approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                                    approvalType: valApprovalType,
+                                                    remarks: valremarks
+                                                }).then(function (response) {
+                                                    if (response.status == 'success') {
+                                                        loadData();
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Saved',
+                                                            text: 'The submission has been submitted.',
+                                                        });
+                                                    }
+                                                });
+                                            } 
+                                        })
+                                    }else {
+                                        sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                            requestStatus: 1,
+                                            action: actionForm,
+                                            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                            approvalType: valApprovalType,
+                                            remarks: valremarks
+                                        }).then(function (response) {
+                                            if (response.status == 'success') {
+                                                loadData();
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Saved',
+                                                    text: 'The submission has been submitted.',
+                                                });
+                                            }
+                                        });
+                                    }                               
+                                    
+                                    
                                 }
                             });
                         }
-                    })
-                }
+                    });
+                }                    
             }).dxScheduler("instance");
         });
     }
@@ -1021,6 +1182,7 @@ $(function () {
             fileUploader.upload();
           }
         }).dxButton("instance");
+        let imageElement = document.createElement("img");
     
         $path = "";
         $adafile = "";
@@ -1065,15 +1227,9 @@ $(function () {
               DevExpress.ui.notify(e.request.response,"error");
           }
         }).dxFileUploader("instance");
-      
-        // let imageElement = document.createElement("img");
-        //     imageElement.classList.add("uploadedImage");
-        //     imageElement.setAttribute('src', "upload/" +cellInfo.value);
-        //     imageElement.setAttribute('height', "50");
-            
-        //     cellElement.append(imageElement);
             cellElement.append(fileUploaderElement);
             cellElement.append(buttonElement);
+            cellElement.append(imageElement);
       
     }
 });

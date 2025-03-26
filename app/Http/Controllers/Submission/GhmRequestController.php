@@ -266,6 +266,105 @@ class GhmRequestController extends Controller
     }
 
     ////////// GHM Reqeust - Action Modal  \\\\\\\\\\\\\\\\\\\
+    
+    public function checkattachmentghm(Request $request)
+    {
+        try {
+            $hasKTP = false;
+            $hasKK = false;
+            $hasSD = false;
+
+            if ($request->countfamily > 0 ) {
+                $data = DB::table('tbl_attachment')
+                    ->where('req_id', $request->req_id)
+                    ->where('module_id', $this->getModuleId($request->modelname))
+                    ->where(function($query) {
+                        $query->where('remarks', 'like', 'KTP')
+                              ->orWhere('remarks', 'like', 'KK');
+                    })
+                    ->get();
+                    foreach ($data as $attc) {
+                        // $countattfamily = ?
+                        if ($attc->remarks === 'KTP') {
+                            // if($request->countfamily == $countattfamily) {
+                            //     $hasKTP = true;
+                            // }
+                            $hasKTP = true;
+                        }
+                        if ($attc->remarks === 'KK') {
+                            $hasKK = true;
+                        }
+                    }
+        
+                    if (!$hasKTP) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
+                    }
+        
+                    if (!$hasKK) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
+                    }
+            } else if($request->countguest > 0) {                
+                $data = DB::table('tbl_attachment')
+                    ->where('req_id', $request->req_id)
+                    ->where('module_id', $this->getModuleId($request->modelname))
+                    ->where(function($query) {
+                        $query->where('remarks', 'like', 'Supporting Document');                         
+                    })
+                    ->get();
+                    // $message = "Supporting document is required!";
+                    foreach ($data as $attc) {
+                        // $countattfamily = ?
+                      
+                        if ($attc->remarks === 'Supporting Document') {
+                            $hasSD = true;
+                        }
+                    }
+        
+                    if (!$hasSD) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'Supporting Document' is required. Please attach it."]);
+                    }
+            }
+
+            // foreach ($data as $attc) {
+            //     // $countattfamily = ?
+            //     if ($attc->remarks === 'KTP') {
+            //         // if($request->countfamily == $countattfamily) {
+            //         //     $hasKTP = true;
+            //         // }
+            //         $hasKTP = true;
+            //     }
+            //     if ($attc->remarks === 'KK') {
+            //         $hasKK = true;
+            //     }
+            //     if ($attc->remarks === 'Supporting Document') {
+            //         $hasSD = true;
+            //     }
+            // }
+
+            // if (!$hasKTP) {
+            //     return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
+            // }
+
+            // if (!$hasKK) {
+            //     return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
+            // }
+            // if (!$hasSD) {
+            //     return response()->json(["status" => "error", "message" => "Error: Supporting document 'Supporting Document' is required. Please attach it."]);
+            // }
+        
+            // $data = $this->model->all();
+            if (count($data) > 0) {
+                return response()->json(["status" => "success"]);
+            }
+            // else {
+            // return response()->json(["status" => "error", "message" => $message]);
+        // }
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        } 
+    }
     public function show($id)
     {
         try {
@@ -511,13 +610,10 @@ class GhmRequestController extends Controller
         }
         
         DB::commit();
-
         // Check if the update was successful
         return response()->json([
             'status' => "success",
             'message' => "Record updated successfully",
         ]);
-    
     }
-
 }
