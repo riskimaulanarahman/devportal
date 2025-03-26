@@ -272,6 +272,7 @@ class GhmRequestController extends Controller
         try {
             $hasKTP = false;
             $hasKK = false;
+            $hasSD = false;
 
             if ($request->countfamily > 0 ) {
                 $data = DB::table('tbl_attachment')
@@ -281,45 +282,83 @@ class GhmRequestController extends Controller
                         $query->where('remarks', 'like', 'KTP')
                               ->orWhere('remarks', 'like', 'KK');
                     })
-                    // ->where('remarks', 'like', 'KTP')
-                    // ->where('remarks','like', 'KK')
                     ->get();
-                    // $message = "KK, KTP is Required!";
-            } else {
+                    foreach ($data as $attc) {
+                        // $countattfamily = ?
+                        if ($attc->remarks === 'KTP') {
+                            // if($request->countfamily == $countattfamily) {
+                            //     $hasKTP = true;
+                            // }
+                            $hasKTP = true;
+                        }
+                        if ($attc->remarks === 'KK') {
+                            $hasKK = true;
+                        }
+                    }
+        
+                    if (!$hasKTP) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
+                    }
+        
+                    if (!$hasKK) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
+                    }
+            } else if($request->countguest > 0) {                
                 $data = DB::table('tbl_attachment')
                     ->where('req_id', $request->req_id)
                     ->where('module_id', $this->getModuleId($request->modelname))
+                    ->where(function($query) {
+                        $query->where('remarks', 'like', 'Supporting Document');                         
+                    })
                     ->get();
-                    $message = "Supporting document is required!";
+                    // $message = "Supporting document is required!";
+                    foreach ($data as $attc) {
+                        // $countattfamily = ?
+                      
+                        if ($attc->remarks === 'Supporting Document') {
+                            $hasSD = true;
+                        }
+                    }
+        
+                    if (!$hasSD) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'Supporting Document' is required. Please attach it."]);
+                    }
             }
 
-            foreach ($data as $attc) {
-                // $countattfamily = ?
-                if ($attc->remarks === 'KTP') {
-                    // if($request->countfamily == $countattfamily) {
-                    //     $hasKTP = true;
-                    // }
-                    $hasKTP = true;
-                }
-                if ($attc->remarks === 'KK') {
-                    $hasKK = true;
-                }
-            }
+            // foreach ($data as $attc) {
+            //     // $countattfamily = ?
+            //     if ($attc->remarks === 'KTP') {
+            //         // if($request->countfamily == $countattfamily) {
+            //         //     $hasKTP = true;
+            //         // }
+            //         $hasKTP = true;
+            //     }
+            //     if ($attc->remarks === 'KK') {
+            //         $hasKK = true;
+            //     }
+            //     if ($attc->remarks === 'Supporting Document') {
+            //         $hasSD = true;
+            //     }
+            // }
 
-            if (!$hasKTP) {
-                return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
-            }
+            // if (!$hasKTP) {
+            //     return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
+            // }
 
-            if (!$hasKK) {
-                return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
-            }
+            // if (!$hasKK) {
+            //     return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
+            // }
+            // if (!$hasSD) {
+            //     return response()->json(["status" => "error", "message" => "Error: Supporting document 'Supporting Document' is required. Please attach it."]);
+            // }
         
             // $data = $this->model->all();
             if (count($data) > 0) {
                 return response()->json(["status" => "success"]);
-            } else {
-                return response()->json(["status" => "error", "message" => $message]);
             }
+            // else {
+            // return response()->json(["status" => "error", "message" => $message]);
+        // }
 
         } catch (\Exception $e) {
 

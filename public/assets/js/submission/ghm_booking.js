@@ -954,7 +954,25 @@ $(function () {
                                                 });
                                             } 
                                         })
-                                    }                                    
+                                    }else {
+                                        sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                            requestStatus: 1,
+                                            action: actionForm,
+                                            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                            approvalType: valApprovalType,
+                                            remarks: valremarks
+                                        }).then(function (response) {
+                                            if (response.status == 'success') {
+                                                loadData();
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Saved',
+                                                    text: 'The submission has been submitted.',
+                                                });
+                                            }
+                                        });
+                                    }
+
                                     
                                     
                                 }
@@ -1070,8 +1088,7 @@ $(function () {
                                     console.log("reqid", reqid);
                                     console.log("family", familyCount);
                                     console.log("guestCount", guestCount);
-                                    if (familyCount > 0 || guestCount > 0) {
-                                        
+                                    if (familyCount > 0 || guestCount > 0) {                                        
                                         sendRequest(apiurl + "/checkattachmentghm", "POST",{
                                             req_id: reqid,
                                             modelname: modelclass,
@@ -1098,15 +1115,31 @@ $(function () {
                                                 });
                                             } 
                                         })
-                                    }                                    
+                                    }else {
+                                        sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                            requestStatus: 1,
+                                            action: actionForm,
+                                            approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                            approvalType: valApprovalType,
+                                            remarks: valremarks
+                                        }).then(function (response) {
+                                            if (response.status == 'success') {
+                                                loadData();
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Saved',
+                                                    text: 'The submission has been submitted.',
+                                                });
+                                            }
+                                        });
+                                    }                               
                                     
                                     
                                 }
                             });
                         }
                     });
-                }
-                    
+                }                    
             }).dxScheduler("instance");
         });
     }
