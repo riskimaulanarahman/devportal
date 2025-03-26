@@ -46,7 +46,7 @@ Route::group(['prefix' => 'api'], function () {
         'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
         // financial - Capex
         'capexrequest' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class,
-        // 'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
+        'capexdetail' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestDetailController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -86,6 +86,9 @@ Route::group(['prefix' => 'api'], function () {
     //  financial - ccm
     Route::get('ccmdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class, 'getList']); //get list ccm by req_id of module
     Route::post('ccmcheckbalance/{id}',[App\Http\Controllers\Submission\Financial\Ccm\CcmRequestController::class, 'checkBalance']); // check balance ccm with detail
+
+    // financial - capex
+    Route::get('capexdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestDetailController::class, 'getList']); //get list ccm by req_id of module
 
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request

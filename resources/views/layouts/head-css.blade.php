@@ -12,6 +12,17 @@
 <link href="{{ URL::asset('assets/libs/choices.js/choices.js.min.css') }}" rel="stylesheet">
 
 <link rel="stylesheet" href="{{ asset('assets/css/dx.common.css') }}">
+<style>
+    .tips {
+        color:black;
+        font-weight:bold;
+        text-shadow: 
+        -1px -1px 0 white,
+        1px -1px 0 white,
+        -1px 1px 0 white,
+        1px 1px 0 white;
+    }
+</style>
 @if(Auth::user())
     @if(Auth::user()->theme->layout_mode !== 'dark')
         <link rel="stylesheet" href="{{ asset('assets/css/dx.material.blue.light.compact.css') }}">

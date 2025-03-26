@@ -44,7 +44,7 @@ class CapexRequestDetailController extends Controller
 
         try {
             
-            $listCatalog = $this->listCatalog->find($request->catalog_id);
+            // $listCatalog = $this->listCatalog->find($request->catalog_id);
 
             $requestData = $request->all();
 
@@ -88,8 +88,12 @@ class CapexRequestDetailController extends Controller
 
         try {
             $data = $this->model->findOrFail($id);
-        
+            
+            $quantity = ($request->quantity) ? $request->quantity : $data->quantity;
+            $amount = ($request->amount) ? $request->amount : $data->amount;
+
             $requestData = $request->all();
+            $requestData['subtotal'] = $quantity*$amount;
 
             $data->update($requestData);
 

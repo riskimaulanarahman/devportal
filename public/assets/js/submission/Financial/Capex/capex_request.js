@@ -196,7 +196,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        // location.reload();
+        location.reload();
     }
 }).dxDataGrid("instance");
 
@@ -220,7 +220,7 @@ const accordionItems = [
     },
     {
         ID: 6,
-        Title: '<i class="fas fa-users"> Details </i>',
+        Title: '<i class="fas fa-list"> Expenditure Items </i>',
         visible: true
     },
     {
@@ -341,7 +341,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 var container = $("<div>");
                 if(data.ID == 1) {
                     if (mode == 'add' || mode == 'edit'){
-                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
+                        $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i class="far fa-newspaper tips"> Form Data </i></b> dan lampirkan <i class="fas fa-file tips"> Supporting Document </i> sebelum klik tombol <span class="tips"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
                     }
                     var formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
@@ -390,12 +390,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 width: 150,
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }],
                             },
                             {
                                 caption: 'BU',
                                 dataField: 'bu',
-                                validationRules: [{ type: "required" }],
                                 lookup: {
                                     dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'}],
                                     valueExpr: 'bu',
@@ -403,7 +403,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
-                                }
+                                },
+                                validationRules: [{ type: "required" }],
                             },
                             {
                                 caption: 'Sector',
@@ -449,6 +450,27 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }],
                             },
                             {
+                                caption: 'Business Type',
+                                dataField: 'business_type',
+                                lookup: {
+                                    dataSource: [
+                                        {value:'Fiber'},
+                                        {value:'Natural Resources'},
+                                        {value:'Palm'},
+                                        {value:'Panel'},
+                                        {value:'Property'},
+                                        {value:'Services'},
+                                        {value:'Trading'},
+                                        {value:'Others'},
+                                    ],
+                                    valueExpr: 'value',
+                                    displayExpr: 'value',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                            },
+                            {
                                 caption: 'Project Type',
                                 dataField: 'project_type',
                                 lookup: {
@@ -464,7 +486,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
                                 },
-                                validationRules: [{ type: "required" }],
                             },
                             {
                                 caption: 'Request Type',
@@ -481,7 +502,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
                                 },
-                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: "Reason Unbudgeted",
+                                dataField:'reason_unbudgeted',
+                                dataType: "string",
                             },
                             {
                                 dataField: 'equipment',
@@ -498,66 +523,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             
-                            
-                            {
-                                caption: 'Payment From',
-                                dataField: 'payment_from',
-                                lookup: {
-                                    dataSource: listOption('/list-rekeningccm','id','nama'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'nama',
-                                },
-                                width: 200,
-                                validationRules: [{ type: "required" }],
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            {
-                                caption: 'Payment To',
-                                dataField: 'payment_to',
-                                lookup: {
-                                    dataSource: listOption('/list-rekeningccm','id','nama'),  
-                                    valueExpr: 'id',
-                                    displayExpr: 'nama',
-                                },
-                                width: 200,
-                                validationRules: [{ type: "required" }],
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            {
-                                caption: 'Currency',
-                                dataField: 'payment_to_currency',
-                                lookup: {
-                                    dataSource: [
-                                        {value:'IDR'},
-                                        {value:'USD'},
-                                    ],
-                                    valueExpr: 'value',
-                                    displayExpr: 'value',
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                },
-                                validationRules: [{ type: "required" }],
-                            },
-                            {
-                                caption: 'Amount',
-                                dataField: 'payment_to_amount',
-                                dataType: 'number',
-                                format: "fixedPoint",
-                                editorOptions: {
-                                    format: "fixedPoint",
-                                },
-                                validationRules: [{ type: "required" }],
-                            },
-                            {
-                                caption: "Remarks",
-                                dataField:'remarks',
-                                dataType: "string",
-                            },
                             {
                                 dataField: "created_at",
                                 dataType: "date",
@@ -671,11 +636,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && ((e.column.index>0 && e.column.index<4) || (e.column.index>4 && e.column.index<9))) {
+                            if ( e.rowType == "data" && ((e.column.index>0 && e.column.index<5))) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
-                                        "border": "0.5px solidrgb(89, 86, 86)"
+                                        "border": "0.5px solid #f56e6e"
                                     })
                                 }
                             }
@@ -692,7 +657,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
                 else if(data.ID == 6) {
                     return formData = $("<div id='formdetail'>").dxDataGrid({    
-                        dataSource: storewithmodule('ccmdetail',modelclass,reqid),
+                        dataSource: storewithmodule('capexdetail',modelclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
@@ -714,7 +679,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "cell",
-                            allowAdding: false,
+                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowDeleting: false,
                         },
@@ -733,30 +698,49 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         columns: [
                             {
-                                caption: 'Expenses',
-                                dataField: 'expenses',
-                                editorOptions: { 
-                                    readOnly: true,
-                                }
+                                caption: 'Expenditure Item',
+                                dataField: 'expenditure_item',
+                                validationRules: [{ type: "required" }],
                             },
                             {
-                                caption: 'Amount',
-                                dataField: 'expenses_amount',
+                                caption: 'quantity',
+                                dataField: 'quantity',
                                 dataType: 'number',
-                                width: 150,
+                                width: 100,
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'amount',
+                                dataField: 'amount',
+                                dataType: 'number',
                                 format: "fixedPoint",
                                 editorOptions: {
                                     format: "fixedPoint",
-                                }
+                                },
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Sub Total',
+                                dataField: 'subtotal',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                    readOnly: true
+                                },
                             },
                         ],
                         summary: {
                             totalItems: [
                                 {
-                                    column: "expenses_amount",
+                                    column: "subtotal",
                                     summaryType: "sum",
                                     displayFormat: "Total: {0}",
-                                    valueFormat: "fixedPoint"
+                                    valueFormat: "fixedPoint",
+                                    format: "fixedPoint",
+                                    editorOptions: {
+                                        format: "fixedPoint",
+                                    }
                                 }
                             ]
                         },
@@ -788,14 +772,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPrepared: function (e) {
                         },
                         onCellPrepared: function (e) {
-                            if ( e.rowType == "data" && (e.column.index==1)) {
-                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                                    e.cellElement.css({
-                                        "backgroundColor": "#ffe6e6",
-                                        "border": "0.5px solid #f56e6e"
-                                    })
-                                }
-                            }
+                            // if ( e.rowType == "data" && (e.column.index==1)) {
+                            //     if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                            //         e.cellElement.css({
+                            //             "backgroundColor": "#ffe6e6",
+                            //             "border": "0.5px solid #f56e6e"
+                            //         })
+                            //     }
+                            // }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
