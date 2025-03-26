@@ -600,6 +600,7 @@ $(function () {
                                     editorType: 'dxDateBox',
                                     dataField: 'endDate',
                                     editorOptions: {
+                                        min: new Date(),
                                         type: 'datetime',
                                         value: appointmentData.endDate,
                                         displayFormat: 'dd-MM-yyyy HH:mm:ss',
