@@ -22,7 +22,7 @@ Route::group(['prefix' => 'api'], function () {
         //ghm
         'ghmrequest' => App\Http\Controllers\Submission\GhmRequestController::class,
         'ghm_booking' => App\Http\Controllers\Submission\GhmRequestController::class,
-        'ghm_approve' => App\Http\Controllers\AutoapproveghmController::class,
+        // 'ghm_approve' => App\Http\Controllers\AutoapproveghmController::class,
         // BCID - JDI
         'jdirequest' => App\Http\Controllers\Submission\JdiRequestController::class,
         'jdireport' => App\Http\Controllers\Submission\JdiReportController::class,
