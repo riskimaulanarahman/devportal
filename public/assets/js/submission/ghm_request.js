@@ -53,21 +53,27 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             cellTemplate: function(container, options) {
 
                 var isMine = options.data.isMine;
+                isHrsl = options.data.isHrsl;
                 var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
                 var isPendingOnMe = options.data.isPendingOnMe;
                 var reqid = options.data.id;
                 var reqstatus = options.data.requestStatus;
                 var ticketstatus = options.data.ticketStatus;
                 var confirmationStatus = options.data.confirmationStatus;
-                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
+                var mode = (isMine == 1) ? 'edit' : (reqstatus == 1 && (
+                    (isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)
+                ) ? 'approval' : 'view') ;
                 var arrColor = [
                     "btn-secondary",
                     (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
                     "btn-warning",
-                    (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed')) ? "btn-info" : (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed'))) ? "btn-info" : "btn-success",
+                    (isMine == 0 && isPIC == 1 && 
+                        (ticketstatus != 'Completed' && confirmationStatus != 'Completed')
+                    ) ? "btn-info" : (isMine == 1 && isPIC == 0 && (
+                        (ticketstatus == 'Completed') && (confirmationStatus != 'Completed')
+                    )) ? "btn-info" : "btn-success",
                     "btn-danger",
                 ];
-
                 var viewIcon = ((mode == 'approval' && reqstatus == 1) || (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed'))) ? "fa-check" :  ((mode == 'approval' && reqstatus == 1) || (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed')))) ? "fa-check" : "fa-search";
     
                 $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
@@ -77,12 +83,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                                 contentTemplate: () => popupContentTemplate(reqid,mode,options),
                             });
                             popup.show();
-
                 }).appendTo(container);
-                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
+                if ((reqstatus !== 0 && reqstatus !== 4) && 
+                (isHrsl === 1 || 
+                (isMine === 1 && 
+                (reqstatus === 1 || reqstatus === 2 || reqstatus === 3) && 
+                (isPendingOnMe === 0 || isPendingOnMe === null)))) {
                     $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
-
                         Swal.fire({
                             title: 'Are you sure?',
                             text: "Are you sure you want to cancel this submission?",
@@ -115,32 +123,31 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                                 });
                             }
                           });
-    
                     }).appendTo(container); 
-                }            
+                }
             }
         },
-        { 
+        {
             dataField: "user.fullname",
             caption: 'Creator Name',
             width: 180
         },
-        { 
+        {
             dataField: "text",
             caption: "Purpose",
             width: 180
-        },  
-        { 
+        },
+        {
             dataField: "description",
             caption: "Details",
             width: 180
-        },  
-        { 
+        },
+        {
             dataField: "Location",            
             caption: "Location",
             width: 120,
         },
-        { 
+        {
             dataField: "roomName",            
             caption: "Room",
             width: 120,
@@ -270,7 +277,7 @@ const accordionItems = [
     {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document</i>',
-        visible: true
+        visible: true        
     },
     {
         ID: 3,
@@ -442,12 +449,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'ghm_room_id',
                                 width: 200,
                                 lookup: {
-                                    dataSource: listOption('/list-room','id','roomName'),  
+                                    dataSource: listOption('/list-room','id','roomName', 'roomOccupancy'),  
                                     valueExpr: 'id',
                                     displayExpr: function(data) {
-                                        return data ? data.roomName + ' ' + data.sector : '';
+                                        return data ? `${data.roomName} ${data.sector} ${data.roomOccupancy} Bed` : '';
                                     }
-
                                 },
                                 validationRules: [{ type: "required" }]
                             },
@@ -731,7 +737,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                             allowAdding: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowUpdating: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             allowDeleting: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                        },
+                            
+                        },          
+                        visible: isMine === 1 || isHrsl === 1 || admin === 1 ? true : false,              
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
                             { 
