@@ -146,7 +146,8 @@ class GhmRequestController extends Controller
                   'totalPeople' => $totalPeople,
                   'requestColor' => isset($statusColors[$request->requestStatus]) ? $statusColors[$request->requestStatus] : '#6C757D',
                   'isMine' => $request->isMine,
-                  'isHrsl' => $request->isHrsl
+                  'isHrsl' => $request->isHrsl,
+                  'isMeals' => $request->isMeals
               ];
           });
       }
@@ -199,7 +200,7 @@ class GhmRequestController extends Controller
                 and request_ghm.requestStatus='1'
                 order by a.sequence)";     
                
-                $gethrsl = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
+                $gethrsl = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
@@ -229,6 +230,7 @@ class GhmRequestController extends Controller
                 request_ghm.endDate,
                 request_ghm.created_at,
                 request_ghm.updated_at,
+                request_ghm.isMeals,
                 (SELECT STRING_AGG(emp.fullname, ', ')
                 FROM OPENJSON(request_ghm.employee) 
                 WITH (employee_id INT '$')
@@ -371,6 +373,7 @@ class GhmRequestController extends Controller
                     request_ghm.endDate,
                     request_ghm.created_at,
                     request_ghm.updated_at,
+                    request_ghm.isMeals,
                     COALESCE(request_ghm.guest, '[]') AS guest,
                     COALESCE(request_ghm.family, '[]') AS family,
                     request_ghm_room.location_id, 
