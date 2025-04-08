@@ -562,6 +562,7 @@ $(function () {
 
                         if (totalGuests > roomCapacity) {
                             DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
+                            e.cancel = true;
                             return false;
                         }
                         let formData = form.option("formData");
@@ -579,7 +580,7 @@ $(function () {
                         }
                         
                         return { roomCapacity, remainingCapacity, totalBooked };
-                    }                
+                    }               
                     const { roomCapacity, remainingCapacity } = validateBooking();                    
                     form.option('items', [
                         {
@@ -611,8 +612,23 @@ $(function () {
                                     editorOptions: {
                                         value: appointmentData.description || ''
                                     },
-                                    validationRules: [{ type: "required", message: 'Details is required', }],
-                                }
+                                    validationRules: [{ type: "required", message: 'Details is required' }],
+                                },
+                                {
+                                    caption: 'is Meals?',
+                                    editorType: 'dxCheckBox',
+                                    dataField: 'isMeals',
+                                    editorOptions: {
+                                        value: e.appointmentData.isMeals !== undefined ? e.appointmentData.isMeals : false, 
+                                        onValueChanged: function(args) {
+                                            e.appointmentData.isMeals = args.value ? 1 : 0;
+                                            form.updateData("isMeals", e.appointmentData.isMeals); 
+                                        }                                        
+                                    }, 
+                                    label: {
+                                        text: "Meals included?" 
+                                    }
+                                }                               
                             ]
                         },
                         {
@@ -854,8 +870,7 @@ $(function () {
                                                 console.log("Error loading data:", e.error.message);
                                                 dataGridAttachment.refresh();
                                             }
-                                        });
-                
+                                        });                
                                         return supporting;
                                     }
                                 }
@@ -944,6 +959,7 @@ $(function () {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
+                                isMeals: appointmentData.isMeals,
                                 startDate: appointmentData.startDate,
                                 endDate: appointmentData.endDate,
                                 ghm_room_id: appointmentData.ghm_room_id,
@@ -960,6 +976,7 @@ $(function () {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
+                                isMeals: appointmentData.isMeals,
                                 startDate: appointmentData.startDate,
                                 endDate: appointmentData.endDate,
                                 ghm_room_id: appointmentData.ghm_room_id,
@@ -1109,6 +1126,7 @@ $(function () {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
+                                isMeals: appointmentData.isMeals,
                                 startDate: appointmentData.startDate,
                                 endDate: appointmentData.endDate,
                                 ghm_room_id: appointmentData.ghm_room_id,
@@ -1124,6 +1142,7 @@ $(function () {
                                 requestStatus: requestStatus,
                                 text: appointmentData.text,
                                 description: appointmentData.description,
+                                isMeals: appointmentData.isMeals,
                                 startDate: appointmentData.startDate,
                                 endDate: appointmentData.endDate,
                                 ghm_room_id: appointmentData.ghm_room_id,

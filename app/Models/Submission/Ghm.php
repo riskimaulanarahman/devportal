@@ -34,7 +34,8 @@ class Ghm extends Model
         // 'approveddoc',
         'family',
         'startDate',
-        'endDate'
+        'endDate',
+        'isMeals'
     ];
     protected $dates = [
         'startDate',
