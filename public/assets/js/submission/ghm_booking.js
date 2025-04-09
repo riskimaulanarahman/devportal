@@ -671,6 +671,7 @@ $(function () {
                                     dataField: 'endDate',
                                     editorOptions: {
                                         min: new Date(),
+                                        max: new Date(new Date().setDate(new Date().getDate() + 14)),
                                         type: 'datetime',
                                         value: appointmentData.endDate,
                                         displayFormat: 'dd-MM-yyyy HH:mm:ss',
