@@ -452,7 +452,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     dataSource: listOption('/list-room','id','roomName', 'roomOccupancy'),  
                                     valueExpr: 'id',
                                     displayExpr: function(data) {
-                                        return data ? `${data.roomName} ${data.sector} ${data.roomOccupancy} Bed` : '';
+                                        return data ? `${data.roomName} ${data.sector} ${data.roomOccupancy} Occ` : '';
                                     }
                                 },
                                 validationRules: [{ type: "required" }]
