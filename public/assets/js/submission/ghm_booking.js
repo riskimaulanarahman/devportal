@@ -167,7 +167,7 @@ $(function () {
             dataSource: filteredRooms,
             // displayExpr: 'text',
             displayExpr: function(item) {
-                return item ? item.text + " | " + item.roomOccupancy + " bed" : "";
+                return item ? item.text + " | " + item.roomOccupancy + " Occ" : "";
             },
             valueExpr: 'id',
             value: null,
