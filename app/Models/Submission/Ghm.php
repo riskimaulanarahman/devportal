@@ -36,6 +36,7 @@ class Ghm extends Model
         'startDate',
         'endDate',
         'isMeals'
+        
     ];
     protected $dates = [
         'startDate',
@@ -47,6 +48,7 @@ class Ghm extends Model
         'employee' => 'array',
         'guest' => 'array',
         'family' => 'array',
+        'isMeals' => 'integer'
     ];
 
     public static function getFillableColumns()

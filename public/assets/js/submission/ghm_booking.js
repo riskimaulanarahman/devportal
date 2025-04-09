@@ -71,7 +71,7 @@ $(function () {
         .then(response => response.json())
         .then(response => {
             bookingData = response.booking;    
-            console.log("Data New Booking Loaded:", bookingData);
+            // console.log("Data New Booking Loaded:", bookingData);
             return response.booking;
         }).catch(function (error) {
             alert('Error: ' + error.responseText);
@@ -87,7 +87,7 @@ $(function () {
         .then(response => response.json())
         .then(response => {
             let data = response.booking;    
-            console.log("Data Booking Loaded:", data);
+            // console.log("Data Booking Loaded:", data);
             schedulerInstance.option("dataSource", data);
             schedulerInstance.repaint();
         }).catch(function (error) {
@@ -183,15 +183,14 @@ $(function () {
         return Array.isArray(arr) ? arr : [];
     }
     async function getTotalGuestsPerDay(appointments, roomId, startDate, endDate) {
-        let dailyGuestCount = 0; 
+        let dailyGuestCount = 0;
         appointments.forEach(appointment => {
         if (appointment.requestStatus == 4) {
-            console.log(`Skipping rejected booking ID: ${appointment.id}`);
+            // console.log(`Skipping rejected booking ID: ${appointment.id}`);
             return;
-        }   
+        }
             let bookingStart = new Date(startDate);
             let bookingEnd = new Date(endDate);
-
             if ((appointment.ghm_room_id === roomId) && ((
                 (new Date (appointment.startDate) <= bookingEnd) && (new Date (appointment.startDate) > bookingStart)
                 ) || ((new Date (appointment.endDate) <= bookingEnd) && (new Date (appointment.endDate) > bookingStart))
@@ -203,7 +202,7 @@ $(function () {
                     let totalGuests = guestCount + familyCount + employeeCount;
 
                     dailyGuestCount = (dailyGuestCount || 0) + totalGuests;
-                    console.log("dailyGuestCount", dailyGuestCount);
+                    // console.log("dailyGuestCount", dailyGuestCount);
             }
         });
         return dailyGuestCount;
@@ -236,7 +235,7 @@ $(function () {
                 showAllDayPanel: false,
                 height: 710,          
                 onCanceled : function (e) {
-                    console.log("loadData();");
+                    // console.log("loadData();");
                 },
                 onCellClick: async function(e) {
                     const cellDate = new Date(e.cellData.startDate); 
@@ -304,14 +303,17 @@ $(function () {
                 },
                 appointmentTooltipTemplate: function (model) {
                     const booking = model.appointmentData;
-                    console.log("ba", booking);
-                    const room = roomsWithLocations.find(room => room.id === booking.ghm_room_id);
+                    const room = roomsWithLocations.find(room => room.id === booking.ghm_room_id);                    
                     const roomOccupancy = room?.roomOccupancy || 0;
                     const guestCount = safeArray(booking.guest).length;
                     const familyCount = safeArray(booking.family).length;
                     const employeeCount = safeArray(booking.employee).length;
                     const totalPeople = booking.totalPeople;
-                    const totalGuests = guestCount + familyCount + employeeCount;
+                    const requestStatu = booking.requestStatus;
+                    const totalGuests = 0;
+                    if (requestStatu === "3") {
+                        totalGuests = guestCount + familyCount + employeeCount;
+                    }                    
                     const remainingCapacity = roomOccupancy - totalGuests;
                     const formatDate = (date) => {
                         if (!date) return "No Date";
@@ -332,13 +334,14 @@ $(function () {
                     }
                     const tooltipHtml = `
                         <div>
-                            <b>Purpose: ${booking.text || "No Title"}</b><br>
-                            ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
+                        <b>Created By:</b> ${booking.creator || "No Name"}<br>
+                        <b> Date : </b>${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}<br>
+                            <b>Purpose:</b> ${booking.text || "No Title"}<br><br>
+                            <b>Details Rooms</b><br>
+                            <b>Rooms:</b> ${room.text}<br>
                             <b>Occupancy:</b> ${roomOccupancy} Person<br>
-                            <b>Booked:</b> ${totalGuests} Person<br>
-                            <b>Approve:</b> ${totalPeople} Person<br>
-                            <b>Remaining:</b> ${remainingCapacity} Person<br>
-                            <b>Created By:</b> ${booking.creator || "No Name"}<br><br>
+                            <b>Booked:</b> ${totalGuests} Person<br>                            
+                            <b>Remaining:</b> ${remainingCapacity} Person<br><br>
                             ${booking.isMine === "1" ? `<button id="${actionButtonId}" class="btn ${buttonClass} btn-sm">${buttonLabel}</button>` : ""}
                         </div>
                     `;
@@ -474,8 +477,8 @@ $(function () {
                     const form = e.form;
                     const appointmentData = e.appointmentData;
                     let reqid = appointmentData.id;
-                    console.log("Appointment Data Before:", appointmentData);
-                    if (!reqid) { 
+                    // console.log("Appointment Data Before:", appointmentData);
+                    if (!reqid) {
                         let cellData = e.cellData || {};
                         let ghm_room_id = cellData.ghm_room_id || appointmentData.ghm_room_id;
                         let roomData = roomsWithLocations.find(room => room.id === ghm_room_id);
@@ -495,12 +498,12 @@ $(function () {
                                 guest: cellData.guest || appointmentData.guest || [],
                                 family: cellData.family || appointmentData.family || []
                             }).then(function(response) {
-                                console.log("Response from POST request:", response);                                
+                                // console.log("Response from POST request:", response);                                
                                 if (response.status === 'success') {
                                     reqid = response.data.id;
                                     appointmentData.id = reqid;                             
                                     appointmentData.isNew = 1;     
-                                    console.log("ain", appointmentData.isNew);   
+                                    // console.log("ain", appointmentData.isNew);   
                                     form.option("formData", appointmentData);
                                     form.repaint();
                                 } else {
@@ -510,7 +513,7 @@ $(function () {
                                 console.error("Error during POST request:", error);
                             });
                         } else {
-                            console.error("Required data is missing");
+                            // console.error("Required data is missing");
                         }
 
                         dataSubmitted = false;
@@ -520,8 +523,8 @@ $(function () {
                             console.error("event is undefined");
                         }
                     }
-                    console.log("Updated Appointment Data:", appointmentData);
-                    console.log("Final Req ID:", appointmentData.id);
+                    // console.log("Updated Appointment Data:", appointmentData);
+                    // console.log("Final Req ID:", appointmentData.id);
                     let selectedRoom = appointmentData.ghm_room_id || null;
                     let newStartDate = new Date(appointmentData.startDate);
                     let newEndDate = new Date(appointmentData.endDate);
@@ -539,11 +542,9 @@ $(function () {
                         let familyCount = (form.getEditor("family")?.option("value") || []).length;
                         let employeeCount = (form.getEditor("employee")?.option("value") || []).length;
                         let totalGuests = guestCount + familyCount + employeeCount + totalBooked;
-                        console.log("total guest", totalGuests);
-                        console.log("total booked", totalBooked);
                         let selectedRoom = form.getEditor("ghm_room_id")?.option("value");                        
                         let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;
-                        console.log("total Kaps", roomCapacity);
+                        // console.log("total Kaps", roomCapacity);
                         let remainingCapacity = roomCapacity - totalBooked;                        
                         if (totalBooked > roomCapacity) {
                             DevExpress.ui.notify({
@@ -581,7 +582,12 @@ $(function () {
                         
                         return { roomCapacity, remainingCapacity, totalBooked };
                     }               
-                    const { roomCapacity, remainingCapacity } = validateBooking();                    
+                    const { roomCapacity, remainingCapacity } = validateBooking(); 
+                    function isReadOnlyStatus(status) {
+                        const readOnlyStatuses = ["1", "3", "4"];
+                        return readOnlyStatuses.includes(status);
+                    }
+                    const isReadOnly = isReadOnlyStatus(appointmentData.readOnlyStatus);
                     form.option('items', [
                         {
                             itemType: 'group',
@@ -601,6 +607,7 @@ $(function () {
                                     editorType: 'dxTextBox',
                                     dataField: 'text',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         value: appointmentData.text || ''
                                     },
                                     validationRules: [{ type: "required", message: 'Purpose is required', }],
@@ -610,6 +617,7 @@ $(function () {
                                     editorType: 'dxTextArea',
                                     dataField: 'description',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         value: appointmentData.description || ''
                                     },
                                     validationRules: [{ type: "required", message: 'Details is required' }],
@@ -619,6 +627,7 @@ $(function () {
                                     editorType: 'dxCheckBox',
                                     dataField: 'isMeals',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         value: e.appointmentData.isMeals !== undefined ? e.appointmentData.isMeals : false, 
                                         onValueChanged: function(args) {
                                             e.appointmentData.isMeals = args.value ? 1 : 0;
@@ -656,6 +665,7 @@ $(function () {
                                     editorType: 'dxDateBox',
                                     dataField: 'startDate',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         min: new Date(),
                                         max: new Date(new Date().setDate(new Date().getDate() + 14)),
                                         type: 'datetime',
@@ -670,6 +680,7 @@ $(function () {
                                     editorType: 'dxDateBox',
                                     dataField: 'endDate',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         min: new Date(),
                                         max: new Date(new Date().setDate(new Date().getDate() + 14)),
                                         type: 'datetime',
@@ -710,6 +721,7 @@ $(function () {
                                     editorType: 'dxTagBox',
                                     dataField: 'employee',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         dataSource: emplo,
                                         displayExpr: function (item) {
                                             if (!item) return "";
@@ -729,6 +741,7 @@ $(function () {
                                     editorType: 'dxTagBox',
                                     dataField: 'guest',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         dataSource: [],
                                         value: Array.isArray(appointmentData.guest) ? appointmentData.guest : [],
                                         acceptCustomValue: true,
@@ -754,6 +767,7 @@ $(function () {
                                     editorType: 'dxTagBox',
                                     dataField: 'family',
                                     editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
                                         dataSource: [],
                                         value: Array.isArray(appointmentData.family) ? appointmentData.family : [],
                                         acceptCustomValue: true,
@@ -784,6 +798,8 @@ $(function () {
                             items: [
                                 {
                                     itemType: 'simple',
+                                    editorOptions: {
+                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus)},
                                     name: "supportingDocument",
                                     template: function (data, container) {
                                         var supporting = $("<div id='formattachment'>").dxDataGrid({
@@ -802,12 +818,12 @@ $(function () {
                                                 width: 240,
                                                 placeholder: 'Search...',
                                             },
-                                            editing: {
+                                            editing: {                                               
                                                 useIcons: true,
                                                 mode: "popup",
-                                                allowAdding: true,
-                                                allowUpdating: true,
-                                                allowDeleting: true,
+                                                allowAdding: !isReadOnly ? true : false,
+                                                allowUpdating: !isReadOnly ? true : false,
+                                                allowDeleting: !isReadOnly ? true : false
                                             },
                                             paging: { enabled: true, pageSize: 10 },
                                             columns: [
@@ -868,7 +884,7 @@ $(function () {
                                                 });
                                             },
                                             onDataErrorOccurred: function (e) {
-                                                console.log("Error loading data:", e.error.message);
+                                                // console.log("Error loading data:", e.error.message);
                                                 dataGridAttachment.refresh();
                                             }
                                         });                
@@ -995,9 +1011,9 @@ $(function () {
                                 let familyCount = safeArray(appointmentData.family).length;
                                 
                                 if (response.status == 'success') {
-                                    console.log("reqid", reqid);
-                                    console.log("family", familyCount);
-                                    console.log("guestCount", guestCount);
+                                    // console.log("reqid", reqid);
+                                    // console.log("family", familyCount);
+                                    // console.log("guestCount", guestCount);
                                     if (familyCount > 0 || guestCount > 0) {
                                         
                                         sendRequest(apiurl + "/checkattachmentghm", "POST",{
@@ -1006,7 +1022,7 @@ $(function () {
                                             countfamily: familyCount,
                                             countguest: guestCount
                                         }).then(function (response) {
-                                            console.log("respon", response);
+                                            // console.log("respon", response);
                                             if (response.status == 'success') {
                                                 sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                                                     requestStatus: 1,
