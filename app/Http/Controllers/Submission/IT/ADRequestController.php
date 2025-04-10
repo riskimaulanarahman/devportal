@@ -54,12 +54,10 @@ class ADRequestController extends Controller
             where l.ApprovalAction='1' and l.req_id = request_it_activedirectory.id and l.module_id = '".$module_id."' and request_it_activedirectory.requestStatus='1'
             order by a.sequence)";
 
-            $getIT = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
-            from tbl_approverListReq l
-            left join tbl_approver a on l.approver_id=a.id
+            $getIT = "(select max(CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end)
+            from tbl_approver a
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where l.module_id = '".$module_id."' and r.ApprovalType='IT' and r.isactive='1'
-            order by a.sequence)"; // show for all IT for update username&password
+            where a.module = 'ActiveDirectory' and r.ApprovalType='IT' and a.isactive='1')"; // show for all IT for update username&password
 
             $data = $dataquery
                 ->selectRaw("request_it_activedirectory.*,codes.code,

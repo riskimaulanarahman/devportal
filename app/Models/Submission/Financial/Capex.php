@@ -24,6 +24,7 @@ class Capex extends Model
         'bu',
         'sector',
         'form_type',
+        'business_type',
         'project_type',
         'request_type',
         'reason_unbudgeted',

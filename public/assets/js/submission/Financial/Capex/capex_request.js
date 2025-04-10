@@ -224,6 +224,11 @@ const accordionItems = [
         visible: true
     },
     {
+        ID: 5,
+        Title: '<i class="fas fa-list"> Justifications </i>',
+        visible: true
+    },
+    {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
         visible: true
@@ -249,7 +254,6 @@ const updateVisibleById = (itemId, visible) => {
   };
 
   var dataSector = [
-    // { bu: 'IHM', sector: 'NKL' },
     { bu: 'IHM', sector: 'TRN' },
     { bu: 'IHM', sector: 'SPU' },
     { bu: 'IHM', sector: 'SNI' },
@@ -259,6 +263,7 @@ const updateVisibleById = (itemId, visible) => {
     { bu: 'AHL', sector: 'SSP' },
     { bu: 'AHL', sector: 'HO' },
     { bu: 'NKL', sector: 'NKL' },
+    { bu: 'KPSI', sector: 'KPSI' },
 ];
 
 const popupContentTemplate = function (reqid,mode,options) {
@@ -397,9 +402,21 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'BU',
                                 dataField: 'bu',
                                 lookup: {
-                                    dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'}],
+                                    dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'},{bu:'KPSI'}],
                                     valueExpr: 'bu',
                                     displayExpr: 'bu',
+                                },
+                                setCellValue: function (rowData, value) {
+                                    rowData.bu = value;
+                                    if (value === "IHM") {
+                                        rowData.sector = "HO";
+                                    } else if (value === "AHL") {
+                                        rowData.sector = "HO";
+                                    } else if (value === "NKL") {
+                                        rowData.sector = "NKL";
+                                    } else if (value === "KPSI") {
+                                        rowData.sector = "KPSI";
+                                    }
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
@@ -488,42 +505,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                             },
                             {
-                                caption: 'Request Type',
-                                dataField: 'request_type',
-                                lookup: {
-                                    dataSource: [
-                                        {value:'Budgeted'},
-                                        {value:'Unbudgeted - Swap Unavailable'},
-                                        {value:'Unbudgeted - Swap Available'},
-                                    ],
-                                    valueExpr: 'value',
-                                    displayExpr: 'value',
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                },
-                            },
-                            {
-                                caption: "Reason Unbudgeted",
-                                dataField:'reason_unbudgeted',
-                                dataType: "string",
-                            },
-                            {
-                                dataField: 'equipment',
-                                dataType: 'string',
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            {
-                                dataField: 'cost_center',
-                                dataType: 'string',
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                }
-                            },
-                            
-                            {
                                 dataField: "created_at",
                                 dataType: "date",
                                 format: "dd-MM-yyyy",
@@ -560,70 +541,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onEditorPreparing: function (e) {
-                            if ((e.dataField == "payment_from" || e.dataField == "payment_to") && e.parentType == "dataRow") {
-                                e.editorName = "dxDropDownBox";            
-                                e.editorOptions.dropDownOptions = {                
-                                    height: 500,
-                                    width: 600
-                                };
-                                e.editorOptions.contentTemplate = function (args, container) {
-                    
-                                    var value = args.component.option("value"),
-                                        $dataGrid = $("<div>").dxDataGrid({
-                                            width: '100%',
-                                            dataSource: args.component.option("dataSource"),
-                                            keyExpr: "id",
-                                            columns: ["bu","nama"],
-                                            hoverStateEnabled: true,
-                                            scrolling: {
-                                                mode: "virtual"
-                                            },
-                                            pager: {
-                                                visible: false,
-                                                showInfo: true,
-                                            },
-                                            filterRow: { visible: true },
-                                            height: '90%',
-                                            showRowLines: true,
-                                            showBorders: true,
-                                            selection: { mode: "single" },
-                                            selectedRowKeys: [value],
-                                            focusedRowEnabled: true,
-                                            focusedRowKey: args.component.option("value"),
-                                            searchPanel: {
-                                                visible: true,
-                                                width: 265,
-                                                placeholder: "Search..."
-                                            },
-                                            onSelectionChanged: function (selectedItems) {
-                                                const keys = selectedItems.selectedRowKeys;
-                                                const hasSelection = keys.length;
-                                                args.component.option('value', hasSelection ? keys[0] : null);
-                                                if(hasSelection !== 0) {
-                                                    args.component.close();
-                                                }
-                                            }
-                                        });
-                    
-                                    var dataGrid = $dataGrid.dxDataGrid("instance");
-                    
-                                    args.component.on("valueChanged", function (args) {
-                                        var value = args.value;
-                    
-                                        dataGrid.selectRows(value, false);
-                                    });
-                                    container.append($dataGrid);
-                                    $("<div>").dxButton({
-                                        text: "Close",
-                    
-                                        onClick: function (ev) {
-                                            args.component.close();
-                                        }
-                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                    return container;
-                    
-                                };
-                            }
                         },
                         onRowUpdating: function(e) {
                             
@@ -652,11 +569,152 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
                         }
-                    }).appendTo(container)
+                    }).appendTo(container);
+
+                    // Spacer antara dua DataGrid
+                    $("<div style='height: 20px;'>").appendTo(container);
+
+                    var secondGrid  = $("<div id='secondGrid '>").dxDataGrid({    
+                        dataSource: storedetail(modname,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: false,
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            mode: "virtual"
+                        },
+                        columns: [
+                            {
+                                caption: 'Request Type',
+                                dataField: 'request_type',
+                                lookup: {
+                                    dataSource: [
+                                        {value:'Budgeted'},
+                                        {value:'Unbudgeted - Swap Unavailable'},
+                                        {value:'Unbudgeted - Swap Available'},
+                                    ],
+                                    valueExpr: 'value',
+                                    displayExpr: 'value',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                            },
+                            {
+                                caption: "Reason Unbudgeted",
+                                dataField:'reason_unbudgeted',
+                                dataType: "string",
+                            },
+                            {
+                                dataField: 'equipment',
+                                lookup: {
+                                    dataSource: [
+                                        { value: 'Building' },
+                                        { value: 'Computer Hardware & Accessories' },
+                                        { value: 'Heavy Equipment' },
+                                        { value: 'Infrastructure' },
+                                        { value: 'Lab & Survey Equipment' },
+                                        { value: 'Light Vehicle' },
+                                        { value: 'Low Value Asset' },
+                                        { value: 'Office Mess & Telkom Equipment' },
+                                        { value: 'Other Equipment' },
+                                        { value: 'Plant & Machinery' },
+                                        { value: 'Transport Equipment' },
+                                        { value: 'Water & Electricity Equipment' },
+                                        { value: 'Workshop & Agriculture Equipment' }
+                                    ],
+                                    valueExpr: 'value',
+                                    displayExpr: 'value',
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                }
+                            },
+                            {
+                                dataField: 'cost_center',
+                                dataType: 'string',
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                }
+                            },
+                            {
+                                dataField: 'approved_budget',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                },
+                                validationRules: [{ type: "required" }],
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGrid1 = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                        },
+                        onEditorPreparing: function (e) {
+                        },
+                        onRowUpdating: function(e) {
+                            
+                        },
+                        onCellPrepared: function (e) {
+                            if ( e.rowType == "data" && ((e.column.index>3))) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGrid1.refresh();
+                        }
+                    }).appendTo(container);
+
                     return container
                 }
                 else if(data.ID == 6) {
-                    return formData = $("<div id='formdetail'>").dxDataGrid({    
+                    var containerdetail = $("<div>");
+                    $("<span style='color:red;font-size:11pt'>").html('Total Amount Expenditur Items harus balance dengan Approved Budget').appendTo(containerdetail);
+
+                    var formData = $("<div id='formdetail'>").dxDataGrid({    
                         dataSource: storewithmodule('capexdetail',modelclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -703,14 +761,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }],
                             },
                             {
-                                caption: 'quantity',
                                 dataField: 'quantity',
                                 dataType: 'number',
                                 width: 100,
                                 validationRules: [{ type: "required" }],
                             },
                             {
-                                caption: 'amount',
                                 dataField: 'amount',
                                 dataType: 'number',
                                 format: "fixedPoint",
@@ -772,14 +828,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPrepared: function (e) {
                         },
                         onCellPrepared: function (e) {
-                            // if ( e.rowType == "data" && (e.column.index==1)) {
-                            //     if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                            //         e.cellElement.css({
-                            //             "backgroundColor": "#ffe6e6",
-                            //             "border": "0.5px solid #f56e6e"
-                            //         })
-                            //     }
-                            // }
                         },
                         onDataErrorOccurred: function(e) {
                             // Menampilkan pesan kesalahan
@@ -788,7 +836,134 @@ const popupContentTemplate = function (reqid,mode,options) {
                             // Memuat ulang DataGrid
                             dataGriddetail.refresh();
                         }
-                    })
+                    }).appendTo(containerdetail);
+
+                    return containerdetail
+                }
+                else if(data.ID == 5) {
+                    var containerdetail = $("<div>");
+
+                    var formData = $("<div id='formdetail'>").dxDataGrid({    
+                        dataSource: storewithmodule('capexjustification',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: false,
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            rowRenderingMode: 'virtual',
+                        },
+                        paging: {
+                            pageSize: 25,
+                        },
+                        pager: {
+                            visible: true,
+                            allowedPageSizes: [5, 15, 'all'],
+                            showPageSizeSelector: true,
+                            showInfo: true,
+                            showNavigationButtons: true,
+                        },
+                        columns: [
+                            {
+                                caption: 'What is currently available?',
+                                dataField: 'justification_1',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Why is expenditure needed?',
+                                dataField: 'justification_2',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Can expenditure be deferred to next year? If not, why?',
+                                dataField: 'justification_3',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'What are the consequences if expenditure is denied?',
+                                dataField: 'justification_4',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'What is the impact HES/Health, Environment Safety?',
+                                dataField: 'justification_5',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Will there be any adverse impact on existing operations (e.g disruption, downtime)?',
+                                dataField: 'justification_6',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'When will expenditure be made (month/year)?',
+                                dataField: 'justification_7',
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'What is the project duration? When will project be completed?',
+                                dataField: 'justification_8',
+                                validationRules: [{ type: "required" }],
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridjustification = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridjustification.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPrepared: function (e) {
+                        },
+                        onCellPrepared: function (e) {
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridjustification.refresh();
+                        }
+                    }).appendTo(containerdetail);
+
+                    return containerdetail
                 }
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    

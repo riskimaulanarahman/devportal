@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\Module;
-use App\Models\Submission\Financial\CapexDetail;
+use App\Models\Submission\Financial\CapexJustification;
 use DB;
 
-class CapexRequestDetailController extends Controller
+class CapexRequestJustificationController extends Controller
 {
 
     private $model;
@@ -18,7 +18,7 @@ class CapexRequestDetailController extends Controller
 
     public function __construct()
     {
-        $this->model = new CapexDetail();
+        $this->model = new CapexJustification();
         $this->modulename = 'Capex';
         $this->module = new Module();
     }
@@ -44,11 +44,7 @@ class CapexRequestDetailController extends Controller
 
         try {
             
-            $quantity = $request->quantity;
-            $amount = $request->amount;
-
             $requestData = $request->all();
-            $requestData['subtotal'] = $quantity*$amount;
 
             $this->model->create($requestData);
 
@@ -91,11 +87,7 @@ class CapexRequestDetailController extends Controller
         try {
             $data = $this->model->findOrFail($id);
             
-            $quantity = ($request->quantity) ? $request->quantity : $data->quantity;
-            $amount = ($request->amount) ? $request->amount : $data->amount;
-
             $requestData = $request->all();
-            $requestData['subtotal'] = $quantity*$amount;
 
             $data->update($requestData);
 
