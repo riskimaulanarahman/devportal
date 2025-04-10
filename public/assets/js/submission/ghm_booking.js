@@ -309,19 +309,20 @@ $(function () {
                     const familyCount = safeArray(booking.family).length;
                     const employeeCount = safeArray(booking.employee).length;
                     const totalPeople = booking.totalPeople;
+                    const actionButtonId = `action-btn-${booking.id}`;
+                    const requestStatus = Number(booking.requestStatus);
                     const requestStatu = booking.requestStatus;
-                    const totalGuests = 0;
+                    let totalGuests = 0;
                     if (requestStatu === "3") {
                         totalGuests = guestCount + familyCount + employeeCount;
-                    }                    
+                    }       
                     const remainingCapacity = roomOccupancy - totalGuests;
                     const formatDate = (date) => {
                         if (!date) return "No Date";
                         const d = new Date(date);
                         return isNaN(d.getTime()) ? "No Date" : d.toISOString().split("T")[0];
                     };
-                    const actionButtonId = `action-btn-${booking.id}`;
-                    const requestStatus = Number(booking.requestStatus);
+                    
                     
                     let buttonLabel = "";
                     let buttonClass = "";
