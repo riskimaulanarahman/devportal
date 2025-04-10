@@ -46,7 +46,9 @@ Route::group(['prefix' => 'api'], function () {
         'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
         // financial - Capex
         'capexrequest' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class,
-        // 'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
+        'capexdetail' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestDetailController::class,
+        'capexjustification' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestJustificationController::class,
+        // 'capexquestion' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestJustificationController::class,
         
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -89,7 +91,8 @@ Route::group(['prefix' => 'api'], function () {
     Route::post('ccmcheckbalance/{id}',[App\Http\Controllers\Submission\Financial\Ccm\CcmRequestController::class, 'checkBalance']); // check balance ccm with detail
 
     // financial - capex
-    Route::get('capexdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestDetailController::class, 'getList']); //get list ccm by req_id of module
+    Route::get('capexdetail/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestDetailController::class, 'getList']); //get list capex by req_id of module
+    Route::get('capexjustification/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestJustificationController::class, 'getList']); //get list capex by req_id of module
     
     //Ghm
     Route::post('checkattachmentghm',[App\Http\Controllers\Submission\GhmRequestController::class, 'checkattachmentghm']); //get ghm checkattachmentghm

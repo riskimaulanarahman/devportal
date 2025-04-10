@@ -44,9 +44,11 @@ class CapexRequestDetailController extends Controller
 
         try {
             
-            // $listCatalog = $this->listCatalog->find($request->catalog_id);
+            $quantity = $request->quantity;
+            $amount = $request->amount;
 
             $requestData = $request->all();
+            $requestData['subtotal'] = $quantity*$amount;
 
             $this->model->create($requestData);
 
