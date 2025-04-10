@@ -564,8 +564,8 @@ $(function () {
 
                         if (totalGuests > roomCapacity) {
                             DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
-                            e.cancel = true;
-                            return false;
+                            // e.cancel = true;
+                            // return false;
                         }
                         let formData = form.option("formData");
                         let hasGuestOrFamily = (formData.guest && formData.guest.length > 0) || (formData.family && formData.family.length > 0);
@@ -894,7 +894,6 @@ $(function () {
                                 }
                             ]
                         }
-                    
                     ]);
                     form.on("fieldDataChanged", function (e) {
                         if (e.dataField === "guest" || e.dataField === "family") {
@@ -909,7 +908,27 @@ $(function () {
                     let familyCount = safeArray(appointmentData.family).length;
                     let employeeCount = safeArray(appointmentData.employee).length;
                     let totalNewGuests = guestCount + familyCount + employeeCount;
-                
+                    // let remainingCapacity = roomCapacity - totalBooked;                        
+                    if (totalNewGuests > roomCapacity) {
+                        DevExpress.ui.notify({
+                            type: "error",
+                            displayTime: 3000,
+                            contentTemplate: (e) => {
+                                e.append(`
+                                    <div style="white-space: pre-line;">
+                                    Guest limit exceeded, Please adjust your booking!\n
+                                    Jumlah tamu melebihi kapasitas, sesuaikan dengan kapasitas!\n
+                                    </div>
+                                `);
+                            }
+                        });
+                    }
+
+                    if (totalGuests > roomCapacity) {
+                        DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
+                        e.cancel = true;
+                        return false;
+                    }
                     if (totalNewGuests < 1) {
                         DevExpress.ui.notify({
                             type: "error",
