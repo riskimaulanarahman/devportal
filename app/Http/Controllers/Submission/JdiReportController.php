@@ -66,7 +66,7 @@ class JdiReportController extends Controller
                 // Jika bukan admin, tambahkan kondisi where untuk companycode
                 if (!$isAdmin) {
                     if ($companycode == 'IHM') {
-                        $dataquery = $dataquery->whereIn('request_jdi.bu', ['IHM', 'NKL']);
+                        $dataquery = $dataquery->whereIn('request_jdi.bu', ['IHM', 'NKL', 'AHL']);
                     } else {
                         $dataquery = $dataquery->where('request_jdi.bu', $companycode);
                     }
