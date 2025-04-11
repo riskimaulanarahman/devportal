@@ -223,7 +223,14 @@ checkUserAccess(modname, usersid).then(permissions => {
                 format: "dd-MM-yyyy",
                 width: 150,
                 validationRules: [{ type: "required" }]
-            },       
+            },
+            {
+                dataField: "Gender",
+                lookup: {
+                    dataSource: ['Male','Female']
+                },
+                validationRules: [{ type: "required" }]
+            },   
             {
                 dataField: 'isInternationalStaff',
                 caption: "IS ?",

@@ -321,6 +321,10 @@
                                         <td>Join Date:</td>
                                         <td>{{ ($employee) ? $employee->JoinDate : 'Not Linked With Employee Data' }}</td>
                                     </tr>
+                                    <tr>
+                                        <td>Gender:</td>
+                                        <td>{{ ($employee) ? $employee->Gender : 'Not Linked With Employee Data' }}</td>
+                                    </tr>
                                     {{-- <tr>
                                         <td>Birthday:</td>
                                         <td>{{ ($employee) ? $employee->BirthOfDate : 'Not Linked With Employee Data' }}</td>
