@@ -312,17 +312,16 @@ $(function () {
                     const actionButtonId = `action-btn-${booking.id}`;
                     const requestStatus = Number(booking.requestStatus);
                     const requestStatu = booking.requestStatus;
-                    let totalGuests = 0;
-                    if (requestStatu === "3") {
-                        totalGuests = guestCount + familyCount + employeeCount;
-                    }       
-                    const remainingCapacity = roomOccupancy - totalGuests;
+                    let totalGuests = guestCount + familyCount + employeeCount;
+                    // if (requestStatu === "3") {
+                        // totalGuests = guestCount + familyCount + employeeCount;
+                    // }       
+                    // const remainingCapacity = roomOccupancy - totalGuests;
                     const formatDate = (date) => {
                         if (!date) return "No Date";
                         const d = new Date(date);
                         return isNaN(d.getTime()) ? "No Date" : d.toISOString().split("T")[0];
-                    };
-                    
+                    };                    
                     
                     let buttonLabel = "";
                     let buttonClass = "";
@@ -341,8 +340,7 @@ $(function () {
                             <b>Details Rooms</b><br>
                             <b>Rooms:</b> ${room.text}<br>
                             <b>Occupancy:</b> ${roomOccupancy} Person<br>
-                            <b>Booked:</b> ${totalGuests} Person<br>                            
-                            <b>Remaining:</b> ${remainingCapacity} Person<br><br>
+                            <b>People:</b> ${totalGuests} Person<br>  
                             ${booking.isMine === "1" ? `<button id="${actionButtonId}" class="btn ${buttonClass} btn-sm">${buttonLabel}</button>` : ""}
                         </div>
                     `;
@@ -478,7 +476,6 @@ $(function () {
                     const form = e.form;
                     const appointmentData = e.appointmentData;
                     let reqid = appointmentData.id;
-                    // console.log("Appointment Data Before:", appointmentData);
                     if (!reqid) {
                         let cellData = e.cellData || {};
                         let ghm_room_id = cellData.ghm_room_id || appointmentData.ghm_room_id;
@@ -490,7 +487,6 @@ $(function () {
                         if (ghm_room_id && startDate && endDate) {
                             const response = await sendRequest(apiurl + "/" + modname, "POST", {
                                 requestStatus: 0,
-                                // isNew : 1,
                                 ghm_room_id: ghm_room_id,
                                 startDate: startDate,
                                 endDate: endDate,
@@ -498,13 +494,11 @@ $(function () {
                                 employee: cellData.employee || appointmentData.employee || [],
                                 guest: cellData.guest || appointmentData.guest || [],
                                 family: cellData.family || appointmentData.family || []
-                            }).then(function(response) {
-                                // console.log("Response from POST request:", response);                                
+                            }).then(function(response) {                               
                                 if (response.status === 'success') {
                                     reqid = response.data.id;
                                     appointmentData.id = reqid;                             
-                                    appointmentData.isNew = 1;     
-                                    // console.log("ain", appointmentData.isNew);   
+                                    appointmentData.isNew = 1;      
                                     form.option("formData", appointmentData);
                                     form.repaint();
                                 } else {
@@ -514,7 +508,6 @@ $(function () {
                                 console.error("Error during POST request:", error);
                             });
                         } else {
-                            // console.error("Required data is missing");
                         }
 
                         dataSubmitted = false;
@@ -524,8 +517,6 @@ $(function () {
                             console.error("event is undefined");
                         }
                     }
-                    // console.log("Updated Appointment Data:", appointmentData);
-                    // console.log("Final Req ID:", appointmentData.id);
                     let selectedRoom = appointmentData.ghm_room_id || null;
                     let newStartDate = new Date(appointmentData.startDate);
                     let newEndDate = new Date(appointmentData.endDate);
@@ -545,7 +536,6 @@ $(function () {
                         let totalGuests = guestCount + familyCount + employeeCount + totalBooked;
                         let selectedRoom = form.getEditor("ghm_room_id")?.option("value");                        
                         let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;
-                        // console.log("total Kaps", roomCapacity);
                         let remainingCapacity = roomCapacity - totalBooked;                        
                         if (totalBooked > roomCapacity) {
                             DevExpress.ui.notify({
@@ -564,8 +554,6 @@ $(function () {
 
                         if (totalGuests > roomCapacity) {
                             DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
-                            // e.cancel = true;
-                            // return false;
                         }
                         let formData = form.option("formData");
                         let hasGuestOrFamily = (formData.guest && formData.guest.length > 0) || (formData.family && formData.family.length > 0);
@@ -908,27 +896,6 @@ $(function () {
                     let familyCount = safeArray(appointmentData.family).length;
                     let employeeCount = safeArray(appointmentData.employee).length;
                     let totalNewGuests = guestCount + familyCount + employeeCount;
-                    // let remainingCapacity = roomCapacity - totalBooked;                        
-                    if (totalNewGuests > roomCapacity) {
-                        DevExpress.ui.notify({
-                            type: "error",
-                            displayTime: 3000,
-                            contentTemplate: (e) => {
-                                e.append(`
-                                    <div style="white-space: pre-line;">
-                                    Guest limit exceeded, Please adjust your booking!\n
-                                    Jumlah tamu melebihi kapasitas, sesuaikan dengan kapasitas!\n
-                                    </div>
-                                `);
-                            }
-                        });
-                    }
-
-                    if (totalGuests > roomCapacity) {
-                        DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
-                        e.cancel = true;
-                        return false;
-                    }
                     if (totalNewGuests < 1) {
                         DevExpress.ui.notify({
                             type: "error",
