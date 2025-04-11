@@ -80,8 +80,8 @@ class GhmRequestController extends Controller
                               ->whereIn("request_ghm.requestStatus", [1, 3, 4]);
                       } else {
                           $query->where("request_ghm.user_id", "!=", $userId)
-                              ->whereIn("request_ghm.requestStatus", [1, 3])
-                              ->where("bu", $this->getEmployeeID()->companycode);
+                              ->whereIn("request_ghm.requestStatus", [1, 3]);
+                            //   ->where("bu", $this->getEmployeeID()->companycode);
                       }
                   })
                   ->orWhere("request_ghm.user_id", $userId);
