@@ -266,6 +266,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180
         },
         {
+            dataField: 'bu',
+            dataType: 'string',
+        },
+        {
             dataField: 'requestType',
             dataType: 'string',
             lookup: {
