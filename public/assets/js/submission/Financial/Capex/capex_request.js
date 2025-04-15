@@ -229,6 +229,11 @@ const accordionItems = [
         visible: true
     },
     {
+        ID: 7,
+        Title: '<i class="fas fa-list"> Questionnaire </i>',
+        visible: true
+    },
+    {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
         visible: true
@@ -574,7 +579,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                     // Spacer antara dua DataGrid
                     $("<div style='height: 20px;'>").appendTo(container);
 
-                    var secondGrid  = $("<div id='secondGrid '>").dxDataGrid({    
+                    var secondGrid  = $("<div id='secondGrid'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -843,7 +848,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 else if(data.ID == 5) {
                     var containerdetail = $("<div>");
 
-                    var formData = $("<div id='formdetail'>").dxDataGrid({    
+                    var formData = $("<div id='formjustification'>").dxDataGrid({    
                         dataSource: storewithmodule('capexjustification',modelclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -962,6 +967,148 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGridjustification.refresh();
                         }
                     }).appendTo(containerdetail);
+
+                    return containerdetail
+                }
+                else if(data.ID == 7) {
+                    var containerdetail = $("<div>");
+                    $("<span style='color:red;font-size:11pt'>").html('A. Does the purchase give future economic benefit?').appendTo(containerdetail);
+
+                    var formData = $("<div id='formquestion'>").dxDataGrid({    
+                        dataSource: storewithmodule('capexquestion',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: false,
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            rowRenderingMode: 'virtual',
+                        },
+                        paging: {
+                            pageSize: 25,
+                        },
+                        pager: {
+                            visible: true,
+                            allowedPageSizes: [5, 15, 'all'],
+                            showPageSizeSelector: true,
+                            showInfo: true,
+                            showNavigationButtons: true,
+                        },
+                        columns: [
+                            {
+                                caption: 'A. Does the purchase give future economic benefit?',
+                                columns: [
+                                    {
+                                        caption: 'Number',
+                                        dataField: 'refcapexq.number',
+                                        width: 80,
+                                        editorOptions: { 
+                                            readOnly: true
+                                        }
+                                    },
+                                    {
+                                        caption: 'Question',
+                                        dataField: 'refcapexq.question',
+                                        editorOptions: { 
+                                            readOnly: true
+                                        }
+                                    },
+                                    { 
+                                        dataField: "answer", 
+                                        cellTemplate: function(container, options) {
+                                            const value = options.value;
+                                            const name = `answer_${options.rowIndex}`;
+                                            
+                                            $('<div>').dxRadioGroup({
+                                                items: ['Yes', 'No'],
+                                                value: value,
+                                                layout: 'horizontal',
+                                                onValueChanged: function(e) {
+                                                    // Aktifkan mode edit terlebih dahulu
+                                                    options.component.editCell(options.rowIndex, "answer");
+                                                    options.setValue(e.value);
+                                                }
+                                            }).appendTo(container);
+                                        },
+                                        editCellTemplate: function(container, options) {
+                                            $('<div>').dxRadioGroup({
+                                                items: ['Yes', 'No'],
+                                                value: options.value,
+                                                layout: 'horizontal',
+                                                onValueChanged: function(e) {
+                                                    options.setValue(e.value);
+                                                }
+                                            }).appendTo(container);
+                                        },
+                                        validationRules: [{ type: "required" }]
+                                    },
+                                    {
+                                        dataField: "remarks",
+                                        validationRules: [{ type: "required" }]
+                                    }
+                                ]
+                            }
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridquestion = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridquestion.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPrepared: function (e) {
+                        },
+                        onCellPrepared: function (e) {
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridquestion.refresh();
+                        }
+                    }).appendTo(containerdetail);
+
+                    $("<span style='color:red;font-size:11pt'>").html('B. How critical is the purchase?').appendTo(containerdetail);
+
 
                     return containerdetail
                 }
