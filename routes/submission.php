@@ -50,6 +50,9 @@ Route::group(['prefix' => 'api'], function () {
         'capexjustification' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestJustificationController::class,
         // 'capexquestion' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestJustificationController::class,
         
+        //memor
+        'memorandum_request' => App\Http\Controllers\Submission\MemorandumController::class,
+
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
         'assignmentto' => App\Http\Controllers\AssignmenttoController::class,
@@ -63,6 +66,10 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('approverlisthistory/{id}/{modulename}',[App\Http\Controllers\ApproverHistoryController::class, 'getList']); //get list approver history by req_id of module
     Route::get('assignmentto/{id}/{modulename}',[App\Http\Controllers\AssignmenttoController::class, 'getList']); //get list developer by req_id of module
     Route::get('stackholders/{id}/{modulename}',[App\Http\Controllers\StackholdersController::class, 'getList']); //get list stackholders by req_id of module
+    Route::get('memorandumhis/{id}/{modulename}',[App\Http\Controllers\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
+    Route::post('memorandumhis',[App\Http\Controllers\ContractHistoryController::class, 'store']); //get list contract history by req_id of module
+    Route::put('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'update']); //get list contract history by req_id of module
+    Route::delete('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'destroy']); //get list contract history by req_id of module
     // uav mission
     Route::get('missionrequestdetail/{id}/{modulename}',[App\Http\Controllers\Submission\UavMissionRequestDetailController::class, 'getList']); //get list missionrequestdetail by req_id of module
     // category

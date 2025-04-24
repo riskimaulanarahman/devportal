@@ -17,6 +17,7 @@ use App\Models\Attachment;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\Useraccess;
+use App\Models\MemorandumHis;
 use DB;
 use COM;
 
@@ -31,7 +32,7 @@ class MemorandumController extends Controller
     public function __construct()
     {
         $this->model = new MemorandumReq();
-        $this->modulename = 'MemorandumReq';
+        $this->modulename = 'Memorandum';
         $this->codename = 'Memorandum';
         $this->module = new Module();
         $this->user = new User();
@@ -40,19 +41,19 @@ class MemorandumController extends Controller
     public function index(Request $request)
     {
         try {
-            
             $id = $request->id;
             $user_id = $this->getAuth()->id;
             $employeeid = $this->getEmployeeID()->id;
             $module_id = $this->getModuleId($this->modulename);
             $isAdmin = $this->getAuth()->isAdmin;
+            $historycontract = MemorandumHis::all();
 
             $dataquery = $this->model->query();
 
             $subquery = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
             from tbl_approverListReq l
             left join tbl_approver a on l.approver_id=a.id
-            left join tbl_approvaltype r on a.approvaltype_id = r.id 
+            left join tbl_approvaltype r on a.approvaltype_id = r.id
             where l.ApprovalAction='1' and l.req_id = request_memorandum.id and l.module_id = '".$module_id."' and request_memorandum.requestStatus='1'
             order by a.sequence)";
 
@@ -65,31 +66,42 @@ class MemorandumController extends Controller
             from tbl_assignment l
             left join employee.tbl_employee e on l.employee_id = e.id
             left join users u on e.LoginName = u.username
-            where l.req_id = request_memorandum.id 
+            where l.req_id = request_memorandum.id
             and l.module_id = '".$module_id."') as tab1
             where user_id = '".$user_id."')";
 
-            $checkUserAccess = Useraccess::where('module_id',$module_id)->where('employee_id',$user_id)->first();
+            $checkUserAccess = Useraccess::where('module_id', $module_id)->where('employee_id', $user_id)->first();
             $getAllview = ($checkUserAccess) ? $checkUserAccess->allowView : null;
-            
+
             $data = $dataquery
                 ->selectRaw("request_memorandum.id,
                     request_memorandum.user_id,
                     request_memorandum.requestStatus,
-                    request_memorandum.bu,
+                    employee.tbl_employee.companycode,
                     request_memorandum.prStatus,
                     request_memorandum.approveddoc,
+                    request_memorandum.employee_id,
                     request_memorandum.created_at,
+                    employee.tbl_employee.FullName,
+                    employee.tbl_employee.SAPID,
+                    employee.tbl_employee.BirthOfDate,
+                    employee.tbl_employee.deptheadName,
+                    employee.tbl_location.Location,
+                    employee.tbl_level.Level,
+                    employee.tbl_designation.DesignationName,
                     codes.code,
                     CASE WHEN request_memorandum.user_id='".$user_id."' then 1 else 0 end as isMine,
                     ".$subquery." as isPendingOnMe,
-                    emp.FullName,
                     ".$getAssignment." as isAssignment
                 ")
                 ->leftJoin('codes','request_memorandum.code_id','codes.id')
+                ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
+                ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
+                ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
+                ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->leftJoin('tbl_assignment', function($join) use ($module_id) {
                     $join->on('request_memorandum.id', '=', 'tbl_assignment.req_id')
-                         ->where('tbl_assignment.module_id', '=', $module_id);
+                        ->where('tbl_assignment.module_id', '=', $module_id);
                 })
                 ->leftJoin('employee.tbl_employee as emp', 'tbl_assignment.employee_id', '=', 'emp.id')
                 ->with(['user','approverlist'])
@@ -117,59 +129,82 @@ class MemorandumController extends Controller
                             ->orWhereRaw($subquery . " = 1");
                         }
                     }
-                })
+                })                
                 ->groupBy('request_memorandum.id',
                     'request_memorandum.user_id',
                     'request_memorandum.requestStatus',
-                    'request_memorandum.bu',
+                    'employee.tbl_employee.companycode',
                     'request_memorandum.prStatus',
                     'request_memorandum.approveddoc',
                     'request_memorandum.created_at',
+                    'request_memorandum.employee_id',
                     'codes.code',
-                    'emp.FullName'
+                    'employee.tbl_employee.sys_id',
+                    'employee.tbl_employee.FullName',
+                    'employee.tbl_location.Location',
+                    'employee.tbl_employee.SAPID',
+                    'employee.tbl_employee.BirthOfDate',
+                    'employee.tbl_level.Level',
+                    'employee.tbl_designation.DesignationName',
+                    'employee.tbl_employee.deptheadName',
                 )
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("CASE WHEN request_memorandum.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_memorandum.created_at desc")
                 ->get();
 
-                $groupedData = [];
+            $groupedData = [];
 
-                // dd($data);
-                foreach ($data as $row) {
-                    if (!isset($groupedData[$row->id])) {
-                        $groupedData[$row->id] = [
-                            'id' => $row->id,
-                            'code' => $row->code,
-                            'requestStatus' => $row->requestStatus,
-                            'bu' => $row->bu,
-                            'prStatus' => $row->prStatus,
-                            'isMine' => $row->isMine,
-                            'isPendingOnMe' => $row->isPendingOnMe,
-                            'isAssignment' => $row->isAssignment,
-                            'user' => $row->user,
-                            'approveddoc' => $row->approveddoc,
-                            'created_at' => $row->created_at,
-                            'FullName' => []
-                        ];
-                    }
-                    if ($row->FullName) {
-                        $groupedData[$row->id]['FullName'][] = $row->FullName;
-                    }
+            foreach ($data as $row) {
+                if (!isset($groupedData[$row->id])) {
+                    $groupedData[$row->id] = [
+                        'id' => $row->id,   
+                        'code' => $row->code,
+                        'requestStatus' => $row->requestStatus,
+                        'bu' => $row->companycode,
+                        'prStatus' => $row->prStatus,
+                        'isMine' => $row->isMine,
+                        'isPendingOnMe' => $row->isPendingOnMe,
+                        'isAssignment' => $row->isAssignment,
+                        'approveddoc' => $row->approveddoc,
+                        'created_at' => $row->created_at,
+                        'employee_id' => $row->employee_id,    
+                        'sys_id' => $row->sys_id,    
+                        // 'employee' => [],                   
+                        'FullName' => $row->FullName,
+                        'user' => $row->user,
+                        'Location' => $row->Location,
+                        // 'memorandum_his' => [],
+                        'SAPID' => $row->SAPID,
+                        'BirthOfDate' => $row->BirthOfDate,
+                        'Level' => $row->Level,
+                        'DesignationName' => $row->DesignationName,
+                        'deptheadName' => $row->deptheadName,
+                    ];
                 }
 
-                foreach ($groupedData as &$data) {
-                    $data['FullName'] = implode(', ', array_unique($data['FullName']));
-                }
+                // if ($row->FullName) {
+                //     $groupedData[$row->id]['FullName'][] = $row->FullName;
+                // }
+
+                // Ambil data memorandum_his untuk setiap request_memorandum
+                // $memorandumHis = MemorandumHis::select('cs', 'startContract', 'endContract')
+                //     ->where('req_id', $row->id)
+                //     ->get();
+
+                // $groupedData[$row->id]['memorandum_his'] = $memorandumHis;
+            }
+
+            // foreach ($groupedData as &$data) {
+            //     $data['FullName'] = implode(', ', array_unique($data['FullName']));
+            // }
 
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
-                // 'data' => $data
                 'data' => array_values($groupedData)
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
-
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
@@ -185,19 +220,19 @@ class MemorandumController extends Controller
 
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
-            $requestData['bu'] = $this->getEmployeeID()->companycode;
-            $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
+            // $requestData['bu'] = $this->getEmployeeID()->companycode;
+            // $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
 
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
 
             // Simpan id dari data baru
-            $req_id = $newData->id;
+            // $req_id = $newData->id;
 
-            $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
+            // $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
 
             DB::commit();
-            
+
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['store'],
@@ -213,24 +248,67 @@ class MemorandumController extends Controller
     public function show($id)
     {
         try {
-
-            $data = $this->model->select(
+            // Ambil data request_memorandum beserta semua memorandumHistories
+            $data = $this->model
+            ->select(
                 'request_memorandum.*',
-                'codes.code'
-                )
-                ->leftJoin('codes','request_memorandum.code_id','codes.id')
-                ->where('request_memorandum.id',$id)
+                'employee.tbl_employee.FullName', 
+                'codes.code', 
+                'employee.tbl_employee.sys_id', 
+                'employee.tbl_employee.SAPID', 
+                'employee.tbl_employee.JoinDate', 
+                'employee.tbl_employee.companycode', 
+                'employee.tbl_employee.deptheadName',
+                'employee.tbl_employee.contract_status',
+                'employee.tbl_employee.BirthOfDate',
+                'employee.tbl_employee.JoinDate',
+                'employee.tbl_employee.deptheadName',
+                'employee.tbl_location.Location',
+                'employee.tbl_level.Level',
+                'employee.tbl_designation.DesignationName',
+            )
+            ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
+            ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
+            ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
+            ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
+            ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
+            ->where('request_memorandum.id', $id)
             ->first();
+        
+            // Ambil data dari `request_memorandum_his` sebagai array terpisah
+            // if ($data) {
+            //     $memorandumHis = DB::table('request_memorandum_his')
+            //         ->select('cs', 'startContract', 'endContract')
+            //         ->where('req_id', $id)
+            //         ->get();
+            
+            //     // Cek apakah memorandumHis memiliki data
+            //     if ($memorandumHis->isEmpty()) {
+            //         // Jika kosong, tambahkan nilai default
+            //         $data->memorandum_his = []; // Atur ke array kosong
+            //     } else {
+            //         // Jika ada data, tambahkan ke properti
+            //         $data->memorandum_his = $memorandumHis;
+            //     }
+            // }
 
-            if($data->code_id == null) {
+            if (!$data) {
+                return response()->json(["status" => "error", "message" => "Data tidak ditemukan"], 404);
+            }
+
+            // Jika code_id null, maka generate kode baru
+            if ($data->code_id == null) {
                 $data->code_id = $this->generateCode($this->codename);
                 $data->save();
             }
 
-            return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
+            return response()->json([
+                'status' => "show",
+                'message' => $this->getMessage()['show'],
+                'data' => $data // Data akan mencakup sys_id
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
-
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }

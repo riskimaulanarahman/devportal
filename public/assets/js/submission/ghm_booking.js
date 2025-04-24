@@ -534,9 +534,9 @@ $(function () {
                         let familyCount = (form.getEditor("family")?.option("value") || []).length;
                         let employeeCount = (form.getEditor("employee")?.option("value") || []).length;
                         let totalGuests = guestCount + familyCount + employeeCount + totalBooked;
-                        let selectedRoom = form.getEditor("ghm_room_id")?.option("value");                        
+                        let selectedRoom = form.getEditor("ghm_room_id")?.option("value");
                         let roomCapacity = roomsWithLocations.find(room => room.id === selectedRoom)?.roomOccupancy || 0;
-                        let remainingCapacity = roomCapacity - totalBooked;                        
+                        let remainingCapacity = roomCapacity - totalBooked;                    
                         if (totalBooked > roomCapacity) {
                             DevExpress.ui.notify({
                                 type: "error",
@@ -555,6 +555,29 @@ $(function () {
                         if (totalGuests > roomCapacity) {
                             DevExpress.ui.notify("Jumlah tamu melebihi kapasitas kamar!", "error", 2000);
                         }
+                        // if (bookingStatus === 3) {
+                        //     let hasInvalidGender = false;
+                    
+                        //     if (firstEmployeeGender === "female") {
+                        //         // Jika gender pertama adalah female, cari employee dengan gender male
+                        //         hasInvalidGender = employees.some(employee => employee.gender === "male");
+                        //     } else if (firstEmployeeGender === "male") {
+                        //         // Jika gender pertama adalah male, cari employee dengan gender female
+                        //         hasInvalidGender = employees.some(employee => employee.gender === "female");
+                        //     }
+                    
+                        //     if (hasInvalidGender) {
+                        //         // Batalkan submit jika ditemukan gender yang tidak valid
+                        //         DevExpress.ui.notify(
+                        //             "Tidak diperbolehkan menambahkan employee dengan gender berbeda dalam satu kamar untuk status booking ini!",
+                        //             "error",
+                        //             3000
+                        //         );
+                        //         e.cancel = true; // Batalkan proses submit
+                        //         return; // Hentikan eksekusi lebih lanjut
+                        //     }
+                        // }
+
                         let formData = form.option("formData");
                         let hasGuestOrFamily = (formData.guest && formData.guest.length > 0) || (formData.family && formData.family.length > 0);
                         form.itemOption("supportingDocument", "isRequired", hasGuestOrFamily);
@@ -715,7 +738,7 @@ $(function () {
                                         displayExpr: function (item) {
                                             if (!item) return "";
                                             const department = departments.find(dept => dept.id === item.department_id);
-                                            return `${item.FullName} | ${item.SAPID} | ${department ? department.DepartmentName : "Failed"}`;
+                                            return `${item.FullName} | ${item.SAPID} | ${department ? department.DepartmentName : "Failed"} | ${item.Gender}`;
                                         },
                                         valueExpr: 'id',
                                         value: Array.isArray(appointmentData.employee) ? appointmentData.employee : [],
@@ -945,6 +968,28 @@ $(function () {
                         loadData();
                         return;
                     }
+                    // if (bookingStatus === 3) {
+                    //     let hasInvalidGender = false;
+                
+                    //     if (firstEmployeeGender === "female") {
+                    //         // Jika gender pertama adalah female, cari employee dengan gender male
+                    //         hasInvalidGender = employees.some(employee => employee.gender === "male");
+                    //     } else if (firstEmployeeGender === "male") {
+                    //         // Jika gender pertama adalah male, cari employee dengan gender female
+                    //         hasInvalidGender = employees.some(employee => employee.gender === "female");
+                    //     }
+                
+                    //     if (hasInvalidGender) {
+                    //         // Batalkan submit jika ditemukan gender yang tidak valid
+                    //         DevExpress.ui.notify(
+                    //             "Tidak diperbolehkan menambahkan employee dengan gender berbeda dalam satu kamar untuk status booking ini!",
+                    //             "error",
+                    //             3000
+                    //         );
+                    //         e.cancel = true; // Batalkan proses submit
+                    //         return; // Hentikan eksekusi lebih lanjut
+                    //     }
+                    // }
                 
                     let reqid = appointmentData.id;
                 
@@ -998,9 +1043,6 @@ $(function () {
                                 let familyCount = safeArray(appointmentData.family).length;
                                 
                                 if (response.status == 'success') {
-                                    // console.log("reqid", reqid);
-                                    // console.log("family", familyCount);
-                                    // console.log("guestCount", guestCount);
                                     if (familyCount > 0 || guestCount > 0) {
                                         
                                         sendRequest(apiurl + "/checkattachmentghm", "POST",{

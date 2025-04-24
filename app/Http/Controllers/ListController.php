@@ -34,6 +34,7 @@ use App\Models\Ecatalog;
 use App\Models\Purchasinguser;
 use App\Models\RekeningCcm;
 use App\Models\Ghm_room;
+use App\Models\MemorandumHis;
 use Auth;
 
 class ListController extends Controller
@@ -246,7 +247,7 @@ class ListController extends Controller
 
     public function listEcatalog() {
         return Ecatalog::select('*')->orderBy('description','asc')->get();
-    }
+    }    
 
     public function listPurchasinguser() {
         return Purchasinguser::select('*')->with('employee')->get();
@@ -254,5 +255,9 @@ class ListController extends Controller
 
     public function listRekeningCcm() {
         return RekeningCcm::selectRaw("id, bu, CONCAT(nama, ' - ', norek, ' (', bank, ')') AS nama")->get();
+    }
+
+    public function ListContract() {
+        return MemorandumHis::select('cs')->orderBy('cs','asc')->get();
     }
 }

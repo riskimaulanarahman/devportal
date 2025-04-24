@@ -237,6 +237,12 @@ class GhmRequestController extends Controller
                 LEFT JOIN employee.tbl_employee AS emp
                 ON emp.id = employee_id
                 ) AS employee_fullname,
+                 (SELECT STRING_AGG(emp.Gender, ', ')
+                FROM OPENJSON(request_ghm.employee) 
+                WITH (employee_id INT '$')
+                LEFT JOIN employee.tbl_employee AS emp
+                ON emp.id = employee_id
+                ) AS gender,
                 COALESCE(request_ghm.guest, '[]') AS guest,
                 COALESCE(request_ghm.family, '[]') AS family,
                 employee.tbl_location.Location, 
@@ -490,6 +496,18 @@ class GhmRequestController extends Controller
 
             $requestData['bu'] = $employee->companycode;
             // Buat data baru pada tabel utama
+            $ghm_room_id = $request->input('ghm_room_id');
+
+            $existingGenders = \App\Models\Submission\Ghm::where('ghm_room_id', $ghm_room_id)
+            ->with('employee')
+            ->get()
+            ->pluck('employee.gender')
+            ->unique();
+    
+            if ($existingGenders->count() > 0 && !$existingGenders->contains($employee->gender)) {
+                return back()->withErrors(['ghm_room_id' => 'Kamar ini sudah ditempati oleh gender yang berbeda.']);
+            }
+
             $newData = $this->model->create($requestData);
 
             // Simpan id dari data baru

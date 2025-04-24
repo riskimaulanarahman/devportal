@@ -138,6 +138,22 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180
         },
         {
+            dataField: 'requestStatus',
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "<span>Draft</span>",
+                    "<span>Waiting Approval</span>",
+                    "<span>Rework</span>",
+                    "<span>Approved</span>",
+                    "<span>Rejected</span>",
+                ];
+                return arrText[e.value];
+            },
+        },  
+        {
             dataField: "description",
             caption: "Details",
             width: 180
@@ -200,23 +216,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: "family",
             caption: "Family",
             width: 180
-        },
-        {
-            dataField: 'requestStatus',
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                ];
-                return arrText[e.value];
-            },
-        },     
+        }           
       
     ],
     export: {

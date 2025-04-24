@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Code;
 use App\Models\ApproverListReq;
+use App\Models\MemorandumHis;
+use App\Models\Employee;
 use App\Models\ApproverListHistory;
 
 class MemorandumReq extends Model
@@ -19,14 +21,17 @@ class MemorandumReq extends Model
     protected $guarded = ['id'];
 
     protected $fillable = [
-        'user_id',
-        'requestStatus',
-        'bu',
-        'prStatus'
+            'sys_id',
+            'requestStatus',
+            'bu',
+            'pa',
+            'sector',
+            'prStatus',
+            'user_id',
+            'employee_id'
     ];
 
     protected $casts = [
-        // 'special_requirements' => 'integer',
         'user_id' => 'integer',
     ];
 
@@ -49,6 +54,16 @@ class MemorandumReq extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function request_memorandum_his()
+    {
+        return $this->hasMany(MemorandumHis::class, 'sys_id', 'sys_id');
+    }
+    
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function approverlist()
