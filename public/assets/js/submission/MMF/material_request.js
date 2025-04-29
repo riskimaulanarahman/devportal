@@ -460,7 +460,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         readOnly: true
                                     }
                                 },
-                                { 
+                                {
                                     dataField: "bu",
                                     caption: "BU",
                                     lookup: {

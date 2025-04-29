@@ -171,7 +171,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
         {
             caption: "PR PIC",
-            dataField: 'FullName',
+            dataField: 'user.fullname',
             width: 180,
         },
         {
@@ -460,14 +460,33 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     },
                                     validationRules: [{ type: "required" }]
                                 },
-                                { 
-                                    caption: "BU",
-                                    dataField: "companycode",
-                                },                                
                                 {
-                                    caption: 'Sub Area',
-                                    dataField: 'Location',
-                                }, 
+                                    caption: 'BU',
+                                    dataField: 'bu',
+                                    validationRules: [{ type: "required" }],
+                                    lookup: {
+                                        dataSource: [{bu:'IHM'},{bu:'AHL'}],
+                                        valueExpr: 'bu',
+                                        displayExpr: 'bu',
+                                    },
+                                    setCellValue: function (rowData, value) {
+                                        rowData.bu = value;
+                                        if (value === "IHM") {
+                                            rowData.sector = "HO";
+                                        } else if (value === "AHL") {
+                                            rowData.sector = "HO";
+                                        }  else if (value === "NKL") {
+                                            rowData.sector = "HO";
+                                        }
+                                    },
+                                    // editorOptions: { 
+                                    //     readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
+                                    // }
+                                },                                
+                                // {
+                                //     caption: 'Sub Area',
+                                //     dataField: 'sector',
+                                // }, 
                                 {
                                     caption: 'SAP',
                                     dataField: 'SAPID'
@@ -484,7 +503,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         valueExpr: 'id',
                                         displayExpr: 'name',
                                     },
-                                    visible: (options.data.requestStatus == 3) ? true : false
+                                    // visible: (options.data.requestStatus == 3) ? true : false
                                 },
                                 {
                                     dataField: "created_at",
@@ -660,7 +679,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 {
                                     caption: 'Birth of Date',                                    
                                     dataType: 'date',
-                                    dataField: 'birthofdate',
+                                    dataField: 'BirthOfDate',
                                 },
                                 {
                                     caption: 'Date of Hire',
@@ -1306,7 +1325,6 @@ function btnreqsubmit(reqid,mode) {
     btnSubmit.prop('disabled', true);
 
     var actionForm = (mode == 'approval') ? 'approval' : 'submission';
-
 
     if(mode == 'approval') {
         var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button

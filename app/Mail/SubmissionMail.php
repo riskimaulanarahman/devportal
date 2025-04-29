@@ -28,7 +28,7 @@ use App\Http\Controllers\Submission\MMF\M28RequestController;
 use App\Http\Controllers\Submission\MMF\M30RequestController;
 use App\Models\Submission\HRIS\Hris;
 use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
-
+use App\Http\Controllers\Submission\MemorandumController;
 use Storage;
 use DB;
 use App\Http\Traits\HasGetModule;
@@ -348,7 +348,7 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
-        // Material Req MODULE
+        // Material Req MODULE        
 
         // MMF MODULE
             if($modulename == 'Mmf') {
@@ -403,6 +403,21 @@ class SubmissionMail extends Mailable
 
         }
     // hcrf MODULE
+        // Material Req MODULE
+        if($modulename == 'MemorandumReq') {
+            $request = new Request();
+            $memorandumController = new MemorandumController();
+            if($final == 1) {
+                if($mailData['action_id'] !== 5) {// action task MoM
+                    $pdf = $memorandumController->genPdfMemorandumReq($request,$mailData['submission']->id);
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                }
+                foreach ($Mailrecipient as $cc) {
+                    $this->cc($cc->email); // cc
+                }
+            }
+        }
+        // Material Req MODULE
 
     }
 

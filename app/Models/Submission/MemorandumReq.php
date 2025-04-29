@@ -21,12 +21,11 @@ class MemorandumReq extends Model
     protected $guarded = ['id'];
 
     protected $fillable = [
-            'sys_id',
             'requestStatus',
             'bu',
             'pa',
-            'sector',
-            'prStatus',
+            // 'sector',
+            // 'prStatus',
             'user_id',
             'employee_id'
     ];
@@ -74,6 +73,14 @@ class MemorandumReq extends Model
     public function approverHistory()
     {
         return $this->hasMany(ApproverListHistory::class,'req_id');
+    }
+    public function approver()
+    {
+        return $this->hasMany(approver::class,'req_id');
+    }
+    public function approvaltype()
+    {
+        return $this->hasMany(approvaltype::class,'req_id');
     }
 
     public function code()

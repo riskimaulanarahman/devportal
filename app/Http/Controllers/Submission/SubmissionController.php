@@ -104,6 +104,7 @@ class SubmissionController extends Controller
                 'MaterialReq' => "App\Models\Submission\Ecatalog",
                 'Hris' => "App\Models\Submission\HRIS",
                 'Ccm' => "App\Models\Submission\Financial",
+                'MemorandumReq' => "App\Models\Submission\MemorandumReq",
             ];
             
             $baseNamespace = "App\Models\Submission";
