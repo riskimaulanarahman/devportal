@@ -159,7 +159,7 @@ class AdvanceRequestController extends Controller
                 ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
                 ->where('request_mmf.category', 'MMF30')
                 ->whereIn('request_mmf.requestStatus', [3]);
-               
+            
             if ($startDate && $endDate) {
                 $query->whereBetween('request_mmf.created_at', [$startDate, $endDate]);
             }

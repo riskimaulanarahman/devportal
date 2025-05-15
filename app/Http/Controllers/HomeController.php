@@ -103,6 +103,7 @@ class HomeController extends Controller
             'request_ccm' => $this->getModuleId('Ccm'),
             'request_ghm' => $this->getModuleId('Ghm'),
             'request_memorandum' => $this->getModuleId('MemorandumReq'),
+            // 'request_memo' => $this->getModuleId('MemorandumReq'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -181,6 +182,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_memorandum':
                                 $url = 'memorandum_request';
+                                break;
+                            case 'request_memo':
+                                $url = 'memo_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }
@@ -271,6 +275,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_memorandum':
                                 $url = 'memorandum_request';
+                                break;
+                            case 'request_memo':
+                                $url = 'memo_request';
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }

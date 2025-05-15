@@ -34,6 +34,7 @@ class SubmissionController extends Controller
             'MaterialReq' => "App\Models\Submission\Ecatalog",
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
+            'MemorandumReq' => "App\Models\Submission\MemorandumReq",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -105,6 +106,7 @@ class SubmissionController extends Controller
                 'Hris' => "App\Models\Submission\HRIS",
                 'Ccm' => "App\Models\Submission\Financial",
                 'MemorandumReq' => "App\Models\Submission\MemorandumReq",
+                'MemorandumHis' => "App\Models\MemorandumHis",
             ];
             
             $baseNamespace = "App\Models\Submission";
@@ -131,7 +133,7 @@ class SubmissionController extends Controller
                             ->where('id', $id)
                             ->whereNull($column)
                             ->first();
-            
+
                 if ($data) {
                     $nullColumns[] = $column;
                 }
@@ -203,12 +205,13 @@ class SubmissionController extends Controller
             } else {
                 // submission yang tidak perlu menambahkan supporting document
                 $except = [
-                    'ActiveDirectory', 
-                    'Mmf', 
+                    'ActiveDirectory',
+                    'Mmf',
                     'MaterialReq',
                     'Hris',
                     'Ghm',
-                    'MemorandumReq'
+                    'MemorandumReq',
+                    'MemorandumHis'
                 ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {

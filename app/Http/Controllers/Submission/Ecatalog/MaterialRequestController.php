@@ -236,52 +236,16 @@ class MaterialRequestController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Mulai transaksi database
-        DB::beginTransaction();
-        
         try {
-            $data = $this->model->findOrFail($id);
-            $reqStatus = $data->requestStatus;
+
             // Mengambil semua data dari request
             $requestData = $request->all();
-
-            $this->addOneDayToDate($requestData);
-
-            $data->update($requestData);
-
-            //start save history perubahan
-            $fields = [
-                'prStatus' => ($request->prStatus == 1) ? 'Done' : 'Waiting',
-            ];
             
-            foreach ($fields as $key => $value) {
-                if ($value) {
-                    $this->approverAction($this->modulename, $id, $key, 1, $value, null, null);
-                }
-            }
-            //end save history perubahan
+            // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
+            // $this->addOneDayToDate($requestData);
 
-            if(isset($request->prStatus) && $data->requestStatus == 3) {
-                if($request->prStatus == 1) {
-
-                    $getSubmissionData = $this->model->findOrFail($id);
-
-                    $mailData = [
-                        "id" => 30, // final approved
-                        "action_id" => 5, // update id
-                        "submission" => $getSubmissionData,
-                        "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
-                        "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
-                        "message" => $this->mailMessage()['newActivity'],
-                        "remarks" => $request->ticketStatus
-                    ];
-                    Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
-                }
-
-            }
-
-            // Komit transaksi jika semuanya berjalan lancar
-            DB::commit();
+            $data = $this->model->findOrFail($id);
+            $data->update($requestData);
 
             // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([

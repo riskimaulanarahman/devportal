@@ -4,19 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Module;
+use App\Models\User;
 use App\Models\MemorandumHis;
+use App\Models\MemorandumReq;
+use App\Models\Submission\MemorandumReq as SubmissionMemorandumReq;
 use Illuminate\Http\Request;
 use DB;
 
 class ContractHistoryController extends Controller
 {
-    private $model;
-    private $module;
+    
+    public $model;
+    public $modulename;
+    public $module;
+    public $user;
+    public $codename;
 
     public function __construct()
     {
         $this->model = new MemorandumHis();
+        $this->modulename = 'MemorandumHis';
+        $this->codename = 'Memorandum';
         $this->module = new Module();
+        $this->user = new User();
     }
 
     public function index()
@@ -36,13 +46,14 @@ class ContractHistoryController extends Controller
     public function store(Request $request)
     {
 
-        DB::beginTransaction();
 
         try {
+            $employeeid = $this->getEmployeeID()->id;
             $requestData = $request->all();
             $requestData['user_id'] = $this->getAuth()->id;
+            $requestData['sysid'] = $this->getEmployeeID()->sys_id;
+            $requestData['requestStatus'] = $this->getEmployeeID()->requestStatus;
             $newData = $this->model->create($requestData);
-            DB::commit();
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['store'],
@@ -60,31 +71,30 @@ class ContractHistoryController extends Controller
         //
     }
 
-    public function getList($id, $modulename)
+    public function getList($sysid, $modulename)
     {
         try {
-            // Ambil module berdasarkan modulename
             $module = $this->module
                 ->select('id', 'module')
                 ->where('module', $modulename)
                 ->first();
 
-            if ($module) {
-                $data = DB::table('request_memorandum_his')
-                    ->where('req_id', $id)
-                    ->get();
-
-                return response()->json([
-                    "status" => "show",
-                    "message" => $this->getMessage()['show'],
-                    "data" => $data
-                ]);
-            } else {
+            if (!$module) {
                 return response()->json([
                     "status" => "show",
                     "message" => "Module not found for modulename: $modulename."
                 ]);
             }
+
+            // Mengambil data berdasarkan sysid saja
+            $data = MemorandumHis::where('sysid', $sysid)->get();
+
+            return response()->json([
+                "status" => "show",
+                "message" => $this->getMessage()['show'],
+                "data" => $data
+            ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 "status" => "error",
@@ -93,21 +103,16 @@ class ContractHistoryController extends Controller
         }
     }
 
+
+
     public function update(Request $request, $id)
     {
         DB::beginTransaction();
 
         try {
-            // Ambil semua data dari request
             $requestData = $request->all();
-
-            // Tambahkan user_id dari user yang sedang login
-            $requestData['user_id'] = $this->getAuth()->id;
-
-            // Cari data berdasarkan ID
             $data = $this->model->findOrFail($id);
-
-            // Perbarui data
+            $requestData['user_id'] = $this->getAuth()->id;
             $data->update($requestData);
 
             DB::commit();
@@ -119,7 +124,6 @@ class ContractHistoryController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Rollback jika terjadi error
             DB::rollBack();
 
             return response()->json([

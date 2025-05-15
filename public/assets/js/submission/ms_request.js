@@ -65,21 +65,20 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 var isMine = options.data.isMine;
                 var isPendingOnMe = options.data.isPendingOnMe;
                 var isAssignment = options.data.isAssignment;
-                var prStatus = options.data.prStatus;
-                var reqid = options.data.id;
+                var reqid = options.data.id;                
                 var reqstatus = options.data.requestStatus;
                 var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
                 var arrColor = [
                     "btn-secondary",
                     (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
                     "btn-warning",
-                    ((prStatus == 0 && isAssignment == 1 && reqstatus == 3)) ? "btn-primary" : "btn-success",
+                    ((isAssignment == 1 && reqstatus == 3)) ? "btn-primary" : "btn-success",
                     "btn-danger",
                 ];
 
                 var viewIcon = (mode == 'approval' && reqstatus == 1) 
                 ? "fa-check" 
-                : ((prStatus == 0 && isAssignment == 1 && reqstatus == 3) 
+                : (( isAssignment == 1 && reqstatus == 3) 
                     ? "fa-pen" 
                     : "fa-search");
     
@@ -154,23 +153,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180
         },
         {
-            caption: 'PR Status',
-            dataField: 'prStatus',
-            width: 180,
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Active</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Terminated</span>",
-                ];
-                return arrText[e.value];
-            },
-        },
-        {
-            caption: "PR PIC",
+            caption: "Superior",
             dataField: 'user.fullname',
             width: 180,
         },
@@ -269,24 +252,24 @@ $('#btnadd').on('click',function(){
 const accordionItems = [
     {
         ID: 1,
-        Title: '<i class="far fa-newspaper"> Form Data</i>',
+        Title: '<i class="far fa-newspaper"> Personal Data Infomation</i>',
         visible: true
     },
     {
         ID: 5,
         Title: '',
-        visible: false
+        visible: true
     },
     // {
     //     ID: 7,
     //     Title: '<i class="fas fa-users"> Assignment To </i>',
     //     visible: true
     // },
-    {
-        ID: 6,
-        Title: '<i class="fas fa-list-ul"> Details </i>',
-        visible: true
-    },
+    // {
+    //     ID: 6,
+    //     Title: '<i class="fas fa-list-ul"> Details </i>',
+    //     visible: true
+    // },
     {
         ID: 9,
         Title: '<i class="fas fa-list-ul"> Contract List </i>',
@@ -325,6 +308,7 @@ const updateVisibleById = (itemId, visible) => {
 const popupContentTemplate = function (reqid,mode,options) {
     
         isMine = options.data.isMine;
+        var sysid = options.data.sysid;
         var isPendingOnMe = options.data.isPendingOnMe;
         var isAssignment = options.data.isAssignment;
 
@@ -432,10 +416,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                             editing: {
                                 useIcons:true,
                                 mode: "batch",
-                                allowAdding: true,
+                                allowAdding: false,
                                 allowUpdating: true,
                                 // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isAssignment == 1 ? true : false),
-                                allowDeleting: true,
+                                allowDeleting: false,
                             },
                             scrolling: {
                                 mode: "virtual"
@@ -460,51 +444,23 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     },
                                     validationRules: [{ type: "required" }]
                                 },
-                                {
-                                    caption: 'BU',
-                                    dataField: 'bu',
-                                    validationRules: [{ type: "required" }],
+                                { 
+                                    dataField: "bu",
+                                    caption: "BU",
                                     lookup: {
-                                        dataSource: [{bu:'IHM'},{bu:'AHL'}],
-                                        valueExpr: 'bu',
-                                        displayExpr: 'bu',
-                                    },
-                                    setCellValue: function (rowData, value) {
-                                        rowData.bu = value;
-                                        if (value === "IHM") {
-                                            rowData.sector = "HO";
-                                        } else if (value === "AHL") {
-                                            rowData.sector = "HO";
-                                        }  else if (value === "NKL") {
-                                            rowData.sector = "HO";
-                                        }
-                                    },
-                                    // editorOptions: { 
-                                    //     readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
-                                    // }
-                                },                                
-                                // {
-                                //     caption: 'Sub Area',
-                                //     dataField: 'sector',
-                                // }, 
+                                        dataSource: listOption('/list-company','id','CompanyCode'),  
+                                        valueExpr: 'CompanyCode',
+                                        displayExpr: 'CompanyCode',
+                                    }
+                                },   
                                 {
-                                    caption: 'SAP',
-                                    dataField: 'SAPID'
+                                    caption: 'SYSID',
+                                    dataField: 'sys_id'
                                 },                      
                                 {
                                     caption: 'Department Head',
                                     dataField: 'deptheadName'
-                                },                      
-                                {
-                                    caption: 'PR Status',
-                                    dataField: 'prStatus',
-                                    lookup: { 
-                                        dataSource: [{id:0,name:"Waiting"},{id:1,name:"Done"},{id:2,name:"Rejected"}],  
-                                        valueExpr: 'id',
-                                        displayExpr: 'name',
-                                    },
-                                    // visible: (options.data.requestStatus == 3) ? true : false
-                                },
+                                }, 
                                 {
                                     dataField: "created_at",
                                     dataType: "date",
@@ -513,36 +469,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         readOnly: true
                                     }
                                 },
-                                // {
-                                //     caption: 'SYS ID',
-                                //     dataField: 'sys_id'
-                                // },                                
-                                // {
-                                //     caption: 'PA',
-                                //     dataField: 'pa'
-                                // }, 
-                                // {
-                                //     caption: 'Date of Hire',                                    
-                                //     dataType: 'date',
-                                //     dataField: 'JoinDate',
-                                // },
-                                // {
-                                //     caption: 'Birth of Date',
-                                //     dataType: 'date',
-                                //     dataField: 'BirthOfDate',
-                                // },  
-                                // {
-                                //     caption: 'jabatan',
-                                //     dataField: 'Level',
-                                // },  
-                                // {
-                                //     caption: 'OU',
-                                //     dataField: 'DesignationName',
-                                // },  
-                                // {
-                                //     caption: 'pendidikan',
-                                //     dataField: 'pendidikan',
-                                // },
                             ],
                             export: {
                                 enabled: false,
@@ -558,10 +484,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             onInitNewRow : function(e) {
                             },
-                            onSaved: function(e) {
-                            },
-                            onEditCanceled: function(e) {
-                            },
+                            // onSaved: function(e) {
+                            //     updateVisibility(e.component);
+                            // },
+                            // onEditCanceled: function(e) {
+                            //     updateVisibility(e.component);
+                            //     dataGrid1.refresh();
+                            // },
                             onToolbarPreparing: function(e) {
                                 e.toolbarOptions.items.unshift({						
                                     location: "after",
@@ -571,12 +500,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         icon: "refresh",
                                         onClick: function() {
                                             dataGrid1.refresh();
-                                        }
+                                            dataGrid11.refresh();
+                                        }   
                                     }
                                 });
                             },
                             onEditorPreparing: function (e) {
-                
                             },
                             onCellPrepared: function (e) {
                                 if (e.column.index == 0 && e.rowType == "data") {
@@ -601,20 +530,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             onDataErrorOccurred: function(e) {
-                                // Menampilkan pesan kesalahan
                                 console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
-                        
-                                // Memuat ulang DataGrid
                                 dataGrid1.refresh();
                             }
                         }).appendTo(infoContent2)
-
-                        return infoContent2
+                        return formData
                     }                     
-                    else if(data.ID == 6) {
-                        return formData = $("<div id='formdata'>").dxDataGrid({    
-                            // dataSource: storewithmodule('MemorandumHis',modelclass,reqid),
-                            // dataSource: storewithmodule('memorandumhis',modelclass,reqid),
+                    else if(data.ID == 5) {
+                        let formData2 = $("<div id='formdata2'>").dxDataGrid({    
                             dataSource: storedetail(modname,reqid),
                             allowColumnReordering: true,
                             allowColumnResizing: true,
@@ -627,7 +550,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             filterPanel: { visible: false },
                             headerFilter: { visible: false },
                             searchPanel: {
-                                visible: true,
+                                visible: false,
                                 width: 240,
                                 placeholder: 'Search...',
                             },
@@ -636,10 +559,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             editing: {
                                 useIcons:true,
-                                mode: "batch",
-                                allowAdding:  true,
+                                mode: "cell",
+                                allowAdding:  false,
                                 allowUpdating:  true,
-                                allowDeleting:  true,
+                                allowDeleting:  false,
                                 // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                                 // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                                 // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
@@ -647,35 +570,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                             scrolling: {
                                 rowRenderingMode: 'virtual',
                             },
-                            paging: {
-                                pageSize: 5,
-                            },
-                            pager: {
-                                visible: true,
-                                allowedPageSizes: [5, 15, 'all'],
-                                showPageSizeSelector: true,
-                                showInfo: true,
-                                showNavigationButtons: true,
-                            },
-                            columns: [
-                                // {
-                                //     caption: 'cs',
-                                //     dataField: 'cs',
-                                //     lookup: {
-                                //         dataSource: listOption('/list-contract','id','cs'),  
-                                //         valueExpr: 'id',
-                                //         displayExpr: 'cs'
-                                //     },
-                                //     validationRules: [{ type: "required" }]
-                                // },                                       
+                            columns: [                                      
                                 {
-                                    caption: 'SYS ID',
-                                    dataField: 'sys_id'
-                                },                                
+                                    caption: 'SAPID',
+                                    dataField: 'SAPID'
+                                },   
                                 {
-                                    caption: 'PA',
-                                    dataField: 'pa'
-                                }, 
+                                    caption: 'pendidikan',
+                                    dataField: 'pendidikan',
+                                    
+                                },
                                 {
                                     caption: 'Birth of Date',                                    
                                     dataType: 'date',
@@ -685,19 +589,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     caption: 'Date of Hire',
                                     dataType: 'date',
                                     dataField: 'JoinDate',
-                                },  
+                                },
+                                {
+                                    caption: 'OU',
+                                    dataField: 'DesignationName',
+                                },                               
                                 {
                                     caption: 'jabatan',
                                     dataField: 'Level',
                                 },  
-                                {
-                                    caption: 'OU',
-                                    dataField: 'DesignationName',
-                                },  
-                                {
-                                    caption: 'pendidikan',
-                                    dataField: 'pendidikan',
-                                },  
+                                  
                             ],
                             export: {
                                 enabled: false,
@@ -706,108 +607,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 allowExportSelectedData: true
                             },
                             onInitialized: function(e) {
-                                dataGriddetail = e.component;
+                                dataGrid11 = e.component;
                             },
                             onContentReady: function(e){
                                 moveEditColumnToLeft(e.component);
                             },
-                            onToolbarPreparing: function(e) {
-                                e.toolbarOptions.items.unshift({						
-                                    location: "after",
-                                    widget: "dxButton",
-                                    options: {
-                                        hint: "Refresh Data",
-                                        icon: "refresh",
-                                        onClick: function() {
-                                            dataGriddetail.refresh();
-                                        }
-                                    }
-                                });
+                            onInitNewRow : function(e) {
                             },
-                            onEditorPrepared: function (e) {
+                            onToolbarPreparing: function(e) {
                             },
                             onEditorPreparing: function (e) {
-                                if ((e.dataField == "catalog_id") && e.parentType == "dataRow") {
-                                    e.editorName = "dxDropDownBox";                
-                                    e.editorOptions.dropDownOptions = {                
-                                        height: 500,
-                                        width: 1000,
-                                    };
-                                    e.editorOptions.contentTemplate = function (args, container) {
-                        
-                                        var value = args.component.option("value"),
-                                            $dataGrid = $("<div>").dxDataGrid({
-                                                width: '100%',
-                                                dataSource: args.component.option("dataSource"),
-                                                keyExpr: "id",
-                                                columns: [
-                                                    "materialCode",
-                                                    "category",
-                                                    {
-                                                        dataField: 'description',
-                                                        width: 240
-                                                    },
-                                                    "brand",
-                                                    "type",
-                                                    "uom",
-                                                    "historicalPrice",
-                                                    "currency",
-                                                    "lastUpdated",
-                                                    "pg"
-                                                ],
-                                                scrolling: {
-                                                    mode: "virtual"
-                                                },
-                                                pager: {
-                                                    visible: false,
-                                                    showInfo: true,
-                                                },
-                                                columnsAutoWidth: true,
-                                                allowColumnResizing: true,
-                                                hoverStateEnabled: true,
-                                                paging: { enabled: true, pageSize: 10 },
-                                                filterRow: { visible: true },
-                                                height: '90%',
-                                                showRowLines: true,
-                                                showBorders: true,
-                                                selection: { mode: "single" },
-                                                selectedRowKeys: [value],
-                                                focusedRowEnabled: true,
-                                                focusedRowKey: value,
-                                                searchPanel: {
-                                                    visible: true,
-                                                    width: 265,
-                                                    placeholder: "Search..."
-                                                },
-                                                onSelectionChanged: function (selectedItems) {
-                                                    const keys = selectedItems.selectedRowKeys;
-                                                    const hasSelection = keys.length;
-                                                    if(hasSelection !== 0) {
-                                                        args.component.option('value', hasSelection ? keys[0] : null);
-                                                        args.component.close();
-                                                    }
-                                                }
-                                            });
-                        
-                                        var dataGrid = $dataGrid.dxDataGrid("instance");
-                        
-                                        args.component.on("valueChanged", function (args) {
-                                            var value = args.value;
-                        
-                                            dataGrid.selectRows(value, false);
-                                        });
-                                        container.append($dataGrid);
-                                        $("<div>").dxButton({
-                                            text: "Close",
-                        
-                                            onClick: function (ev) {
-                                                args.component.close();
-                                            }
-                                        }).css({ float: "right", marginTop: "10px" }).appendTo(container);
-                                        return container;
-                        
-                                    };
-                                }
+                            },
+                            onEditorPrepared: function (e) {
                             },
                             onCellPrepared: function (e) {
                                 if ( e.rowType == "data" && (e.column.index==5)) {
@@ -824,13 +635,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                         
                                 // Memuat ulang DataGrid
-                                dataGriddetail.refresh();
+                                dataGrid11.refresh();
                             }
                         })
-                    }     
+                        return formData2;
+                    }
                     else if(data.ID == 9) {
                         return formData = $("<div id='formcontract'>").dxDataGrid({    
-                            dataSource: storewithmodule('memorandumhis',modelclass,reqid),
+                            dataSource: storewithmodule('memorandumhis',modelclass,sysid),                       
                             allowColumnReordering: true,
                             allowColumnResizing: true,
                             columnsAutoWidth: true,
@@ -875,7 +687,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             columns: [
                                 {
                                     caption: 'Kontrak ke-',
-                                    dataField: 'cs',
+                                    dataField: 'sequence',
                                     editorOptions: { 
                                         readOnly: false,
                                     }
@@ -897,23 +709,98 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }
                                 },
                                 {
-                                    caption: 'termination',
-                                    dataField: 'cs',
-                                    editorOptions: { 
-                                        readOnly: false,
+                                    dataField: "approveddoc",
+                                    caption:"Approval Doc",
+                                    allowFiltering: false,
+                                    allowSorting: false,
+                                    formItem: { visible: false},
+                                    cellTemplate: function (container, options) {
+                                        if ((options.value!="") && (options.value)){
+                                            $("<div />").dxButton({
+                                                icon: 'download',
+                                                type: "success",
+                                                text: "Download",
+                                                onClick: function (e) {
+                                                    window.open(options.value, '_blank');
+                                                }
+                                            }).appendTo(container);
+                                        }
                                     }
-                                },                                                              
-                                {
-                                    caption: 'termination',
-                                    dataField: "cs",
                                 },                                                              
                                 {
                                     caption: 'komentar',
-                                    dataField: 'cs',
+                                    dataField: 'remarks',
                                     editorOptions: { 
                                         readOnly: false,
                                     }
-                                },                                                              
+                                },      
+                                {
+                                    caption: 'Action',
+                                    width: 140,
+                                    cellTemplate: function(container, options) {
+                                        const {
+                                            isMine,
+                                            isPendingOnMe,
+                                            isAssignment,
+                                            id: reqid,
+                                            approveddoc
+                                        } = options.data;
+                                    
+                                        // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
+                                        if (approveddoc != null) return;
+                                    
+                                        // Tombol "Submit Contract"
+                                        $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
+                                            .on('dxclick', function(evt) {
+                                                evt.stopPropagation();
+                                                btnreqsubmit(reqid);  // Panggil fungsi submit
+                                            })
+                                            .appendTo(container);
+                                    
+                                        // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
+                                        if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
+                                            $('<button class="btn btn-danger" style="margin-left: 5px;">Cancel</button>')
+                                                .on('dxclick', function(evt) {
+                                                    evt.stopPropagation();
+                                                    Swal.fire({
+                                                        title: 'Are you sure?',
+                                                        text: "Are you sure you want to cancel this submission?",
+                                                        icon: 'warning',
+                                                        showCancelButton: true,
+                                                        confirmButtonColor: '#d33',
+                                                        cancelButtonColor: '#3085d6',
+                                                        confirmButtonText: 'Yes, cancel it'
+                                                    }).then((result) => {
+                                                        if (result.isConfirmed) {
+                                                            showLoadingScreen();
+                                                            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                                action: 'submission',
+                                                                approvalAction: 0
+                                                            }).then(function(response) {
+                                                                hideLoadingScreen();
+                                                                if (response.status != 'error') {
+                                                                    dataGrid.refresh();
+                                                                    Swal.fire({
+                                                                        icon: 'success',
+                                                                        title: 'Saved',
+                                                                        text: 'The submission has been cancelled.',
+                                                                    });
+                                                                }
+                                                            });
+                                                        } else {
+                                                            hideLoadingScreen();
+                                                            Swal.fire({
+                                                                icon: 'error',
+                                                                title: 'Cancelled',
+                                                                text: 'The submission cancellation has been cancelled.'
+                                                            });
+                                                        }
+                                                    });
+                                                })
+                                                .appendTo(container);
+                                        }
+                                    }
+                                }                                                        
                             ],
                             export: {
                                 enabled: false,
@@ -950,86 +837,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataGriddetail.refresh();
                             }
                         })
-                    }              
-                    // else if(data.ID == 8) {
-                    //     return $("<div id='formhistorykontrak'>").dxDataGrid({    
-                    //         dataSource: storewithmodule('memorandumhis',modelclass,reqid),
-                    //         allowColumnReordering: true,
-                    //         allowColumnResizing: true,
-                    //         columnsAutoWidth: true,
-                    //         rowAlternationEnabled: true,
-                    //         wordWrapEnabled: true,
-                    //         showBorders: true,
-                    //         filterRow: { visible: false },
-                    //         filterPanel: { visible: false },
-                    //         headerFilter: { visible: false },
-                    //         searchPanel: {
-                    //             visible: true,
-                    //             width: 240,
-                    //             placeholder: 'Search...',
-                    //         },
-                    //         editing: {
-                    //             useIcons:true,
-                    //             mode: "batch",
-                    //             allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                    //             allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                    //             allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                    //         },
-                    //         paging: { enabled: true, pageSize: 10 },
-                    //         columns: [
-                    //             {
-                    //                 caption: "Sequence",
-                    //                 dataField: "cs"
-                    //             },
-                    //             {
-                    //                 caption: "Start Contract",
-                    //                 dataField: "startContract",
-                    //                 dataType: "date",
-                    //                 format: "dd-MM-yyyy",
-                    //             },
-                    //             {
-                    //                 caption: "End Contract",
-                    //                 dataField: "endContract",
-                    //                 dataType: "date",
-                    //                 format: "dd-MM-yyyy",
-                    //             },
-                    //             {
-                    //                 caption: "Doc Contract"
-                    //             }
-                    //         ],
-                    //         export: {
-                    //             enabled: false,
-                    //             fileName: modname,
-                    //             excelFilterEnabled: true,
-                    //             allowExportSelectedData: true
-                    //         },
-                    //         onInitialized: function(e) {
-                    //             dataGridApproverHistory = e.component;
-                    //         },
-                    //         onContentReady: function(e){
-                    //             moveEditColumnToLeft(e.component);
-                    //         },
-                    //         onInitNewRow : function(e) {
-                    //         },
-                    //         onToolbarPreparing: function(e) {
-                    //             e.toolbarOptions.items.unshift({						
-                    //                 location: "after",
-                    //                 widget: "dxButton",
-                    //                 options: {
-                    //                     hint: "Refresh Data",
-                    //                     icon: "refresh",
-                    //                     onClick: function() {
-                    //                         dataGridApproverHistory.refresh();
-                    //                     }
-                    //                 }
-                    //             })
-                    //         },
-                    //         onDataErrorOccurred: function(e) {
-                    //             console.log("Terjadi kesalahan saat memuat data (4):", e.error.message);
-                    //             dataGridApproverHistory.refresh();
-                    //         }
-                    //     })
-                    // }
+                    }  
                     else if(data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({    
                             dataSource: storewithmodule('approverlistrequest',modelclass,reqid),
@@ -1066,11 +874,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         valueExpr: 'id',
                                         displayExpr: 'fullname',
                                     },
-                                    validationRules: [
-                                        { 
-                                            type: "required" 
-                                        }
-                                    ]
+                                    // validationRules: [
+                                    //     { 
+                                    //         type: "required" 
+                                    //     }
+                                    // ]
                                 },
                                 {
                                     dataField: "ApprovalType",
@@ -1359,7 +1167,7 @@ function btnreqsubmit(reqid,mode) {
                 requestStatus:1,
                 action: actionForm,
                 approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                // approvalType: valApprovalType,
+                approvalType: valApprovalType,
                 remarks: valremarks
           }).then(function(response){
                 if(response.status == 'error') {
@@ -1386,7 +1194,6 @@ function btnreqsubmit(reqid,mode) {
             hideLoadingScreen();
         }
       });
-
 }
 
 function runpopup() {
@@ -1440,7 +1247,6 @@ function runpopup() {
 
     }).dxPopup('instance');
 }
-
 
 function cellTemplate(container, options) {
     container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');

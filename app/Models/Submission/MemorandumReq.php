@@ -21,27 +21,27 @@ class MemorandumReq extends Model
     protected $guarded = ['id'];
 
     protected $fillable = [
-            'requestStatus',
-            'bu',
-            'pa',
-            // 'sector',
-            // 'prStatus',
-            'user_id',
-            'employee_id'
-    ];
-
+        'code_id',
+        'requestStatus',
+        'bu',
+        'sysid',
+        // 'sector',
+        // 'startContract',
+        // 'endContract',
+        'user_id',
+        'employee_id',
+        ];
+        
     protected $casts = [
-        'user_id' => 'integer',
+            'user_id' => 'integer',
+            'employee_id' => 'integer',
+            // 'sysid' => 'string'
     ];
 
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, [
-            'approveddoc',
-            // 'special_requirements',
-            // 'special_requirements_others',
-        ]);
+        $fillable = array_diff($fillable, []);
         return $fillable;
     }
 
@@ -57,7 +57,7 @@ class MemorandumReq extends Model
 
     public function request_memorandum_his()
     {
-        return $this->hasMany(MemorandumHis::class, 'sys_id', 'sys_id');
+        return $this->hasMany(MemorandumHis::class, 'sysid', 'sysid');
     }
     
     public function employee()
