@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
 use App\Models\MemorandumHis;
+use App\Models\Useraccess;
 use App\Models\MemorandumReq;
 use App\Models\Submission\MemorandumReq as SubmissionMemorandumReq;
 use Illuminate\Http\Request;
@@ -71,37 +72,57 @@ class ContractHistoryController extends Controller
         //
     }
 
-    public function getList($sysid, $modulename)
+    public function getList($id, $reqid)
     {
         try {
-            $module = $this->module
-                ->select('id', 'module')
-                ->where('module', $modulename)
+            // Ambil sysid dan sequence berdasarkan reqid yang dipilih
+            $historyData = DB::table('request_memorandum_his')
+                ->select('sysid', 'sequence')
+                ->where('id', $id)
                 ->first();
 
-            if (!$module) {
-                return response()->json([
-                    "status" => "show",
-                    "message" => "Module not found for modulename: $modulename."
-                ]);
+            if (!$historyData) {
+                return response()->json(["status" => "error", "message" => "Data sejarah tidak ditemukan"], 404);
             }
 
-            // Mengambil data berdasarkan sysid saja
-            $data = MemorandumHis::where('sysid', $sysid)->get();
+            $selected_sequence = $historyData->sequence;
+            $sysid = $historyData->sysid;
+
+            // Validasi sequence agar tidak null
+            if (is_null($selected_sequence)) {
+                return response()->json(["status" => "error", "message" => "Sequence tidak ditemukan"], 404);
+            }
+
+            // Ambil data memorandumHistories berdasarkan sequence dan sysid
+            $memorandumHistories = DB::table('request_memorandum_his')
+                ->selectRaw("
+                    MIN(id) AS reqid, 
+                    sequence, 
+                    startContract,
+                    endContract,
+                    approveddoc,
+                    created_at,
+                    remarks,
+                    sysid,
+                    id
+                ")
+                ->where('sysid', $sysid)
+                ->where('sequence', '<=', $selected_sequence)
+                ->groupBy('sequence', 'sysid', 'startContract', 'endContract', 'approveddoc', 'created_at', 'remarks', 'id')
+                ->orderBy('sequence', 'DESC')
+                ->get();
 
             return response()->json([
-                "status" => "show",
-                "message" => $this->getMessage()['show'],
-                "data" => $data
-            ]);
+                'status' => "show",
+                'message' => $this->getMessage()['show'],
+                'data' => $memorandumHistories
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
-            return response()->json([
-                "status" => "error",
-                "message" => $e->getMessage()
-            ]);
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
 
 
 

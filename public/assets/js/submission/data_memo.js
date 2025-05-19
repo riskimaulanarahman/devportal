@@ -9,18 +9,15 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
-
 var dataGrid = $("#gridContainer").dxTreeList({    
     dataSource: store(modname),
     keyExpr: 'id',
-    parentIdExpr: 'sysid',
+    parentIdExpr: 'parentID',
     allowColumnReordering: true,
     allowColumnResizing: true,
-    // columnsAutoWidth: true,
     columnHidingEnabled: true,
     rowAlternationEnabled: false,
     wordWrapEnabled: true,
-    // focusedRowEnabled: true,
     autoExpandAll: true,
     showBorders: true,
     filterRow: { visible: true },
@@ -28,13 +25,8 @@ var dataGrid = $("#gridContainer").dxTreeList({
     headerFilter: { visible: true },
     selection: {
         mode: 'multiple',
-        recursive: true,
+        recursive: false,
     },
-    // stateStoring: {
-    //     enabled: true,
-    //     type: 'sessionStorage',
-    //     storageKey: 'treeListStorage',
-    // },
     searchPanel: {
         visible: true,
         width: 240,
@@ -52,10 +44,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
     },
     pager: {
         visible: false,
-        // allowedPageSizes: [5, 10, 'all'],
-        // showPageSizeSelector: true,
         showInfo: true,
-        // showNavigationButtons: true,
     },
     columns: [
         {
@@ -68,7 +57,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
             width: 140,
             cellTemplate: function(container, options) {
 
-                var isMine = options.data.isMine;
+                var isMine = options.data.isMine;                
                 var isPendingOnMe = options.data.isPendingOnMe;
                 var reqid = options.data.id;
                 var reqstatus = options.data.requestStatus;
@@ -119,11 +108,10 @@ var dataGrid = $("#gridContainer").dxTreeList({
         },        
         {
             dataField: 'FullName',
-            width: 350,
-            sortOrder: "asc",
+            width: 180,
         },                
         { 
-			dataField: "user.fullname",
+			dataField: "sequence",
             caption: 'Creator Name',
             width: 180
         },
@@ -142,7 +130,6 @@ var dataGrid = $("#gridContainer").dxTreeList({
                 ];
                 return arrText[e.value];
             },
-            // width: 110
         },
         {
             dataField: 'projectStatus',
@@ -157,7 +144,6 @@ var dataGrid = $("#gridContainer").dxTreeList({
                     return "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>"
                 }
             },
-            // width: 110
         },
       
     ],
@@ -177,36 +163,26 @@ var dataGrid = $("#gridContainer").dxTreeList({
                 e.cellElement.css('background','rgba(128, 128, 0,0.1)')
             }
         }
-        // if (e.column.index == 0 && e.rowType == "data") {
-        //     if(e.data.requestStatus == 3) {
-        //         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
-        //     }
-        // }
     },
-    onToolbarPreparing: function(e) {
-        dataGrid = e.component;
+    // onToolbarPreparing: function(e) {
+    //     dataGrid = e.component;
 
-        e.toolbarOptions.items.unshift({						
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function() {
-                    dataGrid.refresh();
-                }
-            }
-        })
-    },
-    onDataErrorOccurred: function(e) {
-        // Menampilkan pesan kesalahan
-        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-        // Memuat ulang Page
-        location.reload();
-    }
+    //     e.toolbarOptions.items.unshift({						
+    //         location: "after",
+    //         widget: "dxButton",
+    //         options: {
+    //             hint: "Refresh Data",
+    //             icon: "refresh",
+    //             onClick: function() {
+    //                 dataGrid.refresh();
+    //             }
+    //         }
+    //     })
+    // },
+    // onDataErrorOccurred: function(e) {
+    //     console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+    //     location.reload();
+    // }
 }).dxTreeList("instance");
 
 $('#btnadd').on('click',function(){
@@ -227,21 +203,11 @@ const accordionItems = [
         Title: '<i class="far fa-newspaper"> Form Data </i>',
         visible: true
     },
-    // {
-    //     ID: 5,
-    //     Title: '<i class="fas fa-users"> Assignment To </i>',
-    //     visible: false
-    // },
     {
         ID: 9,
         Title: '<i class="fas fa-list-ul"> Contract List </i>',
         visible: true
     },
-    // {
-    //     ID: 2,
-    //     Title: '<i class="fas fa-file"> Supporting Document </i>',
-    //     visible: true
-    // },
     {
         ID: 3,
         Title: '<i class="fas fa-list-ul"> Approver List </i>',
@@ -265,6 +231,7 @@ const updateVisibleById = (itemId, visible) => {
 const popupContentTemplate = function (reqid,mode,options) {
 
     var isMine = options.data.isMine;
+    // var reqid = options.data.hisid;
     var isPendingOnMe = options.data.isPendingOnMe;
 
     popupid = reqid;
@@ -397,26 +364,26 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 caption: "Employee",
-                                dataField: "employee_id",
-                                lookup: {
-                                    dataSource: listOption('/list-employeeall','id','fullname'),
-                                    valueExpr: 'id',
-                                    displayExpr: 'fullname',
-                                },
-                                validationRules: [{ type: "required" }]
+                                dataField: "FullName",
+                                // lookup: {
+                                //     dataSource: listOption('/list-employeeall','id','fullname'),
+                                //     valueExpr: 'id',
+                                //     displayExpr: 'fullname',
+                                // },
+                                // validationRules: [{ type: "required" }]
                             },
                             { 
-                                dataField: "bu",
+                                dataField: "companycode",
                                 caption: "BU",
-                                lookup: {
-                                    dataSource: listOption('/list-company','id','CompanyCode'),  
-                                    valueExpr: 'CompanyCode',
-                                    displayExpr: 'CompanyCode',
-                                }
+                                // lookup: {
+                                //     dataSource: listOption('/list-company','id','CompanyCode'),  
+                                //     valueExpr: 'CompanyCode',
+                                //     displayExpr: 'CompanyCode',
+                                // }
                             }, 
                             {
                                 caption: 'SYSID',
-                                dataField: 'sysid'
+                                dataField: 'sys_id'
                             },
                             {
                                 caption: 'Birth of Date',                                    
@@ -480,14 +447,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     width: 600
                                 };
                                 e.editorOptions.contentTemplate = function (args, container) {
-
                                         const $dataGrid = $("<div>").dxTreeView({
                                             dataSource: args.component.option("dataSource"),
                                             dataStructure: 'plain',
                                             keyExpr: "id",
-                                            parentIdExpr: 'sysid',
+                                            parentIdExpr: 'parentID',
                                             selectionMode: 'single',
-                                            displayExpr: 'nameSystem',
+                                            displayExpr: 'FullName',
                                             selectByClick: true,
                                             selectNodesRecursive: false,
                                             onItemSelectionChanged(selectedItems) {
@@ -647,7 +613,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         $dataGrid = $("<div>").dxDataGrid({
                                             width: '100%',
                                             dataSource: args.component.option("dataSource"),
-                                            keyExpr: "id",
+                                            keyExpr: "sequence",
                                             columns: ["fullname","ApprovalType"],
                                             hoverStateEnabled: true,
                                             paging: { enabled: true, pageSize: 10 },
@@ -815,10 +781,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                     })
                 }
                 else if(data.ID == 9) {
-                    const contractData = storedetail(modname, reqid);
-                    console.log("Contract Data:", contractData);
                     return formData = $("<div id='formcontract'>").dxDataGrid({    
-                        dataSource: storewithmodule('memorandumhis',modelclass,reqid),                        
+                        // dataSource: storewithmodule('memorandumhis',modelclass,reqid), 
+                        dataSource: storewithmodule('memorandumhis',modelclass,reqid),   
+                        // dataSource: storewithmodule('memorandumHistories',modelclass,reqid),
+                        // dataSource: storedetail(sysid,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
                         columnsAutoWidth: true,
@@ -1005,13 +972,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         onEditorPrepared: function (e) {
                         },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                        // onDataErrorOccurred: function(e) {
+                        //     // Menampilkan pesan kesalahan
+                        //     console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                     
-                            // Memuat ulang DataGrid
-                            dataGriddetail.refresh();
-                        }
+                        //     // Memuat ulang DataGrid
+                        //     dataGriddetail.refresh();
+                        // }
                     })
                 }
             }

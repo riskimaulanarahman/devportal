@@ -114,7 +114,7 @@ Route::group(['prefix' => 'api'], function () {
     
     //memorhistorycal
     // Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
-    Route::get('memorandumhis/{sysid}/{modulename}',[App\Http\Controllers\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
+    Route::get('memorandumhis/{id}/{modulename}',[App\Http\Controllers\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
     Route::get('memorandumhis',[App\Http\Controllers\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
     Route::put('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'update']); //get list contract history by req_id of module
     Route::delete('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'destroy']); //get list contract history by req_id of module

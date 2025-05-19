@@ -392,7 +392,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                         if (mode == 'add' || mode == 'edit'){
                             $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel, sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent2);
                         }
-
                         let formData = $("<div id='formdata'>").dxDataGrid({    
                             dataSource: storedetail(modname,reqid),
                             allowColumnReordering: true,

@@ -282,6 +282,7 @@ class MemorandumController extends Controller
                     ->where('sysid', $sysid)
                     ->get();                
                 $data->memorandumHistories = $memorandumHistories;
+                // dd($data);
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],

@@ -9,7 +9,6 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
-
 var dataGrid = $("#gridContainer").dxTreeList({    
     dataSource: store(modname),
     keyExpr: 'id',

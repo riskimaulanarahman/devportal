@@ -44,32 +44,6 @@ class MemoController extends Controller
         $this->user = new User();
     }
 
-
-    // public function index()
-    // {
-    //     $xpc = DB::table('employee.tbl_employee')
-    //     ->where(function($query) {
-    //         $query->where('contract_status', 'contract')
-    //               ->orWhere(function($subQuery) {
-    //                   $subQuery->where('contract_status', 'permanent')
-    //                            ->whereRaw('DATEDIFF(YEAR, birthofdate, GETDATE()) >= 55');
-    //               });
-    //     })
-    //     ->get();
-
-
-    //     // $xpc = DB::table('memoView')
-    //     // ->join('codes', 'memoView.id', '=', 'codes.id')
-    //     // ->select('memoView.*',
-    //     // 'codes.code') 
-    //     // ->get();
-
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'data' => $xpc
-    //     ]);
-
-    // }
     public function index()
     {
         try {
@@ -86,7 +60,7 @@ class MemoController extends Controller
                 left join tbl_approver a on l.approver_id=a.id
                 left join tbl_approvaltype r on a.approvaltype_id = r.id 
                 where l.ApprovalAction='1' 
-                and l.req_id = request_memorandum.id and l.module_id = '".$module_id."' 
+                and l.req_id = request_memorandum_his.id and l.module_id = '".$module_id."' 
                 and request_memorandum.requestStatus='1'
                 order by a.sequence)"; 
 
@@ -99,20 +73,22 @@ class MemoController extends Controller
             from tbl_assignment l
             left join employee.tbl_employee e on l.employee_id = e.id
             left join users u on e.LoginName = u.username
-            where l.req_id = request_memorandum.id
+            where l.req_id = request_memorandum_his.id
             and l.module_id = '".$module_id."') as tab1
             where user_id = '".$user_id."')";
 
             $checkUserAccess = Useraccess::where('module_id', $module_id)->where('employee_id', $user_id)->first();
             $getAllview = ($checkUserAccess) ? $checkUserAccess->allowView : null;      
             $data = $dataquery
-                ->selectRaw("request_memorandum.id,
+                ->selectRaw("request_memorandum_his.id,
                     request_memorandum.user_id,
                     request_memorandum.requestStatus,   
                     request_memorandum.employee_id,
                     request_memorandum.created_at,
-                    request_memorandum.bu, 
+                    request_memorandum.bu,
                     request_memorandum.sysid,  
+                    request_memorandum_his.sequence,  
+                    request_memorandum_his.req_id,  
                     employee.tbl_employee.FullName,
                     employee.tbl_employee.SAPID,
                     employee.tbl_employee.sys_id,
@@ -124,17 +100,17 @@ class MemoController extends Controller
                     ".$subquery." as isPendingOnMe
                 ")
                 ->leftJoin('codes','request_memorandum.code_id','codes.id')
-                // ->leftJoin('request_memorandum_his','request_memorandum.sysid','request_memorandum_his.sysid')
+                ->leftJoin('request_memorandum_his','request_memorandum.id','request_memorandum_his.req_id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
                 ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->leftJoin('tbl_assignment', function($join) use ($module_id) {
-                    $join->on('request_memorandum.id', '=', 'tbl_assignment.req_id')
+                    $join->on('request_memorandum_his.id', '=', 'tbl_assignment.req_id')
                         ->where('tbl_assignment.module_id', '=', $module_id);
                 })
                 ->leftJoin('employee.tbl_employee as emp', 'tbl_assignment.employee_id', '=', 'emp.id')
-                ->with(['user','approverlist'])
+                // ->with(['user','approverlist'])
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $getAllview) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id, $isAdmin, $getAllview) {
@@ -160,12 +136,14 @@ class MemoController extends Controller
                         }
                     }
                 })
-                ->groupBy('request_memorandum.id',
+                ->groupBy('request_memorandum_his.id',
                     'request_memorandum.user_id',
                     'request_memorandum.requestStatus',
                     'request_memorandum.created_at',
                     'request_memorandum.employee_id',
                     'request_memorandum.bu',
+                    'request_memorandum_his.sequence',
+                    'request_memorandum_his.req_id',
                     'request_memorandum.sysid',
                     'codes.code',
                     'employee.tbl_employee.FullName',
@@ -177,58 +155,49 @@ class MemoController extends Controller
                     'employee.tbl_employee.deptheadName',
                 )                
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN request_memorandum.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_memorandum.created_at desc")
+                ->orderByRaw("CASE WHEN request_memorandum.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_memorandum.created_at asc")
                 ->get();
-                // Ambil Memorandum Histories untuk TreeList
-        $sysids = $data->pluck('sysid')->unique()->toArray();
-        $memorandumHistories = DB::table('request_memorandum_his')
-            ->whereIn('sysid', $sysids)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy('sysid');
-
-        // Bentuk Data dalam Format Hierarki untuk DevExtreme TreeList
-        $formattedData = [];
-        foreach ($data as $row) {
-            $children = $memorandumHistories->get($row->sysid, collect())->map(function ($history) {
-                return [
-                    'id' => $history->id,
-                    'parent_id' => $history->sysid,
-                    'req_id' => $history->req_id,
-                    'sequence' => $history->sequence,
-                    'startContract' => $history->startContract,
-                    'endContract' => $history->endContract,
-                    'approveddoc' => $history->approveddoc,
-                    'remarks' => $history->remarks,
-                    'user_id' => $history->user_id,
-                    'sysid' => $history->sysid,
-                    'requestStatus' => $history->requestStatus,
-                    'created_at' => $history->created_at,                    
-                ];
-            });
-
-            $formattedData[] = [
-                'id' => $row->id,
-                'parent_id' => $row->sysid,
-                'FullName' => $row->FullName,
-                'SAPID' => $row->SAPID,
-                'BirthOfDate' => $row->BirthOfDate,
-                'Level' => $row->Level,
-                'DesignationName' => $row->DesignationName,
-                'code' => $row->code,
-                'user_id' => $row->user_id,
-                'requestStatus' => $row->requestStatus,   
-                'employee_id' => $row->employee_id,
-                'created_at' => $row->created_at,
-                'bu' => $row->bu,
-                'children' => $children->values()
-            ];
-        }
+                $parents = [];                
+                foreach ($data as $item) {
+                    if ($item->sequence == 1) {
+                        $parents[$item->sysid] = $item->id;
+                    }
+                    if ($item->id === null) {
+                        continue;
+                    }
+                }
+                $mappedData = [];
+                // dd($data);
+                foreach ($data as $item) {
+                    $mappedData[] = [
+                        'id' => $item->id, 
+                        'isParent' => ($item->sequence == 1) ? 1 : 0, 
+                        'parentID' => ($item->sequence == 1) ? null : ($parents[$item->sysid] ?? null), // Ambil parent berdasarkan sysid jika ada
+                        'user_id' => $item->user_id,
+                        'requestStatus' => $item->requestStatus,
+                        'created_at' => $item->created_at,
+                        'bu' => $item->bu,
+                        'employee_id' => $item->employee_id,
+                        'sysid' => $item->sysid,
+                        'sequence' => $item->sequence,
+                        'FullName' => $item->FullName,
+                        'SAPID' => $item->SAPID,
+                        'sys_id' => $item->sys_id,
+                        'BirthOfDate' => $item->BirthOfDate,
+                        'Level' => $item->Level,
+                        'deptheadName' => $item->deptheadName,
+                        'DesignationName' => $item->DesignationName,
+                        'code' => $item->code,
+                        'isMine' => $item->isMine,
+                        'isPendingOnMe' => $item->isPendingOnMe
+                    ];
+                }
+                // dd($mappedData);
            
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
-                'data' => $formattedData
+                'data' => $mappedData
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
@@ -297,23 +266,26 @@ class MemoController extends Controller
                     'request_memorandum.*',
                     'codes.code',
                     'employee.tbl_employee.FullName',
+                    'request_memorandum_his.id',
+                    'employee.tbl_employee.sys_id',
                     'employee.tbl_employee.SAPID', 
-                    'employee.tbl_employee.sys_id', 
                     'employee.tbl_employee.JoinDate', 
                     'employee.tbl_employee.deptheadName',
                     'employee.tbl_employee.contract_status',
                     'employee.tbl_employee.BirthOfDate',
                     'employee.tbl_employee.JoinDate',
                     'employee.tbl_employee.deptheadName',
+                    'employee.tbl_employee.companycode',
                     'employee.tbl_level.Level',
                     'employee.tbl_designation.DesignationName',
                 )
                 ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
+                ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
                 ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
-                ->where('request_memorandum.id', $id)
+                ->where('request_memorandum_his.id', $id)
                 ->first();
 
             if (!$data) {
@@ -325,26 +297,71 @@ class MemoController extends Controller
                 $data->code_id = $this->generateCode($this->codename);
                 $data->save();
             }
-
-            // Tambahkan atribut ismine
-            $data->ismine = ($data->employee_id == $user_id);
-
-            // Tambahkan atribut ispendingonme
-            $data->isPendingOnMe = $this->model
-                ->selectRaw($subquery . " as isPendingOnMe")
+            // Ambil sysid dan sequence secara dinamis berdasarkan reqid yang dipilih
+            $historyData = DB::table('request_memorandum_his')
+                ->select('sysid', 'sequence')
                 ->where('id', $id)
-                ->first()
-                ->isPendingOnMe;        
+                ->first();
 
-                $sysid = $data->sysid;
-                $memorandumHistories = DB::table('request_memorandum_his')
-                    ->where('sysid', $sysid)
-                    ->get();                
-                $data->memorandumHistories = $memorandumHistories;
+            if (!$historyData) {
+                return response()->json(["status" => "error", "message" => "Data sejarah tidak ditemukan"], 404);
+            }
+
+            $selected_sequence = $historyData->sequence; // Sequence yang terkait dengan reqid
+            $sysid = $historyData->sysid; // Sysid terkait
+
+            // Ambil data memorandumHistories berdasarkan sequence dan sysid secara dinamis
+            $memorandumHistories = DB::table('request_memorandum_his')
+                ->selectRaw("
+                    MIN(req_id) AS id, 
+                    id AS hisid, 
+                    sequence, 
+                    startContract,
+                    endContract,
+                    approveddoc,
+                    created_at,
+                    remarks,
+                    sysid
+                ")
+                ->where('sysid', $sysid)
+                ->where('sequence', '<=', $selected_sequence)
+                ->groupBy('id',
+                 'sequence',
+                 'endContract',
+                 'startContract',
+                 'approveddoc',
+                 'created_at',
+                 'remarks',
+                  'sysid')
+                ->orderBy('sequence', 'DESC')
+                ->get();
+            //mapping
+            $mappedData = [
+                'id' => $data->id,
+                'code_id' => $data->code_id,
+                'user_id' => $data->user_id,
+                'requestStatus' => $data->requestStatus,
+                'created_at' => $data->created_at,
+                'updated_at' => $data->updated_at,
+                'companycode' => $data->companycode,
+                'FullName' => $data->FullName,
+                'sys_id' => $data->sys_id,
+                'SAPID' => $data->SAPID,
+                'JoinDate' => $data->JoinDate,
+                'deptheadName' => $data->deptheadName,
+                'contract_status' => $data->contract_status,
+                'BirthOfDate' => $data->BirthOfDate,
+                'Level' => $data->Level,
+                'DesignationName' => $data->DesignationName,
+                'code' => $data->code,
+                // 'memorandumHistories' => DB::table('request_memorandum_his')->where('sysid', $data->sysid)->get()
+                'memorandumHistories' => $memorandumHistories
+            ];   
+            // dd($mappedData);         
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
-                'data' => $data, // Data utama request_memorandum
+                'data' => $mappedData, // Data utama request_memorandum
                 // 'memorandumHistories' => $memorandumHistories // Semua data dari request_memorandum_his
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
