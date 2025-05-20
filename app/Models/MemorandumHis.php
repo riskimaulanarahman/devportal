@@ -28,14 +28,14 @@ class MemorandumHis extends Model
     protected $casts = [
         'req_id' => 'integer',
         'module_id' => 'integer',
-        'sequence' => 'integer',
-        'startContract' => 'date',
-        'endContract' => 'date',        
-        'remarks' => 'string',
-        'user_id' => 'integer', 
+        // 'sequence' => 'integer',
+        // 'startContract' => 'date',
+        // 'endContract' => 'date',        
+        // 'remarks' => 'string',
+        // 'user_id' => 'integer', 
         'sysid' => 'string',
-        'employee_idr' => 'integer',
-        'requestStatus' => 'integer',
+        // 'employee_idr' => 'integer',
+        // 'requestStatus' => 'integer',
     ];
     public static function getFillableColumns()
     {
@@ -49,9 +49,9 @@ class MemorandumHis extends Model
         return (new static)->getTable();
     }
 
-    public function MemorandumReq()
+    public function Memorandum()
     {
-        return $this->belongsTo('App\Models\Submission\MemorandumReq', 'sys_id', 'sys_id');
+        return $this->belongsTo('App\Models\Submission\Memorandum', 'sys_id', 'sys_id');
     }
     public function approverlist()
     {

@@ -12,7 +12,7 @@ use App\Models\MemorandumHis;
 use App\Models\Employee;
 use App\Models\ApproverListHistory;
 
-class MemorandumReq extends Model
+class Memorandum extends Model
 {
     use HasFactory;
 
@@ -25,11 +25,15 @@ class MemorandumReq extends Model
         'requestStatus',
         'bu',
         'sysid',
-        // 'sector',
-        // 'startContract',
-        // 'endContract',
+        'parentID',
+        'startContract',
+        'endContract',
         'user_id',
-        'employee_id',
+        'employee_id',        
+        'sequence',
+        'remarks',
+        'created_at',
+        'updated_at'
         ];
         
     protected $casts = [
@@ -41,7 +45,7 @@ class MemorandumReq extends Model
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, []);
+        $fillable = array_diff($fillable, ['approveddoc']);
         return $fillable;
     }
 

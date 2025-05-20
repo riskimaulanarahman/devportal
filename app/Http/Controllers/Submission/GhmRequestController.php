@@ -503,7 +503,7 @@ class GhmRequestController extends Controller
             ->get()
             ->pluck('employee.gender')
             ->unique();
-    
+
             if ($existingGenders->count() > 0 && !$existingGenders->contains($employee->gender)) {
                 return back()->withErrors(['ghm_room_id' => 'Kamar ini sudah ditempati oleh gender yang berbeda.']);
             }

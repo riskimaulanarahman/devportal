@@ -404,7 +404,7 @@ class SubmissionMail extends Mailable
         }
     // hcrf MODULE
         // Material Req MODULE
-        if($modulename == 'MemorandumReq') {
+        if($modulename == 'Memorandum') {
             $request = new Request();
             $memorandumController = new MemorandumController();
             if($final == 1) {

@@ -34,7 +34,7 @@ class SubmissionController extends Controller
             'MaterialReq' => "App\Models\Submission\Ecatalog",
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
-            'MemorandumReq' => "App\Models\Submission\MemorandumReq",
+            'Memorandum' => "App\Models\Submission\Memorandum",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -105,8 +105,7 @@ class SubmissionController extends Controller
                 'MaterialReq' => "App\Models\Submission\Ecatalog",
                 'Hris' => "App\Models\Submission\HRIS",
                 'Ccm' => "App\Models\Submission\Financial",
-                'MemorandumReq' => "App\Models\Submission\MemorandumReq",
-                'MemorandumHis' => "App\Models\MemorandumHis",
+                'Memorandum' => "App\Models\Submission\Memorandum",
             ];
             
             $baseNamespace = "App\Models\Submission";
@@ -210,8 +209,7 @@ class SubmissionController extends Controller
                     'MaterialReq',
                     'Hris',
                     'Ghm',
-                    'MemorandumReq',
-                    'MemorandumHis'
+                    'Memorandum',
                 ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {

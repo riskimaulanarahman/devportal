@@ -1,5 +1,5 @@
 var modname = 'memorandum_request';
-var modelclass = 'MemorandumReq';
+var modelclass = 'Memorandum';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -308,7 +308,7 @@ const updateVisibleById = (itemId, visible) => {
 const popupContentTemplate = function (reqid,mode,options) {
     
         isMine = options.data.isMine;
-        var sysid = options.data.sysid;
+        // var sysid = options.data.sysid;
         var isPendingOnMe = options.data.isPendingOnMe;
         var isAssignment = options.data.isAssignment;
 
@@ -446,15 +446,15 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 { 
                                     dataField: "bu",
                                     caption: "BU",
-                                    lookup: {
-                                        dataSource: listOption('/list-company','id','CompanyCode'),  
-                                        valueExpr: 'CompanyCode',
-                                        displayExpr: 'CompanyCode',
-                                    }
+                                    // lookup: {
+                                    //     dataSource: listOption('/list-company','id','CompanyCode'),  
+                                    //     valueExpr: 'CompanyCode',
+                                    //     displayExpr: 'CompanyCode',
+                                    // }
                                 },   
                                 {
                                     caption: 'SYSID',
-                                    dataField: 'sys_id'
+                                    dataField: 'sysid'
                                 },                      
                                 {
                                     caption: 'Department Head',
@@ -641,10 +641,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                     }
                     else if(data.ID == 9) {
                         return formData = $("<div id='formcontract'>").dxDataGrid({    
-                            dataSource: storewithmodule('memorandumhis',modelclass,sysid),                       
+                            // dataSource: storewithmodule('memorandumhis',modelclass,reqid),    
+                            dataSource: storedetail(modname,reqid),                  
                             allowColumnReordering: true,
                             allowColumnResizing: true,
-                            columnsAutoWidth: true,
+                            columnsAutoWidth: true, 
                             rowAlternationEnabled: true,
                             wordWrapEnabled: true,
                             showBorders: true,

@@ -102,8 +102,7 @@ class HomeController extends Controller
             'request_material' => $this->getModuleId('MaterialReq'),
             'request_ccm' => $this->getModuleId('Ccm'),
             'request_ghm' => $this->getModuleId('Ghm'),
-            'request_memorandum' => $this->getModuleId('MemorandumReq'),
-            // 'request_memo' => $this->getModuleId('MemorandumReq'),
+            'request_memorandum' => $this->getModuleId('Memorandum'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         

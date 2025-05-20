@@ -20,7 +20,7 @@ use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Submission\MemorandumReq;
+use App\Models\Submission\Memorandum;
 
 use function PHPUnit\Framework\fileExists;
 
@@ -34,8 +34,8 @@ class MemorandumController extends Controller
 
     public function __construct()
     {
-        $this->model = new MemorandumReq();
-        $this->modulename = 'MemorandumReq';
+        $this->model = new Memorandum();
+        $this->modulename = 'Memorandum';
         $this->codename = 'Memorandum';
         $this->module = new Module();
         $this->user = new User();
@@ -44,128 +44,105 @@ class MemorandumController extends Controller
     public function index(Request $request)
     {
         try {
-            $id = $request->id;
             $user_id = $this->getAuth()->id;
-            $employeeid = $this->getEmployeeID()->id;
             $module_id = $this->getModuleId($this->modulename);
             $isAdmin = $this->getAuth()->isAdmin;
-            $historycontract = MemorandumHis::all();
-            $xpc = DB::table('memoView')->get();
-            // dd($xpc);
 
-            $dataquery = $this->model->query();
-
-            $subquery = "(select TOP 1 
-                CASE WHEN a.user_id='".$user_id."' 
-                then 1 else 0 end 
-                from tbl_approverListReq l
-                left join tbl_approver a on l.approver_id=a.id
-                left join tbl_approvaltype r on a.approvaltype_id = r.id 
-                where l.ApprovalAction='1' 
-                and l.req_id = request_memorandum.id and l.module_id = '".$module_id."' 
-                and request_memorandum.requestStatus='1'
-                order by a.sequence)"; 
-
-            $getAssignment = "(select top 1
-            CASE WHEN user_id='".$user_id."' then 1 else 0 end
-            from
-            (select
-            u.id as user_id,
-            u.fullname as nama_users
-            from tbl_assignment l
-            left join employee.tbl_employee e on l.employee_id = e.id
-            left join users u on e.LoginName = u.username
-            where l.req_id = request_memorandum.id
-            and l.module_id = '".$module_id."') as tab1
-            where user_id = '".$user_id."')";
-
+            // Ambil akses pengguna
             $checkUserAccess = Useraccess::where('module_id', $module_id)->where('employee_id', $user_id)->first();
-            $getAllview = ($checkUserAccess) ? $checkUserAccess->allowView : null;      
-            $data = $dataquery
-                ->selectRaw("request_memorandum.id,
+            $getAllview = $checkUserAccess ? $checkUserAccess->allowView : null;
+
+            // Subquery untuk pengecekan apakah user memiliki pending approval
+            $subquery = "(SELECT TOP 1 
+                CASE WHEN a.user_id = '" . $user_id . "' THEN 1 ELSE 0 END 
+                FROM tbl_approverListReq l
+                LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                WHERE l.ApprovalAction = '1' 
+                    AND l.req_id = request_memorandum.id 
+                    AND l.module_id = '" . $module_id . "' 
+                    AND request_memorandum.requestStatus = '1'
+                ORDER BY a.sequence)";
+
+            // Subquery untuk mendapatkan assignment user
+            $getAssignment = "(SELECT TOP 1 
+                CASE WHEN user_id = '" . $user_id . "' THEN 1 ELSE 0 END
+                FROM (
+                    SELECT u.id AS user_id
+                    FROM tbl_assignment l
+                    LEFT JOIN employee.tbl_employee e ON l.employee_id = e.id
+                    LEFT JOIN users u ON e.LoginName = u.username
+                    WHERE l.req_id = request_memorandum.id
+                    AND l.module_id = '" . $module_id . "'
+                ) AS tab1
+                WHERE user_id = '" . $user_id . "')";
+
+            // Query utama
+            $data = $this->model
+                ->selectRaw("
+                    request_memorandum.id,
                     request_memorandum.user_id,
                     request_memorandum.requestStatus,   
                     request_memorandum.employee_id,
                     request_memorandum.created_at,
                     request_memorandum.bu, 
                     request_memorandum.sysid, 
-                    request_memorandum_his.sequence, 
                     employee.tbl_employee.FullName,
                     employee.tbl_employee.SAPID,
-                    employee.tbl_employee.BirthOfDate, 
-                    employee.tbl_level.Level,
-                    employee.tbl_designation.DesignationName,
                     codes.code,
-                    CASE WHEN request_memorandum.user_id='".$user_id."' then 1 else 0 end as isMine,
-                    ".$subquery." as isPendingOnMe
+                    users.fullname,
+                    CASE WHEN request_memorandum.user_id = '" . $user_id . "' THEN 1 ELSE 0 END AS isMine,
+                    " . $subquery . " AS isPendingOnMe
                 ")
-                ->leftJoin('codes','request_memorandum.code_id','codes.id')
+                ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-                ->leftJoin('request_memorandum_his', 'request_memorandum.sysid', '=', 'request_memorandum_his.sysid')
-                ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
-                ->leftJoin('tbl_assignment', function($join) use ($module_id) {
-                    $join->on('request_memorandum.id', '=', 'tbl_assignment.req_id')
-                        ->where('tbl_assignment.module_id', '=', $module_id);
-                })
-                ->leftJoin('employee.tbl_employee as emp', 'tbl_assignment.employee_id', '=', 'emp.id')
-                // ->with(['user','approverlist', 'request_memorandum_his'])
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $getAllview) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id, $isAdmin, $getAllview) {
                             if ($isAdmin) {
-                                $query->whereIn("request_memorandum.requestStatus", [1,3,4])
+                                $query->whereIn("request_memorandum.requestStatus", [1, 3, 4])
                                     ->where("request_memorandum.user_id", "!=", $user_id);
-                            } else if($getAllview) {
+                            } else if ($getAllview) {
                                 $query->whereIn("request_memorandum.requestStatus", [3])
-                                ->where("request_memorandum.user_id", "!=", $user_id);
+                                    ->where("request_memorandum.user_id", "!=", $user_id);
                             } else {
                                 $query->where("request_memorandum.user_id", "!=", $user_id)
-                                ->whereIn("request_memorandum.requestStatus", [3]);
+                                    ->whereIn("request_memorandum.requestStatus", [3]);
                             }
                         })
                         ->orWhere("request_memorandum.user_id", $user_id);
                 })
-                ->where(function ($query) use ($user_id,$getAssignment, $isAdmin, $getAllview, $subquery) {
-                    if(!$isAdmin) {
-                        if(!$getAllview) {
+                ->where(function ($query) use ($user_id, $getAssignment, $isAdmin, $getAllview, $subquery) {
+                    if (!$isAdmin) {
+                        if (!$getAllview) {
                             $query->whereRaw($getAssignment . " = 1")
-                            ->orWhere("request_memorandum.user_id", $user_id)
-                            ->orWhereRaw($subquery . " = 1");
+                                ->orWhere("request_memorandum.user_id", $user_id)
+                                ->orWhereRaw($subquery . " = 1");
                         }
                     }
                 })
-                ->groupBy('request_memorandum.id',
+                ->groupBy([
+                    'request_memorandum.id',
                     'request_memorandum.user_id',
                     'request_memorandum.requestStatus',
                     'request_memorandum.created_at',
                     'request_memorandum.employee_id',
                     'request_memorandum.bu',
                     'request_memorandum.sysid',
-                    'request_memorandum_his.sequence',
                     'codes.code',
+                    'users.fullname',
                     'employee.tbl_employee.FullName',
                     'employee.tbl_employee.SAPID',
                     'employee.tbl_employee.BirthOfDate',
                     'employee.tbl_level.Level',
-                    'employee.tbl_designation.DesignationName',
-                    'employee.tbl_employee.deptheadName',
-                )                
+                    'employee.tbl_designation.DesignationName'
+                ])
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN request_memorandum.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_memorandum.created_at desc")
+                ->orderByRaw("CASE WHEN request_memorandum.user_id = '" . $user_id . "' THEN 0 ELSE 1 END, request_memorandum.created_at DESC")
                 ->get();
-                $sysids = $data->pluck('sysid')->unique()->toArray();
-                $memorandumHistories = DB::table('request_memorandum_his')
-                ->whereIn('sysid', $sysids)
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->groupBy('sysid');
-                foreach ($data as $row) {
-                    $row->memorandumHistories = $memorandumHistories->get($row->employee_id, collect())->values();
-                }
+
                 // dd($data);
-           
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
@@ -176,6 +153,7 @@ class MemorandumController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
 
     public function store(Request $request)
     {
@@ -189,8 +167,8 @@ class MemorandumController extends Controller
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
             // $requestData['user_id'] = $this->getAuth()->id;
-            $requestData['sysid'] = $this->getEmployeeID()->sys_id;
-            $requestData['employee_id'] = $this->getEmployeeID()->id;
+            // $requestData['sysid'] = $this->getEmployeeID()->sys_id;
+            // $requestData['employee_id'] = $this->getEmployeeID()->id;
             $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
 
             // Buat data baru pada tabel utama
@@ -221,37 +199,26 @@ class MemorandumController extends Controller
         $user_id = $this->getAuth()->id;
         $module_id = $this->getModuleId($this->modulename);
 
-        $subquery = "(select TOP 1 CASE WHEN a.user_id='" . $user_id . "'  then 1 else 0 end 
-            from tbl_approverListReq l
-            left join tbl_approver a on l.approver_id=a.id
-            left join tbl_approvaltype r on a.approvaltype_id = r.id
-            where l.ApprovalAction='1' and l.req_id = request_memorandum.id and l.module_id = '" . $module_id . "' and request_memorandum.requestStatus='1'
-            order by a.sequence)";
-
-        $checkUserAccess = Useraccess::where('module_id', $module_id)->where('employee_id', $user_id)->first();
-        $getAllview = ($checkUserAccess) ? $checkUserAccess->allowView : null;
+        $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '" . $user_id . "' THEN 1 ELSE 0 END 
+            FROM tbl_approverListReq l
+            LEFT JOIN tbl_approver a ON l.approver_id = a.id
+            WHERE l.ApprovalAction = '1' 
+                AND l.req_id = request_memorandum.id 
+                AND l.module_id = '" . $module_id . "' 
+                AND request_memorandum.requestStatus = '1'
+            ORDER BY a.sequence)";
 
         try {
-            // Ambil data request_memorandum
+            // Ambil data utama dari request_memorandum berdasarkan ID
             $data = $this->model
-                ->select(
-                    'request_memorandum.*',
-                    'codes.code',
-                    'employee.tbl_employee.FullName',
-                    'employee.tbl_employee.sys_id',
-                    'employee.tbl_employee.SAPID', 
-                    'employee.tbl_employee.JoinDate', 
-                    'employee.tbl_employee.deptheadName',
-                    'employee.tbl_employee.contract_status',
-                    'employee.tbl_employee.BirthOfDate',
-                    'employee.tbl_employee.JoinDate',
-                    'employee.tbl_employee.deptheadName',
-                    'employee.tbl_level.Level',
-                    'employee.tbl_designation.DesignationName',
-                )
+                ->select('request_memorandum.*',                
+                'employee.tbl_level.Level',
+                'employee.tbl_designation.DesignationName',
+                'employee.tbl_employee.JoinDate',
+                'employee.tbl_employee.sys_id',
+                'employee.tbl_employee.BirthOfDate')
                 ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-                ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->where('request_memorandum.id', $id)
@@ -267,27 +234,30 @@ class MemorandumController extends Controller
                 $data->save();
             }
 
-            // Tambahkan atribut ismine
-            $data->ismine = ($data->employee_id == $user_id);
+            // Tambahkan atribut isMine
+            $data->isMine = ($data->employee_id == $user_id);
 
-            // Tambahkan atribut ispendingonme
+            // Tambahkan atribut isPendingOnMe
             $data->isPendingOnMe = $this->model
                 ->selectRaw($subquery . " as isPendingOnMe")
                 ->where('id', $id)
                 ->first()
-                ->isPendingOnMe;        
+                ->isPendingOnMe;
 
-                $sysid = $data->sysid;
-                $memorandumHistories = DB::table('request_memorandum_his')
-                    ->where('sysid', $sysid)
-                    ->get();                
-                $data->memorandumHistories = $memorandumHistories;
-                // dd($data);
+            // **Tambahkan kelompok kontrak berdasarkan sysid, parentID, dan sequence**
+            $contractList = $this->model
+                ->select('sysid', 'id AS memorandum_id', 'parentID', 'sequence')
+                ->where('sysid', $data->sysid) // Ambil semua kontrak dengan sysid yang sama
+                ->orderBy('sequence', 'ASC') // Urutkan berdasarkan sequence (Parent lebih dulu)
+                ->get();
+
+            // Tambahkan list kontrak ke data utama
+            $data->contractList = $contractList;
+
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
-                'data' => $data, // Data utama request_memorandum
-                // 'memorandumHistories' => $memorandumHistories // Semua data dari request_memorandum_his
+                'data' => $data
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
@@ -379,18 +349,17 @@ class MemorandumController extends Controller
             ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
             ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
             ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
-            ->leftJoin('request_memorandum_his as rm_his', 'request_memorandum.id', '=', 'rm_his.req_id')
+            ->leftJoin('request_memorandum as rm_his', 'request_memorandum.id', '=', 'rm_his.id')
             ->where('request_memorandum.id', $id)
             ->first();
         if (!$data || !$data->approverHistory) {
             return response()->json(["status" => "error", "message" => "Data or approver history not found"]);
         }
-        $contracts = DB::table('request_memorandum_his as rm_his')
+        $contracts = DB::table('request_memorandum as rm_his')
         ->select('rm_his.sequence', 
         'rm_his.startContract', 
         'rm_his.endContract',
         'rm_his.remarks')
-        ->where('rm_his.req_id', $id)
         ->get();
 
         if ($contracts->isEmpty()) {
@@ -437,9 +406,6 @@ class MemorandumController extends Controller
             $Worksheet->Range("E21")->Value = $data->DesignationName ?? ''; 
             $Worksheet->Range("F21")->Value = $data->sys_id ?? ''; 
             $Worksheet->Range("C36")->Value = $data->remarks ?? ''; 
-            $Worksheet->Range("D36")->Value = $data->remarks ?? ''; 
-            $Worksheet->Range("C34")->Value = $data->remarks ?? ''; 
-            $Worksheet->Range("D20")->Value = $data->remarks ?? ''; 
             $Worksheet->Range("C63")->Value = $data->DesignationName ?? ''; 
             $Worksheet->Range("A56")->Value = $data->username ?? ''; 
             $Worksheet->Range("C56")->Value = $data->deptheadName ?? ''; 
@@ -530,8 +496,8 @@ class MemorandumController extends Controller
 			unset($excel);
 			
             $pathfilename = 'public/template/memo/pdf/' . $fileName;
-            DB::table('request_memorandum_his')
-            ->where('req_id', $id) // Sesuaikan dengan primary key di tabel
+            DB::table('request_memorandum')
+            ->where('id', $id) // Sesuaikan dengan primary key di tabel
             ->update(['approveddoc' => $pathfilename]);
             $this->processcopy($pathfilename);
 

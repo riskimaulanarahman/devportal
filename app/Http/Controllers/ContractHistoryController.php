@@ -35,6 +35,7 @@ class ContractHistoryController extends Controller
         try {
 
             $data = $this->model->all();
+            // dd($data);
 
             return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
 
