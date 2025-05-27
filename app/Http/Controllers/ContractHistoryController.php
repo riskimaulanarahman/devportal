@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
+// use App\Models\Submission\Memorandum;
 use App\Models\MemorandumHis;
 use App\Models\Useraccess;
 use App\Models\MemorandumReq;
@@ -24,7 +25,7 @@ class ContractHistoryController extends Controller
     public function __construct()
     {
         $this->model = new MemorandumHis();
-        $this->modulename = 'MemorandumHis';
+        $this->modulename = 'Memorandum';
         $this->codename = 'Memorandum';
         $this->module = new Module();
         $this->user = new User();
@@ -47,20 +48,14 @@ class ContractHistoryController extends Controller
 
     public function store(Request $request)
     {
-
-
         try {
-            $employeeid = $this->getEmployeeID()->id;
+
             $requestData = $request->all();
-            $requestData['user_id'] = $this->getAuth()->id;
-            $requestData['sysid'] = $this->getEmployeeID()->sys_id;
-            $requestData['requestStatus'] = $this->getEmployeeID()->requestStatus;
-            $newData = $this->model->create($requestData);
-            return response()->json([
-                "status" => "success",
-                "message" => $this->getMessage()['store'],
-                "data" => $newData
-            ]);
+            $requestData['module_id'] = $this->getModuleId($request->modulename);
+            // $requestData['approvalAction'] = 1;
+            $this->model->create($requestData);
+
+            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 
         } catch (\Exception $e) {
 
@@ -73,63 +68,85 @@ class ContractHistoryController extends Controller
         //
     }
 
-    public function getList($id, $reqid)
+    public function getList($reqid, $modulename)
     {
         try {
-            // Ambil sysid dan sequence berdasarkan reqid yang dipilih
-            $historyData = DB::table('request_memorandum_his')
-                ->select('sysid', 'sequence')
-                ->where('id', $id)
-                ->first();
-
-            if (!$historyData) {
-                return response()->json(["status" => "error", "message" => "Data sejarah tidak ditemukan"], 404);
+            // **Cek apakah ID valid sebelum query dijalankan**
+            if (empty($reqid)) {
+                return response()->json([
+                    "status" => "show",
+                    "message" => "Form baru dibuka, tidak ada data kontrak",
+                    "data" => []
+                ]);
+            }
+            // **Periksa apakah memorandum memiliki data sebelum mengambilnya**
+            $historyExists = $this->model->where('req_id', $reqid)->exists();
+            if (!$historyExists) {
+                return response()->json([
+                    "status" => "show",
+                    "message" => "Belum ada data kontrak",
+                    "data" => []
+                ]);
             }
 
-            $selected_sequence = $historyData->sequence;
+            // Ambil module berdasarkan modulename
+            $moduleExists = $this->module->where('module', $modulename)->exists();
+            
+            if (!$moduleExists) {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['errornotfound']]);
+            }
+
+            // **Ambil sysid dan sequence berdasarkan ID memorandum yang diberikan**
+            $historyData = $this->model->select('sysid', 'sequence')->where('req_id', $reqid)->first();
+
             $sysid = $historyData->sysid;
+            $selected_sequence = $historyData->sequence;
 
-            // Validasi sequence agar tidak null
-            if (is_null($selected_sequence)) {
-                return response()->json(["status" => "error", "message" => "Sequence tidak ditemukan"], 404);
+            // **Pastikan sequence tidak null sebelum memproses lebih lanjut**
+            if (empty($sysid) || empty($selected_sequence)) {
+                return response()->json([
+                    "status" => "show",
+                    "message" => "Belum ada data kontrak",
+                    "data" => []
+                ]);
             }
 
-            // Ambil data memorandumHistories berdasarkan sequence dan sysid
-            $memorandumHistories = DB::table('request_memorandum_his')
-                ->selectRaw("
-                    MIN(id) AS reqid, 
-                    sequence, 
-                    startContract,
-                    endContract,
-                    approveddoc,
-                    created_at,
-                    remarks,
-                    sysid,
-                    id
-                ")
+            // **Periksa apakah ada kontrak terkait sebelum mengambil list**
+            $contractExists = $this->model
+                ->where('sysid', $sysid)
+                ->where('sequence', '<', $selected_sequence)
+                ->exists();
+
+            if (!$contractExists) {
+                return response()->json([
+                    "status" => "show",
+                    "message" => "Belum ada kontrak",
+                    "data" => []
+                ]);
+            }
+
+            // **Ambil data memorandumHistories dengan sequence <= sequence yang dipilih**
+            $contractList = $this->model
                 ->where('sysid', $sysid)
                 ->where('sequence', '<=', $selected_sequence)
-                ->groupBy('sequence', 'sysid', 'startContract', 'endContract', 'approveddoc', 'created_at', 'remarks', 'id')
                 ->orderBy('sequence', 'DESC')
                 ->get();
 
             return response()->json([
-                'status' => "show",
-                'message' => $this->getMessage()['show'],
-                'data' => $memorandumHistories
+                "status" => "show",
+                "message" => "List kontrak berhasil diambil",
+                "data" => $contractList
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+            return response()->json(["status" => "error", "message" => $e->getMessage()], 500);
         }
     }
 
 
-
-
     public function update(Request $request, $id)
     {
-        DB::beginTransaction();
+        // DB::beginTransaction();
 
         try {
             $requestData = $request->all();
@@ -137,7 +154,7 @@ class ContractHistoryController extends Controller
             $requestData['user_id'] = $this->getAuth()->id;
             $data->update($requestData);
 
-            DB::commit();
+            // DB::commit();
 
             return response()->json([
                 "status" => "success",
@@ -146,7 +163,7 @@ class ContractHistoryController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            // DB::rollBack();
 
             return response()->json([
                 "status" => "error",

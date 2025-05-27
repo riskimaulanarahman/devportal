@@ -16,26 +16,24 @@ class MemorandumHis extends Model
 
     protected $guarded = ['id'];
 
-    // protected $fillable = [
-    //     'req_id' => 'integer',
-    //     'cs' => 'integer',
-    //     'module_id' => 'integer',
-    //     'employee_idr' => 'integer',
-    //     'startContract' => 'date',
-    //     'endContract' => 'date',        
-    //     'remarks' => 'string',
-    // ];
-    protected $casts = [
-        'req_id' => 'integer',
-        'module_id' => 'integer',
-        // 'sequence' => 'integer',
-        // 'startContract' => 'date',
-        // 'endContract' => 'date',        
-        // 'remarks' => 'string',
-        // 'user_id' => 'integer', 
+    protected $fillable = [
+        'req_id',
+        'sequence',
+        'module_id',
+        'employee_idr',
+        'startContract',
+        'endContract',        
+        'remarks',
+        'code_id',
+        'superiorName',
+        'requestStatus',
+        'user_id',
+        'sysid'
+    ];
+    protected $casts = [      
+        'code_id' => 'integer',
+        'user_id' => 'integer', 
         'sysid' => 'string',
-        // 'employee_idr' => 'integer',
-        // 'requestStatus' => 'integer',
     ];
     public static function getFillableColumns()
     {
@@ -43,7 +41,6 @@ class MemorandumHis extends Model
         $fillable = array_diff($fillable, ['approveddoc']);        
         return $fillable;
     }
-
     public static function getTableName()
     {
         return (new static)->getTable();
@@ -69,5 +66,9 @@ class MemorandumHis extends Model
     public function approvaltype()
     {
         return $this->hasMany(approvaltype::class,'req_id');
+    }
+    public function code()
+    {
+        return $this->belongsTo(Code::class);
     }
 }

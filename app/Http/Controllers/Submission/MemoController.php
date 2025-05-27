@@ -83,21 +83,13 @@ class MemoController extends Controller
             $data = $this->model
                 ->selectRaw("
                     request_memorandum.id,
-                    request_memorandum.parentID,
                     request_memorandum.user_id,
-                    request_memorandum.requestStatus,   
-                    request_memorandum.employee_id,
-                    request_memorandum.created_at,
-                    request_memorandum.bu, 
-                    request_memorandum.sysid, 
-                    request_memorandum.sequence, 
+                    request_memorandum.requestStatus,
+                    request_memorandum.bu,  
+                    request_memorandum_his.sequence, 
                     employee.tbl_employee.FullName,
-                    employee.tbl_employee.sys_id,
-                    employee.tbl_employee.BirthOfDate, 
-                    employee.tbl_employee.JoinDate, 
                     employee.tbl_employee.companycode, 
-                    employee.tbl_level.Level,
-                    employee.tbl_designation.DesignationName,
+                    employee.tbl_employee.contract_status, 
                     codes.code,
                     users.fullname,
                     CASE WHEN request_memorandum.user_id = '" . $user_id . "' THEN 1 ELSE 0 END AS isMine,
@@ -105,8 +97,8 @@ class MemoController extends Controller
                 ")
                 ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
                 ->leftJoin('users', 'request_memorandum.user_id', '=', 'users.id')
-                // ->join('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
+                ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $getAllview) {
@@ -136,19 +128,19 @@ class MemoController extends Controller
                 })
                 ->groupBy([
                     'request_memorandum.id',
-                    'request_memorandum.parentID',
                     'request_memorandum.user_id',
                     'request_memorandum.requestStatus',
                     'request_memorandum.created_at',
                     'request_memorandum.employee_id',
                     'request_memorandum.bu',
                     'request_memorandum.sysid',
-                    'request_memorandum.sequence',
+                    'request_memorandum_his.sequence',
                     'codes.code',
                     'users.fullname',
                     'employee.tbl_employee.FullName',
                     'employee.tbl_employee.SAPID',
                     'employee.tbl_employee.sys_id',
+                    'employee.tbl_employee.contract_status',
                     'employee.tbl_employee.companycode',
                     'employee.tbl_employee.BirthOfDate',
                     'employee.tbl_employee.JoinDate',
@@ -222,15 +214,17 @@ class MemoController extends Controller
         try {
             // Ambil data utama dari request_memorandum berdasarkan ID
             $data = $this->model
-                ->select('request_memorandum.*',                
+                ->select('request_memorandum.*',       
                 'employee.tbl_level.Level',
                 'employee.tbl_designation.DesignationName',
                 'employee.tbl_employee.JoinDate',
                 'employee.tbl_employee.companycode',
+                'employee.tbl_employee.contract_status',
                 'employee.tbl_employee.sys_id as sysid',
                 'employee.tbl_employee.BirthOfDate')
                 ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
+                // ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->where('request_memorandum.id', $id)
@@ -256,11 +250,11 @@ class MemoController extends Controller
                 ->first()
                 ->isPendingOnMe;
 
-            // **Tambahkan kelompok kontrak berdasarkan sysid, parentID, dan sequence**
+            // **Tambahkan kelompok kontrak berdasarkan sysid, dan sequence**
             $contractList = $this->model
-                ->select('sysid', 'id AS memorandum_id', 'parentID', 'sequence')
+                ->select('sysid', 'id AS memorandum_id', 'sequence', 'approveddoc', 'superiorName', 'remarks')
                 ->where('sysid', $data->sysid) // Ambil semua kontrak dengan sysid yang sama
-                ->orderBy('sequence', 'ASC') // Urutkan berdasarkan sequence (Parent lebih dulu)
+                ->orderBy('sequence', 'ASC') // Urutkan berdasarkan sequence ( lebih dulu)
                 ->get();
 
             // Tambahkan list kontrak ke data utama
@@ -271,13 +265,12 @@ class MemoController extends Controller
                 'message' => $this->getMessage()['show'],
                 'data' => $data
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
         } catch (\Exception $e) {
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
 
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         try {
             $requestData = $request->all();
@@ -301,24 +294,13 @@ class MemoController extends Controller
                 }
             }
 
-            // **Cari Parent berdasarkan sysid yang sama dengan sequence = 1**
-            $parentData = $this->model
-                ->select('id')
-                ->where('sysid', $requestData['sysid'])
-                ->where('sequence', 1)
-                ->first();
+            
 
             // **Tetapkan Sequence dan Parent ID**
             if (!isset($requestData['sequence'])) {
-                $maxSequence = $this->model
-                    ->where('sysid', $requestData['sysid'])
-                    ->max('sequence');
-
-                $requestData['sequence'] = $maxSequence ? $maxSequence + 1 : 1;
+                // Jika sequence tidak dikirim, gunakan sequence yang sudah ada
+                $requestData['sequence'] = $data->sequence;
             }
-
-            $requestData['parentID'] = ($requestData['sequence'] == 1) ? null : ($parentData ? $parentData->id : null);
-
             // **Pastikan tidak ada duplikasi sequence dalam sysid**
             $existingSequence = $this->model
                 ->where('sysid', $requestData['sysid'])
@@ -348,9 +330,6 @@ class MemoController extends Controller
             ]);
         }
     }
-
-
-
 
 
     public function destroy($id)

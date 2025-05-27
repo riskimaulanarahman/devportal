@@ -115,11 +115,17 @@ var dataGrid = $("#gridContainer").dxTreeList({
             dataField: 'FullName',
             // width: 180,
         },
+        {
+            dataField: 'contract_status',
+            caption: 'status',
+            width: 120
+        },
         { 
             dataField: "sequence",
             caption: 'Contract',
-            width: 120
-        },
+            width: 120,
+            alignment: "left"
+        },        
         {
             dataField: 'fullname',
             caption: 'Creator',
@@ -155,7 +161,7 @@ var dataGrid = $("#gridContainer").dxTreeList({
         //         }
         //     },
         // },
-      
+
     ],
     export: {
         enabled: true,
@@ -174,25 +180,25 @@ var dataGrid = $("#gridContainer").dxTreeList({
             }
         }
     },
-    // onToolbarPreparing: function(e) {
-    //     dataGrid = e.component;
+    onToolbarPreparing: function(e) {
+        dataGrid = e.component;
 
-    //     e.toolbarOptions.items.unshift({						
-    //         location: "after",
-    //         widget: "dxButton",
-    //         options: {
-    //             hint: "Refresh Data",
-    //             icon: "refresh",
-    //             onClick: function() {
-    //                 dataGrid.refresh();
-    //             }
-    //         }
-    //     })
-    // },
-    // onDataErrorOccurred: function(e) {
-    //     console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-    //     location.reload();
-    // }
+        e.toolbarOptions.items.unshift({						
+            location: "after",
+            widget: "dxButton",
+            options: {
+                hint: "Refresh Data",
+                icon: "refresh",
+                onClick: function() {
+                    dataGrid.refresh();
+                }
+            }
+        })
+    },
+    onDataErrorOccurred: function(e) {
+        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+        location.reload();
+    }
 }).dxTreeList("instance");
 
 $('#btnadd').on('click',function(){
@@ -215,14 +221,19 @@ const accordionItems = [
     },
     {
         ID: 9,
-        Title: '<i class="fas fa-list-ul"> Contract </i>',
+        Title: '<i class="fas fa-list-ul"> Contract New</i>',
+        visible: true
+    },
+    {
+        ID: 90,
+        Title: '<i class="fas fa-list-ul"> Contract History </i>',
         visible: true
     },
     {
         ID: 3,
         Title: '<i class="fas fa-list-ul"> Approver List </i>',
         visible: true
-    },
+    },    
     {
         ID: 4,
         Title: '<i class="fas fa-history"> History </i>',
@@ -374,14 +385,22 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
+                                caption: "Superior",
+                                dataField: "superiorName",
+                                lookup: {
+                                    dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
+                                    valueExpr: 'fullname',
+                                    displayExpr: 'fullname',
+                                }
+                            },
+                            {
                                 caption: "Employee",
                                 dataField: "employee_id",
                                 lookup: {
                                     dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
                                     valueExpr: 'id',
                                     displayExpr: 'fullname',
-                                },
-                                validationRules: [{ type: "required" }]
+                                }
                             },
                             { 
                                 dataField: "companycode",
@@ -407,6 +426,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'JoinDate',
                                 dataType: 'date',
                                 format: "dd-MM-yyyy",
+                            },
+                            {
+                                caption: 'Status',
+                                dataField: 'contract_status',
                             },
                             {
                                 caption: 'OU',
@@ -528,206 +551,540 @@ const popupContentTemplate = function (reqid,mode,options) {
                     }).appendTo(infoContent2)
                     return formData
                 }
+                // else if(data.ID == 5) {
+                //     // return formData = $("<div id='formcontract'>").dxDataGrid({    
+                //         let formData2 = $("<div id='formdata2'>").dxDataGrid({
+                //         // dataSource: storewithmodule('memorandumhis',modelclass,reqid), 
+                //         dataSource: storedetail(modname,reqid),
+                //         // dataSource: response.data.contractList,
+                //         // dataSource: data.contractList,
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         showColumnLines:true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: true,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         sorting: {
+                //             mode: "none" // or "multiple" | "none"
+                //         },
+                //         editing: {
+                //                 useIcons:true,
+                //                 mode: "cell",
+                //                 allowAdding:  false,
+                //                 allowUpdating:  true,
+                //                 allowDeleting:  false,
+                //                 // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //                 // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //                 // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //             },
+                //         scrolling: {
+                //             rowRenderingMode: 'virtual',
+                //         },
+                //         paging: {
+                //             pageSize: 5,
+                //         },
+                //         pager: {
+                //             visible: true,
+                //             allowedPageSizes: [5, 15, 'all'],
+                //             showPageSizeSelector: true,
+                //             showInfo: true,
+                //             showNavigationButtons: true,
+                //         },
+                //         columns: [
+                //             {
+                //                 caption: 'Kontrak ke-',
+                //                 dataField: 'sequence',
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'Start Contract',
+                //                 dataField: 'startContract',
+                //                 dataType: "date",
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'End Contract',
+                //                 dataField: 'endContract',
+                //                 dataType: "date",
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },
+                //             {
+                //                 dataField: "approveddoc",
+                //                 caption:"Approval Doc",
+                //                 allowFiltering: false,
+                //                 allowSorting: false,
+                //                 formItem: { visible: false},
+                //                 cellTemplate: function (container, options) {
+                //                     if ((options.value!="") && (options.value)){
+                //                         $("<div />").dxButton({
+                //                             icon: 'download',
+                //                             type: "success",
+                //                             text: "Download",
+                //                             onClick: function (e) {
+                //                                 window.open(options.value, '_blank');
+                //                             }
+                //                         }).appendTo(container);
+                //                     }
+                //                 }
+                //             },                                                              
+                //             {
+                //                 caption: 'komentar',
+                //                 dataField: 'remarks',
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },                                                    
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGrid11 = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGriddetail.refresh();
+                //                     }
+                //                 }
+                //             });
+                //         },
+                //         onEditorPrepared: function (e) {
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //                 // Menampilkan pesan kesalahan
+                //                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                        
+                //                 // Memuat ulang DataGrid
+                //                 dataGrid11.refresh();
+                //             }
+                //         })
+                //         return formData2;
+                //     }
+                // else if(data.ID == 6) {
+                //         let formData22 = $("<div id='formdata22'>").dxDataGrid({
+                //         dataSource: storewithmodule('memorandumhis',modelclass,reqid), 
+                //         allowColumnReordering: true,
+                //         allowColumnResizing: true,
+                //         columnsAutoWidth: true,
+                //         rowAlternationEnabled: true,
+                //         wordWrapEnabled: true,
+                //         showBorders: true,
+                //         showColumnLines:true,
+                //         filterRow: { visible: false },
+                //         filterPanel: { visible: false },
+                //         headerFilter: { visible: false },
+                //         searchPanel: {
+                //             visible: true,
+                //             width: 240,
+                //             placeholder: 'Search...',
+                //         },
+                //         sorting: {
+                //             mode: "none" 
+                //         },
+                //         editing: {
+                //                 useIcons:true,
+                //                 mode: "cell",
+                //                 allowAdding:  false,
+                //                 allowUpdating:  true,
+                //                 allowDeleting:  false,
+                //             },
+                //         scrolling: {
+                //             rowRenderingMode: 'virtual',
+                //         },
+                //         paging: {
+                //             pageSize: 5,
+                //         },
+                //         pager: {
+                //             visible: true,
+                //             allowedPageSizes: [5, 15, 'all'],
+                //             showPageSizeSelector: true,
+                //             showInfo: true,
+                //             showNavigationButtons: true,
+                //         },
+                //         columns: [
+                //             {
+                //                 caption: 'Kontrak ke-',
+                //                 dataField: 'sequence',
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'Start Contract',
+                //                 dataField: 'startContract',
+                //                 dataType: "date",
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },
+                //             {
+                //                 caption: 'End Contract',
+                //                 dataField: 'endContract',
+                //                 dataType: "date",
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },
+                //             {
+                //                 dataField: "approveddoc",
+                //                 caption:"Approval Doc",
+                //                 allowFiltering: false,
+                //                 allowSorting: false,
+                //                 formItem: { visible: false},
+                //                 cellTemplate: function (container, options) {
+                //                     if ((options.value!="") && (options.value)){
+                //                         $("<div />").dxButton({
+                //                             icon: 'download',
+                //                             type: "success",
+                //                             text: "Download",
+                //                             onClick: function (e) {
+                //                                 window.open(options.value, '_blank');
+                //                             }
+                //                         }).appendTo(container);
+                //                     }
+                //                 }
+                //             },                                                              
+                //             {
+                //                 caption: 'komentar',
+                //                 dataField: 'remarks',
+                //                 editorOptions: { 
+                //                     readOnly: false,
+                //                 }
+                //             },                                                    
+                //         ],
+                //         export: {
+                //             enabled: false,
+                //             fileName: modname,
+                //             excelFilterEnabled: true,
+                //             allowExportSelectedData: true
+                //         },
+                //         onInitialized: function(e) {
+                //             dataGrid11 = e.component;
+                //         },
+                //         onContentReady: function(e){
+                //             moveEditColumnToLeft(e.component);
+                //         },
+                //         onToolbarPreparing: function(e) {
+                //             e.toolbarOptions.items.unshift({						
+                //                 location: "after",
+                //                 widget: "dxButton",
+                //                 options: {
+                //                     hint: "Refresh Data",
+                //                     icon: "refresh",
+                //                     onClick: function() {
+                //                         dataGriddetail.refresh();
+                //                     }
+                //                 }
+                //             });
+                //         },
+                //         onEditorPrepared: function (e) {
+                //         },
+                //         onDataErrorOccurred: function(e) {
+                //                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                //                 dataGrid11.refresh();
+                //             }
+                //         })
+                //         return formData22;
+                //     }
                 else if(data.ID == 9) {
-                    // return formData = $("<div id='formcontract'>").dxDataGrid({    
-                        // dataSource: storewithmodule('memorandumhis',modelclass,reqid), 
-                        let formData2 = $("<div id='formdata2'>").dxDataGrid({
-                        dataSource: storedetail(modname,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        showColumnLines:true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: true,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        sorting: {
-                            mode: "none" // or "multiple" | "none"
-                        },
-                        editing: {
+                        return formData = $("<div id='formcontract'>").dxDataGrid({
+                            // dataSource: storewithmodule('memorandumhis',modelclass,reqid),
+                            dataSource: storedetail(modname,reqid),
+                            // dataSource: data.contractList,
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnsAutoWidth: true, 
+                            rowAlternationEnabled: true,
+                            wordWrapEnabled: true,
+                            showBorders: true,
+                            showColumnLines:true,
+                            filterRow: { visible: false },
+                            filterPanel: { visible: false },
+                            headerFilter: { visible: false },
+                            searchPanel: {
+                                visible: true,
+                                width: 240,
+                                placeholder: 'Search...',
+                            },
+                            sorting: {
+                                mode: "none" // or "multiple" | "none"
+                            },
+                            editing: {
                                 useIcons:true,
-                                mode: "cell",
-                                allowAdding:  false,
-                                allowUpdating:  true,
-                                allowDeleting:  false,
+                                mode:"cell",
+                                allowAdding: true,
+                                allowUpdating: true,
+                                allowDeleting: true,
+                                // mode: "batch",
                                 // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                                 // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                                 // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                             },
-                        scrolling: {
-                            rowRenderingMode: 'virtual',
-                        },
-                        paging: {
-                            pageSize: 5,
-                        },
-                        pager: {
-                            visible: true,
-                            allowedPageSizes: [5, 15, 'all'],
-                            showPageSizeSelector: true,
-                            showInfo: true,
-                            showNavigationButtons: true,
-                        },
-                        columns: [
-                            {
-                                caption: 'Kontrak ke-',
-                                dataField: 'sequence',
-                                editorOptions: { 
-                                    readOnly: false,
-                                }
+                            scrolling: {
+                                rowRenderingMode: 'virtual',
                             },
-                            {
-                                caption: 'Start Contract',
-                                dataField: 'startContract',
-                                dataType: "date",
-                                editorOptions: { 
-                                    readOnly: false,
-                                }
+                            paging: {
+                                pageSize: 5,
                             },
-                            {
-                                caption: 'End Contract',
-                                dataField: 'endContract',
-                                dataType: "date",
-                                editorOptions: { 
-                                    readOnly: false,
-                                }
+                            pager: {
+                                visible: true,
+                                allowedPageSizes: [5, 15, 'all'],
+                                showPageSizeSelector: true,
+                                showInfo: true,
+                                showNavigationButtons: true,
                             },
-                            {
-                                dataField: "approveddoc",
-                                caption:"Approval Doc",
-                                allowFiltering: false,
-                                allowSorting: false,
-                                formItem: { visible: false},
-                                cellTemplate: function (container, options) {
-                                    if ((options.value!="") && (options.value)){
-                                        $("<div />").dxButton({
-                                            icon: 'download',
-                                            type: "success",
-                                            text: "Download",
-                                            onClick: function (e) {
-                                                window.open(options.value, '_blank');
-                                            }
-                                        }).appendTo(container);
+                            columns: [
+                                {
+                                    caption: 'Kontrak ke-',
+                                    dataField: 'sequence',
+                                    alignment: "left",
+                                    width: 100
+                                },
+                                {
+                                    caption: 'Start Contract',
+                                    dataField: 'startContract',
+                                    dataType: "date",
+                                    alignment: "left",
+                                    width: 180
+                                },
+                                {
+                                    caption: 'End Contract',
+                                    dataField: 'endContract',
+                                    dataType: "date",
+                                    width: 180
+                                },
+                                {
+                                    dataField: "approveddoc",
+                                    caption:"Approval Doc",
+                                    allowFiltering: false,
+                                    allowSorting: false,
+                                    formItem: { visible: false},
+                                    cellTemplate: function (container, options) {
+                                        if ((options.value!="") && (options.value)){
+                                            $("<div />").dxButton({
+                                                icon: 'download',
+                                                type: "success",
+                                                text: "Download",
+                                                onClick: function (e) {
+                                                    window.open(options.value, '_blank');
+                                                }
+                                            }).appendTo(container);
+                                        }
+                                    },
+                                    width: 180
+                                },                                                              
+                                {
+                                    caption: 'komentar',
+                                    dataField: 'remarks',
+                                    editorOptions: { 
+                                        readOnly: false,
                                     }
-                                }
-                            },                                                              
-                            {
-                                caption: 'komentar',
-                                dataField: 'remarks',
-                                editorOptions: { 
-                                    readOnly: false,
-                                }
-                            },      
-                            // {
-                            //     caption: 'Action',
-                            //     width: 140,
-                            //     cellTemplate: function(container, options) {
-                            //         const {
-                            //             isMine,
-                            //             isPendingOnMe,
-                            //             isAssignment,
-                            //             id: reqid,
-                            //             approveddoc
-                            //         } = options.data;
-                                
-                            //         // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
-                            //         if (approveddoc != null) return;
-                                
-                            //         // Tombol "Submit Contract"
-                            //         $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
-                            //             .on('dxclick', function(evt) {
-                            //                 evt.stopPropagation();
-                            //                 btnreqsubmit(reqid);  // Panggil fungsi submit
-                            //             })
-                            //             .appendTo(container);
-                                
-                            //         // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
-                            //         if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
-                            //             $('<button class="btn btn-danger" style="margin-left: 5px;">Cancel</button>')
-                            //                 .on('dxclick', function(evt) {
-                            //                     evt.stopPropagation();
-                            //                     Swal.fire({
-                            //                         title: 'Are you sure?',
-                            //                         text: "Are you sure you want to cancel this submission?",
-                            //                         icon: 'warning',
-                            //                         showCancelButton: true,
-                            //                         confirmButtonColor: '#d33',
-                            //                         cancelButtonColor: '#3085d6',
-                            //                         confirmButtonText: 'Yes, cancel it'
-                            //                     }).then((result) => {
-                            //                         if (result.isConfirmed) {
-                            //                             showLoadingScreen();
-                            //                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                            //                                 action: 'submission',
-                            //                                 approvalAction: 0
-                            //                             }).then(function(response) {
-                            //                                 hideLoadingScreen();
-                            //                                 if (response.status != 'error') {
-                            //                                     dataGrid.refresh();
-                            //                                     Swal.fire({
-                            //                                         icon: 'success',
-                            //                                         title: 'Saved',
-                            //                                         text: 'The submission has been cancelled.',
-                            //                                     });
-                            //                                 }
-                            //                             });
-                            //                         } else {
-                            //                             hideLoadingScreen();
-                            //                             Swal.fire({
-                            //                                 icon: 'error',
-                            //                                 title: 'Cancelled',
-                            //                                 text: 'The submission cancellation has been cancelled.'
-                            //                             });
-                            //                         }
-                            //                     });
-                            //                 })
-                            //                 .appendTo(container);
-                            //         }
-                            //     }
-                            // }                                                        
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGrid11 = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGriddetail.refresh();
+                                },      
+                                                                                    
+                            ],
+                            export: {
+                                enabled: false,
+                                fileName: modname,
+                                excelFilterEnabled: true,
+                                allowExportSelectedData: true
+                            },
+                            onInitialized: function(e) {
+                                dataGriddetail = e.component;
+                            },
+                            onContentReady: function(e){
+                                moveEditColumnToLeft(e.component);
+                            },
+                            onToolbarPreparing: function(e) {
+                                e.toolbarOptions.items.unshift({						
+                                    location: "after",
+                                    widget: "dxButton",
+                                    options: {
+                                        hint: "Refresh Data",
+                                        icon: "refresh",
+                                        onClick: function() {
+                                            dataGriddetail.refresh();
+                                        }
                                     }
-                                }
-                            });
-                        },
-                        onEditorPrepared: function (e) {
-                        },
-                        onDataErrorOccurred: function(e) {
+                                });
+                            },
+                            onEditorPrepared: function (e) {
+                            },
+                            onDataErrorOccurred: function(e) {
                                 // Menampilkan pesan kesalahan
                                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                         
                                 // Memuat ulang DataGrid
-                                dataGrid11.refresh();
+                                dataGriddetail.refresh();
                             }
                         })
-                        return formData2;
+                    }
+                else if(data.ID == 90) {
+                        return formData = $("<div id='formcontract'>").dxDataGrid({    
+                            dataSource: storewithmodule('memorandumhis',modelclass,reqid),    
+                            // dataSource: storedetail(modname,reqid),                  
+                            // dataSource: data.contractList,                  
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnsAutoWidth: true, 
+                            rowAlternationEnabled: true,
+                            wordWrapEnabled: true,
+                            showBorders: true,
+                            showColumnLines:true,
+                            filterRow: { visible: false },
+                            filterPanel: { visible: false },
+                            headerFilter: { visible: false },
+                            searchPanel: {
+                                visible: true,
+                                width: 240,
+                                placeholder: 'Search...',
+                            },
+                            sorting: {
+                                mode: "none" // or "multiple" | "none"
+                            },
+                            editing: {
+                                useIcons:true,
+                                mode:"cell",
+                                allowAdding: false,
+                                allowUpdating: false,
+                                allowDeleting: false,
+                                // mode: "batch",
+                                // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                                // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                                // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            },
+                            scrolling: {
+                                rowRenderingMode: 'virtual',
+                            },
+                            paging: {
+                                pageSize: 5,
+                            },
+                            pager: {
+                                visible: true,
+                                allowedPageSizes: [5, 15, 'all'],
+                                showPageSizeSelector: true,
+                                showInfo: true,
+                                showNavigationButtons: true,
+                            },
+                            columns: [
+                                {
+                                    caption: 'Kontrak ke-',
+                                    dataField: 'sequence',
+                                    alignment: "left",
+                                    width: 100,
+                                    editorOptions: { 
+                                        readOnly: true,
+                                    }
+                                },
+                                {
+                                    caption: 'Start Contract',
+                                    dataField: 'startContract',
+                                    dataType: "date",
+                                    alignment: "left",
+                                    width: 180,
+                                    editorOptions: { 
+                                        readOnly: true,
+                                    }
+                                },
+                                {
+                                    caption: 'End Contract',
+                                    dataField: 'endContract',
+                                    dataType: "date",
+                                    width: 180,
+                                    editorOptions: { 
+                                        readOnly: true,
+                                    }
+                                },
+                                {
+                                    dataField: "approveddoc",
+                                    caption:"Approval Doc",
+                                    allowFiltering: false,
+                                    allowSorting: false,
+                                    formItem: { visible: false},
+                                    cellTemplate: function (container, options) {
+                                        if ((options.value!="") && (options.value)){
+                                            $("<div />").dxButton({
+                                                icon: 'download',
+                                                type: "success",
+                                                text: "Download",
+                                                onClick: function (e) {
+                                                    window.open(options.value, '_blank');
+                                                }
+                                            }).appendTo(container);
+                                        }
+                                    },
+                                    width: 180
+                                },                                                              
+                                {
+                                    caption: 'komentar',
+                                    dataField: 'remarks',
+                                    editorOptions: { 
+                                        readOnly: true,
+                                    }
+                                },      
+                                                                                    
+                            ],
+                            export: {
+                                enabled: false,
+                                fileName: modname,
+                                excelFilterEnabled: true,
+                                allowExportSelectedData: true
+                            },
+                            onInitialized: function(e) {
+                                dataGriddetail = e.component;
+                            },
+                            onContentReady: function(e){
+                                moveEditColumnToLeft(e.component);
+                            },
+                            onToolbarPreparing: function(e) {
+                                e.toolbarOptions.items.unshift({						
+                                    location: "after",
+                                    widget: "dxButton",
+                                    options: {
+                                        hint: "Refresh Data",
+                                        icon: "refresh",
+                                        onClick: function() {
+                                            dataGriddetail.refresh();
+                                        }
+                                    }
+                                });
+                            },
+                            onEditorPrepared: function (e) {
+                            },
+                            onDataErrorOccurred: function(e) {
+                                // Menampilkan pesan kesalahan
+                                console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                        
+                                // Memuat ulang DataGrid
+                                dataGriddetail.refresh();
+                            }
+                        })
                     }
                 else if(data.ID == 3) {
                     return $("<div id='formapproverlist'>").dxDataGrid({    
@@ -993,7 +1350,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGridApproverHistory.refresh();
                         }
                     })
-                }                
+                }
             }
         })
     

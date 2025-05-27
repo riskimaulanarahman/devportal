@@ -114,8 +114,10 @@ Route::group(['prefix' => 'api'], function () {
     
     //memorhistorycal
     // Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
-    Route::get('memorandumhis/{id}/{modulename}',[App\Http\Controllers\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
+    Route::get('memorandumhis/{reqid}/{modulename}',[App\Http\Controllers\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
     Route::get('memorandumhis',[App\Http\Controllers\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
-    Route::put('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'update']); //get list contract history by req_id of module
+    // Route::put('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'update']); //get list contract history by req_id of module
+    Route::post('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'store']); //get list contract history by req_id of module
     Route::delete('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'destroy']); //get list contract history by req_id of module
+    Route::get('testing',[App\Http\Controllers\Submission\MemorandumController::class, 'testing']); //get list contract history by req_id of module
 });

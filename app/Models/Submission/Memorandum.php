@@ -22,20 +22,14 @@ class Memorandum extends Model
 
     protected $fillable = [
         'code_id',
-        'requestStatus',
         'bu',
         'sysid',
-        'parentID',
-        'startContract',
-        'endContract',
         'user_id',
-        'employee_id',        
-        'sequence',
-        'remarks',
+        'employee_id', 
         'created_at',
         'updated_at'
         ];
-        
+
     protected $casts = [
             'user_id' => 'integer',
             'employee_id' => 'integer',
@@ -45,7 +39,7 @@ class Memorandum extends Model
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['approveddoc']);
+        $fillable = array_diff($fillable, []);
         return $fillable;
     }
 

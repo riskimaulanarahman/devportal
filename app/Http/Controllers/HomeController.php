@@ -180,7 +180,7 @@ class HomeController extends Controller
                                 $url = 'ghm_request';
                                 break;
                             case 'request_memorandum':
-                                $url = 'memorandum_request';
+                                $url = 'memo_request';
                                 break;
                             case 'request_memo':
                                 $url = 'memo_request';
@@ -273,8 +273,11 @@ class HomeController extends Controller
                                 $url = 'ghm_request';
                                 break;
                             case 'request_memorandum':
-                                $url = 'memorandum_request';
+                                $url = 'memo_request';
                                 break;
+                            // case 'request_memorandum':
+                            //     $url = 'memorandum_request';
+                            //     break;
                             case 'request_memo':
                                 $url = 'memo_request';
                                 break;
