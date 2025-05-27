@@ -40,7 +40,7 @@ class Capex extends Model
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['equipment','cost_center','reason_unbudgeted','additional_approver']);
+        $fillable = array_diff($fillable, ['equipment','cost_center','reason_unbudgeted','additional_budget','additional_approver']);
         return $fillable;
     }
 
