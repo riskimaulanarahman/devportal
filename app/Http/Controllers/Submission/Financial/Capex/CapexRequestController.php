@@ -633,10 +633,12 @@ class CapexRequestController extends Controller
                     }
 
                     if($question->question_id == 20) {
-                        $Worksheet2->Range("O58")->Value = $question->answer;
+                        $date = new \DateTime($question->answer);
+                        $Worksheet2->Range("O58")->Value = $date->format('d-m-y');
                     }
                     if($question->question_id == 21) {
-                        $Worksheet2->Range("O60")->Value = $question->answer;
+                        $date = new \DateTime($question->answer);
+                        $Worksheet2->Range("O60")->Value = $date->format('d-m-y');
                     }
                     if($question->question_id == 22) {
                         $Worksheet2->Range("O62")->Value = $question->answer;
