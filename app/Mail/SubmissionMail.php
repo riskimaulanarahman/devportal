@@ -28,6 +28,7 @@ use App\Http\Controllers\Submission\MMF\M28RequestController;
 use App\Http\Controllers\Submission\MMF\M30RequestController;
 use App\Models\Submission\HRIS\Hris;
 use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
+use App\Http\Controllers\Submission\Financial\Capex\CapexRequestController;
 
 use Storage;
 use DB;
@@ -383,26 +384,40 @@ class SubmissionMail extends Mailable
         // MMF MODULE
 
         // hcrf MODULE
-        if($modulename == 'Hris') {
-            $checkCategory = Hris::find($mailData['submission']->id);
-            
-            $request = new Request();
-            if($checkCategory->category == 'Hcrf') {
-                $controller = new HcrfRequestController();
-            }
+            if($modulename == 'Hris') {
+                $checkCategory = Hris::find($mailData['submission']->id);
+                
+                $request = new Request();
+                if($checkCategory->category == 'Hcrf') {
+                    $controller = new HcrfRequestController();
+                }
 
-            if($final == 1) {
-                $pdf = $controller->genPdfHcrfReq($request,$mailData['submission']->id);
-                $this->attach($url."devportal/".$pdf); // add attachment to mail
-                foreach ($MailrecipientNoBu as $cc){
-                    if($cc->company_list == 'Hcrf') {
-                        $this->cc($cc->email);
-                    } 
+                if($final == 1) {
+                    $pdf = $controller->genPdfHcrfReq($request,$mailData['submission']->id);
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    foreach ($MailrecipientNoBu as $cc){
+                        if($cc->company_list == 'Hcrf') {
+                            $this->cc($cc->email);
+                        } 
+                    }
+                }
+
+            }
+        // hcrf MODULE
+
+        // Capex MODULE
+            if($modulename == 'Capex') {
+                $request = new Request();
+                $capexController = new CapexRequestController();
+                if($final == 1) {
+                    $pdf = $capexController->genPdfCapex($request,$mailData['submission']->id);
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    foreach ($Mailrecipient as $cc) {
+                        $this->cc($cc->email); // cc
+                    }
                 }
             }
-
-        }
-    // hcrf MODULE
+        // Capex MODULE
 
     }
 

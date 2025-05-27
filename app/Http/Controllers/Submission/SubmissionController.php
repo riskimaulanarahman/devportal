@@ -104,6 +104,7 @@ class SubmissionController extends Controller
                 'MaterialReq' => "App\Models\Submission\Ecatalog",
                 'Hris' => "App\Models\Submission\HRIS",
                 'Ccm' => "App\Models\Submission\Financial",
+                'Capex' => "App\Models\Submission\Financial",
             ];
             
             $baseNamespace = "App\Models\Submission";
@@ -206,7 +207,8 @@ class SubmissionController extends Controller
                     'Mmf', 
                     'MaterialReq',
                     'Hris',
-                    'Ghm'
+                    'Ghm',
+                    'Capex'
                 ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {
@@ -261,7 +263,6 @@ class SubmissionController extends Controller
                     $bu = $getSubmissionData->bu;
                     $company = $bu;
                 }
-                    // dd($company);
                     $this->createApprover($modulename, $id, $company, $category);
 
             }
@@ -351,7 +352,6 @@ class SubmissionController extends Controller
                         }
 
                     }
-                    // dd($request);
                     $getcurrentapprUser = $approverlist[0]->approver_id;
                     $this->approverAction($modulename, $id, 'Approver', $request->approvalAction, $request->remarks, $getcurrentapprUser); // $moduleName, $req_id, $type, $appraction, $remarks, appuser
                 }
@@ -389,10 +389,7 @@ class SubmissionController extends Controller
                 ->where('id', $id)
                 ->update($dataToUpdate);
 
-            // dd($approverlist);
-
             foreach($approverlist as $getappr) {
-                // dd($getappr);
                 if($request->approvalAction == 0 && $getappr->approvalAction == 0) { // cancel pengajuan
                     $mailData = [
                         "id" => 0,
@@ -476,7 +473,7 @@ class SubmissionController extends Controller
                     break;
                 }
             }
-            // dd($mailData);
+            
             if(count($mailData) > 0) {
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$modulename,$final));
             }

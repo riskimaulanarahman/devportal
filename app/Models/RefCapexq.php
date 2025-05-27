@@ -9,7 +9,7 @@ class RefCapexq extends Model
 {
     use HasFactory;
 
-    protected $table = 'capex_question';
+    protected $table = 'reference.capex_question';
     
     protected $guarded = ['id'];
     
