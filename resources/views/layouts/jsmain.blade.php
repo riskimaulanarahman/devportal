@@ -202,7 +202,9 @@
         '/capex_request': 'submission/Financial/Capex/capex_request.js',
         //submission/Memo
         '/memorandum_request': 'submission/ms_request.js',
-        '/memo_request': 'submission/data_memo.js',
+        // '/memo_request': 'submission/data_memo.js',
+        //Submission/Legal
+        '/legal_request' : 'submission/legal_request.js'
     }
     
     const pathname = window.location.pathname;

@@ -646,6 +646,7 @@ class ComposerStaticInitc0ab960a98edb137ab2e98b6663cdd78
         'App\\Http\\Controllers\\Submission\\TicketRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/TicketRequestController.php',
         'App\\Http\\Controllers\\Submission\\UavMissionRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/UavMissionRequestController.php',
         'App\\Http\\Controllers\\Submission\\UavMissionRequestDetailController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/UavMissionRequestDetailController.php',
+        'App\\Http\\Controllers\\Submission\\LegalRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/LegalRequestController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\Authenticate' => __DIR__ . '/../..' . '/app/Http/Middleware/Authenticate.php',
         'App\\Http\\Middleware\\EncryptCookies' => __DIR__ . '/../..' . '/app/Http/Middleware/EncryptCookies.php',

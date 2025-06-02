@@ -34,7 +34,8 @@ class SubmissionController extends Controller
             'MaterialReq' => "App\Models\Submission\Ecatalog",
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
-            'Memorandum' => "App\Models\Submission\Memorandum",
+            'MemorandumHis' => "App\Models\Submission\MemorandumHis",
+            'Legal' => "App\Models\Submission\Legal",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -105,7 +106,7 @@ class SubmissionController extends Controller
                 'MaterialReq' => "App\Models\Submission\Ecatalog",
                 'Hris' => "App\Models\Submission\HRIS",
                 'Ccm' => "App\Models\Submission\Financial",
-                'Memorandum' => "App\Models\Submission\Memorandum",
+                'MemorandumHis' => "App\Models\Submission\MemorandumHis",
             ];
             
             $baseNamespace = "App\Models\Submission";

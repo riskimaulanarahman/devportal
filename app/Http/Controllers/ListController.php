@@ -34,7 +34,7 @@ use App\Models\Ecatalog;
 use App\Models\Purchasinguser;
 use App\Models\RekeningCcm;
 use App\Models\Ghm_room;
-use App\Models\MemorandumHis;
+use App\Models\Submission\MemorandumHis;
 use Auth;
 
 class ListController extends Controller

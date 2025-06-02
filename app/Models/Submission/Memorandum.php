@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Code;
 use App\Models\ApproverListReq;
-use App\Models\MemorandumHis;
+use App\Models\Submission\MemorandumHis;
 use App\Models\Employee;
 use App\Models\ApproverListHistory;
 
@@ -32,8 +32,7 @@ class Memorandum extends Model
 
     protected $casts = [
             'user_id' => 'integer',
-            'employee_id' => 'integer',
-            // 'sysid' => 'string'
+            'employee_id' => 'integer'
     ];
 
     public static function getFillableColumns()

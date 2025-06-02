@@ -14,7 +14,7 @@ use App\Models\Useraccess;
 use App\Mail\SubmissionMail;
 use App\Models\Approvaluser;
 use Illuminate\Http\Request;
-use App\Models\MemorandumHis;
+use App\Models\Submission\MemorandumHis;
 use Illuminate\Support\Carbon;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
@@ -168,49 +168,80 @@ class MemorandumController extends Controller
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
-        try {
-            $module_id = $this->getModuleId($this->modulename);
-            $user_id = $this->getAuth();
+        try {            
             $code_id = $this->generateCode($this->modulename);
+            $user_id = auth()->id(); 
             $requestData = $request->all();
             $getsys = DB::table('memoExp')
-            ->where('id', $requestData['req_id'])
-            ->value('sys_id');
+                ->where('id', $requestData['req_id'])
+                ->value('sys_id');
 
+            $requestData['module_id'] = $this->getModuleId($request->modulename);
+            $requestData['user_id'] = $user_id;
+            $requestData['sysid'] = $getsys;
+            $requestData['requestStatus'] = 0;
+            $requestData['endContract'] = $request->input('endContract');
+            $requestData['code_id'] = $code_id;
+            $requestData['req_id'] = $request->input('req_id');
+            $requestData['sequence'] = $request->input('sequence');
+            $requestData['superiorName'] = $request->input('superiorName');
+            $requestData['startContract'] = $request->input('startContract');
+            $requestData['remarks'] = $request->input('remarks');
 
-            if (empty($requestData['req_id']) || empty($requestData['sequence']) || empty($requestData['superiorName']) ||
-                empty($requestData['startContract']) || empty($requestData['endContract']) || empty($requestData['remarks'])) {
-                return response()->json(["status" => "error", "message" => "Incomplete data."]);
-            }
-
-            $newData = MemorandumHis::create([
-                'user_id'       => $user_id->id, 
-                'sysid'        => $getsys,
-                'requestStatus' => 0,
-                'module_id'     => $module_id,
-                'code_id'       => $code_id,
-                'req_id'        => $requestData['req_id'],
-                'sequence'      => $requestData['sequence'],
-                'superiorName'  => $requestData['superiorName'],
-                'startContract' => date('Y-m-d', strtotime($requestData['startContract'])),
-                'endContract'   => date('Y-m-d', strtotime($requestData['endContract'])),
-                'remarks'       => $requestData['remarks']
-            ]);
-
-            DB::commit();
-            return response()->json([
-                "status" => "success",
-                "message" => "MemorandumHis stored successfully",
-                "data" => $newData
-            ]);
+            $this->model->create($requestData);
+            
+            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Store function error: ' . $e->getMessage());
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
+    // public function store(Request $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $module_id = $this->getModuleId($this->modulename);
+    //         $user_id = $this->getAuth();
+    //         $code_id = $this->generateCode($this->modulename);
+    //         $requestData = $request->all();
+    //         $getsys = DB::table('memoExp')
+    //         ->where('id', $requestData['req_id'])
+    //         ->value('sys_id');
+
+
+    //         if (empty($requestData['req_id']) || empty($requestData['sequence']) || empty($requestData['superiorName']) ||
+    //             empty($requestData['startContract']) || empty($requestData['endContract']) || empty($requestData['remarks'])) {
+    //             return response()->json(["status" => "error", "message" => "Incomplete data."]);
+    //         }
+
+    //         $newData = MemorandumHis::create([
+    //             'user_id'       => $user_id->id, 
+    //             'sysid'        => $getsys,
+    //             'requestStatus' => 0,
+    //             'module_id'     => $module_id,
+    //             'code_id'       => $code_id,
+    //             'req_id'        => $requestData['req_id'],
+    //             'sequence'      => $requestData['sequence'],
+    //             'superiorName'  => $requestData['superiorName'],
+    //             'startContract' => date('Y-m-d', strtotime($requestData['startContract'])),
+    //             'endContract'   => date('Y-m-d', strtotime($requestData['endContract'])),
+    //             'remarks'       => $requestData['remarks']
+    //         ]);
+
+    //         DB::commit();
+    //         return response()->json([
+    //             "status" => "success",
+    //             "message" => "MemorandumHis stored successfully",
+    //             "data" => $newData
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         \Log::error('Store function error: ' . $e->getMessage());
+    //         return response()->json(["status" => "error", "message" => $e->getMessage()]);
+    //     }
+    // }
 
     public function show($id)
     {
@@ -241,18 +272,7 @@ class MemorandumController extends Controller
                 ]);
             }
 
-            $contractList = MemorandumHis::select(
-                'sysid', 
-                'user_id', 
-                'req_id', 
-                'id AS history_id', 
-                'sequence', 
-                'approveddoc', 
-                'superiorName', 
-                'startContract', 
-                'endContract', 
-                'remarks'
-            )
+            $contractList = MemorandumHis::select('request_memorandum_his.*')
             ->where('sysid', $data->sysid)
             ->orderBy('sequence', 'ASC')
             ->get();
@@ -272,7 +292,6 @@ class MemorandumController extends Controller
             ]);
         }
     }
-
 
     // public function update(Request $request, $id)
     // {
@@ -315,7 +334,6 @@ class MemorandumController extends Controller
     //         ]);
     //     }
     // }
-
 
     public function update(Request $request, $id)
     {
@@ -393,7 +411,7 @@ class MemorandumController extends Controller
     public function testing()
     {
         $dataAppr = DB::table('memoApprover')->select('*')->get(); // data approver
-        dd($dataAppr);
+        // dd($dataAppr);
         return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],

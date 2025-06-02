@@ -177,42 +177,42 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'days_left',
             alignment: "left"
         },
-        // {
-        //     dataField: 'requestStatus',
-        //     width: 240,
-        //     encodeHtml: false,
-        //     allowFiltering: false,
-        //     allowHeaderFiltering: true,
-        //     customizeText: function (e) {
-        //         var arrText = [
-        //             "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-        //             "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-        //             "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-        //             "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-        //             "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-        //         ];
-        //         return arrText[e.value];
-        //     },
-        // },
-        // {
-        //     dataField: "approveddoc",
-        //     caption:"Approval Doc",
-        //     allowFiltering: false,
-        //     allowSorting: false,
-        //     formItem: { visible: false},
-        //     cellTemplate: function (container, options) {
-        //         if ((options.value!="") && (options.value)){
-        //             $("<div />").dxButton({
-        //                 icon: 'download',
-        //                 type: "success",
-        //                 text: "Download",
-        //                 onClick: function (e) {
-        //                     window.open(options.value, '_blank');
-        //                 }
-        //             }).appendTo(container);
-        //         }
-        //     }
-        // },
+        {
+            dataField: 'requestStatus',
+            width: 240,
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                ];
+                return arrText[e.value];
+            },
+        },
+        {
+            dataField: "approveddoc",
+            caption:"Approval Doc",
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: { visible: false},
+            cellTemplate: function (container, options) {
+                if ((options.value!="") && (options.value)){
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        type: "success",
+                        text: "Download",
+                        onClick: function (e) {
+                            window.open(options.value, '_blank');
+                        }
+                    }).appendTo(container);
+                }
+            }
+        },
     ],
     columnChooser: {
     enabled: true,
@@ -275,19 +275,14 @@ const accordionItems = [
         Title: '<i class="far fa-newspaper"> Personal Data </i>',
         visible: true
     },
-    // {
-    //     ID: 5,
-    //     Title: '<i class="fas fa-list-ul"> Contract</i>',
-    //     visible: true
-    // },
-    {
+        {
         ID: 9,
         Title: '<i class="fas fa-list-ul"> Contract New</i>',
         visible: true
     },
     {
         ID: 90,
-        Title: '<i class="fas fa-list-ul"> Contract History </i>',
+        Title: '<i class="fas fa-list-ul"> Contracts </i>',
         visible: true
     },
     {
@@ -592,10 +587,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                         }
                     }).appendTo(infoContent2)
                     return formData
-                }                
+                }    
                 else if(data.ID == 9) {
                         return formData = $("<div id='formcontract'>").dxDataGrid({
+                            // dataSource: storewithmodule('memorandumhis',modelclass,reqid),
                             dataSource: storedetail(modname,reqid),
+                            // dataSource: data.contractList,
                             allowColumnReordering: true,
                             allowColumnResizing: true,
                             columnsAutoWidth: true, 
@@ -640,6 +637,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             columns: [
                                 {
+                                    caption: 'code',
+                                    dataField: 'code',
+                                    editorOptions: { 
+                                        readOnly: true,
+                                    }
+                                },  
+                                {
                                 caption: "Superior Name",
                                 dataField: "superiorName",
                                 lookup: {
@@ -652,7 +656,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 {
                                     caption: 'Kontrak ke-',
                                     dataField: 'sequence',
-                                    alignment: "left",
                                     editorOptions: { 
                                         readOnly: false,
                                     }
@@ -740,6 +743,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                             showLoadingScreen();
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                                                                 action: 'submission',
+                                                                user_id: '10087',
                                                                 approvalAction: 0
                                                             }).then(function(response) {
                                                                 hideLoadingScreen();
@@ -806,8 +810,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 else if(data.ID == 90) {
                         return formData = $("<div id='formcontract'>").dxDataGrid({    
                             dataSource: storewithmodule('memorandumhis',modelclass,reqid),    
-                            // dataSource: storedetail(modname,reqid),                  
-                            // dataSource: data.contractList,                  
+                            // dataSource: storedetail(modname,reqid),
                             allowColumnReordering: true,
                             allowColumnResizing: true,
                             columnsAutoWidth: true, 
@@ -823,23 +826,16 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 width: 240,
                                 placeholder: 'Search...',
                             },
-                            sorting: {
-                                mode: "none" // or "multiple" | "none"
-                            },
                             editing: {
                                 useIcons:true,
                                 mode:"cell",
                                 allowAdding: true,
-                                allowUpdating: true,
+                                allowUpdating: false,
                                 allowDeleting: true,
-                                // mode: "batch",
-                                // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                                // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                                // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            },
+                                },
                             scrolling: {
-                                rowRenderingMode: 'virtual',
-                            },
+                                mode: "virtual"
+                                },
                             paging: {
                                 pageSize: 5,
                             },
@@ -851,6 +847,23 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 showNavigationButtons: true,
                             },
                             columns: [
+                                {
+                                    caption: 'code',
+                                    dataField: 'code',
+                                    editorOptions: { 
+                                        readOnly: true,
+                                    }
+                                },  
+                                {
+                                caption: "Superior Name",
+                                dataField: "superiorName",
+                                lookup: {
+                                    dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
+                                    valueExpr: 'fullname',
+                                    displayExpr: 'fullname',
+                                },
+                                validationRules: [{ type: "required" }]
+                                },
                                 {
                                     caption: 'Kontrak ke-',
                                     dataField: 'sequence',
@@ -941,6 +954,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                             showLoadingScreen();
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                                                                 action: 'submission',
+                                                                user_id: '10087',
                                                                 approvalAction: 0
                                                             }).then(function(response) {
                                                                 hideLoadingScreen();

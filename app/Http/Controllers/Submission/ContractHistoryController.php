@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Submission;
 
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
-// use App\Models\Submission\Memorandum;
-use App\Models\MemorandumHis;
+use App\Models\Submission\MemorandumHis;
 use App\Models\Useraccess;
 use App\Models\MemorandumReq;
 use App\Models\Submission\MemorandumReq as SubmissionMemorandumReq;
@@ -46,7 +45,7 @@ class ContractHistoryController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function storex(Request $request)
     {
         try {
 
@@ -63,15 +62,66 @@ class ContractHistoryController extends Controller
         }
     }
 
+    public function store(Request $request)
+    {
+        try {            
+            $code_id = $this->generateCode($this->modulename);
+            $user_id = auth()->id();
+            $requestData = $request->all();
+            $getsys = DB::table('memoExp')
+                ->where('id', $requestData['req_id'])
+                ->value('sys_id');
+
+            $requestData['module_id'] = $this->getModuleId($request->modulename);
+            $requestData['user_id'] = $user_id;
+            $requestData['sysid'] = $getsys;
+            $requestData['requestStatus'] = 0;
+            $requestData['endContract'] = $request->input('endContract');
+            $requestData['code_id'] = $code_id;
+            $requestData['req_id'] = $request->input('req_id');
+            $requestData['sequence'] = $request->input('sequence');
+            $requestData['superiorName'] = $request->input('superiorName');
+            $requestData['startContract'] = $request->input('startContract');
+            $requestData['remarks'] = $request->input('remarks');
+
+            $this->model->create($requestData);
+            
+            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+
+        } catch (\Exception $e) {
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
     public function show($id)
     {
         //
     }
 
-    public function getList($reqid, $modulename)
+    public function getList($id,$modulename)
     {
         try {
-            // **Cek apakah ID valid sebelum query dijalankan**
+            $module = $this->module->select('id','module')->where('module',$modulename)->first();
+            if($module) {
+                $data = $this->model->select('request_memorandum_his.*', 'codes.code')
+                ->leftJoin('codes','request_memorandum_his.code_id','codes.id')
+                ->where('req_id',$id)
+                ->orderBy('sequence', 'DESC')
+                ->get();
+                return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
+            } else {
+                return response()->json(["status" => "show", "message" => $this->getMessage()['errornotfound']]);
+            }
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public function getLost($reqid, $modulename)
+    {
+        try {
             if (empty($reqid)) {
                 return response()->json([
                     "status" => "show",
@@ -79,7 +129,6 @@ class ContractHistoryController extends Controller
                     "data" => []
                 ]);
             }
-            // **Periksa apakah memorandum memiliki data sebelum mengambilnya**
             $historyExists = $this->model->where('req_id', $reqid)->exists();
             if (!$historyExists) {
                 return response()->json([
@@ -88,21 +137,13 @@ class ContractHistoryController extends Controller
                     "data" => []
                 ]);
             }
-
-            // Ambil module berdasarkan modulename
-            $moduleExists = $this->module->where('module', $modulename)->exists();
-            
+            $moduleExists = $this->module->where('module', $modulename)->exists();        
             if (!$moduleExists) {
                 return response()->json(["status" => "error", "message" => $this->getMessage()['errornotfound']]);
             }
-
-            // **Ambil sysid dan sequence berdasarkan ID memorandum yang diberikan**
             $historyData = $this->model->select('sysid', 'sequence')->where('req_id', $reqid)->first();
-
             $sysid = $historyData->sysid;
             $selected_sequence = $historyData->sequence;
-
-            // **Pastikan sequence tidak null sebelum memproses lebih lanjut**
             if (empty($sysid) || empty($selected_sequence)) {
                 return response()->json([
                     "status" => "show",
@@ -110,13 +151,10 @@ class ContractHistoryController extends Controller
                     "data" => []
                 ]);
             }
-
-            // **Periksa apakah ada kontrak terkait sebelum mengambil list**
             $contractExists = $this->model
                 ->where('sysid', $sysid)
                 ->where('sequence', '<', $selected_sequence)
                 ->exists();
-
             if (!$contractExists) {
                 return response()->json([
                     "status" => "show",
@@ -124,20 +162,16 @@ class ContractHistoryController extends Controller
                     "data" => []
                 ]);
             }
-
-            // **Ambil data memorandumHistories dengan sequence <= sequence yang dipilih**
             $contractList = $this->model
                 ->where('sysid', $sysid)
                 ->where('sequence', '<=', $selected_sequence)
                 ->orderBy('sequence', 'DESC')
                 ->get();
-
             return response()->json([
                 "status" => "show",
                 "message" => "List kontrak berhasil diambil",
                 "data" => $contractList
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
         } catch (\Exception $e) {
             return response()->json(["status" => "error", "message" => $e->getMessage()], 500);
         }

@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Submission;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
-// use App\Models\Submission\MemorandumReq;
+use App\Models\Code;
+use App\Models\User;
+use App\Models\Employee;
 
 class MemorandumHis extends Model
 {
@@ -20,7 +22,6 @@ class MemorandumHis extends Model
         'req_id',
         'sequence',
         'module_id',
-        'employee_idr',
         'startContract',
         'endContract',        
         'remarks',
@@ -69,6 +70,6 @@ class MemorandumHis extends Model
     }
     public function code()
     {
-        return $this->belongsTo(Code::class);
+        return $this->belongsTo(Code::class, 'code_id');
     }
 }

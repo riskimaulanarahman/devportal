@@ -102,7 +102,8 @@ class HomeController extends Controller
             'request_material' => $this->getModuleId('MaterialReq'),
             'request_ccm' => $this->getModuleId('Ccm'),
             'request_ghm' => $this->getModuleId('Ghm'),
-            'request_memorandum' => $this->getModuleId('Memorandum'),
+            'request_memorandum_his' => $this->getModuleId('Memorandum'),
+            'request_legal' => $this->getModuleId('Legal'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -180,11 +181,14 @@ class HomeController extends Controller
                                 $url = 'ghm_request';
                                 break;
                             case 'request_memorandum':
-                                $url = 'memo_request';
+                                $url = 'memorandum_request';
                                 break;
-                            case 'request_memo':
-                                $url = 'memo_request';
+                            case 'request_legal':
+                                $url = 'legal_request';
                                 break;
+                            // case 'request_memo':
+                            //     $url = 'memo_request';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -273,14 +277,14 @@ class HomeController extends Controller
                                 $url = 'ghm_request';
                                 break;
                             case 'request_memorandum':
-                                $url = 'memo_request';
+                                $url = 'memorandum_request';
                                 break;
-                            // case 'request_memorandum':
-                            //     $url = 'memorandum_request';
+                            case 'request_legal':
+                                $url = 'legal_request';
+                                break;
+                            // case 'request_memo':
+                            //     $url = 'memo_request';
                             //     break;
-                            case 'request_memo':
-                                $url = 'memo_request';
-                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
