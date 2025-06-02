@@ -1282,7 +1282,7 @@ function editCellTemplate(cellElement, cellInfo) {
     let fileUploaderElement = document.createElement("div");
     let fileUploader = $(fileUploaderElement).dxFileUploader({
       multiple: false,
-      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
+      accept: ".pptx,.ppt,.docx,.pdf,.xlsx,.csv,.png,.jpg,.jpeg,.zip,.msg",
       uploadMode: "instantly",
       name: "myFile",
       uploadUrl: apiurl + "/upload-berkas/"+modname,
