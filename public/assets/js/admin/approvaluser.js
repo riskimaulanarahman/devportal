@@ -7,31 +7,6 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
-
-// var typeData = sendRequest('/list-approvaltype','POST','').then(function(resp) {
-//     return resp;
-// })
-
-// async function getTypeData() {
-//     const resp = await sendRequest('/api/list-approvaltype', 'POST', '');
-//     return resp;
-//   }
-  
-// async function getTypeDatxa() {
-//   const typeData = await getTypeData();
-//   return typeData;
-// }
-
-// async function getTypeData() {
-//   const resp = await sendRequest('/api/list-approvaltype', 'POST', '');
-//   return resp; // nilai yang dikembalikan harus berupa sebuah array
-// }
-
-// var getTypeData;
-// sendRequest('/api/list-approvaltype','POST','').then(function(itemsData) {
-//     getTypeData = itemsData;
-// })
-
 function getData() {
     return sendRequest(apiurl+'/list-approvaltype','POST','');
   }
@@ -141,12 +116,6 @@ function processData(itemsData) {
                 caption: "Category",
                 dataField: "category_id",
                 width: 300,
-                // editorType: "dxDropDownBox",
-                // lookup: {
-                //     dataSource: listOption('/list-categoryform','id','nameCategory'),  
-                //     valueExpr: 'id',
-                //     displayExpr: 'nameCategory',
-                // },
             },
             { 
                 dataField: "autoAdd",
@@ -262,7 +231,8 @@ function processData(itemsData) {
                             width: '100%',
                             dataSource: args.component.option("dataSource"),
                             keyExpr: "id",
-                            columns: ["module.module","nameCategory"],
+                            columns: ["module.module","nameCategory","amount"],
+                            wordWrapEnabled: true,
                             // hoverStateEnabled: true,
                             paging: { enabled: true, pageSize: 10 },
                             filterRow: { visible: true },
@@ -284,7 +254,7 @@ function processData(itemsData) {
                                 const hasSelection = keys.length;
                                 args.component.option('value', hasSelection ? keys : null);
                                 if(hasSelection !== 0) {
-                                    args.component.close();
+                                    // args.component.close();
                                 }
                             }
                         });
