@@ -144,6 +144,12 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180,
         },
         {
+            caption: "R S",
+            dataField: 'requestStatus',
+            alignment: "left",
+            width: 180,
+        },
+        {
             caption: "sys_id",
             dataField: 'sys_id',
             alignment: "left"
@@ -307,75 +313,79 @@ const updateVisibleById = (itemId, visible) => {
 
 const popupContentTemplate = function (reqid,mode,options) {
     
-        isMine = options.data.isMine;
-        // var sysid = options.data.sysid;
-        var isPendingOnMe = options.data.isPendingOnMe;
-        var isAssignment = options.data.isAssignment;
+    isMine = options.data.isMine;
+    var isPendingOnMe = options.data.isPendingOnMe;
+    isBCIDv = options.data.isBCIDv;
 
-        popupid = reqid;
+    var validationRules = [];
+    var validationRules2 = [];
 
-        const scrollView = $('<div />');
+    popupid = reqid;
 
-        if ((isMine == 1 || isPendingOnMe == 1) && (mode == 'add' || mode == 'edit' || mode == 'approval')) {
-            if((isPendingOnMe == 1) && (mode == 'approval')) {
-                var approvalOptions = 
-                    '<div class="row">' +
-                        '<div class="col-md-6">' +
-                        '<label for="remarks">Approval Action :</label>' +
-                        '<div class="form-check">'+
-                            '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction1" value="3">'+
-                            '<label class="form-check-label" for="rappraction1">'+
-                            'Approved'+
-                            '</label>'+
-                        '</div>'+
-                        '<div class="form-check">'+
-                            '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction2" value="2">'+
-                            '<label class="form-check-label" for="rappraction2">'+
-                            'Reworked'+
-                            '</label>'+
-                        '</div>'+
-                        '<div class="form-check mb-3">'+
-                            '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction3" value="4">'+
-                            '<label class="form-check-label" for="rappraction3">'+
-                            'Rejected'+
-                            '</label>'+
-                        '</div>'+
-                        '</div>' +
-                        '<div class="col-md-6">' +
-                        '<div class="form-group">' +
-                            '<label for="remarks">Remarks :</label>' +
-                            '<textarea class="form-control" id="remarks" rows="3"></textarea>' +
-                        '</div>' +
-                        '</div>' +
-                    '</div><hr>';
-            } else {
-                var approvalOptions = '';
-            }
+    // console.log(mode)
 
-            scrollView.append('<div class="row">' +
-                '<div class="col-lg-12">' +
-                '<div class="card">' +
-                    '<div class="card-header">' +
-                    '<h5 class="card-title">Form Action</h5>' +
+    const scrollView = $('<div />');
+
+    if ((isMine == 1 || isPendingOnMe == 1) && (mode == 'add' || mode == 'edit' || mode == 'approval')) {
+        if((isPendingOnMe == 1) && (mode == 'approval')) {
+            var approvalOptions = 
+                '<div class="row">' +
+                    '<div class="col-md-6">' +
+                    '<label for="remarks">Approval Action :</label>' +
+                    '<div class="form-check">'+
+                        '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction1" value="3">'+
+                        '<label class="form-check-label" for="rappraction1">'+
+                        'Approved'+
+                        '</label>'+
+                    '</div>'+
+                    '<div class="form-check">'+
+                        '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction2" value="2">'+
+                        '<label class="form-check-label" for="rappraction2">'+
+                        'Reworked'+
+                        '</label>'+
+                    '</div>'+
+                    '<div class="form-check mb-3">'+
+                        '<input class="form-check-input" type="radio" name="approvalaction" id="rappraction3" value="4">'+
+                        '<label class="form-check-label" for="rappraction3">'+
+                        'Rejected'+
+                        '</label>'+
+                    '</div>'+
                     '</div>' +
-                    '<div class="card-body" style="border-bottom-color: darkseagreen !important;border-left-color: darkseagreen;">' +
-                    approvalOptions +
-                    '<button id="btn-submit" type="button" onClick="btnreqsubmit('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Submit Submission</button>'+
+                    '<div class="col-md-6">' +
+                    '<div class="form-group">' +
+                        '<label for="remarks">Remarks :</label>' +
+                        '<textarea class="form-control" id="remarks" rows="3"></textarea>' +
                     '</div>' +
+                    '</div>' +
+                '</div><hr>';
+          } else {
+            var approvalOptions = '';
+          }
+          
+          scrollView.append('<div class="row">' +
+            '<div class="col-lg-12">' +
+              '<div class="card">' +
+                '<div class="card-header">' +
+                  '<h5 class="card-title">Form Action</h5>' +
                 '</div>' +
+                '<div class="card-body" style="border-bottom-color: darkseagreen !important;border-left-color: darkseagreen;">' +
+                  approvalOptions +
+                  '<button id="btn-submit" type="button" onClick="btnreqsubmit('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Submit Submission</button>'+
                 '</div>' +
-            '</div>');
-        }
+              '</div>' +
+            '</div>' +
+          '</div>');
+    }
 
-        if(options.data.requestStatus == 3 || (admin == 1 || aPermissions.allowView == 1)) {
-            updateVisibleById(7, true);
-        } else {
-            updateVisibleById(7, false);
-        }
+    if(options.data.requestStatus == 3 || (isPendingOnMe && isBCIDv)) {
+        updateVisibleById(7, true);
+    } else {
+        updateVisibleById(7, false);
+    }
 
-        scrollView.append("<hr>"),
+    scrollView.append("<hr>"),
 
-        scrollView.append(
+    scrollView.append(
 
         $("<div>").dxAccordion({
             dataSource: accordionItems,
@@ -743,7 +753,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                             showLoadingScreen();
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                                                                 action: 'submission',
-                                                                user_id: '10087',
                                                                 approvalAction: 0
                                                             }).then(function(response) {
                                                                 hideLoadingScreen();
@@ -907,7 +916,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }
                                 },                                                              
                                 {
-                                    caption: 'komentar',
+                                    caption: 'komentaro',
                                     dataField: 'remarks',
                                     editorOptions: { 
                                         readOnly: false,
@@ -929,12 +938,21 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         if (approveddoc != null) return;
                                     
                                         // Tombol "Submit Contract"
-                                        $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
-                                            .on('dxclick', function(evt) {
-                                                evt.stopPropagation();
-                                                btnreqsubmit(reqid);  // Panggil fungsi submit
-                                            })
-                                            .appendTo(container);
+                                        
+                
+                                        scrollView.append('<div class="row">' +
+                                            '<div class="col-lg-12">' +
+                                            '<div class="card">' +
+                                                '<div class="card-header">' +
+                                                '<h5 class="card-title">Form Action</h5>' +
+                                                '</div>' +
+                                                '<div class="card-body" style="border-bottom-color: darkseagreen !important;border-left-color: darkseagreen;">' +
+                                                approvalOptions +
+                                                '<button id="btn-submit" type="button" onClick="btnreqsubmit('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Submit Submission</button>'+
+                                                '</div>' +
+                                            '</div>' +
+                                            '</div>' +
+                                        '</div>');
                                     
                                         // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
                                         if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
@@ -954,7 +972,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                             showLoadingScreen();
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                                                                 action: 'submission',
-                                                                user_id: '10087',
                                                                 approvalAction: 0
                                                             }).then(function(response) {
                                                                 hideLoadingScreen();

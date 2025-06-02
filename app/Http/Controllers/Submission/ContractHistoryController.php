@@ -30,14 +30,57 @@ class ContractHistoryController extends Controller
         $this->user = new User();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
+            
+            $id = $request->id;
+            $user_id = $this->getAuth()->id;
+            $module_id = $this->getModuleId($this->modulename);
+            $isAdmin = $this->getAuth()->isAdmin;
 
-            $data = $this->model->all();
-            // dd($data);
+            $dataquery = $this->model->query();
+            $subquery = "(select TOP 1 
+                CASE WHEN a.user_id='".$user_id."' 
+                then 1 else 0 end
+                from tbl_approverListReq l
+                left join tbl_approver a on l.approver_id=a.id
+                left join tbl_approvaltype r on a.approvaltype_id = r.id
+                where l.ApprovalAction='1'
+                and l.req_id = request_memorandum_his.id and l.module_id = '".$module_id."' 
+                and request_memorandum_his.requestStatus='1'
+                order by a.sequence)"; 
 
-            return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
+            $data = $dataquery
+                ->selectRaw("request_memorandum_his.*,codes.code,
+                    CASE WHEN request_memorandum_his.user_id='".$user_id."' then 1 else 0 end as isMine,
+                    ".$subquery." as isPendingOnMe
+                ")
+                ->leftJoin('codes','request_memorandum_his.code_id','codes.id')
+                ->with(['user','approverlist'])
+                ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
+                    $query->whereRaw($subquery . " = 1")
+                        ->orWhere(function ($query) use ($user_id, $isAdmin) {
+                            if ($isAdmin) {
+                                $query->where("request_memorandum_his.user_id", "!=", $user_id)
+                                    ->whereIn("request_memorandum_his.requestStatus", [1,3,4]);
+                            } else {
+                                $query->where("request_memorandum_his.user_id", "!=", $user_id)
+                                    ->whereIn("request_memorandum_his.requestStatus", [3])
+                                    ->where("bu",$this->getEmployeeID()->companycode);
+                            }
+                        })             
+                        ->orWhere("request_memorandum_his.user_id", $user_id);
+                })
+                ->orderBy(DB::raw($subquery), 'DESC')
+                // ->orderByRaw("CASE WHEN request_memorandum_his.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_memorandum_his.submitDate desc")
+                ->get();
+
+            return response()->json([
+                'status' => "show",
+                'message' => $this->getMessage()['show'],
+                'data' => $data
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
 
@@ -98,26 +141,49 @@ class ContractHistoryController extends Controller
         //
     }
 
-    public function getList($id,$modulename)
+    public function getList($id, $modulename)
     {
         try {
-            $module = $this->module->select('id','module')->where('module',$modulename)->first();
-            if($module) {
-                $data = $this->model->select('request_memorandum_his.*', 'codes.code')
-                ->leftJoin('codes','request_memorandum_his.code_id','codes.id')
-                ->where('req_id',$id)
+            $user_id = $this->getAuth()->id; // Ambil ID pengguna saat ini
+            $module = $this->module->select('id', 'module')->where('module', $modulename)->first();
+            
+            if ($module) {
+                $data = $this->model->selectRaw("
+                    request_memorandum_his.*, 
+                    codes.code,
+                    CASE WHEN request_memorandum_his.user_id = ? THEN 1 ELSE 0 END AS isMine,
+                    (SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END 
+                    FROM tbl_approverListReq l
+                    LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                    WHERE l.req_id = request_memorandum_his.id 
+                    AND l.module_id = ? 
+                    AND request_memorandum_his.requestStatus = '1'
+                    ORDER BY a.sequence) AS isPendingOnMe
+                ", [$user_id, $user_id, $module->id]) // Parameter untuk SQL Injection Protection
+                
+                ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
+                ->with(['user', 'approverlist'])
+                ->where('req_id', $id)
                 ->orderBy('sequence', 'DESC')
                 ->get();
-                return response()->json(["status" => "show", "message" => $this->getMessage()['show'] , 'data' => $data]);
+
+                return response()->json([
+                    "status" => "show", 
+                    "message" => $this->getMessage()['show'], 
+                    "data" => $data
+                ]);
             } else {
-                return response()->json(["status" => "show", "message" => $this->getMessage()['errornotfound']]);
+                return response()->json([
+                    "status" => "show", 
+                    "message" => $this->getMessage()['errornotfound']
+                ]);
             }
 
         } catch (\Exception $e) {
-
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
 
     public function getLost($reqid, $modulename)
     {

@@ -157,14 +157,14 @@ class MemorandumController extends Controller
 
     public function index()
     {
-        $dataAppr = DB::table('memoExp')->select('*')->get(); // data approver
-        // dd($dataAppr);
-        return response()->json([
+        $dataAppr = DB::table('memoExp')->select('*')->get(); // data approver        
+            return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
                 'data' => $dataAppr
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
     }
+
 
     public function store(Request $request)
     {
@@ -254,8 +254,8 @@ class MemorandumController extends Controller
                 'employee.tbl_employee.companycode',
                 'employee.tbl_employee.contract_status',
                 'employee.tbl_employee.sys_id as sysid',
-                'employee.tbl_employee.BirthOfDate',
                 'employee.tbl_designation.DesignationName',
+                'employee.tbl_employee.BirthOfDate',
                 'request_memorandum_his.code_id'
             )
             ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')

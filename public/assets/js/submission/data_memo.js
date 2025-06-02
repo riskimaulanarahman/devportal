@@ -994,7 +994,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             columns: [
                                 {
-                                    caption: 'Kontrak ke-',
+                                    caption: 'Kontrak ke-s',
                                     dataField: 'sequence',
                                     alignment: "left",
                                     width: 100,

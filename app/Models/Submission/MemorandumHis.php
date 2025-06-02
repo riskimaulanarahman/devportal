@@ -47,6 +47,11 @@ class MemorandumHis extends Model
         return (new static)->getTable();
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
     public function Memorandum()
     {
         return $this->belongsTo('App\Models\Submission\Memorandum', 'sys_id', 'sys_id');

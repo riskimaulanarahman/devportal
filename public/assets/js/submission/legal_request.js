@@ -1279,7 +1279,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 }
             }
         })
-    
+
     );
 
     scrollView.dxScrollView({
@@ -1306,7 +1306,7 @@ function btnreqsubmit(reqid,mode) {
         ]
     }
 
-    sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/JDI", "POST", {
+    sendRequest(apiurl + "/submissioncheckfields/"+reqid+"/LEGAL", "POST", {
         fieldsToCheckGrid
     }).then(function(response){
         if(response.status !== 'error') {
@@ -1316,7 +1316,7 @@ function btnreqsubmit(reqid,mode) {
             var actionForm = (mode == 'approval') ? 'approval' : 'submission';
 
             if(mode == 'approval') {
-                
+
                 if (!valapprovalAction) {
                     DevExpress.ui.dialog.alert("Please select approval action.", "Warning");
                     btnSubmit.prop('disabled', false);
