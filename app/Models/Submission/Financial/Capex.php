@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Code;
 use App\Models\ApproverListReq;
+use App\Models\ApproverListHistory;
 
 class Capex extends Model
 {
@@ -20,24 +21,26 @@ class Capex extends Model
     protected $fillable = [
         'user_id',
         'requestStatus',
+        'category_id',
         'title',
         'bu',
-        'sector',
+        'estate',
         'form_type',
         'business_type',
         'project_type',
         'request_type',
         'reason_unbudgeted',
         'approved_budget',
-        'currency',
+        'additional_budget',
         'equipment',
         'cost_center',
+        'additional_approver',
     ];
 
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, ['equipment','cost_center','reason_unbudgeted']);
+        $fillable = array_diff($fillable, ['equipment','cost_center','reason_unbudgeted','additional_budget','additional_approver']);
         return $fillable;
     }
 
@@ -54,6 +57,11 @@ class Capex extends Model
     public function approverlist()
     {
         return $this->hasMany(ApproverListReq::class,'req_id');
+    }
+
+    public function approverHistory()
+    {
+        return $this->hasMany(ApproverListHistory::class,'req_id');
     }
 
     public function code()

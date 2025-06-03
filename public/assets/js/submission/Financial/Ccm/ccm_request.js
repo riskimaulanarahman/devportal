@@ -1198,7 +1198,6 @@ function runpopup() {
     }).dxPopup('instance');
 }
 
-
 function cellTemplate(container, options) {
     container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
 }

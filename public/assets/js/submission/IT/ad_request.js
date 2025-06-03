@@ -98,73 +98,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 if((reqstatus == 3) && (options.data.LoginName == "" || options.data.LoginName == null) && (admin == 1 || isIT == 1)) {
                     $('<button class="btn btn-info" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-user"></i></button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
-                            
-                        // Swal.fire({
-                        //     title: "Are you sure?",
-                        //     text: "Do you want to submit account information for this employee?",
-                        //     icon: "warning",
-                        //     showCancelButton: true,
-                        //     confirmButtonText: "Yes, submit!",
-                        //     cancelButtonText: "No, cancel!"
-                        // }).then((result) => {
-                        //     if (result.isConfirmed) {
-                        //         Swal.fire({
-                        //             title: "Enter Username of "+options.data.employee.FullName,
-                        //             input: "text",
-                        //             inputPlaceholder: "Username",
-                        //             showCancelButton: true,
-                        //             confirmButtonText: "Next",
-                        //             cancelButtonText: "Cancel"
-                        //         }).then((usernameResult) => {
-                        //             if (usernameResult.isConfirmed) {
-                        //                 const loginNameVal = usernameResult.value;
-                        
-                        //                 if (loginNameVal !== null && loginNameVal.trim() !== "") {
-                        //                     Swal.fire({
-                        //                         title: "Enter Password for "+options.data.employee.FullName,
-                        //                         input: "password",
-                        //                         inputPlaceholder: "Password",
-                        //                         showCancelButton: true,
-                        //                         confirmButtonText: "Submit",
-                        //                         cancelButtonText: "Cancel"
-                        //                     }).then((passwordResult) => {
-                        //                         if (passwordResult.isConfirmed) {
-                        //                             const passwordVal = passwordResult.value;
-                        
-                        //                             if (passwordVal !== null && passwordVal.trim() !== "") {
-                        //                                 showLoadingScreen();  // Show loading screen
-                                                        
-                        //                                 sendRequest(apiurl + "/adrequest/" + reqid, "PUT", {
-                        //                                     username_temp: loginNameVal,
-                        //                                     password_temp: passwordVal
-                        //                                 });
-                                                        
-                        //                                 sendRequest(apiurl + "/employeedata/" + options.data.employee_id, "PUT", {
-                        //                                     LoginName: loginNameVal
-                        //                                 }).then(function(response) {
-                        //                                     hideLoadingScreen();  // Hide loading screen
-                                                            
-                        //                                     if (response.status != 'error') {
-                        //                                         dataGrid.refresh();
-                        //                                     }
-                        //                                 }).catch(function(error) {
-                        //                                     hideLoadingScreen();  // Hide loading screen
-                        //                                     console.error("An error occurred:", error);
-                        //                                 });
-                        //                             } else {
-                        //                                 Swal.fire("Cancelled", "The password has an empty value", "error");
-                        //                             }
-                        //                         }
-                        //                     });
-                        //                 } else {
-                        //                     Swal.fire("Cancelled", "The username has an empty value", "error");
-                        //                 }
-                        //             }
-                        //         });
-                        //     } else {
-                        //         Swal.fire("Cancelled", "Submission has been cancelled", "info");
-                        //     }
-                        // });
 
                         Swal.fire({
                             title: "Are you sure?",
@@ -264,6 +197,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Full Name",
             dataField: 'employee.FullName',
             width: 180
+        },
+        {
+            dataField: 'bu',
+            dataType: 'string',
         },
         {
             dataField: 'requestType',
@@ -492,9 +429,6 @@ const popupContentTemplate = function (reqid,mode,options) {
             itemTemplate: function (data) {
                 var infoContent1 = $("<div id='infoContent1'>");
                 if(data.ID == 1) {
-                    // if (mode == 'add' || mode == 'edit'){
-                    //     $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i style="color:black;font-weight:bold" class="far fa-newspaper"> Form Data </i></b> dan tekan tombol <b>Simpan</b> (<i style="color:black;font-weight:bold" class="fas fa-save"></i>) yang ada di pojok kanan atas tabel serta lampirkan <i style="color:black;font-weight:bold" class="fas fa-file"> Supporting Document </i> sebelum klik tombol <span style="color:black;font-weight:bold"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(infoContent1);
-                    // }
                     var formData = $("<div id='formdata'>").dxDataGrid({    
                         dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
@@ -762,9 +696,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 format: "yyyy-MM-dd",
                                 validationRules: [{ type: "required" }]
                             },
-                            // {
-                            //     dataField: 'remarks'
-                            // },
                         ],
                         export: {
                             enabled: false,

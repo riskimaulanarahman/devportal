@@ -41,5 +41,7 @@ Route::middleware(['session.check'])->group(function () {
     Route::get('/gen-pdf/mmf28/{id}', [App\Http\Controllers\Submission\MMF\M28RequestController::class, 'genPdfMmfReq'])->name('gen-pdf-28');
     Route::get('/gen-pdf/mmf30/{id}', [App\Http\Controllers\Submission\MMF\M30RequestController::class, 'genPdfMmfReq'])->name('gen-pdf-m30');
     Route::get('/gen-pdf/hcrf/{id}', [App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class, 'genPdfHcrfReq'])->name('gen-pdf-hcrf');
+    Route::get('/gen-pdf/capex/{id}', [App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class, 'genPdfCapex'])->name('gen-pdf-capex');
+
     Route::get('/gen-pdf/memorandum/{id}', [App\Http\Controllers\Submission\MemorandumController::class, 'genPdfMemorandumReq'])->name('gen-pdf-memorandum');
 });

@@ -102,6 +102,7 @@ class HomeController extends Controller
             'request_material' => $this->getModuleId('MaterialReq'),
             'request_ccm' => $this->getModuleId('Ccm'),
             'request_ghm' => $this->getModuleId('Ghm'),
+            'request_capex' => $this->getModuleId('Capex'),
             'request_memorandum_his' => $this->getModuleId('Memorandum'),
             'request_legal' => $this->getModuleId('Legal'),
         ]; 
@@ -182,12 +183,6 @@ class HomeController extends Controller
                                 break;
                             case 'request_memorandum':
                                 $url = 'memorandum_request';
-                                break;
-                            case 'request_legal':
-                                $url = 'legal_request';
-                                break;
-                            // case 'request_memo':
-                            //     $url = 'memo_request';
                             //     break;
                             // Tambahkan case sesuai dengan url module
                         }
@@ -278,12 +273,6 @@ class HomeController extends Controller
                                 break;
                             case 'request_memorandum':
                                 $url = 'memorandum_request';
-                                break;
-                            case 'request_legal':
-                                $url = 'legal_request';
-                                break;
-                            // case 'request_memo':
-                            //     $url = 'memo_request';
                             //     break;
                             // Tambahkan case sesuai dengan url module
                         }

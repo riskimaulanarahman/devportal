@@ -208,11 +208,11 @@ class ListController extends Controller
     }
 
     public function listCategoryFormWithModule($modulename) {
-        return CategoryForm::with('module')->select('*')->where('module_id',$this->getModuleId($modulename))->get();
+        return CategoryForm::with('module')->select('*')->where('module_id',$this->getModuleId($modulename))->where('isActive',1)->get();
     }
 
     public function listCategoryForm() {
-        return CategoryForm::with('module')->select('*')->get();
+        return CategoryForm::with('module')->select('*')->where('isActive',1)->get();
     }
 
     public function listUavAsset() {

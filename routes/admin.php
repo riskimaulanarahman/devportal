@@ -29,6 +29,8 @@ Route::group(['prefix' => 'api'], function () {
         'uavasset' => App\Http\Controllers\Admin\UavAssetController::class,
         'categoryhrsc' => App\Http\Controllers\Admin\CategoryhrscController::class,
         'ghm_admin' => App\Http\Controllers\Admin\GhmAdminController::class,
+        'categoryform' => App\Http\Controllers\Admin\CategoryFormController::class,
+        'exchange_rate' => App\Http\Controllers\Admin\ExchangeRateController::class,
     ]);
     Route::post('/update-profilepicture', [App\Http\Controllers\HomeController::class, 'updateProfilePicture']);    
 });

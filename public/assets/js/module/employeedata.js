@@ -268,6 +268,13 @@ checkUserAccess(modname, usersid).then(permissions => {
                 validationRules: [{ type: "required" }]
             },
             {
+                dataField: "contract_status",
+                lookup: {
+                    dataSource: ['Permanent','Contract']
+                },
+                validationRules: [{ type: "required" }]
+            },  
+            {
                 dataField: 'isActive',
                 dataType: 'boolean',
                 visible: (admin == 1) ? true : false,

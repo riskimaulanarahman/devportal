@@ -288,14 +288,12 @@ const updateVisibleById = (itemId, visible) => {
   };
 
 var dataSector = [
-        // { bu: 'IHM', sector: 'NKL' },
         { bu: 'IHM', sector: 'TRN' },
         { bu: 'IHM', sector: 'SPU' },
         { bu: 'IHM', sector: 'SNI' },
         { bu: 'IHM', sector: 'HO' },
         { bu: 'AHL', sector: 'SBG' },
         { bu: 'AHL', sector: 'SBS' },
-        { bu: 'AHL', sector: 'SSP' },
         { bu: 'AHL', sector: 'NURSERY' },
         { bu: 'AHL', sector: 'HO' },
         { bu: 'NKL', sector: 'NKL' },
@@ -1442,7 +1440,6 @@ function btnreqsubmit(reqid,mode) {
     var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
     var valremarks = $('#remarks').val(); // mengambil nilai dari text area
     
-    // if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
     if(mode == 'approval' && isBCIDv == 1 && valapprovalAction == 3) {
         var fieldsToCheckGrid = [
             { field: 'objective', name: 'Objective' },

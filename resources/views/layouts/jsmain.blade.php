@@ -167,6 +167,8 @@
         '/uavasset': 'admin/uavasset.js',
         '/categoryhrsc': 'admin/category_hrsc.js',
         '/ghm_admin': 'admin/ghm_admin.js',
+        '/categoryform': 'admin/category_form.js',
+        '/exchange_rate': 'submission/Financial/exchangeRate.js',
         //module
         '/headcounts': 'module/headcounts.js',
         '/employeedata': 'module/employeedata.js',
@@ -199,7 +201,7 @@
         //submission/GHM
         '/ghm_request': 'submission/ghm_request.js',
         //submission/Capex
-        '/capex_request': 'submission/Financial/Capex/capex_request.js',
+        '/request_capex': 'submission/Financial/Capex/capex_request.js',
         //submission/Memo
         '/memorandum_request': 'submission/memorandum_request.js',
         // '/memo_request': 'submission/data_memo.js',

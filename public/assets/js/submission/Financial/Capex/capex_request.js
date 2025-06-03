@@ -52,22 +52,19 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             cellTemplate: function(container, options) {
 
                 var isMine = options.data.isMine;
-                var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
                 var isPendingOnMe = options.data.isPendingOnMe;
                 var reqid = options.data.id;
                 var reqstatus = options.data.requestStatus;
-                var ticketstatus = options.data.ticketStatus;
-                var confirmationStatus = options.data.confirmationStatus;
                 var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
                 var arrColor = [
                     "btn-secondary",
                     (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
                     "btn-warning",
-                    (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed')) ? "btn-info" : (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed'))) ? "btn-info" : "btn-success",
+                    "btn-success",
                     "btn-danger",
                 ];
 
-                var viewIcon = ((mode == 'approval' && reqstatus == 1) || (isMine == 0 && isPIC == 1 && (ticketstatus != 'Completed' && confirmationStatus != 'Completed'))) ? "fa-check" :  ((mode == 'approval' && reqstatus == 1) || (isMine == 1 && isPIC == 0 && ((ticketstatus == 'Completed') && (confirmationStatus != 'Completed')))) ? "fa-check" : "fa-search";
+                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
     
                 $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
                     evt.stopPropagation();
@@ -132,8 +129,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180
         },
         { 
-			dataField: "sector",
-            caption: 'Sector',
+			dataField: "estate",
+            caption: 'Estate',
             width: 180
         },
         { 
@@ -156,6 +153,25 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 ];
                 return arrText[e.value];
             },
+        },
+        {
+            dataField: "approveddoc",
+            caption:"Approval Doc",
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: { visible: false},
+            cellTemplate: function (container, options) {
+                if ((options.value!="") && (options.value)){
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        type: "success",
+                        text: "Download",
+                        onClick: function (e) {
+                            window.open(options.value, '_blank');
+                        }
+                    }).appendTo(container);
+                }
+            }
         },
       
     ],
@@ -229,6 +245,11 @@ const accordionItems = [
         visible: true
     },
     {
+        ID: 7,
+        Title: '<i class="fas fa-list"> Questionnaire </i>',
+        visible: true
+    },
+    {
         ID: 2,
         Title: '<i class="fas fa-file"> Supporting Document </i>',
         visible: true
@@ -253,24 +274,35 @@ const updateVisibleById = (itemId, visible) => {
     });
   };
 
-  var dataSector = [
-    { bu: 'IHM', sector: 'TRN' },
-    { bu: 'IHM', sector: 'SPU' },
-    { bu: 'IHM', sector: 'SNI' },
-    { bu: 'IHM', sector: 'HO' },
-    { bu: 'AHL', sector: 'SBG' },
-    { bu: 'AHL', sector: 'SBS' },
-    { bu: 'AHL', sector: 'SSP' },
-    { bu: 'AHL', sector: 'HO' },
-    { bu: 'NKL', sector: 'NKL' },
-    { bu: 'KPSI', sector: 'KPSI' },
-];
+    var dataSector = [
+        { bu: 'IHM', sector: 'TRN' },
+        { bu: 'IHM', sector: 'SPU' },
+        { bu: 'IHM', sector: 'SNI' },
+        { bu: 'IHM', sector: 'HO' },
+        { bu: 'AHL', sector: 'SBG' },
+        { bu: 'AHL', sector: 'SBS' },
+        { bu: 'AHL', sector: 'SSP' },
+        { bu: 'AHL', sector: 'HO' },
+        { bu: 'NKL', sector: 'NKL' },
+        { bu: 'KPSI', sector: 'KPSI' },
+    ];
+
+    var categoryType = [
+        { form: 'Low Value Asset', request: 'Budgeted' },
+        { form: 'Low Value Asset', request: 'Unbudgeted Swap Available' },
+        { form: 'Operating/Maintenance Capex', request: 'Budgeted' },
+        { form: 'Operating/Maintenance Capex', request: 'Unbudgeted Swap Available' },
+        { form: 'Operating/Maintenance Capex', request: 'Unbudgeted Swap Unavailable' },
+        { form: 'Project Capex', request: 'Budgeted' },
+        { form: 'Project Capex', request: 'Unbudgeted Swap Available' },
+        { form: 'Project Capex', request: 'Unbudgeted Swap Unavailable' },
+    ];
 
 const popupContentTemplate = function (reqid,mode,options) {
 
     var isMine = options.data.isMine;
-    var isPIC = (options.data.ticketStatus == 'Completed') ? 0 : options.data.isPIC;
     var isPendingOnMe = options.data.isPendingOnMe;
+    isChecker = options.data.isChecker;
 
     var validationRules = [];
 
@@ -409,13 +441,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 setCellValue: function (rowData, value) {
                                     rowData.bu = value;
                                     if (value === "IHM") {
-                                        rowData.sector = "HO";
+                                        rowData.estate = "HO";
                                     } else if (value === "AHL") {
-                                        rowData.sector = "HO";
+                                        rowData.estate = "HO";
                                     } else if (value === "NKL") {
-                                        rowData.sector = "NKL";
+                                        rowData.estate = "NKL";
                                     } else if (value === "KPSI") {
-                                        rowData.sector = "KPSI";
+                                        rowData.estate = "KPSI";
                                     }
                                 },
                                 editorOptions: { 
@@ -424,8 +456,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }],
                             },
                             {
-                                caption: 'Sector',
-                                dataField: 'sector',
+                                caption: 'Estate',
+                                dataField: 'estate',
                                 lookup: {
                                     dataSource: function (options) {
                                         return {
@@ -445,46 +477,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                             },
                             {
-                                caption: 'Form Type',
-                                dataField: 'form_type',
-                                lookup: {
-                                    dataSource: [
-                                        {value:'Contract Apporoval'},
-                                        {value:'Land Claim Settlement/Land Recovery'},
-                                        {value:'Low Value Asset'},
-                                        {value:'Operating/Maintenance Capex'},
-                                        {value:'Planting Capex'},
-                                        {value:'Progress Payment Approval Include Planting'},
-                                        {value:'Project Capex'},
-                                        {value:'Unbudgeted Planting'},
-                                    ],
-                                    valueExpr: 'value',
-                                    displayExpr: 'value',
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                },
-                                validationRules: [{ type: "required" }],
-                            },
-                            {
                                 caption: 'Business Type',
                                 dataField: 'business_type',
-                                lookup: {
-                                    dataSource: [
-                                        {value:'Fiber'},
-                                        {value:'Natural Resources'},
-                                        {value:'Palm'},
-                                        {value:'Panel'},
-                                        {value:'Property'},
-                                        {value:'Services'},
-                                        {value:'Trading'},
-                                        {value:'Others'},
-                                    ],
-                                    valueExpr: 'value',
-                                    displayExpr: 'value',
-                                },
                                 editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
+                                    readOnly: true,
                                 },
                             },
                             {
@@ -503,128 +499,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
                                 },
-                            },
-                            {
-                                dataField: "created_at",
-                                dataType: "date",
-                                format: "dd-MM-yyyy",
-                                editorOptions: { 
-                                    readOnly: true
-                                }
-                            },
-                        ],
-                        export: {
-                            enabled: false,
-                            fileName: modname,
-                            excelFilterEnabled: true,
-                            allowExportSelectedData: true
-                        },
-                        onInitialized: function(e) {
-                            dataGrid1 = e.component;
-                        },
-                        onContentReady: function(e){
-                            moveEditColumnToLeft(e.component);
-                        },
-                        onInitNewRow : function(e) {
-                        },
-                        onToolbarPreparing: function(e) {
-                            e.toolbarOptions.items.unshift({						
-                                location: "after",
-                                widget: "dxButton",
-                                options: {
-                                    hint: "Refresh Data",
-                                    icon: "refresh",
-                                    onClick: function() {
-                                        dataGrid1.refresh();
-                                    }
-                                }
-                            });
-                        },
-                        onEditorPreparing: function (e) {
-                        },
-                        onRowUpdating: function(e) {
-                            
-                        },
-                        onCellPrepared: function (e) {
-                            if (e.column.index == 0 && e.rowType == "data") {
-                                if(e.data.code === null) {
-                                    $("#formdata").dxDataGrid('columnOption','code', 'visible', false);
-                                } else {
-                                    $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
-                                }
-                            }
-                            if ( e.rowType == "data" && ((e.column.index>0 && e.column.index<5))) {
-                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                                    e.cellElement.css({
-                                        "backgroundColor": "#ffe6e6",
-                                        "border": "0.5px solid #f56e6e"
-                                    })
-                                }
-                            }
-                        },
-                        onDataErrorOccurred: function(e) {
-                            // Menampilkan pesan kesalahan
-                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
-                    
-                            // Memuat ulang DataGrid
-                            dataGrid1.refresh();
-                        }
-                    }).appendTo(container);
-
-                    // Spacer antara dua DataGrid
-                    $("<div style='height: 20px;'>").appendTo(container);
-
-                    var secondGrid  = $("<div id='secondGrid '>").dxDataGrid({    
-                        dataSource: storedetail(modname,reqid),
-                        allowColumnReordering: true,
-                        allowColumnResizing: true,
-                        columnsAutoWidth: true,
-                        rowAlternationEnabled: true,
-                        wordWrapEnabled: true,
-                        showBorders: true,
-                        showColumnLines:true,
-                        filterRow: { visible: false },
-                        filterPanel: { visible: false },
-                        headerFilter: { visible: false },
-                        searchPanel: {
-                            visible: false,
-                            width: 240,
-                            placeholder: 'Search...',
-                        },
-                        sorting: {
-                            mode: "none" // or "multiple" | "none"
-                        },
-                        editing: {
-                            useIcons:true,
-                            mode: "cell",
-                            allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                            allowDeleting: false,
-                        },
-                        scrolling: {
-                            mode: "virtual"
-                        },
-                        columns: [
-                            {
-                                caption: 'Request Type',
-                                dataField: 'request_type',
-                                lookup: {
-                                    dataSource: [
-                                        {value:'Budgeted'},
-                                        {value:'Unbudgeted - Swap Unavailable'},
-                                        {value:'Unbudgeted - Swap Available'},
-                                    ],
-                                    valueExpr: 'value',
-                                    displayExpr: 'value',
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                },
-                            },
-                            {
-                                caption: "Reason Unbudgeted",
-                                dataField:'reason_unbudgeted',
-                                dataType: "string",
                             },
                             {
                                 dataField: 'equipment',
@@ -659,13 +533,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                dataField: 'approved_budget',
-                                dataType: 'number',
-                                format: "fixedPoint",
-                                editorOptions: {
-                                    format: "fixedPoint",
-                                },
-                                validationRules: [{ type: "required" }],
+                                dataField: "created_at",
+                                dataType: "date",
+                                format: "dd-MM-yyyy",
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                         ],
                         export: {
@@ -683,6 +556,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onInitNewRow : function(e) {
                         },
                         onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGrid1.refresh();
+                                        dataGrid1a.refresh();
+                                    }
+                                }
+                            });
                         },
                         onEditorPreparing: function (e) {
                         },
@@ -690,7 +575,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                             
                         },
                         onCellPrepared: function (e) {
-                            if ( e.rowType == "data" && ((e.column.index>3))) {
+                            if (e.column.index == 0 && e.rowType == "data") {
+                                if(e.data.code === null) {
+                                    $("#formdata").dxDataGrid('columnOption','code', 'visible', false);
+                                } else {
+                                    $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
+                                }
+                            }
+                            if ( e.rowType == "data" && ((e.column.index>0 && e.column.index<7))) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -705,6 +597,201 @@ const popupContentTemplate = function (reqid,mode,options) {
                     
                             // Memuat ulang DataGrid
                             dataGrid1.refresh();
+                        }
+                    }).appendTo(container);
+
+                    // Spacer antara dua DataGrid
+                    $("<div style='height: 20px;'>").appendTo(container);
+
+                    var secondGrid  = $("<div id='secondGrid'>").dxDataGrid({    
+                        dataSource: storedetail(modname,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: false,
+                            // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && (mode == 'edit' || mode == 'add')) ? true : (admin == 1 ? true : (isChecker == 1 ? true : false)),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            mode: "virtual"
+                        },
+                        columns: [
+                            {
+                                caption: 'Form Type',
+                                dataField: 'form_type',
+                                lookup: {
+                                    dataSource: [
+                                        {form:'Low Value Asset'},
+                                        {form:'Operating/Maintenance Capex'},
+                                        {form:'Project Capex'},
+                                    ],
+                                    valueExpr: 'form',
+                                    displayExpr: 'form',
+                                },
+                                setCellValue: function (rowData, value) {
+                                    rowData.form_type = value;
+                                    if (value === "Low Value Asset") {
+                                        rowData.request_type = "Budgeted";
+                                    } else if (value === "Operating/Maintenance Capex") {
+                                        rowData.request_type = "Budgeted";
+                                    } else if (value === "Project Capex") {
+                                        rowData.request_type = "Budgeted";
+                                    }
+                                },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false,
+                                },
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Request Type',
+                                dataField: 'request_type',
+                                lookup: {
+                                    dataSource: function (options) {
+                                        return {
+                                            store: {
+                                                type: 'array',
+                                                data: categoryType
+                                            },
+                                            filter: options.data ? ["form", "=", options.data.form_type] : null
+                                        };
+                                    },
+                                    valueExpr: 'request',
+                                    displayExpr: 'request',
+                                },
+                                // setCellValue: function (rowData, value) {
+                                //     rowData.request_type = value;
+                                //     console.log(value)
+                                //     if (value === 'Unbudgeted - Swap Unavailable' || value === 'Unbudgeted - Swap Available') {
+                                //         validationRules.length = 0;
+                                //         validationRules.push({
+                                //             type: "required", 
+                                //             message: "This item is required"
+                                //         });
+                                //     } else {
+                                //         validationRules.length = 0;
+                                //     }
+                                // },
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: "Reason Unbudgeted",
+                                dataField:'reason_unbudgeted',
+                                dataType: "string",
+                                validationRules: [{
+                                    type: "custom",
+                                    message: "Reason Unbudgeted is required when Request Type is Unbudgeted.",
+                                    validationCallback: function(e) {
+                                        const requestType = e.data.request_type;
+                                        return !(requestType === 'Unbudgeted Swap Unavailable' || requestType === 'Unbudgeted Swap Available') || (e.value !== null && e.value !== '');
+                                    }
+                                }],
+                                editorOptions: { 
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                // validationRules : validationRules
+                            },
+                            {
+                                dataField: 'approved_budget',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    readOnly: (mode == 'approval') ? true : false,
+                                    format: "fixedPoint",
+                                },
+                                // validationRules: [{ type: "required" }],
+                            },
+                            {
+                                dataField: 'additional_budget',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                    readOnly: (mode == 'approval') ? true : false
+                                },
+                                allowUpdating: (isChecker == 1) ? true : false,
+                                validationRules: [{
+                                    type: "custom",
+                                    message: "Additional Budget is required when Request Type is Unbudgeted Swap Available.",
+                                    validationCallback: function(e) {
+                                        const requestType = e.data.request_type;
+                                        return !(requestType === 'Unbudgeted Swap Available') || (e.value !== null && e.value !== '' && e.value !== 0);
+                                    }
+                                }],
+                                // validationRules: [{ type: "required" }],
+                            },
+                            {
+                                caption: 'Additional Approver',
+                                dataField: 'additional_approver',
+                                lookup: {
+                                    dataSource: listOption('/list-employee','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: function(item) {
+                                        return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                    }
+                                },
+                                visible: (isChecker == 1 || admin == 1) ? true : false,
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGrid1a = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                        },
+                        onEditorPreparing: function (e) {
+                        },
+                        onRowUpdating: function(e) {
+                            
+                        },
+                        onCellPrepared: function (e) {
+                            if ( e.rowType == "data" && ((e.column.index < 2))) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGrid1a.refresh();
                         }
                     }).appendTo(container);
 
@@ -843,7 +930,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 else if(data.ID == 5) {
                     var containerdetail = $("<div>");
 
-                    var formData = $("<div id='formdetail'>").dxDataGrid({    
+                    var formData = $("<div id='formjustification'>").dxDataGrid({    
                         dataSource: storewithmodule('capexjustification',modelclass,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,
@@ -965,6 +1052,461 @@ const popupContentTemplate = function (reqid,mode,options) {
 
                     return containerdetail
                 }
+                else if(data.ID == 7) {
+                    var containerdetail = $("<div>");
+
+                    var formData = $("<div id='formquestion'>").dxDataGrid({    
+                        dataSource: storewithmodule('capexquestion',modelclass,reqid),
+                        allowColumnReordering: false,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: false,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: false,
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            rowRenderingMode: 'virtual',
+                        },
+                        paging: {
+                            pageSize: 25,
+                        },
+                        pager: {
+                            visible: true,
+                            allowedPageSizes: [5, 15, 'all'],
+                            showPageSizeSelector: true,
+                            showInfo: true,
+                            showNavigationButtons: true,
+                        },
+                        grouping: {
+                            autoExpandAll: false,
+                        },
+                        groupPanel: {
+                            visible: true,
+                        },
+                        columns : [
+                            {
+                                caption: 'Sequence',
+                                dataField: 'refcapexq.sequence',
+                                width: 80,
+                                groupIndex: 0,
+                                editorOptions: { 
+                                    readOnly: true
+                                }
+                            },
+                            {
+                                caption: 'Number',
+                                dataField: 'refcapexq.number',
+                                width: 80,
+                                editorOptions: { 
+                                    readOnly: true
+                                }
+                            },
+                            {
+                                caption: 'Question',
+                                dataField: 'refcapexq.question',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
+                            },
+                            // { 
+                            //     dataField: "answer", 
+                            //     cellTemplate: function(container, options) {
+                            //         const value = options.value;
+                            //         const name = `answer_${options.rowIndex}`;
+                            //         const questionId = options.data.refcapexq.id;
+
+                            //         let items;
+                            //         if (questionId <= 7 || questionId == 9 ) {
+                            //             items = ['Yes', 'No'];
+                            //         } else if (questionId === 8) {
+                            //             items = ['Must Have', 'Need to Have', 'Nice to Have'];
+                            //         }
+                                    
+                            //         $('<div>').dxRadioGroup({
+                            //             items: items,
+                            //             value: value,
+                            //             layout: 'horizontal',
+                            //             onValueChanged: function(e) {
+                            //                 // Aktifkan mode edit terlebih dahulu
+                            //                 options.component.editCell(options.rowIndex, "answer");
+                            //                 options.setValue(e.value);
+                            //             }
+                            //         }).appendTo(container);
+                            //     },
+                            //     editCellTemplate: function(container, options) {
+                            //         const questionId = options.row.data.refcapexq.id;
+
+                            //         let items;
+                            //         if (questionId <= 7 || questionId == 9 ) {
+                            //             items = ['Yes', 'No'];
+                            //         } else if (questionId === 8) {
+                            //             items = ['Must Have', 'Need to Have', 'Nice to Have'];
+                            //         }
+                                    
+                            //         $('<div>').dxRadioGroup({
+                            //             items: items,
+                            //             value: options.value,
+                            //             layout: 'horizontal',
+                            //             onValueChanged: function(e) {
+                            //                 options.setValue(e.value);
+                            //             }
+                            //         }).appendTo(container);
+                            //     },
+                            //     validationRules: [{ type: "required" }]
+                            // },
+                            // {
+                            //     dataField: "answer",
+                            //     cellTemplate: function(container, options) {
+                            //         const value = options.value;
+                            //         const questionId = options.data.refcapexq.id;
+                            
+                            //         let items;
+                            //         if (questionId <= 7 || questionId == 9) {
+                            //             items = ['Yes', 'No'];
+                            //             $('<div>').dxRadioGroup({
+                            //                 items: items,
+                            //                 value: value,
+                            //                 layout: 'horizontal',
+                            //                 onValueChanged: function(e) {
+                            //                     options.component.editCell(options.rowIndex, "answer");
+                            //                     options.setValue(e.value);
+                            //                 }
+                            //             }).appendTo(container);
+                            //         } else if (questionId === 8) {
+                            //             items = ['Must Have', 'Need to Have', 'Nice to Have'];
+                            //             $('<div>').dxRadioGroup({
+                            //                 items: items,
+                            //                 value: value,
+                            //                 layout: 'horizontal',
+                            //                 onValueChanged: function(e) {
+                            //                     options.component.editCell(options.rowIndex, "answer");
+                            //                     options.setValue(e.value);
+                            //                 }
+                            //             }).appendTo(container);
+                            //         } else if (questionId >= 10) {
+                            //             $('<input>')
+                            //                 .attr('type', 'text')
+                            //                 .val(value || '')
+                            //                 .on('input', function(e) {
+                            //                     options.component.editCell(options.rowIndex, "answer");
+                            //                     options.setValue(e.target.value);
+                            //                 })
+                            //                 .appendTo(container);
+                            //         }
+                            //     },
+                            //     editCellTemplate: function(container, options) {
+                            //         const questionId = options.row.data.refcapexq.id;
+                            
+                            //         let items;
+                            //         if (questionId <= 7 || questionId == 9) {
+                            //             items = ['Yes', 'No'];
+                            //             $('<div>').dxRadioGroup({
+                            //                 items: items,
+                            //                 value: options.value,
+                            //                 layout: 'horizontal',
+                            //                 onValueChanged: function(e) {
+                            //                     options.setValue(e.value);
+                            //                 }
+                            //             }).appendTo(container);
+                            //         } else if (questionId === 8) {
+                            //             items = ['Must Have', 'Need to Have', 'Nice to Have'];
+                            //             $('<div>').dxRadioGroup({
+                            //                 items: items,
+                            //                 value: options.value,
+                            //                 layout: 'horizontal',
+                            //                 onValueChanged: function(e) {
+                            //                     options.setValue(e.value);
+                            //                 }
+                            //             }).appendTo(container);
+                            //         } else if (questionId >= 10) {
+                            //             $('<input>')
+                            //                 .attr('type', 'text')
+                            //                 .val(options.value || '')
+                            //                 .on('input', function(e) {
+                            //                     options.setValue(e.target.value);
+                            //                 })
+                            //                 .appendTo(container);
+                            //         }
+                            //     },
+                            //     validationRules: [{ type: "required" }]
+                            // },
+                            {
+                                dataField: "answer",
+                                cellTemplate: function(container, options) {
+                                    const value = options.value;
+                                    const questionId = options.data.refcapexq.id;
+                            
+                                    if (questionId >= 10 && questionId !== 20 && questionId !== 21) {
+                                        createTextEditor(container, value, options);
+                                    } else if (questionId === 20 || questionId === 21) {
+                                        createDateEditor(container, value, options);
+                                    } else {
+                                        const items = getItems(questionId);
+                                        createRadioGroup(container, items, value, options);
+                                    }
+                                },
+                                editCellTemplate: function(container, options) {
+                                    const questionId = options.row.data.refcapexq.id;
+                            
+                                    if (questionId >= 10 && questionId !== 20 && questionId !== 21) {
+                                        createTextEditor(container, options.value, options);
+                                    } else if (questionId === 20 || questionId === 21) {
+                                        createDateEditor(container, options.value, options);
+                                    } else {
+                                        const items = getItems(questionId);
+                                        createRadioGroup(container, items, options.value, options);
+                                    }
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: "remarks",
+                                // validationRules: [{ type: "required" }]
+                            }
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridquestion = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridquestion.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPrepared: function (e) {
+                        },
+                        onCellPrepared: function (e) {
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridquestion.refresh();
+                        }
+                    }).appendTo(containerdetail);
+
+                    function getItems(questionId) {
+                        if (questionId <= 7 || questionId == 9) {
+                            return ['Yes', 'No'];
+                        } else if (questionId === 8) {
+                            return ['Must Have', 'Need to Have', 'Nice to Have'];
+                        }
+                        return null;
+                    }
+                    
+                    function createRadioGroup(container, items, value, options) {
+                        $('<div>').dxRadioGroup({
+                            items: items,
+                            value: value,
+                            layout: 'horizontal',
+                            onValueChanged: function(e) {
+                                options.component.editCell(options.rowIndex, "answer");
+                                options.setValue(e.value);
+                            }
+                        }).appendTo(container);
+                    }
+                    
+                    function createTextEditor(container, value, options) {
+                        $('<div>')
+                        .dxTextBox({
+                            value: value || '',
+                            onValueChanged: function(e) {
+                                options.component.editCell(options.rowIndex, "answer");
+                                options.setValue(e.value);
+                            }
+                        })
+                        .appendTo(container);
+                    }
+
+                    function createDateEditor(container, value, options) {
+                        $('<div>')
+                            .dxDateBox({
+                                value: value || null,
+                                type: 'date', // Anda bisa mengatur jenis seperti 'datetime' jika diperlukan
+                                displayFormat: 'dd/MM/yyyy', // Format tampilan tanggal
+                                onValueChanged: function(e) {
+                                    options.component.editCell(options.rowIndex, "answer");
+                                    options.setValue(e.value);
+                                }
+                            })
+                            .appendTo(container);
+                    }
+
+                    $("<span style='color:red;font-size:11pt'>").html('G : Forecasted Cash Flow Details').appendTo(containerdetail);
+
+                    var formData = $("<div id='formdetail'>").dxDataGrid({    
+                        dataSource: storewithmodule('capexquestioncf',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        showColumnLines:true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        sorting: {
+                            mode: "none" // or "multiple" | "none"
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "cell",
+                            allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: false,
+                        },
+                        scrolling: {
+                            rowRenderingMode: 'virtual',
+                        },
+                        paging: {
+                            pageSize: 25,
+                        },
+                        pager: {
+                            visible: true,
+                            allowedPageSizes: [5, 15, 'all'],
+                            showPageSizeSelector: true,
+                            showInfo: true,
+                            showNavigationButtons: true,
+                        },
+                        columns: [
+                            {
+                                dataField: 'year',
+                                dataType: 'number',
+                                width: 100,
+                                lookup: {
+                                    dataSource: generateYearOptions(),
+                                    valueExpr: 'value',
+                                    displayExpr: 'text'
+                                },
+                            },
+                            {
+                                dataField: 'q1',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                },
+                            },
+                            {
+                                dataField: 'q2',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                },
+                            },
+                            {
+                                dataField: 'q3',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                },
+                            },
+                            {
+                                dataField: 'q4',
+                                dataType: 'number',
+                                format: "fixedPoint",
+                                editorOptions: {
+                                    format: "fixedPoint",
+                                },
+                            },
+                        ],
+                        summary: {
+                            totalItems: [
+                                {
+                                    column: "subtotal",
+                                    summaryType: "sum",
+                                    displayFormat: "Total: {0}",
+                                    valueFormat: "fixedPoint",
+                                    format: "fixedPoint",
+                                    editorOptions: {
+                                        format: "fixedPoint",
+                                    }
+                                }
+                            ]
+                        },
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridquestioncf = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridquestioncf.refresh();
+                                    }
+                                }
+                            });
+                        },
+                        onEditorPrepared: function (e) {
+                        },
+                        onCellPrepared: function (e) {
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridquestioncf.refresh();
+                        }
+                    }).appendTo(containerdetail);
+
+                    return containerdetail
+                }
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
                         dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
@@ -985,9 +1527,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowDeleting: (((isMine == 1 || isPIC == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowAdding: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowDeleting: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
@@ -1324,7 +1866,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 function btnreqsubmit(reqid,mode) {
 
     var btnSubmit = $('#btn-submit');
-    btnSubmit.prop('disabled', true);
+    // btnSubmit.prop('disabled', true);
     var actionForm = (mode == 'approval') ? 'approval' : 'submission';
 
     if(mode == 'approval') {
@@ -1345,7 +1887,7 @@ function btnreqsubmit(reqid,mode) {
 
     var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
 
-    sendRequest(apiurl + "/ccmcheckbalance/"+reqid, "POST").then(function(response){
+    sendRequest(apiurl + "/capexcheck/"+reqid, "POST").then(function(response){
         if(response.status == 'error') {
             btnSubmit.prop('disabled', false);
         } else {
@@ -1359,27 +1901,27 @@ function btnreqsubmit(reqid,mode) {
                 confirmButtonText: 'Yes, send it!'
               }).then((result) => {
                 if (result.isConfirmed) {
-                    showLoadingScreen();
+                    // showLoadingScreen();
                     sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
                         requestStatus:1,
                         action: actionForm,
                         approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
                         approvalType: valApprovalType,
                         remarks: valremarks
-                  }).then(function(response){
-                        if(response.status == 'error') {
-                            btnSubmit.prop('disabled', false);
-                            hideLoadingScreen();
-                        } else {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Saved',
-                                text: 'The submission has been submited.',
-                            });
-                            popup.hide();
-                            hideLoadingScreen();
-                        }
-                  });
+                    }).then(function(response){
+                            if(response.status == 'error') {
+                                btnSubmit.prop('disabled', false);
+                                hideLoadingScreen();
+                            } else {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Saved',
+                                    text: 'The submission has been submited.',
+                                });
+                                popup.hide();
+                                hideLoadingScreen();
+                            }
+                    });
                 } else {
                     btnSubmit.prop('disabled', false);
                     Swal.fire({
@@ -1392,7 +1934,7 @@ function btnreqsubmit(reqid,mode) {
                 }
               });
         }
-  });
+    });
 
     
 
@@ -1449,7 +1991,6 @@ function runpopup() {
 
     }).dxPopup('instance');
 }
-
 
 function cellTemplate(container, options) {
     container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
@@ -1517,4 +2058,20 @@ function editCellTemplate(cellElement, cellInfo) {
         cellElement.append(fileUploaderElement);
         cellElement.append(buttonElement);
   
-  }
+}
+
+// Fungsi untuk generate array tahun
+function generateYearOptions() {
+    const currentYear = new Date().getFullYear(); // Tahun sekarang (2025)
+    const years = [];
+    
+    for (let i = 0; i <= 5; i++) {
+        const year = currentYear - i;
+        years.push({
+            value: year,
+            text: year.toString()
+        });
+    }
+    
+    return years;
+}
