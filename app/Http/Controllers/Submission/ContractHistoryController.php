@@ -120,7 +120,7 @@ class ContractHistoryController extends Controller
             $requestData['sysid'] = $getsys;
             $requestData['requestStatus'] = 0;
             $requestData['endContract'] = $request->input('endContract');
-            $requestData['code_id'] = $code_id;
+            // $requestData['code_id'] = $code_id;
             $requestData['req_id'] = $request->input('req_id');
             $requestData['sequence'] = $request->input('sequence');
             $requestData['superiorName'] = $request->input('superiorName');
@@ -144,7 +144,7 @@ class ContractHistoryController extends Controller
     public function getList($id, $modulename)
     {
         try {
-            $user_id = $this->getAuth()->id; // Ambil ID pengguna saat ini
+            $user_id = $this->getAuth()->id;
             $module = $this->module->select('id', 'module')->where('module', $modulename)->first();
             
             if ($module) {
@@ -159,7 +159,7 @@ class ContractHistoryController extends Controller
                     AND l.module_id = ? 
                     AND request_memorandum_his.requestStatus = '1'
                     ORDER BY a.sequence) AS isPendingOnMe
-                ", [$user_id, $user_id, $module->id]) // Parameter untuk SQL Injection Protection
+                ", [$user_id, $user_id, $module->id]) 
                 
                 ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
                 ->with(['user', 'approverlist'])
@@ -185,64 +185,63 @@ class ContractHistoryController extends Controller
     }
 
 
-    public function getLost($reqid, $modulename)
-    {
-        try {
-            if (empty($reqid)) {
-                return response()->json([
-                    "status" => "show",
-                    "message" => "Form baru dibuka, tidak ada data kontrak",
-                    "data" => []
-                ]);
-            }
-            $historyExists = $this->model->where('req_id', $reqid)->exists();
-            if (!$historyExists) {
-                return response()->json([
-                    "status" => "show",
-                    "message" => "Belum ada data kontrak",
-                    "data" => []
-                ]);
-            }
-            $moduleExists = $this->module->where('module', $modulename)->exists();        
-            if (!$moduleExists) {
-                return response()->json(["status" => "error", "message" => $this->getMessage()['errornotfound']]);
-            }
-            $historyData = $this->model->select('sysid', 'sequence')->where('req_id', $reqid)->first();
-            $sysid = $historyData->sysid;
-            $selected_sequence = $historyData->sequence;
-            if (empty($sysid) || empty($selected_sequence)) {
-                return response()->json([
-                    "status" => "show",
-                    "message" => "Belum ada data kontrak",
-                    "data" => []
-                ]);
-            }
-            $contractExists = $this->model
-                ->where('sysid', $sysid)
-                ->where('sequence', '<', $selected_sequence)
-                ->exists();
-            if (!$contractExists) {
-                return response()->json([
-                    "status" => "show",
-                    "message" => "Belum ada kontrak",
-                    "data" => []
-                ]);
-            }
-            $contractList = $this->model
-                ->where('sysid', $sysid)
-                ->where('sequence', '<=', $selected_sequence)
-                ->orderBy('sequence', 'DESC')
-                ->get();
-            return response()->json([
-                "status" => "show",
-                "message" => "List kontrak berhasil diambil",
-                "data" => $contractList
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-        } catch (\Exception $e) {
-            return response()->json(["status" => "error", "message" => $e->getMessage()], 500);
-        }
-    }
+    // public function getList(Request $request)
+    // {
+    //     try {
+    //         $auth = (object) [
+    //             'id' => $this->getAuth()->id,
+    //             'isAdmin' => $this->getAuth()->isAdmin
+    //         ];
+    //         // dd($this->getAuth());
 
+    //         $module_id = $this->getModuleId($this->modulename);
+
+    //         $dataquery = $this->model->query();
+    //         $subquery = "(select TOP 1 
+    //             CASE WHEN a.user_id='" . $auth->id . "' 
+    //             then 1 else 0 end
+    //             from tbl_approverListReq l
+    //             left join tbl_approver a on l.approver_id=a.id
+    //             left join tbl_approvaltype r on a.approvaltype_id = r.id
+    //             where l.ApprovalAction='1'
+    //             and l.req_id = request_memorandum_his.id and l.module_id = '" . $module_id . "' 
+    //             and request_memorandum_his.requestStatus='1'
+    //             order by a.sequence)"; 
+
+    //         $data = $dataquery
+    //             ->selectRaw("request_memorandum_his.*, codes.code,
+    //                 CASE WHEN request_memorandum_his.user_id='" . $auth->id . "' then 1 else 0 end as isMine,
+    //                 " . $subquery . " as isPendingOnMe
+    //             ")
+    //             ->leftJoin('codes', 'request_memorandum_his.code_id', 'codes.id')
+    //             ->with(['user', 'approverlist'])
+    //             ->where(function ($query) use ($subquery, $auth) {
+    //                 $query->whereRaw($subquery . " = 1")
+    //                     ->orWhere(function ($query) use ($auth) {
+    //                         if ($auth->isAdmin) {
+    //                             $query->where("request_memorandum_his.user_id", "!=", $auth->id)
+    //                                 ->whereIn("request_memorandum_his.requestStatus", [1, 3, 4]);
+    //                         } else {
+    //                             $query->where("request_memorandum_his.user_id", "!=", $auth->id)
+    //                                 ->whereIn("request_memorandum_his.requestStatus", [3])
+    //                                 ->where("bu", $this->getEmployeeID()->companycode);
+    //                         }
+    //                     })             
+    //                     ->orWhere("request_memorandum_his.user_id", $auth->id);
+    //             })
+    //             ->orderBy(DB::raw($subquery), 'DESC')
+    //             ->get();
+
+    //         return response()->json([
+    //             'status' => "show",
+    //             'message' => $this->getMessage()['show'],
+    //             'data' => $data
+    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json(["status" => "error", "message" => $e->getMessage()]);
+    //     }
+    // }
 
     public function update(Request $request, $id)
     {

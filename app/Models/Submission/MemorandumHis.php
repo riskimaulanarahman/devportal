@@ -28,13 +28,12 @@ class MemorandumHis extends Model
         'code_id',
         'superiorName',
         'requestStatus',
-        'user_id',
         'sysid'
     ];
     protected $casts = [      
         'code_id' => 'integer',
-        'user_id' => 'integer', 
         'sysid' => 'string',
+        'req_id' => 'integer',
     ];
     public static function getFillableColumns()
     {

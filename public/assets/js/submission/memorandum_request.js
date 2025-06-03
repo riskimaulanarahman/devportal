@@ -82,6 +82,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     ? "fa-pen" 
                     : "fa-search");
     
+                console.log(options.data.id);
                 $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
                     evt.stopPropagation();
                 
@@ -322,7 +323,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     popupid = reqid;
 
-    // console.log(mode)
+    // console.log(popupid)
 
     const scrollView = $('<div />');
 
@@ -598,224 +599,224 @@ const popupContentTemplate = function (reqid,mode,options) {
                     }).appendTo(infoContent2)
                     return formData
                 }    
-                else if(data.ID == 9) {
-                        return formData = $("<div id='formcontract'>").dxDataGrid({
-                            // dataSource: storewithmodule('memorandumhis',modelclass,reqid),
-                            dataSource: storedetail(modname,reqid),
-                            // dataSource: data.contractList,
-                            allowColumnReordering: true,
-                            allowColumnResizing: true,
-                            columnsAutoWidth: true, 
-                            rowAlternationEnabled: true,
-                            wordWrapEnabled: true,
-                            showBorders: true,
-                            showColumnLines:true,
-                            filterRow: { visible: false },
-                            filterPanel: { visible: false },
-                            headerFilter: { visible: false },
-                            searchPanel: {
-                                visible: true,
-                                width: 240,
-                                placeholder: 'Search...',
-                            },
-                            sorting: {
-                                mode: "none" // or "multiple" | "none"
-                            },
-                            editing: {
-                                useIcons:true,
-                                mode:"cell",
-                                allowAdding: true,
-                                allowUpdating: true,
-                                allowDeleting: true,
-                                // mode: "batch",
-                                // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                                // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                                // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            },
-                            scrolling: {
-                                rowRenderingMode: 'virtual',
-                            },
-                            paging: {
-                                pageSize: 5,
-                            },
-                            pager: {
-                                visible: true,
-                                allowedPageSizes: [5, 15, 'all'],
-                                showPageSizeSelector: true,
-                                showInfo: true,
-                                showNavigationButtons: true,
-                            },
-                            columns: [
-                                {
-                                    caption: 'code',
-                                    dataField: 'code',
-                                    editorOptions: { 
-                                        readOnly: true,
-                                    }
-                                },  
-                                {
-                                caption: "Superior Name",
-                                dataField: "superiorName",
-                                lookup: {
-                                    dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
-                                    valueExpr: 'fullname',
-                                    displayExpr: 'fullname',
-                                },
-                                validationRules: [{ type: "required" }]
-                                },
-                                {
-                                    caption: 'Kontrak ke-',
-                                    dataField: 'sequence',
-                                    editorOptions: { 
-                                        readOnly: false,
-                                    }
-                                },
-                                {
-                                    caption: 'Start Contract',
-                                    dataField: 'startContract',
-                                    dataType: "date",
-                                    editorOptions: { 
-                                        readOnly: false,
-                                    }
-                                },
-                                {
-                                    caption: 'End Contract',
-                                    dataField: 'endContract',
-                                    dataType: "date",
-                                    editorOptions: { 
-                                        readOnly: false,
-                                    }
-                                },
-                                {
-                                    dataField: "approveddoc",
-                                    caption:"Approval Doc",
-                                    allowFiltering: false,
-                                    allowSorting: false,
-                                    formItem: { visible: false},
-                                    cellTemplate: function (container, options) {
-                                        if ((options.value!="") && (options.value)){
-                                            $("<div />").dxButton({
-                                                icon: 'download',
-                                                type: "success",
-                                                text: "Download",
-                                                onClick: function (e) {
-                                                    window.open(options.value, '_blank');
-                                                }
-                                            }).appendTo(container);
-                                        }
-                                    }
-                                },                                                              
-                                {
-                                    caption: 'komentar',
-                                    dataField: 'remarks',
-                                    editorOptions: { 
-                                        readOnly: false,
-                                    }
-                                },      
-                                {
-                                    caption: 'Action',
-                                    width: 140,
-                                    cellTemplate: function(container, options) {
-                                        const {
-                                            isMine,
-                                            isPendingOnMe,
-                                            isAssignment,
-                                            id: reqid,
-                                            approveddoc
-                                        } = options.data;
+                // else if(data.ID == 9) {
+                //         return formData = $("<div id='formcontract'>").dxDataGrid({
+                //             // dataSource: storewithmodule('memorandumhis',modelclass,reqid),
+                //             dataSource: storedetail(modname,reqid),
+                //             // dataSource: data.contractList,
+                //             allowColumnReordering: true,
+                //             allowColumnResizing: true,
+                //             columnsAutoWidth: true, 
+                //             rowAlternationEnabled: true,
+                //             wordWrapEnabled: true,
+                //             showBorders: true,
+                //             showColumnLines:true,
+                //             filterRow: { visible: false },
+                //             filterPanel: { visible: false },
+                //             headerFilter: { visible: false },
+                //             searchPanel: {
+                //                 visible: true,
+                //                 width: 240,
+                //                 placeholder: 'Search...',
+                //             },
+                //             sorting: {
+                //                 mode: "none" // or "multiple" | "none"
+                //             },
+                //             editing: {
+                //                 useIcons:true,
+                //                 mode:"cell",
+                //                 allowAdding: true,
+                //                 allowUpdating: true,
+                //                 allowDeleting: true,
+                //                 // mode: "batch",
+                //                 // allowAdding: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //                 // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //                 // allowDeleting: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                //             },
+                //             scrolling: {
+                //                 rowRenderingMode: 'virtual',
+                //             },
+                //             paging: {
+                //                 pageSize: 5,
+                //             },
+                //             pager: {
+                //                 visible: true,
+                //                 allowedPageSizes: [5, 15, 'all'],
+                //                 showPageSizeSelector: true,
+                //                 showInfo: true,
+                //                 showNavigationButtons: true,
+                //             },
+                //             columns: [
+                //                 {
+                //                     caption: 'code',
+                //                     dataField: 'code',
+                //                     editorOptions: { 
+                //                         readOnly: true,
+                //                     }
+                //                 },  
+                //                 {
+                //                 caption: "Superior Name",
+                //                 dataField: "superiorName",
+                //                 lookup: {
+                //                     dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
+                //                     valueExpr: 'fullname',
+                //                     displayExpr: 'fullname',
+                //                 },
+                //                 validationRules: [{ type: "required" }]
+                //                 },
+                //                 {
+                //                     caption: 'Kontrak ke-',
+                //                     dataField: 'sequence',
+                //                     editorOptions: { 
+                //                         readOnly: false,
+                //                     }
+                //                 },
+                //                 {
+                //                     caption: 'Start Contract',
+                //                     dataField: 'startContract',
+                //                     dataType: "date",
+                //                     editorOptions: { 
+                //                         readOnly: false,
+                //                     }
+                //                 },
+                //                 {
+                //                     caption: 'End Contract',
+                //                     dataField: 'endContract',
+                //                     dataType: "date",
+                //                     editorOptions: { 
+                //                         readOnly: false,
+                //                     }
+                //                 },
+                //                 {
+                //                     dataField: "approveddoc",
+                //                     caption:"Approval Doc",
+                //                     allowFiltering: false,
+                //                     allowSorting: false,
+                //                     formItem: { visible: false},
+                //                     cellTemplate: function (container, options) {
+                //                         if ((options.value!="") && (options.value)){
+                //                             $("<div />").dxButton({
+                //                                 icon: 'download',
+                //                                 type: "success",
+                //                                 text: "Download",
+                //                                 onClick: function (e) {
+                //                                     window.open(options.value, '_blank');
+                //                                 }
+                //                             }).appendTo(container);
+                //                         }
+                //                     }
+                //                 },                                                              
+                //                 {
+                //                     caption: 'komentar',
+                //                     dataField: 'remarks',
+                //                     editorOptions: { 
+                //                         readOnly: false,
+                //                     }
+                //                 },      
+                //                 {
+                //                     caption: 'Action',
+                //                     width: 140,
+                //                     cellTemplate: function(container, options) {
+                //                         const {
+                //                             isMine,
+                //                             isPendingOnMe,
+                //                             isAssignment,
+                //                             id: reqid,
+                //                             approveddoc
+                //                         } = options.data;
                                     
-                                        // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
-                                        if (approveddoc != null) return;
+                //                         // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
+                //                         if (approveddoc != null) return;
                                     
-                                        // Tombol "Submit Contract"
-                                        $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
-                                            .on('dxclick', function(evt) {
-                                                evt.stopPropagation();
-                                                btnreqsubmit(reqid);  // Panggil fungsi submit
-                                            })
-                                            .appendTo(container);
+                //                         // Tombol "Submit Contract"
+                //                         $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
+                //                             .on('dxclick', function(evt) {
+                //                                 evt.stopPropagation();
+                //                                 btnreqsubmit(reqid);  // Panggil fungsi submit
+                //                             })
+                //                             .appendTo(container);
                                     
-                                        // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
-                                        if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
-                                            $('<button class="btn btn-danger" style="margin-left: 5px;">Cancel</button>')
-                                                .on('dxclick', function(evt) {
-                                                    evt.stopPropagation();
-                                                    Swal.fire({
-                                                        title: 'Are you sure?',
-                                                        text: "Are you sure you want to cancel this submission?",
-                                                        icon: 'warning',
-                                                        showCancelButton: true,
-                                                        confirmButtonColor: '#d33',
-                                                        cancelButtonColor: '#3085d6',
-                                                        confirmButtonText: 'Yes, cancel it'
-                                                    }).then((result) => {
-                                                        if (result.isConfirmed) {
-                                                            showLoadingScreen();
-                                                            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                                                action: 'submission',
-                                                                approvalAction: 0
-                                                            }).then(function(response) {
-                                                                hideLoadingScreen();
-                                                                if (response.status != 'error') {
-                                                                    dataGrid.refresh();
-                                                                    Swal.fire({
-                                                                        icon: 'success',
-                                                                        title: 'Saved',
-                                                                        text: 'The submission has been cancelled.',
-                                                                    });
-                                                                }
-                                                            });
-                                                        } else {
-                                                            hideLoadingScreen();
-                                                            Swal.fire({
-                                                                icon: 'error',
-                                                                title: 'Cancelled',
-                                                                text: 'The submission cancellation has been cancelled.'
-                                                            });
-                                                        }
-                                                    });
-                                                })
-                                                .appendTo(container);
-                                        }
-                                    }
-                                }                                                        
-                            ],
-                            export: {
-                                enabled: false,
-                                fileName: modname,
-                                excelFilterEnabled: true,
-                                allowExportSelectedData: true
-                            },
-                            onInitialized: function(e) {
-                                dataGriddetail = e.component;
-                            },
-                            onContentReady: function(e){
-                                moveEditColumnToLeft(e.component);
-                            },
-                            onToolbarPreparing: function(e) {
-                                e.toolbarOptions.items.unshift({						
-                                    location: "after",
-                                    widget: "dxButton",
-                                    options: {
-                                        hint: "Refresh Data",
-                                        icon: "refresh",
-                                        onClick: function() {
-                                            dataGriddetail.refresh();
-                                        }
-                                    }
-                                });
-                            },
-                            onEditorPrepared: function (e) {
-                            },
-                            onDataErrorOccurred: function(e) {
-                                // Menampilkan pesan kesalahan
-                                console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+                //                         // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
+                //                         if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
+                //                             $('<button class="btn btn-danger" style="margin-left: 5px;">Cancel</button>')
+                //                                 .on('dxclick', function(evt) {
+                //                                     evt.stopPropagation();
+                //                                     Swal.fire({
+                //                                         title: 'Are you sure?',
+                //                                         text: "Are you sure you want to cancel this submission?",
+                //                                         icon: 'warning',
+                //                                         showCancelButton: true,
+                //                                         confirmButtonColor: '#d33',
+                //                                         cancelButtonColor: '#3085d6',
+                //                                         confirmButtonText: 'Yes, cancel it'
+                //                                     }).then((result) => {
+                //                                         if (result.isConfirmed) {
+                //                                             showLoadingScreen();
+                //                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                //                                                 action: 'submission',
+                //                                                 approvalAction: 0
+                //                                             }).then(function(response) {
+                //                                                 hideLoadingScreen();
+                //                                                 if (response.status != 'error') {
+                //                                                     dataGrid.refresh();
+                //                                                     Swal.fire({
+                //                                                         icon: 'success',
+                //                                                         title: 'Saved',
+                //                                                         text: 'The submission has been cancelled.',
+                //                                                     });
+                //                                                 }
+                //                                             });
+                //                                         } else {
+                //                                             hideLoadingScreen();
+                //                                             Swal.fire({
+                //                                                 icon: 'error',
+                //                                                 title: 'Cancelled',
+                //                                                 text: 'The submission cancellation has been cancelled.'
+                //                                             });
+                //                                         }
+                //                                     });
+                //                                 })
+                //                                 .appendTo(container);
+                //                         }
+                //                     }
+                //                 }                                                        
+                //             ],
+                //             export: {
+                //                 enabled: false,
+                //                 fileName: modname,
+                //                 excelFilterEnabled: true,
+                //                 allowExportSelectedData: true
+                //             },
+                //             onInitialized: function(e) {
+                //                 dataGriddetail = e.component;
+                //             },
+                //             onContentReady: function(e){
+                //                 moveEditColumnToLeft(e.component);
+                //             },
+                //             onToolbarPreparing: function(e) {
+                //                 e.toolbarOptions.items.unshift({						
+                //                     location: "after",
+                //                     widget: "dxButton",
+                //                     options: {
+                //                         hint: "Refresh Data",
+                //                         icon: "refresh",
+                //                         onClick: function() {
+                //                             dataGriddetail.refresh();
+                //                         }
+                //                     }
+                //                 });
+                //             },
+                //             onEditorPrepared: function (e) {
+                //             },
+                //             onDataErrorOccurred: function(e) {
+                //                 // Menampilkan pesan kesalahan
+                //                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
                         
-                                // Memuat ulang DataGrid
-                                dataGriddetail.refresh();
-                            }
-                        })
-                    }
+                //                 // Memuat ulang DataGrid
+                //                 dataGriddetail.refresh();
+                //             }
+                //         })
+                //     }
                 else if(data.ID == 90) {
                         return formData = $("<div id='formcontract'>").dxDataGrid({    
                             dataSource: storewithmodule('memorandumhis',modelclass,reqid),    
@@ -916,7 +917,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     }
                                 },                                                              
                                 {
-                                    caption: 'komentaro',
+                                    caption: 'komentar',
                                     dataField: 'remarks',
                                     editorOptions: { 
                                         readOnly: false,
@@ -933,26 +934,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             id: reqid,
                                             approveddoc
                                         } = options.data;
-                                    
+                                        // let masterid = options.data.req_id
+                                        
                                         // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
                                         if (approveddoc != null) return;
                                     
                                         // Tombol "Submit Contract"
-                                        
-                
-                                        scrollView.append('<div class="row">' +
-                                            '<div class="col-lg-12">' +
-                                            '<div class="card">' +
-                                                '<div class="card-header">' +
-                                                '<h5 class="card-title">Form Action</h5>' +
-                                                '</div>' +
-                                                '<div class="card-body" style="border-bottom-color: darkseagreen !important;border-left-color: darkseagreen;">' +
-                                                approvalOptions +
-                                                '<button id="btn-submit" type="button" onClick="btnreqsubmit('+reqid+',\''+mode+'\')" class="btn btn-success waves-effect btn-label waves-light m-1"><i class="bx bx-check-double label-icon"></i> Submit Submission</button>'+
-                                                '</div>' +
-                                            '</div>' +
-                                            '</div>' +
-                                        '</div>');
+                                        $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
+                                            .on('dxclick', function(evt) {
+                                                evt.stopPropagation();
+                                                console.log(reqid);
+                                                btnreqsubmit(reqid);  // Panggil fungsi submit
+                                            })
+                                            .appendTo(container);
                                     
                                         // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
                                         if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
@@ -970,6 +964,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                     }).then((result) => {
                                                         if (result.isConfirmed) {
                                                             showLoadingScreen();
+                                                            
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
                                                                 action: 'submission',
                                                                 approvalAction: 0
@@ -997,7 +992,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                 .appendTo(container);
                                         }
                                     }
-                                }                                                        
+                                }                                                           
                             ],
                             export: {
                                 enabled: false,
@@ -1314,7 +1309,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 };
 
 function btnreqsubmit(reqid,mode) {
-
+// console.log(reqid);
     if (mode == 'add' || mode == 'edit') {
         var dataGridAssignment = $("#formdata").dxDataGrid("instance");
         var dataSource = dataGridAssignment.getDataSource();
