@@ -38,4 +38,4 @@ Route::post('list-buyer',[App\Http\Controllers\ListController::class, 'listBuyer
 Route::post('list-ecatalog',[App\Http\Controllers\ListController::class, 'listEcatalog']);
 Route::post('list-pg',[App\Http\Controllers\ListController::class, 'listPurchasinguser']);
 Route::post('list-rekeningccm',[App\Http\Controllers\ListController::class, 'listRekeningCcm']);
-// Route::post('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']);
+Route::post('list-rfc',[App\Http\Controllers\ListController::class, 'ListRfc']);

@@ -845,6 +845,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                             },
                             {
+                                caption: 'SK/Non SK',
+                                dataField: 'sk',
+                                editorType: 'dxSelectBox',
+                                editorOptions: { 
+                                    items: ['SK', 'Non SK'],
+                                    value: '', 
+                                    placeholder: 'Pilih SK atau Non SK',
+                                    // readOnly: (mode == 'approval') ? true : false
+                                },
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
                                 caption: 'SK Number',
                                 dataField: 'skNumber',
                                 editorType: 'dxTextArea',
@@ -857,13 +869,28 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'RFC Number',
                                 dataField: 'rfcNumber',
-                                editorType: 'dxTextArea',
-                                editorOptions: { 
-                                    height: 50,
-                                    // readOnly: (mode == 'approval') ? true : false
+                                lookup: {
+                                    dataSource: listOption('/list-rfc','id','RFCNo'),  
+                                    valueExpr: 'RFCNo',
+                                    displayExpr: function(item) {
+                                        return item ? item.RFCNo + " (" + item.id + " | " + item.RateType + ")" : "";
+                                    }
                                 },
-                                validationRules: [{ type: "required" }]
+                                // editorOptions: { 
+                                //     readOnly: (mode == 'approval') ? true : false
+                                // },
+                                // validationRules: [{ type: "required" }]
                             },
+                            // {
+                            //     caption: 'RFC Number',
+                            //     dataField: 'rfcNumber',
+                            //     editorType: 'dxTextArea',
+                            //     editorOptions: { 
+                            //         height: 50,
+                            //         // readOnly: (mode == 'approval') ? true : false
+                            //     },
+                            //     validationRules: [{ type: "required" }]
+                            // },
                             
                             
                         ],

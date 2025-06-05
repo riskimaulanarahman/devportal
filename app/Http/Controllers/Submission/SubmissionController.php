@@ -386,6 +386,10 @@ class SubmissionController extends Controller
             if ($modulename == 'Jdi' && $request->action == 'submission') {
                 $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
             }
+            // Cek jika modulename adalah 'Legal' dan tambahkan submitDate
+            if ($modulename == 'Legal' && $request->action == 'submission') {
+                $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+            }
 
             DB::table($tableName)
                 ->where('id', $id)

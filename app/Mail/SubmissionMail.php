@@ -20,8 +20,9 @@ use App\Models\Submission\MMF\Mmf30;
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
 use App\Models\Submission\Jdi;
+use App\Models\Submission\Legal;
 use App\Models\Submission\MMF\Mmf;
-use App\Http\Controllers\Submission\JdiRequestController;
+use App\Http\Controllers\Submission\LegalRequestController;
 use App\Http\Controllers\Submission\IT\ADRequestController;
 use App\Http\Controllers\Submission\Ecatalog\MaterialRequestController;
 use App\Http\Controllers\Submission\MMF\M28RequestController;
@@ -308,6 +309,28 @@ class SubmissionMail extends Mailable
                     }
                     // end save no registrasi
                     $pdf = $jdiController->genPdfJdi($request,$mailData['submission']->id);
+                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+                    foreach ($Mailrecipient as $cc) {
+                        $this->cc($cc->email); // cc bcid
+                    }
+                }
+            }
+            //legal
+            if($modulename == 'Legal') {
+                $request = new Request();
+                $legalController = new LegalRequestController();
+                if($final == 1) {
+                    // save no registrasi
+                    // if($mailData['submission']->noRegistration == null || $mailData['submission']->noRegistration == '') {
+                    //     Legal::where('id',$mailData['submission']->id)
+                    //     ->update(
+                    //         [
+                    //             "noRegistration" => $this->generateCodeLegalNoreg($mailData['submission']->bu)
+                    //         ]
+                    //     );
+                    // }
+                    // end save no registrasi
+                    $pdf = $legalController->genPdfLegal($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc bcid

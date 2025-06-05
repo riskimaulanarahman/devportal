@@ -10,7 +10,7 @@ class Employee extends Model
     use HasFactory;
 
     protected $table = 'employee.tbl_employee';
-    
+
     protected $guarded = ['id'];
 
     protected $casts = [
@@ -23,7 +23,7 @@ class Employee extends Model
         'isTerminate' => 'integer',
         'isNotHC' => 'integer',
     ];
-    
+
     public $timestamps = false;
 
     protected $with = ['department','designation','location','level','company'];

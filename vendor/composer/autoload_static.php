@@ -736,6 +736,7 @@ class ComposerStaticInitc0ab960a98edb137ab2e98b6663cdd78
         'App\\Models\\Submission\\Ticket' => __DIR__ . '/../..' . '/app/Models/Submission/Ticket.php',
         'App\\Models\\Submission\\UavMission' => __DIR__ . '/../..' . '/app/Models/Submission/UavMission.php',
         'App\\Models\\Submission\\UavMissionDetail' => __DIR__ . '/../..' . '/app/Models/Submission/UavMissionDetail.php',
+        'App\\Models\\Submission\\Legal' => __DIR__ . '/../..' . '/app/Models/Submission/Legal.php',
         'App\\Models\\Theme' => __DIR__ . '/../..' . '/app/Models/Theme.php',
         'App\\Models\\UavAsset' => __DIR__ . '/../..' . '/app/Models/UavAsset.php',
         'App\\Models\\Unit' => __DIR__ . '/../..' . '/app/Models/Unit.php',

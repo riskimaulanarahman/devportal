@@ -418,6 +418,7 @@ class MemorandumController extends Controller
                 'data' => $dataAppr
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
     }
+    
     public function genPdfmemorandumReq(Request $request, $id)
     {
         $dataAppr = DB::table('memoApprover')->select('*')->where('id',$id)->get(); // data approver
@@ -590,11 +591,11 @@ class MemorandumController extends Controller
 			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
             $filePath = public_path('template/memo/pdf/' . $fileName);
-			$path = $filePath;
-			if (file_exists($path)) {
-				unlink($path);
+			// $path = $filePath;
+			if (file_exists($filePath)) {
+				unlink($filePath);
 			}
-			$Worksheet->ExportAsFixedFormat($xlTypePDF, $path, $xlQualityStandard);
+			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);
 			
 			$excel->CutCopyMode = false;
 			$Workbook->Close(false);

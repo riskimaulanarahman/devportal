@@ -36,6 +36,7 @@ class Legal extends Model
         'purpose',
         'skNumber',
         'rfcNumber',
+        'sk',        
         'employee_id',        
     ];
 
@@ -48,6 +49,7 @@ class Legal extends Model
         $fillable = (new static)->fillable;
         $fillable = array_diff($fillable, [
             // 'sevenWaste',
+            'submitDate',
         ]);
         return $fillable;
     }

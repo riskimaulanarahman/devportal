@@ -462,9 +462,7 @@ class JdiRequestController extends Controller
             $url = $request->url();
             $action = 'gen-pdf-jdi';
             $this->logerror($ip, $url, $action, $e->getMessage());
-
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
 		}
-
     }
 }

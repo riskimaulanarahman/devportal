@@ -280,160 +280,112 @@ class LegalRequestController extends Controller
         }
     }
 
-    public function genPdflegal(Request $request, $id) {
-        $data = DB::table('legalDetail')->select('*')->where('id',$id)->first(); // data submission
-        $dataAppr = DB::table('legalApprover')->select('*')->where('id',$id)->get(); // data approver
-        $dataAtt = DB::table('legalAttachment')->select('*')->where('id',$id)->get(); // data attachment
+    public function genPdfLegal(Request $request, $id) 
+    {
+        $dataAppr = DB::table('LegalApprover')->where('id', $id)->get(); // Data approver
+        $data = $this->model->select(
+            'request_legal.*',
+            'codes.code',
+            'employee.tbl_employee.FullName as FullName'
+        )
+        ->leftjoin('codes', 'request_legal.code_id', 'codes.id')
+        ->leftJoin('employee.tbl_employee', 'request_legal.employee_id', '=', 'employee.tbl_employee.id')
+        ->first();
 
-        if($data->noRegistration == null || $data->noRegistration == '') {
-            legal::where('id',$id)
-            ->update(
-                [
-                    "noRegistration" => $this->generateCodelegalNoreg($data->bu),
-                    "status_legal" => "Register"
-                ]
-            );
+        if (!$data || !$dataAppr) {
+            return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
 
         try {
-			$excel = new COM("Excel.Application") or die("ERROR: Unable to instantaniate COM!\r\n");
-			$excel->Visible = false;
+            $excel = new COM("Excel.Application");
+            $excel->Visible = false;
 
             $file = public_path("template/legal/legal.xlsx");
 
-			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
-			$Worksheet = $Workbook->Worksheets(1);
-			$Worksheet->Activate;
-            $separatorbreak = "\n \nBenefit:\n";
+            if (!file_exists($file)) {
+                throw new \Exception("File tidak ditemukan: " . $file);
+            }
 
-            // Start Form Data
-                $Worksheet->Range("D3")->Value = $data->submitDate; // Tanggal
-                $Worksheet->Range("D4")->Value = $data->bu;
-                $Worksheet->Range("D5")->Value = $data->nama_pencetus_ide; // Pencetus Ide
-                $Worksheet->Range("D6")->Value = $data->anggota_1;
-                $Worksheet->Range("D7")->Value = $data->anggota_2;
-                $Worksheet->Range("D8")->Value = $data->deptHead;
-                $Worksheet->Range("D9")->Value = $data->title;
+            $Workbook = $excel->Workbooks->Open($file, false, true);
+            $Worksheet = $Workbook->Worksheets(1);
+            $Worksheet->Activate();
 
-                $Worksheet->Range("G3")->Value = $data->objective;
-                $Worksheet->Range("I3")->Value = $data->ranking;
-                $Worksheet->Range("G4")->Value = $data->departmentName;
-                $Worksheet->Range("G5")->Value = $data->sapid_pencetus_ide;
-                $Worksheet->Range("I5")->Value = $data->level_pencetus_ide;
-                $Worksheet->Range("G6")->Value = $data->sapid_anggota_1;
-                $Worksheet->Range("G7")->Value = $data->sapid_anggota_2;
-                $Worksheet->Range("G8")->Value = $data->sapid_deptHead;
+            // Isi Form Data
+            $Worksheet->Range("B3")->Value = $data->referenceNo;
+            $Worksheet->Range("G3")->Value = $data->submitDate;
+            $Worksheet->Range("B6")->Value = $data->FullName;
+            $Worksheet->Range("G6")->Value = $data->bu;
+            $Worksheet->Range("G9")->Value = $data->bu;
+            $Worksheet->Range("G12")->Value = $data->bu;
+            $Worksheet->Range("B15")->Value = $data->requestType;
+            $Worksheet->Range("G15")->Value = $data->formType;
+            $Worksheet->Range("B18")->Value = $data->titleOfDocument;
+            $Worksheet->Range("G18")->Value = $data->dateOfDocument;
+            $Worksheet->Range("B21")->Value = $data->skNumber;
+            $Worksheet->Range("B24")->Value = $data->sk;
+            $Worksheet->Range("B27")->Value = $data->purpose;
+            $Worksheet->Range("G21")->Value = $data->countersigningParty;
+            $Worksheet->Range("G24")->Value = $data->financialAmount;
 
-                $Worksheet->Range("B11")->Value = $data->htk;
-                $valueperbaikan = $data->perbaikan . $separatorbreak . $data->benefit;
-                $Worksheet->Range("E11")->Value = $valueperbaikan;
-                $Worksheet->Range("G12")->Value = $data->isNotWasteful;
-                $Worksheet->Range("G13")->Value = $data->reasonNotWasteful;
-
-                if($data->isSaving == 'Ya') {
-                    $Worksheet->Range("B34")->Value = $data->savingFormula;
-                    $Worksheet->Range("B36")->Value = $data->totalSaving;
-                }
-
-                $Worksheet->Range("H44")->Value = $data->isRollout;
-                $Worksheet->Range("E46")->Value = $data->savingInfo;
-                $Worksheet->Range("E46")->Value = $data->savingInfo;
-                $Worksheet->Range("F37")->Value = $data->noRegistration;
-            // End Form Data
-
+            // Tambahkan Gambar Approval jika ada
             $picpath = public_path("assets/images/approved.png");
-            
-            function addPictureToWorksheet($Worksheet, $picPath, $row, $column, $height, $excel) {
-                $pic = $Worksheet->Shapes->AddPicture($picPath, False, True, 0, 0, -1, -1);
-                $pic->Height = $height;
-                $pic->Top = $excel->Cells($row, $column)->Top;
-                $pic->Left = $excel->Cells($row, $column)->Left;
-            }
-            
-            foreach ($dataAppr as $appr) {
-                if($appr->sequence == 1) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("E41")->Value = $appr->apprname;
-                        $Worksheet->Range("E43")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 40, 5, 40, $excel);
-                    }
-                }
-                if($appr->sequence == 2) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("H41")->Value = $appr->apprname;
-                        $Worksheet->Range("H43")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 40, 6, 40, $excel);
 
-                    }
+            if (file_exists($picpath)) {
+                function addPictureToWorksheet($Worksheet, $picPath, $row, $column, $height, $excel) {
+                    $pic = $Worksheet->Shapes->AddPicture($picPath, False, True, 0, 0, -1, -1);
+                    $pic->Height = $height;
+                    $pic->Top = $excel->Cells($row, $column)->Top;
+                    $pic->Left = $excel->Cells($row, $column)->Left;
                 }
-                if($appr->sequence == 3) {
-                    if($appr->approvalAction == 3) {
-                        $Worksheet->Range("F41")->Value = $appr->apprname;
-                        $Worksheet->Range("F43")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 40, 8, 40, $excel);
+
+                foreach ($dataAppr as $appr) {
+                    if ($appr->sequence == 1 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B36")->Value = $appr->apprname;
+                        $Worksheet->Range("D36")->Value = $appr->apprtype;
+                        $Worksheet->Range("E36")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 36, 7, 36, $excel);
                     }
-                }
-                if($data->isSaving == 'Ya') {
-                    if($appr->sequence == 4) {
-                        if($appr->approvalAction == 3) {
-                            $Worksheet->Range("F49")->Value = $appr->apprname;
-                            $Worksheet->Range("F50")->Value = $appr->approvalDate;
-                            addPictureToWorksheet($Worksheet, $picpath, 48, 6, 40, $excel);
-                        }
+                    if ($appr->sequence == 2 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B37")->Value = $appr->apprname;
+                        $Worksheet->Range("D37")->Value = $appr->apprtype;
+                        $Worksheet->Range("E37")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 37, 7, 36, $excel);
                     }
-                    if($appr->sequence == 5) {
-                        if($appr->approvalAction == 3) {
-                            $Worksheet->Range("H49")->Value = $appr->apprname;
-                            $Worksheet->Range("H50")->Value = $appr->approvalDate;
-                            addPictureToWorksheet($Worksheet, $picpath, 48, 8, 40, $excel);
-                        }
+                    if ($appr->sequence == 3 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B38")->Value = $appr->apprname;
+                        $Worksheet->Range("D38")->Value = $appr->apprtype;
+                        $Worksheet->Range("E38")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 38, 7, 36, $excel);
+                    }
+                    if ($appr->sequence == 4 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B39")->Value = $appr->apprname;
+                        $Worksheet->Range("D39")->Value = $appr->apprtype;
+                        $Worksheet->Range("E39")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 39, 7, 36, $excel);
+                    }
+                    if ($appr->sequence == 5 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B40")->Value = $appr->apprname;
+                        $Worksheet->Range("D40")->Value = $appr->apprtype;
+                        $Worksheet->Range("E40")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 40, 7, 36, $excel);
                     }
                 }
             }
 
-            $appEnv = env('APP_ENV');
-
-            $rowbefore = 63;
-            $rowafter = 153;
-            $countBefore = 0;  // Penghitung untuk gambar 'Before'
-            $countAfter = 0;   // Penghitung untuk gambar 'After'
-            foreach($dataAtt as $att) {
-                if($att->remarks == 'Before' && $countBefore < 3) { // kondisi untuk menambahkan foto sebelum dan menampilkan foto tidak lebih dari 3 (max)
-                    if ($appEnv == 'production') {
-                        $Worksheet->Range("B" . $rowbefore)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowbefore, 2, 300, $excel);
-                    } else {
-                        $Worksheet->Range("B" . $rowbefore)->Value = addPictureToWorksheet($Worksheet, "http://localhost/devportal/public/upload/" . $att->path, $rowbefore, 2, 300, $excel);
-                    }
-                    $rowbefore+=25;
-                    $countBefore++;
-                }
-                if($att->remarks == 'After' && $countAfter < 3) { // kondisi untuk menambahkan foto sesudah dan menampilkan foto tidak lebih dari 3 (max)
-                    $Worksheet->Range("B" . $rowafter)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowafter, 2, 300, $excel);
-                    if ($appEnv == 'production') {
-                        $Worksheet->Range("B" . $rowafter)->Value = addPictureToWorksheet($Worksheet, "http://172.18.83.38/devportal/public/upload/" . $att->path, $rowafter, 2, 300, $excel);
-                } else {
-                        $Worksheet->Range("B" . $rowafter)->Value = addPictureToWorksheet($Worksheet, "http://localhost/devportal/public/upload/" . $att->path, $rowafter, 2, 300, $excel);
-                    }
-                    $rowafter+=25;
-                    $countAfter++;
-                }
-            }
-
+            // Ekspor ke PDF
             $xlTypePDF = 0;
-			$xlQualityStandard = 0;
-
+            $xlQualityStandard = 0;
             $code_sanitized = str_replace('/', '_', $data->code);
 			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
             $filePath = public_path('template/legal/pdf/' . $fileName);
-			$path = $filePath;
-			if (file_exists($path)) {
-				unlink($path);
+			if (file_exists($filePath)) {
+				unlink($filePath);
 			}
-			$Worksheet->ExportAsFixedFormat($xlTypePDF, $path, $xlQualityStandard);
+			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);
 			
 			$excel->CutCopyMode = false;
-			$Workbook->Close(false);
+            $Workbook->Close(false);
 			unset($Worksheet);
 			unset($Workbook);
 			$excel->Workbooks->Close();
@@ -441,24 +393,19 @@ class LegalRequestController extends Controller
 			unset($excel);
 			
             $pathfilename = 'public/template/legal/pdf/' . $fileName;
-
-            $updateData = $this->model->find($data->id);
-			$updateData->approveddoc = str_replace("\\", "/", $pathfilename);
-			$updateData->save();
-
+            DB::table('request_legal')
+            ->where('id', $id) // Sesuaikan dengan primary key di tabel
+            ->update(['approveddoc' => $pathfilename]);
             $this->processcopy($pathfilename);
 
 			return $pathfilename;
-
-		} catch (\Exception $e) {
-            // Log error
-            $ip = $request->ip();
-            $url = $request->url();
-            $action = 'gen-pdf-legal';
-            $this->logerror($ip, $url, $action, $e->getMessage());
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-		}
-
+        } catch (\Exception $e) {
+            // Logging error
+            $this->logerror($request->ip(), $request->url(), 'gen-pdf-legal', $e->getMessage());
+            return response()->json([
+                "status" => "error",
+                "message" => "Error di " . $e->getFile() . " baris " . $e->getLine() . ": " . $e->getMessage()
+            ]);
+        }
     }
 }

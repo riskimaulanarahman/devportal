@@ -34,6 +34,7 @@ use App\Models\Ecatalog;
 use App\Models\Purchasinguser;
 use App\Models\RekeningCcm;
 use App\Models\Ghm_room;
+use App\Models\Rfc;
 use App\Models\Submission\MemorandumHis;
 use Auth;
 
@@ -259,5 +260,15 @@ class ListController extends Controller
 
     public function ListContract() {
         return MemorandumHis::select('cs')->orderBy('cs','asc')->get();
+    }
+
+    public function listRfc() { // not have account/loginName
+        return Rfc::select('archive._tbl_rfc.id', 'RFCNo', 'RateType', 'SKNo')
+                // ->where(function($query) {
+                //     $query->whereNotNull('LoginName')
+                //         ->where('LoginName', '<>', '');
+                // })
+                // ->where('employee.tbl_employee.isActive',1)
+                ->get();
     }
 }
