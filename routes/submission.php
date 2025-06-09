@@ -109,6 +109,7 @@ Route::group(['prefix' => 'api'], function () {
     
     //Ghm
     Route::post('checkattachmentghm',[App\Http\Controllers\Submission\GhmRequestController::class, 'checkattachmentghm']); //get ghm checkattachmentghm
+    Route::post('checkattachmentlegal',[App\Http\Controllers\Submission\LegalRequestController::class, 'checkattachmentlegal']); //get legal checkattachmentlegal
     
     //action
     Route::post('submissionrequest/{id}/{modulename}',[App\Http\Controllers\Submission\SubmissionController::class, 'submit']); //submit submission request

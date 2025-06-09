@@ -183,7 +183,10 @@ class HomeController extends Controller
                                 break;
                             case 'request_memorandum':
                                 $url = 'memorandum_request';
-                            //     break;
+                                break;
+                            case 'request_legal':
+                                $url = 'legal_request';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -273,7 +276,10 @@ class HomeController extends Controller
                                 break;
                             case 'request_memorandum':
                                 $url = 'memorandum_request';
-                            //     break;
+                                break;
+                            case 'request_legal':
+                                $url = 'legal_request';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }

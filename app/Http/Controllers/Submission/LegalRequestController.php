@@ -89,6 +89,72 @@ class LegalRequestController extends Controller
         }
     }
 
+    public function checkattachmentlegal(Request $request)
+    {
+        try {
+            $hasSP = false;
+            $hasRFC = false;
+            $hasSD = false;
+
+            if ($request->countfamily > 0 ) {
+                $data = DB::table('tbl_attachment')
+                    ->where('req_id', $request->req_id)
+                    ->where('module_id', $this->getModuleId($request->modelname))
+                    ->where(function($query) {
+                        $query->where('remarks', 'like', 'SP')
+                              ->orWhere('remarks', 'like', 'RFC');
+                    })
+                    ->get();
+                    foreach ($data as $attc) {
+                        // $countattfamily = ?
+                        if ($attc->remarks === 'SP') {
+                            // if($request->countfamily == $countattfamily) {
+                            //     $hasKTP = true;
+                            // }
+                            $hasSP = true;
+                        }
+                        if ($attc->remarks === 'RFC') {
+                            $hasRFC = true;
+                        }
+                    }
+        
+                    if (!$hasRFC) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'KTP' is required. Please attach it."]);
+                    }
+        
+                    if (!$hasSP) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'KK' is required. Please attach it."]);
+                    }
+            } else if($request->countguest > 0) {                
+                $data = DB::table('tbl_attachment')
+                    ->where('req_id', $request->req_id)
+                    ->where('module_id', $this->getModuleId($request->modelname))
+                    ->where(function($query) {
+                        $query->where('remarks', 'like', 'Supporting Document');                         
+                    })
+                    ->get();
+                    // $message = "Supporting document is required!";
+                    foreach ($data as $attc) {
+                        // $countattfamily = ?
+                      
+                        if ($attc->remarks === 'Supporting Document') {
+                            $hasSD = true;
+                        }
+                    }
+        
+                    if (!$hasSD) {
+                        return response()->json(["status" => "error", "message" => "Error: Supporting document 'Supporting Document' is required. Please attach it."]);
+                    }
+            }
+            if (count($data) > 0) {
+                return response()->json(["status" => "success"]);
+            }
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        } 
+    }
+
     public function store(Request $request)
     {
         try {
@@ -97,14 +163,8 @@ class LegalRequestController extends Controller
 
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
-            
-            $employee = $this->getEmployeeID();
-
-            if ($employee->companycode === 'KPSI') {
-                $employee->companycode = 'IHM';
-            }
-
-            $requestData['bu'] = $employee->companycode;
+            $requestData['requestStatus'] = 0;
+            // $requestData['sknumber'] = 0;
 
             // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
@@ -112,8 +172,9 @@ class LegalRequestController extends Controller
             // Simpan id dari data baru
             $req_id = $newData->id;
 
-            $this->createApproverList($this->modulename, $req_id);
-            
+            // $this->createApproverList($this->modulename, $req_id);
+
+
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['store'],
@@ -121,7 +182,7 @@ class LegalRequestController extends Controller
             ]);
 
         } catch (\Exception $e) {
-
+            DB::rollBack();
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
@@ -140,20 +201,6 @@ class LegalRequestController extends Controller
                 $data->save();
             }
 
-            // if($data->noRegistration == null) {
-                
-            //     $data->save();
-            // }
-
-            // if($data->depthead_id !== null) {
-            //     $this->createApprManager($data->depthead_id, $this->modulename, $id, $data->requestStatus);
-            // }
-
-            // Transform the 'sevenWaste' field from string "1,2" to array [1,2]
-                if (isset($data->sevenWaste) && is_string($data->sevenWaste)) {
-                    $data->sevenWaste = explode(',', $data->sevenWaste);
-                }
-
             return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
@@ -165,57 +212,49 @@ class LegalRequestController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $data = $this->model->findOrFail($id);
-            $reqStatus = $data->requestStatus;
+
             // Mengambil semua data dari request
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
-            if($request->isSaving == 1) {
-                $requestData['category_id'] = 4;
-            } else {
-                $requestData['category_id'] = null;
-            }
 
-            if(isset($request->isSaving)) {
-                if($request->isSaving == 1) {
-                    // $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
-                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $data->bu);
-                } else {
-                    // $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $this->getEmployeeID()->companycode);
-                    $this->createApprSaving($request->isSaving, $this->modulename, $id, $reqStatus, $data->bu);
-                }
-            }
-
-            if($request->depthead_id) {
-                $this->createApprManager($request->depthead_id, $this->modulename, $id);
-            }
-
-            if (is_array($request->sevenWaste) && !empty($request->sevenWaste)) {
-                $requestData['sevenWaste'] = implode(",", $request->sevenWaste);
-            } else {
-                // Handle the case where it's not an array or is empty
-                $requestData['sevenWaste'] = null; // or however you want to default it
-            }
-            
             // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
             $this->addOneDayToDate($requestData);
+
+            $data = $this->model->findOrFail($id);
+
+            if($request->additional_approver) {
+                $this->createApprAdditionalApprover($request->additional_approver, $this->modulename, $id);
+            }
 
             $data->update($requestData);
 
             //start save history perubahan
             $fields = [
-                'objective' => $request->objective,
-                'ranking' => $request->ranking,
-                // 'isRollout' => $request->isRollout,
-                'savingInfo' => $request->savingInfo,
+                'form_type' => $request->form_type,
+                'request_type' => $request->request_type,
             ];
             
             foreach ($fields as $key => $value) {
                 if ($value) {
-                    $this->approverAction($this->modulename, $id, $key, 1, $value, null);
+                    $this->approverAction($this->modulename, $id, $key, 1, $value, null, null);
                 }
             }
             //end save history perubahan
+
+            if(isset($request->ticketStatus) && $data->requestStatus == 3) {
+                $getSubmissionData = $this->model->findOrFail($id);
+
+                $mailData = [
+                    "id" => 30, // final approved
+                    "action_id" => 5, // update id
+                    "submission" => $getSubmissionData,
+                    "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
+                    "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
+                    "message" => $this->mailMessage()['newActivity'],
+                    "remarks" => $request->ticketStatus
+                ];
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
+            }
 
             // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([
@@ -282,7 +321,7 @@ class LegalRequestController extends Controller
 
     public function genPdfLegal(Request $request, $id) 
     {
-        $dataAppr = DB::table('LegalApprover')->where('id', $id)->get(); // Data approver
+        $dataAppr = DB::table('LegalApprover')->select('*')->where('id', $id)->get(); // Data approver
         $data = $this->model->select(
             'request_legal.*',
             'codes.code',
@@ -290,8 +329,12 @@ class LegalRequestController extends Controller
         )
         ->leftjoin('codes', 'request_legal.code_id', 'codes.id')
         ->leftJoin('employee.tbl_employee', 'request_legal.employee_id', '=', 'employee.tbl_employee.id')
+        ->where('request_legal.id', $id)
         ->first();
 
+        // foreach ($data as $data) {
+        //     echo $data->referenceNo; // Sekarang bisa diakses
+        // }
         if (!$data || !$dataAppr) {
             return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
@@ -311,7 +354,7 @@ class LegalRequestController extends Controller
             $Worksheet->Activate();
 
             // Isi Form Data
-            $Worksheet->Range("B3")->Value = $data->referenceNo;
+            $Worksheet->Range("B3")->Value = $data->code;
             $Worksheet->Range("G3")->Value = $data->submitDate;
             $Worksheet->Range("B6")->Value = $data->FullName;
             $Worksheet->Range("G6")->Value = $data->bu;
@@ -323,7 +366,8 @@ class LegalRequestController extends Controller
             $Worksheet->Range("G18")->Value = $data->dateOfDocument;
             $Worksheet->Range("B21")->Value = $data->skNumber;
             $Worksheet->Range("B24")->Value = $data->sk;
-            $Worksheet->Range("B27")->Value = $data->purpose;
+            $Worksheet->Range("B27")->Value = $data->rfcNumber;
+            $Worksheet->Range("B30")->Value = $data->purpose;
             $Worksheet->Range("G21")->Value = $data->countersigningParty;
             $Worksheet->Range("G24")->Value = $data->financialAmount;
 
@@ -340,34 +384,34 @@ class LegalRequestController extends Controller
 
                 foreach ($dataAppr as $appr) {
                     if ($appr->sequence == 1 && $appr->approvalAction == 3) {
-                        $Worksheet->Range("B36")->Value = $appr->apprname;
-                        $Worksheet->Range("D36")->Value = $appr->apprtype;
-                        $Worksheet->Range("E36")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 36, 7, 36, $excel);
-                    }
-                    if ($appr->sequence == 2 && $appr->approvalAction == 3) {
-                        $Worksheet->Range("B37")->Value = $appr->apprname;
-                        $Worksheet->Range("D37")->Value = $appr->apprtype;
-                        $Worksheet->Range("E37")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 37, 7, 36, $excel);
-                    }
-                    if ($appr->sequence == 3 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B38")->Value = $appr->apprname;
                         $Worksheet->Range("D38")->Value = $appr->apprtype;
                         $Worksheet->Range("E38")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 38, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 4 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 2 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B39")->Value = $appr->apprname;
                         $Worksheet->Range("D39")->Value = $appr->apprtype;
                         $Worksheet->Range("E39")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 39, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 5 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 3 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B40")->Value = $appr->apprname;
                         $Worksheet->Range("D40")->Value = $appr->apprtype;
                         $Worksheet->Range("E40")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 40, 7, 36, $excel);
+                    }
+                    if ($appr->sequence == 4 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B41")->Value = $appr->apprname;
+                        $Worksheet->Range("D41")->Value = $appr->apprtype;
+                        $Worksheet->Range("E41")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 41, 7, 36, $excel);
+                    }
+                    if ($appr->sequence == 5 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B42")->Value = $appr->apprname;
+                        $Worksheet->Range("D42")->Value = $appr->apprtype;
+                        $Worksheet->Range("E42")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 42, 7, 36, $excel);
                     }
                 }
             }

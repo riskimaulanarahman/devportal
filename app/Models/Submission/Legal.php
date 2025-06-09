@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Code;
 use App\Models\ApproverListReq;
+use App\Models\ApproverListHistory;
 
 class Legal extends Model
 {
@@ -33,11 +34,11 @@ class Legal extends Model
         'businessType',
         'titleOfDocument',
         'financialAmount',
-        'purpose',
+        'purpose',        
+        'rfcNumber',                
+        'employee_id', 
         'skNumber',
-        'rfcNumber',
-        'sk',        
-        'employee_id',        
+        'sk',   
     ];
 
     protected $casts = [
@@ -48,8 +49,11 @@ class Legal extends Model
     {
         $fillable = (new static)->fillable;
         $fillable = array_diff($fillable, [
-            // 'sevenWaste',
             'submitDate',
+            'sk',
+            'skNumber',
+            'submissionDate',
+            'additional_approver',
         ]);
         return $fillable;
     }
@@ -58,7 +62,6 @@ class Legal extends Model
     {
         return (new static)->getTable();
     }
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -67,6 +70,11 @@ class Legal extends Model
     public function approverlist()
     {
         return $this->hasMany(ApproverListReq::class,'req_id');
+    }
+
+    public function approverHistory()
+    {
+        return $this->hasMany(ApproverListHistory::class,'req_id');
     }
 
     public function code()

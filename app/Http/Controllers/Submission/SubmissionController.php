@@ -109,7 +109,7 @@ class SubmissionController extends Controller
                 'Capex' => "App\Models\Submission\Financial",
                 'MemorandumHis' => "App\Models\Submission\MemorandumHis",
             ];
-            
+
             $baseNamespace = "App\Models\Submission";
             $locModel = $baseNamespace . "\\" . $modulename;
 
@@ -153,9 +153,16 @@ class SubmissionController extends Controller
                           ->orWhere('remarks', 'like', 'after');
                 });
             }
+            if ($modulename == 'Legal') {
+                $queryAttachement->where(function($query) {
+                    $query->where('remarks', 'like', 'RFC')
+                          ->orWhere('remarks', 'like', 'Surat Perjanjian');
+                });
+            }
+
             $attachement = $queryAttachement->get();
             // end attachment
-            
+
             $checkAppr = DB::table('tbl_approverListReq')
                 ->where('req_id',$id)
                 ->where('module_id',$module_id)
@@ -167,7 +174,7 @@ class SubmissionController extends Controller
                 ->where('module_id',$module_id)
                 ->get();
             }
-            
+
             if (count($nullColumns) > 0) {
                 $nullColumnsStr = implode(', ', $nullColumns);
                 return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Column $nullColumnsStr is required"]);
@@ -202,6 +209,27 @@ class SubmissionController extends Controller
 
                 if (!$hasAfter) {
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'After' is required. Please attach it."]);
+                }
+            } 
+            if ($modulename == 'Legal') {
+                $hasRfc = false;
+                $hasSp = false;
+
+                foreach ($attachement as $attc) {
+                    if ($attc->remarks === 'RFC') {
+                        $hasRfc = true;
+                    }
+                    if ($attc->remarks === 'Surat Perjanjian') {
+                        $hasSp = true;
+                    }
+                }
+
+                if (!$hasRfc) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'RFC' is required. Please attach it."]);
+                }
+
+                if (!$hasSp) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Surat Perjanjian' is required. Please attach it."]);
                 }
             } else {
                 // submission yang tidak perlu menambahkan supporting document
@@ -285,7 +313,7 @@ class SubmissionController extends Controller
                 })
                 ->with('approvaluser')
                 ->get();
-            
+
             $rawgetapproverlist = ApproverListReq::where('req_id',$id)
                 ->where('module_id',$module_id)
                 ->where('approvalAction',1);
@@ -389,6 +417,7 @@ class SubmissionController extends Controller
             // Cek jika modulename adalah 'Legal' dan tambahkan submitDate
             if ($modulename == 'Legal' && $request->action == 'submission') {
                 $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+                // $dataToUpdate["submissionDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
             }
 
             DB::table($tableName)
