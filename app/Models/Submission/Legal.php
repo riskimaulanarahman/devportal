@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
+use App\Models\Rfc;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 
@@ -21,7 +22,6 @@ class Legal extends Model
     protected $fillable = [
         'user_id',
         'requestStatus',
-        'referenceNo',
         'businessGroup',
         'bu',
         'sector',
@@ -35,10 +35,11 @@ class Legal extends Model
         'titleOfDocument',
         'financialAmount',
         'purpose',        
-        'rfcNumber',                
-        'employee_id', 
+        'rfcNumber', 
         'skNumber',
+        'contractNumber',
         'sk',   
+        'depthead_id',
     ];
 
     protected $casts = [
@@ -52,6 +53,7 @@ class Legal extends Model
             'submitDate',
             'sk',
             'skNumber',
+            'contractNumber',
             'submissionDate',
             'additional_approver',
         ]);
@@ -81,5 +83,9 @@ class Legal extends Model
     {
         return $this->belongsTo(Code::class);
     }
+    // public function Rfc()
+    // {
+    //     return $this->belongsTo(Rfc::class);
+    // }
 
 }

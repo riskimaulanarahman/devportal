@@ -70,7 +70,7 @@ class LegalRequestController extends Controller
                                     ->whereIn("request_legal.requestStatus", [3])
                                     ->where("bu",$this->getEmployeeID()->companycode);
                             }
-                        })             
+                        })      
                         ->orWhere("request_legal.user_id", $user_id);
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
@@ -157,6 +157,7 @@ class LegalRequestController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
             // Ambil semua data dari request
             $requestData = $request->all();
@@ -164,6 +165,9 @@ class LegalRequestController extends Controller
             // Tambahkan user_id ke dalam data request
             $requestData['user_id'] = $this->getAuth()->id;
             $requestData['requestStatus'] = 0;
+            $requestData['businessGroup'] = 'KF';
+            $requestData['businessType'] = 'Fiber';
+            $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
             // $requestData['sknumber'] = 0;
 
             // Buat data baru pada tabel utama
@@ -172,9 +176,10 @@ class LegalRequestController extends Controller
             // Simpan id dari data baru
             $req_id = $newData->id;
 
+            $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
+
             // $this->createApproverList($this->modulename, $req_id);
-
-
+            DB::commit();
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['store'],
@@ -191,9 +196,11 @@ class LegalRequestController extends Controller
     {
         try {
 
-            $data = $this->model->select('request_legal.*','codes.code')
+            $data = $this->model->select('request_legal.*','codes.code','archive._tbl_rfc.RFCNo')
             ->leftJoin('codes','request_legal.code_id','codes.id')
+            ->leftjoin('archive._tbl_rfc', 'request_legal.rfcnumber', 'archive._tbl_rfc.id')
             ->where('request_legal.id',$id)
+            ->with(['user'])
             ->first();
 
             if($data->code_id == null) {
@@ -217,7 +224,6 @@ class LegalRequestController extends Controller
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
 
-            // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
@@ -325,10 +331,12 @@ class LegalRequestController extends Controller
         $data = $this->model->select(
             'request_legal.*',
             'codes.code',
-            'employee.tbl_employee.FullName as FullName'
+            'users.fullname',
+            'archive._tbl_rfc.RFCNo',
         )
         ->leftjoin('codes', 'request_legal.code_id', 'codes.id')
-        ->leftJoin('employee.tbl_employee', 'request_legal.employee_id', '=', 'employee.tbl_employee.id')
+        ->leftJoin('users', 'request_legal.user_id', '=', 'users.id')
+        ->leftjoin('archive._tbl_rfc', 'request_legal.rfcnumber', '=', 'archive._tbl_rfc.id')
         ->where('request_legal.id', $id)
         ->first();
 
@@ -356,7 +364,7 @@ class LegalRequestController extends Controller
             // Isi Form Data
             $Worksheet->Range("B3")->Value = $data->code;
             $Worksheet->Range("G3")->Value = $data->submitDate;
-            $Worksheet->Range("B6")->Value = $data->FullName;
+            $Worksheet->Range("B6")->Value = $data->fullname;
             $Worksheet->Range("G6")->Value = $data->bu;
             $Worksheet->Range("G9")->Value = $data->bu;
             $Worksheet->Range("G12")->Value = $data->bu;
@@ -364,12 +372,13 @@ class LegalRequestController extends Controller
             $Worksheet->Range("G15")->Value = $data->formType;
             $Worksheet->Range("B18")->Value = $data->titleOfDocument;
             $Worksheet->Range("G18")->Value = $data->dateOfDocument;
-            $Worksheet->Range("B21")->Value = $data->skNumber;
+            $Worksheet->Range("B21")->Value = $data->contractNumber;
             $Worksheet->Range("B24")->Value = $data->sk;
-            $Worksheet->Range("B27")->Value = $data->rfcNumber;
+            $Worksheet->Range("B27")->Value = $data->RFCNo;
             $Worksheet->Range("B30")->Value = $data->purpose;
             $Worksheet->Range("G21")->Value = $data->countersigningParty;
-            $Worksheet->Range("G24")->Value = $data->financialAmount;
+            $Worksheet->Range("G24")->Value = $data->skNumber;
+            $Worksheet->Range("G27")->Value = $data->financialAmount;
 
             // Tambahkan Gambar Approval jika ada
             $picpath = public_path("assets/images/approved.png");

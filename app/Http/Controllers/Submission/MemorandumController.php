@@ -155,17 +155,6 @@ class MemorandumController extends Controller
     //     }
     // }
 
-    public function index()
-    {
-        $dataAppr = DB::table('memoExp')->select('*')->get(); // data approver        
-            return response()->json([
-                'status' => "show",
-                'message' => $this->getMessage()['show'],
-                'data' => $dataAppr
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
-    }
-
-
     public function store(Request $request)
     {
         try {            
@@ -243,55 +232,104 @@ class MemorandumController extends Controller
     //     }
     // }
 
+
+    public function index()
+    {
+        $data = DB::table('memoExp')->select('*')->get();   
+        // dd($data);     
+            return response()->json([
+                'status' => "show",
+                'message' => $this->getMessage()['show'],
+                'data' => $data
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
+    }
+
     public function show($id)
     {
         try {
-            $data = $this->model->select(
-                'request_memorandum.*',
-                'employee.tbl_level.Level',
-                'employee.tbl_employee.JoinDate',
-                'employee.tbl_employee.fullName',
-                'employee.tbl_employee.companycode',
-                'employee.tbl_employee.contract_status',
-                'employee.tbl_employee.sys_id as sysid',
-                'employee.tbl_designation.DesignationName',
-                'employee.tbl_employee.BirthOfDate',
-                'request_memorandum_his.code_id'
-            )
-            ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')
-            ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-            ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
-            ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
-            ->where('request_memorandum.id', $id)
-            ->first();
-
+            $data = $this->model->where('id', $id)->first();
             if (!$data) {
-                return response()->json([
-                    "status" => "error",
-                    "message" => "Data not found"
-                ]);
+                $memoExpData = DB::table('memoExp')->where('id', $id)->first();
+    
+                if (!$memoExpData) {
+                    return response()->json(["status" => "error", "message" => "Data memoExp tidak ditemukan"]);
+                }
+    
+                $existingRequest = DB::table('request_memorandum')->where('sysid', $memoExpData->sys_id)->first();
+    
+                if (!$existingRequest) {
+                    // Jika tidak ada, buat data baru
+                    $newId = DB::table('request_memorandum')->insertGetId([
+                        'employee_id' => $memoExpData->id ?? null,
+                        'requestStatus' => 0, 
+                        'bu' => $memoExpData->bu,
+                        'sysid' => $memoExpData->sys_id ?? null,
+                        'code_id' => $this->generateCode($this->modulename),
+                        'user_id' => $this->getAuth()->id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+    
+                    $data = $this->model->where('id', $newId)->first();
+                } else {
+                    // Jika sudah ada, gunakan data yang ada
+                    $data = $existingRequest;
+                    $user_id = $this->getAuth()->id;
+                    $module_id = $this->getModuleId($this->modulename);
+                    // 4️⃣ Jika data sudah ada, jalankan query `isMine` dan `isPendingOnMe`
+                    $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
+                    FROM tbl_approverListReq l
+                    LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                    LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
+                    WHERE l.ApprovalAction = '1' 
+                    AND l.req_id = request_memorandum.id 
+                    AND l.module_id = '".$module_id."' 
+                    AND request_memorandum.requestStatus = '1'
+                    ORDER BY a.sequence)";
+
+                    // $getbcidv = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
+                    //             FROM tbl_approverListReq l
+                    //             LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                    //             LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
+                    //             WHERE l.req_id = request_memorandum.id 
+                    //             AND l.module_id = '".$module_id."' 
+                    //             AND r.ApprovalType = 'BCID CI Facilitator' 
+                    //             AND r.isactive = '1'
+                    //             ORDER BY a.sequence)";
+
+                    // 5️⃣ Tambahkan query untuk mendapatkan isMine, isPendingOnMe, dan isBCIDv jika data ditemukan
+                    $data = $this->model->selectRaw("
+                            request_memorandum.*, codes.code,
+                            CASE WHEN request_memorandum.user_id='".$user_id."' THEN 1 ELSE 0 END AS isMine,
+                            ".$subquery." AS isPendingOnMe
+                        ")
+                        ->leftJoin('codes', 'request_memorandum.code_id', 'codes.id')
+                        ->with(['user', 'approverlist'])
+                        ->where('request_memorandum.id', $data->id)
+                        ->first();
+                }
             }
-
-            $contractList = MemorandumHis::select('request_memorandum_his.*')
-            ->where('sysid', $data->sysid)
-            ->orderBy('sequence', 'ASC')
-            ->get();
-
-            $data->contractList = $contractList->isEmpty() ? [] : $contractList;
-
+            $memoExpExtraData = DB::table('memoExp')->where('sys_id', $data->sysid)->first();
+    
+            if ($memoExpExtraData) {
+                foreach ($memoExpExtraData as $key => $value) {
+                    if (!isset($data->$key)) { // Pastikan hanya menambahkan data yang belum ada
+                        $data->$key = $value;
+                    }
+                }
+            }
+    
             return response()->json([
                 'status' => "show",
-                'message' => "Data retrieved successfully",
+                'message' => "Data ditemukan atau baru dibuat",
                 'data' => $data
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
+    
         } catch (\Exception $e) {
-            return response()->json([
-                "status" => "error",
-                "message" => $e->getMessage()
-            ]);
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+    
 
     // public function update(Request $request, $id)
     // {

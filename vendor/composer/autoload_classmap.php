@@ -90,6 +90,7 @@ return array(
     'App\\Http\\Controllers\\Submission\\UavMissionRequestController' => $baseDir . '/app/Http/Controllers/Submission/UavMissionRequestController.php',
     'App\\Http\\Controllers\\Submission\\UavMissionRequestDetailController' => $baseDir . '/app/Http/Controllers/Submission/UavMissionRequestDetailController.php',
     'App\\Http\\Controllers\\Submission\\LegalRequestController' => $baseDir . '/app/Http/Controllers/Submission/LegalRequestController.php',
+    'App\\Http\\Controllers\\Submission\\MemorandumController' => $baseDir . '/app/Http/Controllers/Submission/MemorandumController.php',
     'App\\Http\\Kernel' => $baseDir . '/app/Http/Kernel.php',
     'App\\Http\\Middleware\\Authenticate' => $baseDir . '/app/Http/Middleware/Authenticate.php',
     'App\\Http\\Middleware\\EncryptCookies' => $baseDir . '/app/Http/Middleware/EncryptCookies.php',

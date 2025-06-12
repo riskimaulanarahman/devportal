@@ -639,9 +639,18 @@ $(function () {
                                     editorType: 'dxCheckBox',
                                     dataField: 'isMeals',
                                     editorOptions: {
-                                        readOnly: isReadOnlyStatus(appointmentData.requestStatus),
-                                        value: e.appointmentData.isMeals !== undefined ? e.appointmentData.isMeals : false, 
+                                        readOnly: isReadOnlyStatus(e.appointmentData.requestStatus),
+                                        // Pastikan nilai default adalah false jika tidak ada data
+                                        value: e.appointmentData.isMeals != null ? Boolean(e.appointmentData.isMeals) : false, 
+                                        onInitialized: function(args) {
+                                            // Jika isMeals masih null atau undefined, set ke 0
+                                            if (e.appointmentData.isMeals == null) {
+                                                e.appointmentData.isMeals = 0;
+                                                form.updateData("isMeals", 0);
+                                            }
+                                        },
                                         onValueChanged: function(args) {
+                                            // Simpan sebagai 1 jika dicentang, 0 jika tidak
                                             e.appointmentData.isMeals = args.value ? 1 : 0;
                                             form.updateData("isMeals", e.appointmentData.isMeals); 
                                         }                                        
@@ -649,7 +658,25 @@ $(function () {
                                     label: {
                                         text: "Meals included?" 
                                     }
-                                }                               
+                                }
+                                
+                                // {
+                                //     caption: 'is Meals?',
+                                //     editorType: 'dxCheckBox',
+                                //     dataField: 'isMeals',
+                                //     editorOptions: {
+                                //         readOnly: isReadOnlyStatus(appointmentData.requestStatus),
+                                //         // value: e.appointmentData.isMeals !== undefined ? e.appointmentData.isMeals : false,
+                                //         value: e.appointmentData.isMeals != null ? Boolean(e.appointmentData.isMeals) : false,  
+                                //         onValueChanged: function(args) {
+                                //             e.appointmentData.isMeals = args.value ? 1 : 0;
+                                //             form.updateData("isMeals", e.appointmentData.isMeals); 
+                                //         }                                        
+                                //     }, 
+                                //     label: {
+                                //         text: "Meals included?" 
+                                //     }
+                                // }                               
                             ]
                         },
                         {
@@ -968,29 +995,6 @@ $(function () {
                         loadData();
                         return;
                     }
-                    // if (bookingStatus === 3) {
-                    //     let hasInvalidGender = false;
-                
-                    //     if (firstEmployeeGender === "female") {
-                    //         // Jika gender pertama adalah female, cari employee dengan gender male
-                    //         hasInvalidGender = employees.some(employee => employee.gender === "male");
-                    //     } else if (firstEmployeeGender === "male") {
-                    //         // Jika gender pertama adalah male, cari employee dengan gender female
-                    //         hasInvalidGender = employees.some(employee => employee.gender === "female");
-                    //     }
-                
-                    //     if (hasInvalidGender) {
-                    //         // Batalkan submit jika ditemukan gender yang tidak valid
-                    //         DevExpress.ui.notify(
-                    //             "Tidak diperbolehkan menambahkan employee dengan gender berbeda dalam satu kamar untuk status booking ini!",
-                    //             "error",
-                    //             3000
-                    //         );
-                    //         e.cancel = true; // Batalkan proses submit
-                    //         return; // Hentikan eksekusi lebih lanjut
-                    //     }
-                    // }
-                
                     let reqid = appointmentData.id;
                 
                     Swal.fire({
@@ -1043,8 +1047,7 @@ $(function () {
                                 let familyCount = safeArray(appointmentData.family).length;
                                 
                                 if (response.status == 'success') {
-                                    if (familyCount > 0 || guestCount > 0) {
-                                        
+                                    if (familyCount > 0 || guestCount > 0) {                                        
                                         sendRequest(apiurl + "/checkattachmentghm", "POST",{
                                             req_id: reqid,
                                             modelname: modelclass,
@@ -1130,8 +1133,23 @@ $(function () {
                     let familyCount = safeArray(appointmentData.family).length;
                     let employeeCount = safeArray(appointmentData.employee).length;
                     let totalNewGuests = guestCount + familyCount + employeeCount;
+                    if (totalNewGuests < 1) {
+                        DevExpress.ui.notify({
+                            type: "error",
+                            displayTime: 3000,
+                            contentTemplate: (e) => {
+                                e.append(`
+                                    <div style="white-space: pre-line;">
+                                    List guest is required!\n
+                                    Daftar tamu harus di isi!\n
+                                    </div>
+                                `);
+                            }
+                        });
+                        e.cancel = true;
+                        return;
+                    } 
                     let totalGuestsAfterUpdating = (dailyGuestCount || 0) + totalNewGuests;
-                
                     if (totalGuestsAfterUpdating > roomCapacity) {
                         Swal.fire({
                             title: '<strong>UPS...</strong>',

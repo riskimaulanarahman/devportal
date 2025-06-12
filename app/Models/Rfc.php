@@ -10,4 +10,6 @@ class Rfc extends Model
     use HasFactory;
     protected $table = 'archive._tbl_rfc';
     protected $guarded = ['id'];
+
+    // protected $casts = [    ];
 }

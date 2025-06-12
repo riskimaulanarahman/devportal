@@ -43,8 +43,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         {
+            caption: "Reference Number",
             dataField: 'code',
-            width: 200,
+            width: 180,
+            alignment: "left"
         },
         {
             caption: 'Action',
@@ -105,13 +107,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'countersigningParty',
             width: 180,
             alignment: "left"
-        },
-        {
-            caption: "Reference Number",
-            dataField: 'referenceNo',
-            width: 180,
-            alignment: "left"
-        },
+        },        
         {
             caption: 'BU',
             dataField: 'bu',
@@ -122,7 +118,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: 'Creator Name',
 			dataField: "user.fullname",
             width: 180,
-            alignment: "left"
+            alignment: "left",
         },
         {
             dataField: 'requestStatus',
@@ -564,49 +560,24 @@ const popupContentTemplate = function (reqid,mode,options) {
                         scrolling: {
                             mode: "virtual"
                         },
-                        columns: [
+                        columns: [                            
                             {
                                 caption: 'Code',
                                 dataField: 'code',
-                                allowFiltering: false,
-                                allowHeaderFiltering: false,
-                                editorOptions: { 
-                                    readOnly: true
-                                }
-                            },
-                            {
-                                caption: 'Reference Number',
-                                dataField: 'referenceNo',
-                                validationRules: [{ type: "required" }],
                             },
                             {
                                 caption: 'Creator',
-                                dataField: 'employee_id',
-                                lookup: {
-                                    dataSource: listOption('/list-employeeall','id','fullname'),  
-                                    valueExpr: 'id',
-                                    displayExpr: function(item) {
-                                        return item ? item.fullname + " (" + item.sapid + " | " + item.levels + ")" : "";
-                                    }
+                                dataField: 'user.fullname',                                
+                                editorOptions: { 
+                                    readOnly: true 
                                 },
-                                // editorOptions: { 
-                                //     readOnly: (mode == 'approval') ? true : false
-                                // },
-                                // validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Business Group',
-                                dataField: 'businessGroup',
-                                lookup: {
-                                    dataSource: [{businessGroup:'KF'},{businessGroup:'RF'}],
-                                    valueExpr: 'businessGroup',
-                                    displayExpr: 'businessGroup',
-                                },
+                                dataField: 'businessGroup',                                
                                 editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                    // readOnly: true
+                                    readOnly:  true,
                                 },
-                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'BU',
@@ -657,15 +628,21 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Form Group',
                                 dataField: 'formGroup',
                                 lookup: {
-                                    dataSource: [{formGroup:'Legal Operational SiteIHM'},
-                                        {formGroup:'Legal Operational Sites'},
-                                        {formGroup:'Legal Operational Sitezen'}],
+                                    dataSource: [
+                                        {formGroup:'Capital Expenditure'},
+                                        {formGroup:'CCM Request'},
+                                        {formGroup:'Contract Review and Approval'},
+                                        {formGroup:'Bank Accounts'},
+                                        {formGroup:'Change of Company Particulars'},
+                                        {formGroup:'Legal Operational Site'},
+                                        {formGroup:'Other'},
+                                    ],
                                     valueExpr: 'formGroup',
                                     displayExpr: 'formGroup',
                                 },
                                 // editorOptions: { 
                                     // readOnly: (mode == 'approval') ? true : false
-                                    // readOnly: true
+                                    readOnly: true
                                 // },
                                 // validationRules: [{ type: "required" }]
                             },
@@ -690,7 +667,22 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     valueExpr: 'requestType',
                                     displayExpr: 'requestType',
                                 },
-                            }
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                caption: 'Department Head',
+                                dataField: 'depthead_id',
+                                lookup: {
+                                    dataSource: listOption('/list-employee','id','fullname'),  
+                                    valueExpr: 'id',
+                                    displayExpr: function(item) {
+                                        return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                    }
+                                },
+                                editorOptions: { 
+                                    readOnly:  true,
+                                },
+                            },
                             
                         ],
                         export: {
@@ -730,7 +722,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index>0 && e.column.index<7)) {
+                            if ( e.rowType == "data" && (e.column.index==1 || e.column.index>2 && e.column.index<8)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -800,12 +792,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Business Type',
                                 dataField: 'businessType',
-                                editorType: 'dxTextArea',
                                 editorOptions: { 
-                                    height: 50,
-                                    // readOnly: (mode == 'approval') ? true : false
+                                    readOnly:  true
                                 },
-                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Title Of Document',
@@ -851,18 +840,22 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'SK Number',
                                 dataField: 'skNumber',
                                 editorType: 'dxTextArea',
-                                editorOptions: { 
-                                    height: 50,
-                                    // readOnly: (mode == 'approval') ? true : false
-                                }
-                                // validationRules: [{ type: "required" }]
-                            },                            
+                                height: 50,
+                                format: null
+                            },
+                            {
+                                caption: 'Contract Number',
+                                dataField: 'contractNumber',
+                                editorType: 'dxTextArea',
+                                height: 50,
+                                format: null
+                            },
                             {
                                 caption: 'RFC Number',
                                 dataField: 'rfcNumber',
                                 lookup: {
                                     dataSource: listOption('/list-rfc','id','RFCNo'),  
-                                    valueExpr: 'RFCNo',
+                                    valueExpr: 'id',
                                     displayExpr: function(item) {
                                         return item ? item.RFCNo + "(" + item.RateType + ")" : "";
                                     }
@@ -897,6 +890,65 @@ const popupContentTemplate = function (reqid,mode,options) {
                             });
                         },
                         onEditorPreparing: function (e) {
+                            if ((e.dataField == "rfcNumber" ) && e.parentType == "dataRow") {
+                                e.editorName = "dxDropDownBox";                
+                                e.editorOptions.dropDownOptions = {                
+                                    height: 500,
+                                    width: 600
+                                };
+                                e.editorOptions.contentTemplate = function (args, container) {
+                    
+                                    var value = args.component.option("value"),
+                                        $dataGrid = $("<div>").dxDataGrid({
+                                            width: '100%',
+                                            dataSource: args.component.option("dataSource"),
+                                            keyExpr: "id",
+                                            columns: ["RFCNo","RateType","SKNo"],
+                                            hoverStateEnabled: true,
+                                            paging: { enabled: true, pageSize: 10 },
+                                            filterRow: { visible: true },
+                                            height: '90%',
+                                            showRowLines: true,
+                                            showBorders: true,
+                                            selection: { mode: "single" },
+                                            selectedRowKeys: [value],
+                                            focusedRowEnabled: true,
+                                            focusedRowKey: args.component.option("value"),
+                                            searchPanel: {
+                                                visible: true,
+                                                width: 265,
+                                                placeholder: "Search..."
+                                            },
+                                            onSelectionChanged: function (selectedItems) {
+                                                const keys = selectedItems.selectedRowKeys;
+                                                console.log(keys)
+                                                const hasSelection = keys.length;
+                                                args.component.option('value', hasSelection ? keys[0] : null);
+                                                if(hasSelection !== 0) {
+                                                    args.component.close();
+                                                }
+                                            }
+                                        });
+                    
+                                    var dataGrid = $dataGrid.dxDataGrid("instance");
+                    
+                                    args.component.on("valueChanged", function (args) {
+                                        var value = args.value;
+                    
+                                        dataGrid.selectRows(value, false);
+                                    });
+                                    container.append($dataGrid);
+                                    $("<div>").dxButton({
+                                        text: "Close",
+                    
+                                        onClick: function (ev) {
+                                            args.component.close();
+                                        }
+                                    }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+                                    return container;
+                    
+                                };
+                            }
                         },
                         onCellPrepared: function (e) {
                             if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<3)) {

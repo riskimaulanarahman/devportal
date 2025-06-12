@@ -129,6 +129,7 @@ trait ApproverTrait {
             'ActiveDirectory',
             'Mmf',
             'MaterialReq',
+            'Legal',
         ];
 
         if (in_array($moduleName, $exceptdel)) {
