@@ -22,6 +22,7 @@ use App\Models\Submission\Ticket;
 use App\Models\Submission\Jdi;
 use App\Models\Submission\Legal;
 use App\Models\Submission\MMF\Mmf;
+use App\Http\Controllers\Submission\JdiRequestController;
 use App\Http\Controllers\Submission\LegalRequestController;
 use App\Http\Controllers\Submission\IT\ADRequestController;
 use App\Http\Controllers\Submission\Ecatalog\MaterialRequestController;
