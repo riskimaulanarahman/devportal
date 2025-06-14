@@ -955,7 +955,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         validationRules2.length = 0;
                                     }
                                 },
-                                validationRules: validationRules2,
+                                // validationRules: validationRules2,
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'Alasan mengurangi pemborosan',
@@ -963,7 +964,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
                                 },
-                                validationRules: validationRules2,
+                                // validationRules: validationRules2,
+                                validationRules: [{ type: "required" }]
                             },
                             {
                                 caption: 'is Saving ?',
