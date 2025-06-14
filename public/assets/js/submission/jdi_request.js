@@ -310,7 +310,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 
     popupid = reqid;
 
-    console.log(mode)
+    // console.log(mode)
 
     const scrollView = $('<div />');
 
@@ -446,6 +446,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         'Productivity',
                                         'Quality',
                                         'Safety',
+                                        'Visual Control and 6S',
+                                        'Inventory turns',
                                     ],
                                     searchEnabled: false
                                 },
