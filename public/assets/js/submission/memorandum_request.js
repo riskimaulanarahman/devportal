@@ -645,7 +645,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             id: reqid,
                                             approveddoc
                                         } = options.data;
-                                        // let masterid = options.data.req_id
+                                        let user_id = options.data?.user_id ?? null;
                                         
                                         // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
                                         if (approveddoc != null) return;
@@ -654,7 +654,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
                                             .on('dxclick', function(evt) {
                                                 evt.stopPropagation();
-                                                // console.log(reqid);
+                                                console.log("Data:", options.data);
+                                                console.log("reqid:",reqid);
+                                                console.log("user_id", user_id);
+                                                console.log("User Data:", options.data.user);
+                                                console.log("User ID (from user object):", options.data.user?.id);
+
                                                 btnreqsubmit(reqid);  // Panggil fungsi submit
                                             })
                                             .appendTo(container);
@@ -674,19 +679,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                         confirmButtonText: 'Yes, cancel it'
                                                     }).then((result) => {
                                                         if (result.isConfirmed) {
-                                                            showLoadingScreen();
-                                                            
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                                requestStatus: 1,
                                                                 action: 'submission',
-                                                                approvalAction: 0
-                                                            }).then(function(response) {
-                                                                hideLoadingScreen();
-                                                                if (response.status != 'error') {
-                                                                    dataGrid.refresh();
+                                                                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                                                approvalType: valApprovalType,
+                                                                remarks: valremarks
+                                                            }).then(function (response) {
+                                                                if (response.status == 'success') {
+                                                                    loadData();
                                                                     Swal.fire({
                                                                         icon: 'success',
                                                                         title: 'Saved',
-                                                                        text: 'The submission has been cancelled.',
+                                                                        text: 'The submission has been submitted.',
                                                                     });
                                                                 }
                                                             });

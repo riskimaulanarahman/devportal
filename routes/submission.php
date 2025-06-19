@@ -123,6 +123,7 @@ Route::group(['prefix' => 'api'], function () {
     
     //memorhistorycal
     // Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
+    Route::get('memorandumhis/{reqid}/',[App\Http\Controllers\Submission\MemorandumController::class, 'getList']); //get list contract history by req_id of module
     Route::get('memorandumhis/{reqid}/{modulename}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
     Route::get('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
     // Route::put('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'update']); //get list contract history by req_id of module

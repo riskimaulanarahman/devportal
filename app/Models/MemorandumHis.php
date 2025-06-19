@@ -1,40 +1,20 @@
 <?php
 
-namespace App\Models\Submission;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ApproverListReq;
-use App\Models\ApproverListHistory;
-use App\Models\Code;
-use App\Models\User;
-use App\Models\Employee;
 
 class MemorandumHis extends Model
 {
     use HasFactory;
 
     protected $table = 'request_memorandum_his';
-
+    
     protected $guarded = ['id'];
-
-    protected $fillable = [
-        'req_id',
-        'sequence',
-        'module_id',
-        'startContract',
-        'endContract',        
-        'remarks',
-        'code_id',
-        'superiorName',
-        'requestStatus',
-        'sysid'
-    ];
-    protected $casts = [      
-        'code_id' => 'integer',
-        'sysid' => 'string',
-        'req_id' => 'integer',
-    ];
+    
+    public $timestamps = false;
+    
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
