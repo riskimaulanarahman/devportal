@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Submission;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
-use App\Models\MemorandumHis;
+use App\Models\Submission\MemorandumHis;
 use App\Models\Useraccess;
 use App\Models\MemorandumReq;
 use App\Models\Submission\MemorandumReq as SubmissionMemorandumReq;
@@ -24,8 +24,8 @@ class ContractHistoryController extends Controller
     public function __construct()
     {
         $this->model = new MemorandumHis();
-        $this->modulename = 'Memorandum';
-        $this->codename = 'Memorandum';
+        $this->modulename = 'MemorandumHis';
+        $this->codename = 'MemorandumHis';
         $this->module = new Module();
         $this->user = new User();
     }
@@ -88,43 +88,25 @@ class ContractHistoryController extends Controller
         }
     }
 
-    public function storex(Request $request)
-    {
-        try {
-
-            $user_id = auth()->id();
-            $requestData = $request->all();
-            $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $requestData['code_id'] = $this->generateCode($this->modulename);
-            $requestData['user_id'] = $user_id;
-            // $requestData['approvalAction'] = 1;
-            $this->model->create($requestData);
-
-            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
-
-        } catch (\Exception $e) {
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-        }
-    }
-
     public function store(Request $request)
     {
         try {            
             $code_id = $this->generateCode($this->modulename);
-            $user_id = auth()->id();
+            // $user_id = auth()->id();
             $requestData = $request->all();
-            $getsys = DB::table('memoExp')
+            $getme = DB::table('memoExp')
                 ->where('id', $requestData['req_id'])
-                ->value('sys_id');
-            $getreqid = DB::table('request_memorandum')
+                ->select('sys_id', 'bu')
+                ->first(); // Gunakan first() agar bisa mengambil lebih dari satu kolom
+            $requestData['req_id'] = $requestData['req_id'] ?? DB::table('request_memorandum')
             ->orderBy('id', 'desc')
             ->value('id');
+            $requestData['sysid'] = $getme->sys_id ?? null; // Beri nilai default jika null
+            $requestData['bu'] = $getme->bu ?? null;
             $requestData['module_id'] = $this->getModuleId($request->modulename);
-            $requestData['user_id'] = $user_id;
-            $requestData['sysid'] = $getsys;
-            $requestData['req_id'] = $getreqid;
+            $requestData['user_id'] = $this->getAuth()->id;
             $requestData['requestStatus'] = 0;
+            $requestData['code_id'] = $code_id;
             $this->model->create($requestData);
             
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
@@ -136,47 +118,71 @@ class ContractHistoryController extends Controller
 
     public function show($id)
     {
-        //
+        try {
+            $data = $this->model
+                ->select('request_memorandum_his.*', 'codes.code')                
+                ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
+                ->where('request_memorandum_his.id', $id)
+                ->with(['user'])
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Data tidak ditemukan untuk ID: ' . $id
+                ]);
+            }
+
+            if ($data->code_id == null) {
+                $data->code_id = $this->generateCode($this->modulename);
+                $data->save();
+            }
+
+            return response()->json([
+                'status' => 'show',
+                'message' => $this->getMessage()['show'],
+                'data' => $data
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+        }
     }
+
 
     public function getList($id, $modulename)
     {
         try {
             $user_id = $this->getAuth()->id;
-            $module = $this->module->select('id', 'module')->where('module', $modulename)->first();
-            
-            if ($module) {
-                $data = $this->model->selectRaw("
+            $module = $this->module->select('id', 'module')->where('module', $modulename)->first();      
+            $data = $this->model->selectRaw("
                     request_memorandum_his.*, 
                     codes.code,
-                    CASE WHEN request_memorandum_his.user_id = ? THEN 1 ELSE 0 END AS isMine,
-                    (SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END 
-                    FROM tbl_approverListReq l
-                    LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                    WHERE l.req_id = request_memorandum_his.id 
-                    AND l.module_id = ? 
-                    AND request_memorandum_his.requestStatus = '1'
-                    ORDER BY a.sequence) AS isPendingOnMe
+                    CAST(CASE WHEN request_memorandum_his.user_id = ? THEN 1 ELSE 0 END AS INT) AS isMine,
+                    COALESCE((
+                        SELECT TOP 1 CAST(CASE WHEN a.user_id = ? THEN 1 ELSE 0 END AS INT)
+                        FROM tbl_approverListReq l
+                        LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                        WHERE l.req_id = request_memorandum_his.id 
+                        AND l.module_id = ? 
+                        AND request_memorandum_his.requestStatus = '1'
+                        ORDER BY a.sequence
+                    ), 0) AS isPendingOnMe
                 ", [$user_id, $user_id, $module->id]) 
-                
                 ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
                 ->with(['user', 'approverlist'])
                 ->where('req_id', $id)
                 ->orderBy('sequence', 'DESC')
                 ->get();
-
+                // dd($data);
                 return response()->json([
                     "status" => "show", 
                     "message" => $this->getMessage()['show'], 
                     "data" => $data
                 ]);
-            } else {
-                return response()->json([
-                    "status" => "show", 
-                    "message" => $this->getMessage()['errornotfound']
-                ]);
-            }
-
         } catch (\Exception $e) {
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }

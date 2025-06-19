@@ -40,15 +40,65 @@ class MemorandumController extends Controller
         $this->module = new Module();
         $this->user = new User();
     }
+    // public function index()
+    // {
+    //     $data = DB::table('memoExp')->select('*')->get(); 
+    //         return response()->json([
+    //             'status' => "show",
+    //             'message' => $this->getMessage()['show'],
+    //             'data' => $data
+    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
+    // }
     public function index()
     {
-        $data = DB::table('memoExp')->select('*')->get();   
-        // dd($data);     
+        try {
+            $user_id = $this->getAuth()->id;
+            $module_id = $this->getModuleId($this->modulename);
+
+            // Pastikan `memoExp` berhubungan dengan `request_memorandum` melalui `employee_id`
+            $dataquery = DB::table('memoExp AS m')
+                ->leftJoin('request_memorandum AS r', 'm.id', '=', 'r.employee_id') // Hubungkan employee_id dengan memoExp.id
+                ->leftJoin('users AS u', 'r.user_id', '=', 'u.id'); // Hubungkan user_id dengan users.id
+
+            $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
+                        FROM tbl_approverListReq l
+                        LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                        LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
+                        WHERE l.ApprovalAction = '1' 
+                        AND l.req_id = r.id 
+                        AND l.module_id = '".$module_id."' 
+                        ORDER BY a.sequence)";
+
+            // Ambil `user_id` dari `request_memorandum`, bukan `memoExp`
+            $data = $dataquery
+                ->selectRaw("
+                    m.*, 
+                    r.user_id, 
+                    u.fullname, -- Ambil nama user untuk ditampilkan jika perlu
+                    CASE WHEN r.user_id = '".$user_id."' THEN 1 ELSE 0 END AS isMine, 
+                    ".$subquery." AS isPendingOnMe,
+                    r.requestStatus
+                ")
+                // ->with(['user','approverlist'])                
+                ->get();
+
+            if ($data->isEmpty()) {
+                return response()->json([
+                    'status' => "empty",
+                    'message' => "Data tidak ditemukan, silakan tambahkan data baru",
+                    'data' => []
+                ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
+            }
+            // dd($data);
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
                 'data' => $data
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);    
+
+        } catch (\Exception $e) {
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
     }
 
     public function show($id)
@@ -91,19 +141,21 @@ class MemorandumController extends Controller
                     AND l.module_id = '".$module_id."' 
                     AND request_memorandum.requestStatus = '1'
                     ORDER BY a.sequence)";
+
                     $data = $this->model->selectRaw("
-                            request_memorandum.*, codes.code,
+                            request_memorandum.*, 
+                            codes.code,
                             CASE WHEN request_memorandum.user_id='".$user_id."' THEN 1 ELSE 0 END AS isMine,
                             ".$subquery." AS isPendingOnMe
                         ")
+                        ->with(['user', 'approverlist', 'request_memorandum_his'])
                         ->leftJoin('codes', 'request_memorandum.code_id', 'codes.id')
-                        ->with(['user', 'approverlist'])
                         ->where('request_memorandum.id', $data->id)
                         ->first();
                 }
             }
             $memoExpExtraData = DB::table('memoExp')->where('sys_id', $data->sysid)->first();
-    
+
             if ($memoExpExtraData) {
                 foreach ($memoExpExtraData as $key => $value) {
                     if (!isset($data->$key)) { // Pastikan hanya menambahkan data yang belum ada
@@ -111,7 +163,8 @@ class MemorandumController extends Controller
                     }
                 }
             }
-    
+            // dd($data);
+
             return response()->json([
                 'status' => "show",
                 'message' => "Data ditemukan atau baru dibuat",
@@ -122,19 +175,24 @@ class MemorandumController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-    public function getList($modulename)
+
+    public function getList($id)
     {
-        $data = DB::table('request_memorandum_his')
-            ->join('request_memorandum', 'request_memorandum_his.req_id', '=', 'request_memorandum.id')
-            ->select('request_memorandum_his.*', 'request_memorandum.id as reqid') // Ambil reqid dari master table
-            ->get(); 
+        $data = $this->model->select('request_memorandum_his.*','codes.code')
+            ->leftJoin('codes','request_memorandum_his.code_id','codes.id')
+            ->where('request_memorandum_his.id',$id)
+            ->with(['user'])
+            ->first();
 
         return response()->json([
             'status' => "show",
             'message' => $this->getMessage()['show'],
             'data' => $data
-        ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
+        ])->setEncodingOptions(JSON_NUMERIC_CHECK);
     }
+
+
+
     // {
     //     try {
     //         $user_id = $this->getAuth()->id;

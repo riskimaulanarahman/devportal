@@ -167,18 +167,7 @@ class LegalRequestController extends Controller
             $requestData['requestStatus'] = 0;
             $requestData['businessGroup'] = 'KF';
             $requestData['businessType'] = 'Fiber';
-            $requestData['depthead_id'] = $this->getDeptheadbyIDemployee($this->getEmployeeID()->id);
-            // $requestData['sknumber'] = 0;
-
-            // Buat data baru pada tabel utama
             $newData = $this->model->create($requestData);
-
-            // Simpan id dari data baru
-            $req_id = $newData->id;
-
-            $this->createApprManager($requestData['depthead_id'], $this->modulename, $req_id);
-
-            // $this->createApproverList($this->modulename, $req_id);
             DB::commit();
             return response()->json([
                 "status" => "success",
@@ -219,8 +208,7 @@ class LegalRequestController extends Controller
     public function update(Request $request, $id)
     {
         try {
-
-            // Mengambil semua data dari request
+            
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
 

@@ -259,7 +259,7 @@ class ListController extends Controller
     }
 
     public function ListContract() {
-        return MemorandumHis::select('cs')->orderBy('cs','asc')->get();
+        return MemorandumHis::select('req_id', 'sequence', 'startContract', 'endContract')->orderBy('req_id','asc')->get();
     }
 
     public function listRfc() { // not have account/loginName

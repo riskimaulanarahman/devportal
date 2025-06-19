@@ -49,13 +49,13 @@ class Memorandum extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function request_memorandum_his()
     {
-        return $this->hasMany(MemorandumHis::class, 'sysid', 'sysid');
-    }
+        return $this->hasMany(MemorandumHis::class, 'req_id', 'id');
+    }   
     
     public function employee()
     {

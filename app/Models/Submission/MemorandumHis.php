@@ -1,9 +1,16 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Submission;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
+use App\Models\User;
+use App\Models\Code;
+use App\Models\ApproverListReq;
+use App\Models\Submission\Memorandum;
+use App\Models\Employee;
+use App\Models\ApproverListHistory;
 
 class MemorandumHis extends Model
 {
@@ -12,8 +19,31 @@ class MemorandumHis extends Model
     protected $table = 'request_memorandum_his';
     
     protected $guarded = ['id'];
-    
-    public $timestamps = false;
+    protected $fillable = [
+        'code_id',
+        'requestStatus',        
+        'user_id',
+        'bu',
+        'startContract',
+        'remarks',
+        'endContract',
+        'superiorName',
+        'module_id',
+        'sequence',
+        'req_id',
+        'sysid'
+        ];
+    protected $casts = [
+        'requestStatus' => 'integer',
+        'user_id' => 'integer',
+        'isMine' => 'integer',
+        'code_id' => 'integer',
+        'req_id' => 'integer',
+        'module_id' => 'integer',
+        'sequence' => 'integer',
+        'isPendingOnMe' => 'integer'
+    ];
+    public $timestamps = true;
     
     public static function getFillableColumns()
     {
@@ -33,7 +63,7 @@ class MemorandumHis extends Model
 
     public function Memorandum()
     {
-        return $this->belongsTo('App\Models\Submission\Memorandum', 'sys_id', 'sys_id');
+        return $this->belongsTo(Memorandum::class, 'req_id');
     }
     public function approverlist()
     {

@@ -746,7 +746,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Additional Approver',
                                 dataField: 'additional_approver',
                                 lookup: {
-                                    dataSource: listOption('/list-employee','id','fullname'),  
+                                    dataSource: listOption('/list-employee','id','fullname'),
                                     valueExpr: 'id',
                                     displayExpr: function(item) {
                                         return item ? item.fullname + " (" + item.sapid + ")" : "";
