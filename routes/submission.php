@@ -53,6 +53,7 @@ Route::group(['prefix' => 'api'], function () {
         
         //memor
         'memorandum_request' => App\Http\Controllers\Submission\MemorandumController::class,
+        // 'request_memorandumhis' => App\Http\Controllers\Submission\ContractHistoryController::class,
         // 'memo_request' => App\Http\Controllers\Submission\MemoController::class,
 
         //
@@ -122,11 +123,10 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('list-employeesamedept',[App\Http\Controllers\ListController::class, 'listEmployeeSameDept']); //get list employee same department
     
     //memorhistorycal
-    // Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
+    Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
     Route::get('memorandumhis/{reqid}/{modulename}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
     Route::get('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
-    // Route::put('memorandumhis/{id}',[App\Http\Controllers\ContractHistoryController::class, 'update']); //get list contract history by req_id of module
+    Route::get('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'show']); //get list contract history by req_id of module
     Route::post('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'store']); //get list contract history by req_id of module
-    Route::delete('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'destroy']); //get list contract history by req_id of module
-    Route::get('testing',[App\Http\Controllers\Submission\MemorandumController::class, 'testing']); //get list contract history by req_id of module
+    Route::delete('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'destroy']); 
 });

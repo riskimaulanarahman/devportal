@@ -997,6 +997,28 @@ $(function () {
                     }
                     let reqid = appointmentData.id;
                 
+                    // if (bookingStatus === 3) {
+                    //     let hasInvalidGender = false;
+                
+                    //     if (firstEmployeeGender === "female") {
+                    //         // Jika gender pertama adalah female, cari employee dengan gender male
+                    //         hasInvalidGender = employees.some(employee => employee.gender === "male");
+                    //     } else if (firstEmployeeGender === "male") {
+                    //         // Jika gender pertama adalah male, cari employee dengan gender female
+                    //         hasInvalidGender = employees.some(employee => employee.gender === "female");
+                    //     }
+                
+                    //     if (hasInvalidGender) {
+                    //         // Batalkan submit jika ditemukan gender yang tidak valid
+                    //         DevExpress.ui.notify(
+                    //             "Tidak diperbolehkan menambahkan employee dengan gender berbeda dalam satu kamar untuk status booking ini!",
+                    //             "error",
+                    //             3000
+                    //         );
+                    //         e.cancel = true; // Batalkan proses submit
+                    //         return; // Hentikan eksekusi lebih lanjut
+                    //     }
+                    // }
                     Swal.fire({
                         title: 'What do you want to do?',
                         text: 'Choose an option for this booking',
@@ -1092,9 +1114,6 @@ $(function () {
                                             }
                                         });
                                     }
-
-                                    
-                                    
                                 }
                             });
                         }

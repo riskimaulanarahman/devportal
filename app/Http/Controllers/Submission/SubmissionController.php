@@ -35,7 +35,7 @@ class SubmissionController extends Controller
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
             'MemorandumHis' => "App\Models\Submission\MemorandumHis",
-            'Legal' => "App\Models\Submission\Legal",
+            // 'Legal' => "App\Models\Submission\Legal",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -108,6 +108,9 @@ class SubmissionController extends Controller
                 'Ccm' => "App\Models\Submission\Financial",
                 'Capex' => "App\Models\Submission\Financial",
                 'MemorandumHis' => "App\Models\Submission\MemorandumHis",
+                // 'Memorandum' => "App\Models\Submission\MemorandumHis",
+                // 'Memorandum' => "App\Models\Submission\Memorandum",
+                'Legal' => "App\Models\Submission\Legal",
             ];
 
             $baseNamespace = "App\Models\Submission";
@@ -125,8 +128,10 @@ class SubmissionController extends Controller
         try {
 
             $getSubmissionData = DB::table($tableName)->where('id', $id)->first();
-            $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator
-
+            $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator  
+            // dd($getCreator);          
+            // dd($tableName, $id, $getSubmissionData);
+            
             $nullColumns = [];
 
             foreach ($columns as $column) {
@@ -238,7 +243,8 @@ class SubmissionController extends Controller
                     'Mmf',
                     'MaterialReq',
                     'Hris',
-                    'Ghm'
+                    'Ghm',
+                    'Memorandum'
                 ];
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {

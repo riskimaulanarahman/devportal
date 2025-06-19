@@ -9,20 +9,18 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
-aPermissions = {}; // Deklarasikan array untuk menyimpan hasil
+aPermissions = {};
 
 async function fetchAndStorePermissions() {
     try {
         const permissions = await checkUserAccess(modelclass, usersid);
-        aPermissions = permissions; // Simpan hasil langsung ke objek
+        aPermissions = permissions; 
     } catch (error) {
         console.error('Error fetching user permissions:', error);
-        // Tambahkan objek default ke dalam array jika terjadi kesalahan
         aPermissions = null;
     }
 }
 
-// Panggil fungsi untuk fetch data dan masukkan ke dalam array
 fetchAndStorePermissions();
 
 var dataGrid = $("#gridContainer").dxDataGrid({
@@ -64,25 +62,19 @@ var dataGrid = $("#gridContainer").dxDataGrid({
 
                 var isMine = options.data.isMine;
                 var isPendingOnMe = options.data.isPendingOnMe;
-                var isAssignment = options.data.isAssignment;
-                var reqid = options.data.id;                
+                var reqid = options.data.id;
                 var reqstatus = options.data.requestStatus;
                 var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
                 var arrColor = [
                     "btn-secondary",
                     (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
                     "btn-warning",
-                    ((isAssignment == 1 && reqstatus == 3)) ? "btn-primary" : "btn-success",
+                    "btn-success",
                     "btn-danger",
-                ]; 
+                ];
 
-                var viewIcon = (mode == 'approval' && reqstatus == 1) 
-                ? "fa-check" 
-                : (( isAssignment == 1 && reqstatus == 3) 
-                    ? "fa-pen" 
-                    : "fa-search");
+                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
     
-                // console.log(options.data.id);
                 $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
                     evt.stopPropagation();
                 
@@ -95,43 +87,22 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
                     $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
-                        Swal.fire({
-                            title: 'Are you sure?',
-                            text: "Are you sure you want to cancel this submission?",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#d33',
-                            cancelButtonColor: '#3085d6',
-                            confirmButtonText: 'Yes, cancel it'
-                          }).then((result) => {
-                            if (result.isConfirmed) {
-                                showLoadingScreen();
-                                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                    requestStatus:0,
-                                    action:'submission',
-                                    approvalAction: 0
-                                }).then(function(response){
-                                    if(response.status != 'error') {
-                                        hideLoadingScreen();
-                                        dataGrid.refresh();
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: 'Saved',
-                                            text: 'The submission has been cancelled.',
-                                        });
-                                    } else {
-                                        hideLoadingScreen();
-                                    }
-                                });
-                                } else {
-                                    hideLoadingScreen();
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Cancelled',
-                                        text: 'The submission cancellation has been cancelled.'
-                                    });
+                            
+                        var result = confirm('Are you sure you want to cancel this submission ?');
+
+                        if (result) {
+                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                requestStatus:0,
+                                action:'submission',
+                                approvalAction: 0
+                            }).then(function(response){
+                                if(response.status != 'error') {
+                                    dataGrid.refresh();
                                 }
-                          });
+                            });
+                        } else {
+                            alert('Cancelled.');
+                        }
     
                     }).appendTo(container); 
                 }
@@ -307,11 +278,13 @@ const popupContentTemplate = function (reqid,mode,options) {
     var validationRules = [];
     var validationRules2 = [];
     popupid = reqid;
+    // popupid = id;
 
-    console.log(mode)
-    console.log(isMine)
-    console.log(reqid)
-    console.log(isPendingOnMe)
+    console.log('modepop', mode)
+    console.log('isMinepop', isMine)
+    console.log('reqidpop', reqid)
+    console.log('popupid', popupid)
+    console.log('isPendingOnMepop', isPendingOnMe)
 
     const scrollView = $('<div />');
 
@@ -645,7 +618,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             id: reqid,
                                             approveddoc
                                         } = options.data;
-                                        // let masterid = options.data.req_id
+                                        let user_id = options.data?.user_id ?? null;
                                         
                                         // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
                                         if (approveddoc != null) return;
@@ -654,7 +627,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
                                             .on('dxclick', function(evt) {
                                                 evt.stopPropagation();
-                                                // console.log(reqid);
+                                                console.log("Dataact:", options.data);
+                                                console.log("reqidact:",reqid);
+                                                console.log("user_idact", user_id);
+                                                // console.log("User Data:", options.data.user);
+                                                // console.log("User ID (from user object):", options.data.user?.id);
+
                                                 btnreqsubmit(reqid);  // Panggil fungsi submit
                                             })
                                             .appendTo(container);
@@ -674,19 +652,19 @@ const popupContentTemplate = function (reqid,mode,options) {
                                                         confirmButtonText: 'Yes, cancel it'
                                                     }).then((result) => {
                                                         if (result.isConfirmed) {
-                                                            showLoadingScreen();
-                                                            
                                                             sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                                                requestStatus: 1,
                                                                 action: 'submission',
-                                                                approvalAction: 0
-                                                            }).then(function(response) {
-                                                                hideLoadingScreen();
-                                                                if (response.status != 'error') {
-                                                                    dataGrid.refresh();
+                                                                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                                                                approvalType: valApprovalType,
+                                                                remarks: valremarks
+                                                            }).then(function (response) {
+                                                                if (response.status == 'success') {
+                                                                    loadData();
                                                                     Swal.fire({
                                                                         icon: 'success',
                                                                         title: 'Saved',
-                                                                        text: 'The submission has been cancelled.',
+                                                                        text: 'The submission has been submitted.',
                                                                     });
                                                                 }
                                                             });
@@ -1020,7 +998,7 @@ const popupContentTemplate = function (reqid,mode,options) {
 };
 
 function btnreqsubmit(reqid,mode) {
-// console.log(reqid);
+console.log('reqidbtn', reqid);
     if (mode == 'add' || mode == 'edit') {
         var dataGridAssignment = $("#formdata").dxDataGrid("instance");
         var dataSource = dataGridAssignment.getDataSource();
