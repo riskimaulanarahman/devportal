@@ -91,6 +91,7 @@ trait ApproverTrait {
 
     public function createApprover($moduleName, $req_id, $company, $cat_id)
     {
+        // dd($company);
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
 
         // Periksa apakah modul ada dan bukan 'Mom'
