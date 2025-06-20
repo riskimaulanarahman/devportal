@@ -248,19 +248,19 @@ const updateVisibleById = (itemId, visible) => {
     });
   };
 
-var dataSector = [
+var dataSektor = [
         // { bu: 'IHM', sector: 'NKL' },
-        { bu: 'IHM', sector: 'TRN' },
-        { bu: 'IHM', sector: 'SPU' },
-        { bu: 'IHM', sector: 'SNI' },
-        { bu: 'IHM', sector: 'HO' },
-        { bu: 'AHL', sector: 'SBG' },
-        { bu: 'AHL', sector: 'SBS' },
-        { bu: 'AHL', sector: 'SSP' },
-        { bu: 'AHL', sector: 'NURSERY' },
-        { bu: 'AHL', sector: 'HO' },
-        { bu: 'NKL', sector: 'NKL' },
-        { bu: 'KPSI', sector: 'KPSI' },
+        { bu: 'IHM', sektor: 'TRN' },
+        { bu: 'IHM', sektor: 'SPU' },
+        { bu: 'IHM', sektor: 'SNI' },
+        { bu: 'IHM', sektor: 'HO' },
+        { bu: 'AHL', sektor: 'SBG' },
+        { bu: 'AHL', sektor: 'SBS' },
+        { bu: 'AHL', sektor: 'SSP' },
+        { bu: 'AHL', sektor: 'NURSERY' },
+        { bu: 'AHL', sektor: 'HO' },
+        { bu: 'NKL', sektor: 'NKL' },
+        { bu: 'KPSI', sektor: 'KPSI' },
     ];
 
 const popupContentTemplate = function (reqid,mode,options) {
@@ -416,13 +416,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 setCellValue: function (rowData, value) {
                                     rowData.bu = value;
                                     if (value === "IHM") {
-                                        rowData.sector = "HO";
+                                        rowData.sektor = "HO";
                                     } else if (value === "AHL") {
-                                        rowData.sector = "HO";
+                                        rowData.sektor = "HO";
                                     } else if (value === "NKL") {
-                                        rowData.sector = "NKL";
+                                        rowData.sektor = "NKL";
                                     } else if (value === "PTSI") {
-                                        rowData.sector = "PTSI";
+                                        rowData.sektor = "PTSI";
                                     }
                                 },
                                 editorOptions: { 
@@ -431,27 +431,27 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 validationRules: [{ type: "required" }]
                             },
-                            {
-                                caption: 'Sector',
-                                dataField: 'sector',
-                                lookup: {
-                                    dataSource: function (options) {
-                                        return {
-                                            store: {
-                                                type: 'array',
-                                                data: dataSector
-                                            },
-                                            filter: options.data ? ["bu", "=", options.data.bu] : null
-                                        };
-                                    },
-                                    valueExpr: 'sector',
-                                    displayExpr: 'sector',
-                                },
-                                editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
-                                },
-                                validationRules: [{ type: "required" }]
-                            },               
+                            // {
+                            //     caption: 'Sektor',
+                            //     dataField: 'sektor',
+                            //     lookup: {
+                            //         dataSource: function (options) {
+                            //             return {
+                            //                 store: {
+                            //                     type: 'array',
+                            //                     data: dataSektor
+                            //                 },
+                            //                 filter: options.data ? ["bu", "=", options.data.bu] : null
+                            //             };
+                            //         },
+                            //         valueExpr: 'sektor',
+                            //         displayExpr: 'sektor',
+                            //     },
+                            //     editorOptions: { 
+                            //         readOnly: (mode == 'approval') ? true : false
+                            //     },
+                            //     validationRules: [{ type: "required" }]
+                            // },               
                             {
                                 caption: 'Form Group',
                                 dataField: 'formGroup',
@@ -761,11 +761,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: 'financialAmount',
                                 caption: 'Financial Amount',
-                                editorType: 'dxTextBox',
+                                editorType: 'dxNumberBox',
                                 editorOptions: {
                                     placeholder: 'Isi jika memilih Non SK',
                                     readOnly: (mode === 'approval')
                                 },
+                                showSpinButtons: true,
+    format: {
+        type: 'currency',
+        precision: 0,
+        currency: 'IDR'  // atau pakai 'Rp' tergantung preferensi
+    },
                                 validationRules: [
                                     {
                                     type: 'custom',

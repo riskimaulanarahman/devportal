@@ -179,7 +179,7 @@ class CapexRequestController extends Controller
             }
 
             $data->update($requestData);
-
+            
             //start save history perubahan
             $fields = [
                 'form_type' => $request->form_type,

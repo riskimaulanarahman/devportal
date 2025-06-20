@@ -24,7 +24,7 @@ class Legal extends Model
         'requestStatus',
         'businessGroup',
         'bu',
-        'sector',
+        // 'sektor',
         'formGroup',
         'formType',
         'requestType',
@@ -43,7 +43,7 @@ class Legal extends Model
     ];
 
     protected $casts = [
-        // 'submitDate' => 'date',
+        // 'financialAmount' => 'string',
     ];
 
     public static function getFillableColumns()
