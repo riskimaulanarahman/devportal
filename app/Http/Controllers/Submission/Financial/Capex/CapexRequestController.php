@@ -72,7 +72,7 @@ class CapexRequestController extends Controller
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $checker) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id, $isAdmin, $checker) {
-                            if ($isAdmin || $checker == 1) {
+                            if ($isAdmin || $checker) {
                                 $query->where("request_capex.user_id", "!=", $user_id)
                                     ->whereIn("request_capex.requestStatus", [1,3,4]);
                             }
