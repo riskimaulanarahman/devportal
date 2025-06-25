@@ -24,8 +24,8 @@ class ContractHistoryController extends Controller
     public function __construct()
     {
         $this->model = new MemorandumHis();
-        $this->modulename = 'MemorandumHis';
-        $this->codename = 'MemorandumHis';
+        $this->modulename = 'Memo';
+        $this->codename = 'Memo';
         $this->module = new Module();
         $this->user = new User();
     }
@@ -91,8 +91,15 @@ class ContractHistoryController extends Controller
     public function store(Request $request)
     {
         try {            
+            $request->validate([
+                'startContract' => 'required|date',
+                'endContract' => 'required|date|after_or_equal:startContract',
+                'remarks' => 'required|string',
+                'superiorName' => 'required|string',
+                'sequence' => 'required|integer',
+            ]);
+
             $code_id = $this->generateCode($this->modulename);
-            // $user_id = auth()->id();
             $requestData = $request->all();
             $getme = DB::table('memoExp')
                 ->where('id', $requestData['req_id'])
@@ -101,6 +108,7 @@ class ContractHistoryController extends Controller
             $requestData['req_id'] = $requestData['req_id'] ?? DB::table('request_memorandum')
             ->orderBy('id', 'desc')
             ->value('id');
+            
             $requestData['sysid'] = $getme->sys_id ?? null; // Beri nilai default jika null
             $requestData['bu'] = $getme->bu ?? null;
             $requestData['module_id'] = $this->getModuleId($request->modulename);
@@ -108,6 +116,9 @@ class ContractHistoryController extends Controller
             $requestData['requestStatus'] = 0;
             $requestData['code_id'] = $code_id;
             $this->model->create($requestData);
+            DB::table('request_memorandum')
+            ->where('id', $requestData['req_id'])
+            ->update(['requestStatus' => 0]);
             
             return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
 
@@ -223,12 +234,24 @@ class ContractHistoryController extends Controller
         try {
             // Cari data berdasarkan ID
             $data = $this->model->findOrFail($id);
+            // $reqId = $data->req_id;
 
             // Simpan data untuk response sebelum dihapus
             $deletedData = $data->toArray();
 
             // Hapus data
             $data->delete();
+            // Cek apakah masih ada data his yang tersisa untuk req_id yang sama
+            // $remaining = DB::table('request_memorandum_his')
+            //     ->where('req_id', $reqId)
+            //     ->exists();
+
+            // Kalau tidak ada yang tersisa, kembalikan status ke 1 (atau value default kamu)
+            // if (!$remaining) {
+            //     DB::table('request_memorandum')
+            //         ->where('id', $reqId)
+            //         ->update(['requestStatus' => 1]); // ganti dengan default status kalau bukan 1
+            // }
 
             DB::commit();
 

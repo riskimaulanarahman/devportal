@@ -34,7 +34,7 @@ class SubmissionController extends Controller
             'MaterialReq' => "App\Models\Submission\Ecatalog",
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
-            'MemorandumHis' => "App\Models\Submission\MemorandumHis",
+            'Memorandum' => "App\Models\Submission\Memorandum",
             // 'Legal' => "App\Models\Submission\Legal",
         ];
 
@@ -107,9 +107,7 @@ class SubmissionController extends Controller
                 'Hris' => "App\Models\Submission\HRIS",
                 'Ccm' => "App\Models\Submission\Financial",
                 'Capex' => "App\Models\Submission\Financial",
-                'MemorandumHis' => "App\Models\Submission\MemorandumHis",
-                // 'Memorandum' => "App\Models\Submission\MemorandumHis",
-                // 'Memorandum' => "App\Models\Submission\Memorandum",
+                'Memorandum' => "App\Models\Submission\Memorandum",
                 'Legal' => "App\Models\Submission\Legal",
             ];
 

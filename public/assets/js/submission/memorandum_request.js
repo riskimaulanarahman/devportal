@@ -165,25 +165,25 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 return arrText[e.value];
             },
         },
-        {
-            dataField: "approveddoc",
-            caption:"Approval Doc",
-            allowFiltering: false,
-            allowSorting: false,
-            formItem: { visible: false},
-            cellTemplate: function (container, options) {
-                if ((options.value!="") && (options.value)){
-                    $("<div />").dxButton({
-                        icon: 'download',
-                        type: "success",
-                        text: "Download",
-                        onClick: function (e) {
-                            window.open(options.value, '_blank');
-                        }
-                    }).appendTo(container);
-                }
-            }
-        },
+        // {
+        //     dataField: "approveddoc",
+        //     caption:"Approval Doc",
+        //     allowFiltering: false,
+        //     allowSorting: false,
+        //     formItem: { visible: false},
+        //     cellTemplate: function (container, options) {
+        //         if ((options.value!="") && (options.value)){
+        //             $("<div />").dxButton({
+        //                 icon: 'download',
+        //                 type: "success",
+        //                 text: "Download",
+        //                 onClick: function (e) {
+        //                     window.open(options.value, '_blank');
+        //                 }
+        //             }).appendTo(container);
+        //         }
+        //     }
+        // },
     ],
     columnChooser: {
     enabled: true,
@@ -339,11 +339,11 @@ const popupContentTemplate = function (reqid,mode,options) {
           '</div>');
     }
 
-    if(options.data.requestStatus == 3 || (isPendingOnMe && isBCIDv)) {
+    // if(options.data.requestStatus == 3 || (isPendingOnMe && isBCIDv)) {
         updateVisibleById(7, true);
-    } else {
-        updateVisibleById(7, false);
-    }
+    // } else {
+    //     updateVisibleById(7, false);
+    // }
 
     scrollView.append("<hr>"),
 
@@ -389,7 +389,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "batch",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer || isBCIDv ? true : false),
+                            allowUpdating: true,
+                            // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer || isBCIDv ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -418,6 +419,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             { 
                                 dataField: "bu",
                                 caption: "BU",
+                                
                             },
                             {
                                 caption: 'SYSID',
@@ -438,6 +440,17 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 caption: 'Jabatan',
                                 dataField: 'DesignationName',
+                            },                             
+                            {
+                                 caption: 'Additional Approver',
+                                dataField: 'additional_approver',
+                                lookup: {
+                                    dataSource: listOption('/list-employee','id','fullname'),
+                                    valueExpr: 'id',
+                                    displayExpr: function(item) {
+                                        return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                    }
+                                }
                             }, 
                             {
                                 dataField: "created_at",
@@ -485,14 +498,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            if ( e.rowType == "data" && (e.column.index==1 || e.column.index>2 && e.column.index<8)) {
-                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                                    e.cellElement.css({
-                                        "backgroundColor": "#ffe6e6",
-                                        "border": "0.5px solid #f56e6e"
-                                    })
-                                }
-                            }
+                            // if ( e.rowType == "data" && (e.column.index==1 || e.column.index>2 && e.column.index<8)) {
+                            //     if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                            //         e.cellElement.css({
+                            //             "backgroundColor": "#ffe6e6",
+                            //             "border": "0.5px solid #f56e6e"
+                            //         })
+                            //     }
+                            // }
                         },
                         onDataErrorOccurred: function(e) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);     
@@ -524,7 +537,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 useIcons:true,
                                 mode:"cell",
                                 allowAdding: true,
-                                allowUpdating: false,
+                                allowUpdating: true,
                                 allowDeleting: true,
                                 },
                             scrolling: {
@@ -544,6 +557,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 {
                                     caption: 'code',
                                     dataField: 'code',
+                                    width: 220,
                                     editorOptions: { 
                                         readOnly: true,
                                     }
@@ -551,6 +565,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 {
                                 caption: "Superior Name",
                                 dataField: "superiorName",
+                                width: 148,
                                 lookup: {
                                     dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
                                     valueExpr: 'fullname',
@@ -559,8 +574,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 validationRules: [{ type: "required" }]
                                 },
                                 {
-                                    caption: 'Kontrak ke-',
+                                    caption: 'Kontrak',
                                     dataField: 'sequence',
+                                    alignment: "left",
+                                    width: 70,
                                     editorOptions: { 
                                         readOnly: false,
                                     }
@@ -569,6 +586,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     caption: 'Start Contract',
                                     dataField: 'startContract',
                                     dataType: "date",
+                                    width: 80,
                                     editorOptions: { 
                                         readOnly: false,
                                     }
@@ -577,6 +595,15 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     caption: 'End Contract',
                                     dataField: 'endContract',
                                     dataType: "date",
+                                    width: 80,
+                                    editorOptions: { 
+                                        readOnly: false,
+                                    }
+                                },
+                                {
+                                    caption: 'komentar',
+                                    dataField: 'remarks',
+                                    width: 200,
                                     editorOptions: { 
                                         readOnly: false,
                                     }
@@ -584,6 +611,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 {
                                     dataField: "approveddoc",
                                     caption:"Approval Doc",
+                                    width: 150,
                                     allowFiltering: false,
                                     allowSorting: false,
                                     formItem: { visible: false},
@@ -599,89 +627,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                             }).appendTo(container);
                                         }
                                     }
-                                },                                                              
-                                {
-                                    caption: 'komentar',
-                                    dataField: 'remarks',
-                                    editorOptions: { 
-                                        readOnly: false,
-                                    }
-                                },      
-                                {
-                                    caption: 'Action',
-                                    width: 140,
-                                    cellTemplate: function(container, options) {
-                                        const {
-                                            isMine,
-                                            isPendingOnMe,
-                                            isAssignment,
-                                            id: reqid,
-                                            approveddoc
-                                        } = options.data;
-                                        let user_id = options.data?.user_id ?? null;
-                                        
-                                        // Jika approveddoc sudah ada, tidak tampilkan tombol apapun
-                                        if (approveddoc != null) return;
-                                    
-                                        // Tombol "Submit Contract"
-                                        $('<button class="btn btn-success" id="btnreqid' + reqid + '"><i class="fa fa-circle-check"></i> Submit</button>')
-                                            .on('dxclick', function(evt) {
-                                                evt.stopPropagation();
-                                                console.log("Dataact:", options.data);
-                                                console.log("reqidact:",reqid);
-                                                console.log("user_idact", user_id);
-                                                // console.log("User Data:", options.data.user);
-                                                // console.log("User ID (from user object):", options.data.user?.id);
-
-                                                btnreqsubmit(reqid);  // Panggil fungsi submit
-                                            })
-                                            .appendTo(container);
-                                    
-                                        // Tombol "Cancel" jika milik sendiri dan tidak sedang menunggu approval
-                                        if (isMine == 1 && (!isPendingOnMe || isPendingOnMe == 0)) {
-                                            $('<button class="btn btn-danger" style="margin-left: 5px;">Cancel</button>')
-                                                .on('dxclick', function(evt) {
-                                                    evt.stopPropagation();
-                                                    Swal.fire({
-                                                        title: 'Are you sure?',
-                                                        text: "Are you sure you want to cancel this submission?",
-                                                        icon: 'warning',
-                                                        showCancelButton: true,
-                                                        confirmButtonColor: '#d33',
-                                                        cancelButtonColor: '#3085d6',
-                                                        confirmButtonText: 'Yes, cancel it'
-                                                    }).then((result) => {
-                                                        if (result.isConfirmed) {
-                                                            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                                                requestStatus: 1,
-                                                                action: 'submission',
-                                                                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-                                                                approvalType: valApprovalType,
-                                                                remarks: valremarks
-                                                            }).then(function (response) {
-                                                                if (response.status == 'success') {
-                                                                    loadData();
-                                                                    Swal.fire({
-                                                                        icon: 'success',
-                                                                        title: 'Saved',
-                                                                        text: 'The submission has been submitted.',
-                                                                    });
-                                                                }
-                                                            });
-                                                        } else {
-                                                            hideLoadingScreen();
-                                                            Swal.fire({
-                                                                icon: 'error',
-                                                                title: 'Cancelled',
-                                                                text: 'The submission cancellation has been cancelled.'
-                                                            });
-                                                        }
-                                                    });
-                                                })
-                                                .appendTo(container);
-                                        }
-                                    }
-                                }                                                           
+                                },                                                            
                             ],
                             export: {
                                 enabled: false,
@@ -709,6 +655,14 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 });
                             },
                             onEditorPrepared: function (e) {
+                                if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<7)) {
+                                if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                    e.cellElement.css({
+                                        "backgroundColor": "#ffe6e6",
+                                        "border": "0.5px solid #f56e6e"
+                                    })
+                                }
+                            }
                             },
                             onDataErrorOccurred: function(e) {
                                 // Menampilkan pesan kesalahan

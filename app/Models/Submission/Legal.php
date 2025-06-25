@@ -24,7 +24,6 @@ class Legal extends Model
         'requestStatus',
         'businessGroup',
         'bu',
-        // 'sektor',
         'formGroup',
         'formType',
         'requestType',
@@ -56,24 +55,10 @@ class Legal extends Model
             // 'financialAmount',
             'contractNumber',
             'submissionDate',
-            // 'depthead_id',
             'additional_approver',
         ]);
         return $fillable;
     }
-    // protected static function boot()
-    // {
-    //     parent::boot();
-    //     static::saving(function ($model) {
-    //         if ($model->sk === 'SK' && empty($model->skNumber)) {
-    //             throw new \Exception('Nomor SK wajib diisi jika SK dipilih.');
-    //         }
-
-    //         if ($model->sk === 'Non SK' && empty($model->financialAmount)) {
-    //             throw new \Exception('Financial Amount wajib diisi jika Non SK dipilih.');
-    //         }
-    //     });
-    // }
     public static function getTableName()
     {
         return (new static)->getTable();

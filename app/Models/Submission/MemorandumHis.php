@@ -28,8 +28,8 @@ class MemorandumHis extends Model
         'remarks',
         'endContract',
         'superiorName',
-        'module_id',
         'sequence',
+        'module_id',
         'req_id',
         'sysid'
         ];

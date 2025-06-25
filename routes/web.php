@@ -44,6 +44,5 @@ Route::middleware(['session.check'])->group(function () {
     Route::get('/gen-pdf/capex/{id}', [App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class, 'genPdfCapex'])->name('gen-pdf-capex');
 
     Route::get('/gen-pdf/memorandum/{id}', [App\Http\Controllers\Submission\MemorandumController::class, 'genPdfMemorandumReq'])->name('gen-pdf-memorandum');
-    
     Route::get('/gen-pdf/legal/{id}', [App\Http\Controllers\Submission\LegalRequestController::class, 'genPdfLegal'])->name('gen-pdf-legal');
 });

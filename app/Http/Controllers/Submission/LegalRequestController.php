@@ -410,6 +410,18 @@ class LegalRequestController extends Controller
                         $Worksheet->Range("E42")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 42, 7, 36, $excel);
                     }
+                    if ($appr->sequence == 6 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B43")->Value = $appr->apprname;
+                        $Worksheet->Range("D43")->Value = $appr->apprtype;
+                        $Worksheet->Range("E43")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 43, 7, 36, $excel);
+                    }
+                    if ($appr->sequence == 7 && $appr->approvalAction == 3) {
+                        $Worksheet->Range("B44")->Value = $appr->apprname;
+                        $Worksheet->Range("D44")->Value = $appr->apprtype;
+                        $Worksheet->Range("E44")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 44, 7, 36, $excel);
+                    }
                 }
             }
 

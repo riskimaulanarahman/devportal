@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
-use App\Models\ApproverListReq;
 use App\Models\Submission\MemorandumHis;
 use App\Models\Employee;
+use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 
 class Memorandum extends Model
@@ -26,6 +26,7 @@ class Memorandum extends Model
         'sysid',
         'user_id',
         'employee_id', 
+        'additional_approver', 
         'created_at',
         'updated_at'
         ];
@@ -38,7 +39,9 @@ class Memorandum extends Model
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;
-        $fillable = array_diff($fillable, []);
+        $fillable = array_diff($fillable, [
+            'additional_approver'
+        ]);
         return $fillable;
     }
 

@@ -658,8 +658,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "cell",
                             allowAdding: false,
-                            // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1) && (mode == 'edit' || mode == 'add')) ? true : (admin == 1 ? true : (isChecker == 1 ? true : false)),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),                            
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -671,7 +670,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: "dateOfDocument",
                                 dataType: "date",
                                 editorOptions: { 
-                                    // readOnly: (mode == 'approval') ? true : false
+                                    readOnly: (mode == 'approval') ? true : false
                                 },
                             },
                             {
@@ -728,7 +727,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 setCellValue: function (rowData, value) {
                                     rowData.sk = value;
                                     if (value === "SK") {
-                                    rowData.financialAmount = "-";
+                                    rowData.financialAmount = "0";
                                     rowData.skNumber = ""; // wajib isi manual
                                     } else if (value === "Non SK") {
                                     rowData.skNumber = "-";
@@ -767,11 +766,11 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     readOnly: (mode === 'approval')
                                 },
                                 showSpinButtons: true,
-    format: {
-        type: 'currency',
-        precision: 0,
-        currency: 'IDR'  // atau pakai 'Rp' tergantung preferensi
-    },
+                                format: {
+                                    type: 'currency',
+                                    precision: 0,
+                                    currency: 'IDR'  
+                                },
                                 validationRules: [
                                     {
                                     type: 'custom',
@@ -903,8 +902,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "cell",
                             allowAdding: false,
-                            // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                            allowUpdating: ((isMine == 1) && (mode == 'edit' || mode == 'add')) ? true : (admin == 1 ? true : (isChecker == 1 ? true : false)),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -916,8 +914,10 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataField: 'purpose',
                                 editorType: 'dxTextArea',
                                 editorOptions: {
-                                    height: 150, // Sesuaikan tinggi agar lebih luas
-                                    
+                                    autoResizeEnabled: true,
+                                    minHeight: 90,
+                                    maxHeight: 200, 
+                                    placeholder: 'Purpose...'
                                 },
                                 validationRules: [{ type: "required", message: "Harap isi Purpose" }]
                             }                                                     
@@ -960,10 +960,6 @@ const popupContentTemplate = function (reqid,mode,options) {
 
                     return container;
                 } 
-                // var infoContent3 = $("<div id='infoContent3'>");
-                // if(data.ID == 5) {
-                    
-                // }
                 else if(data.ID == 2) {
                     var supporting = $("<div id='formattachment'>").dxDataGrid({    
                         dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
@@ -984,9 +980,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
-                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
-                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1  ? true : false),
+                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1  ? true : false),
+                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1  ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
@@ -1043,19 +1039,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGridAttachment.refresh();
                         }
                     })
-
-                    // var downloadButton = $("<button>")
-                    //     .text("Download Proposal Guide Template")
-                    //     .addClass("btn btn-danger btn-xs")
-                    //     .appendTo(supporting);
-
-                    // downloadButton.click(function() {
-                    //     var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
-                    //     var link = document.createElement("a");
-                    //     link.href = fileUrl;
-                    //     link.download = "Proposal Pengajuan System.pptx";
-                    //     link.click();
-                    // });
 
                     return supporting;
                 }
@@ -1342,14 +1325,13 @@ function btnreqsubmit(reqid,mode) {
     console.log('submit')
     var btnSubmit = $('#btn-submit');
     var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
-    var valremarks = $('#remarks').val(); // mengambil nilai dari text area
-    
-    // if(mode == 'approval' && isProcHead == 1 && valapprovalAction == 3) {
-    if(mode == 'approval' && isBCIDv == 1 && valapprovalAction == 3) {
+    var valremarks = $('#remarks').val(); 
+
+    if(mode == 'approval' && valapprovalAction == 3) {
         var fieldsToCheckGrid = [
-            { field: 'objective', name: 'Objective' },
-            { field: 'ranking', name: 'Category' },
-            { field: 'status_jdi', name: 'Status JDI' },
+            // { field: 'objective', name: 'Objective' },
+            // { field: 'ranking', name: 'Category' },
+            // { field: 'status_jdi', name: 'Status JDI' },
         ]
     }
 
@@ -1385,56 +1367,6 @@ function btnreqsubmit(reqid,mode) {
     });
 
 }
-
-// function btnreqsubmit(reqid,mode) {
-
-//     var btnSubmit = $('#btn-submit');
-//     btnSubmit.prop('disabled', true);
-//     var actionForm = (mode == 'approval') ? 'approval' : 'submission';
-
-//     if(mode == 'approval') {
-//         var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
-//         var valremarks = $('#remarks').val(); // mengambil nilai dari text area
-//         if (!valapprovalAction) {
-//             alert('Please select approval action.')
-//             btnSubmit.prop('disabled', false);
-//             return false;
-//         }
-//         else if (!valremarks) {
-//             alert('Please enter remarks.')
-//             btnSubmit.prop('disabled', false);
-//             return false;
-//         }
-        
-//     }
-
-//     var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
-
-//     var result = confirm('Are you sure you want to send this submission ?');
-//     if (result) {
-//         showLoadingScreen();
-//         sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-//             requestStatus:1,
-//             action: actionForm,
-//             approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
-//             approvalType: valApprovalType,
-//             remarks: valremarks
-//         }).then(function(response){
-//             if(response.status == 'error') {
-//                 btnSubmit.prop('disabled', false);
-//                 hideLoadingScreen();
-//             } else {
-//                 popup.hide();
-//                 hideLoadingScreen();
-//             }
-//         });
-//     } else {
-//         btnSubmit.prop('disabled', false);
-//         alert('Cancelled.');
-//         hideLoadingScreen();
-//     }
-
-// }
 
 function runpopup() {
     popup = $('#popup').dxPopup({

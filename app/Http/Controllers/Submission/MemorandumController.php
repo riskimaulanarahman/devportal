@@ -14,7 +14,7 @@ use App\Models\Useraccess;
 use App\Mail\SubmissionMail;
 use App\Models\Approvaluser;
 use Illuminate\Http\Request;
-use App\Models\MemorandumHis;
+use App\Models\Submission\MemorandumHis;
 use Illuminate\Support\Carbon;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
@@ -55,46 +55,72 @@ class MemorandumController extends Controller
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
 
-            // Pastikan `memoExp` berhubungan dengan `request_memorandum` melalui `employee_id`
-            $dataquery = DB::table('memoExp AS m')
-                ->leftJoin('request_memorandum AS r', 'm.id', '=', 'r.employee_id') // Hubungkan employee_id dengan memoExp.id
-                ->leftJoin('users AS u', 'r.user_id', '=', 'u.id'); // Hubungkan user_id dengan users.id
+            // Ambil semua data dari memoExp sebagai sumber
+            $memos = DB::table('memoExp')->get();
 
-            $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
-                        FROM tbl_approverListReq l
-                        LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                        LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
-                        WHERE l.ApprovalAction = '1' 
-                        AND l.req_id = r.id 
-                        AND l.module_id = '".$module_id."' 
-                        ORDER BY a.sequence)";
+            foreach ($memos as $memo) {
+                $exists = DB::table('request_memorandum')
+                            ->where('employee_id', $memo->id)
+                            ->exists();
 
-            // Ambil `user_id` dari `request_memorandum`, bukan `memoExp`
-            $data = $dataquery
+                if (!$exists) {
+                    DB::table('request_memorandum')->insert([
+                        'employee_id' => $memo->id,
+                        'requestStatus' => 0,
+                        'bu' => $memo->bu ?? null,
+                        'sysid' => $memo->sys_id ?? null,
+                        'code_id' => $this->generateCode($this->modulename),
+                        'user_id' => $user_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+            }
+
+            // Sekarang data sudah sinkron, tinggal ambil view gabungannya
+            $data = DB::table('request_memorandum AS r')
+                // ->leftJoin('request_memorandum_his AS h', 'r.id', '=', 'h.req_id')
+                ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
+                ->leftjoin('memoExp AS m', 'r.employee_id', '=', 'm.id')
                 ->selectRaw("
-                    m.*, 
-                    r.user_id, 
-                    u.fullname, -- Ambil nama user untuk ditampilkan jika perlu
-                    CASE WHEN r.user_id = '".$user_id."' THEN 1 ELSE 0 END AS isMine, 
-                    ".$subquery." AS isPendingOnMe,
-                    r.requestStatus
-                ")
-                // ->with(['user','approverlist'])                
-                ->get();
+                        r.*, 
+                        m.FullName,
+                        m.JoinDate,
+                        m.BirthOfDate,
+                        m.contract_status,
+                        m.sys_id,
+                        m.SAPID,
+                        m.Location,
+                        m.DesignationName,
+                        m.bu,
+                        CASE WHEN r.user_id = ? THEN 1 ELSE 0 END AS isMine,
+                        (
+                            SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END
+                            FROM tbl_approverListReq l
+                            LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                            LEFT JOIN tbl_approvaltype t ON a.approvaltype_id = t.id 
+                            WHERE l.ApprovalAction = '1' 
+                            AND l.req_id = r.id 
+                            AND l.module_id = ? 
+                            ORDER BY a.sequence
+                        ) AS isPendingOnMe
+                    ", [$user_id, $user_id, $module_id])
+                    ->orderByDesc('r.id')
+                    ->get();
 
             if ($data->isEmpty()) {
                 return response()->json([
                     'status' => "empty",
                     'message' => "Data tidak ditemukan, silakan tambahkan data baru",
                     'data' => []
-                ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
+                ])->setEncodingOptions(JSON_NUMERIC_CHECK);
             }
-            // dd($data);
+
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
                 'data' => $data
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);    
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
@@ -102,96 +128,110 @@ class MemorandumController extends Controller
     }
 
     public function show($id)
-    {
-        try {
-            $data = $this->model->where('id', $id)->first();
-            if (!$data) {
-                $memoExpData = DB::table('memoExp')->where('id', $id)->first();
-    
-                if (!$memoExpData) {
-                    return response()->json(["status" => "error", "message" => "Data memoExp tidak ditemukan"]);
-                }
-    
-                $existingRequest = DB::table('request_memorandum')->where('sysid', $memoExpData->sys_id)->first();
-    
-                if (!$existingRequest) {
-                    // Jika tidak ada, buat data baru
-                    $newId = DB::table('request_memorandum')->insertGetId([
-                        'employee_id' => $memoExpData->id ?? null,
-                        'requestStatus' => 0, 
-                        'bu' => $memoExpData->bu,
-                        'sysid' => $memoExpData->sys_id ?? null,
-                        'code_id' => $this->generateCode($this->modulename),
-                        'user_id' => $this->getAuth()->id,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-    
-                    $data = $this->model->where('id', $newId)->first();
-                } else {
-                    $data = $existingRequest;
-                    $user_id = $this->getAuth()->id;
-                    $module_id = $this->getModuleId($this->modulename);
-                    $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
-                    FROM tbl_approverListReq l
-                    LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                    LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
-                    WHERE l.ApprovalAction = '1' 
-                    AND l.req_id = request_memorandum.id 
-                    AND l.module_id = '".$module_id."' 
-                    AND request_memorandum.requestStatus = '1'
-                    ORDER BY a.sequence)";
+        {
+            try {
 
-                    $data = $this->model->selectRaw("
-                            request_memorandum.*, 
-                            codes.code,
-                            CASE WHEN request_memorandum.user_id='".$user_id."' THEN 1 ELSE 0 END AS isMine,
-                            ".$subquery." AS isPendingOnMe
-                        ")
-                        ->with(['user', 'approverlist', 'request_memorandum_his'])
-                        ->leftJoin('codes', 'request_memorandum.code_id', 'codes.id')
-                        ->where('request_memorandum.id', $data->id)
-                        ->first();
-                }
+                $data = $this->model->select('request_memorandum.*',
+                 'm.FullName',
+                 'm.JoinDate',
+                 'm.BirthOfDate',
+                 'm.contract_status',
+                 'm.sys_id',
+                 'm.SAPID',
+                 'm.Location',
+                 'm.DesignationName',
+                 'm.bu')
+                ->leftJoin('codes','request_memorandum.code_id','codes.id')
+                ->leftjoin('memoExp AS m', 'request_memorandum.employee_id', '=', 'm.id')                
+                ->where('request_memorandum.id',$id)
+                ->with(['user', 'approverlist', 'request_memorandum_his'])
+                ->first();
+
+                return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+            } catch (\Exception $e) {
+
+                return response()->json(["status" => "error", "message" => $e->getMessage()]);
             }
-            $memoExpExtraData = DB::table('memoExp')->where('sys_id', $data->sysid)->first();
-
-            if ($memoExpExtraData) {
-                foreach ($memoExpExtraData as $key => $value) {
-                    if (!isset($data->$key)) { // Pastikan hanya menambahkan data yang belum ada
-                        $data->$key = $value;
-                    }
-                }
-            }
-            // dd($data);
-
-            return response()->json([
-                'status' => "show",
-                'message' => "Data ditemukan atau baru dibuat",
-                'data' => $data
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-    
-        } catch (\Exception $e) {
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
-    }
 
-    public function getList($id)
-    {
-        $data = $this->model->select('request_memorandum_his.*','codes.code')
-            ->leftJoin('codes','request_memorandum_his.code_id','codes.id')
-            ->where('request_memorandum_his.id',$id)
-            ->with(['user'])
-            ->first();
+    // public function show($id)
+    // {
+    //     try {
+    //     // Coba cari dari request_memorandum.id langsung
+    //     $data = $this->model->where('id', $id)->first();
+    //         // Kalau nggak ada, cek apakah ini ID memoExp yang belum pernah dibuka
+    //     if (!$data) {
+    //         $memoExp = DB::table('memoExp')->where('id', $id)->first();
 
-        return response()->json([
-            'status' => "show",
-            'message' => $this->getMessage()['show'],
-            'data' => $data
-        ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-    }
+    //         if (!$memoExp) {
+    //             return response()->json(["status" => "error", "message" => "Data tidak ditemukan"]);
+    //         }
+    
+    //             // Cek apakah sudah ada entri request_memorandum untuk memo tersebut
+    //         $existing = DB::table('request_memorandum')->where('employee_id', $memoExp->id)->first();
 
+    //         if (!$existing) {
+    //             // Buat baru kalau belum ada
+    //             $newId = DB::table('request_memorandum')->insertGetId([
+    //                 'employee_id' => $memoExp->id,
+    //                 'requestStatus' => 0,
+    //                 'bu' => $memoExp->bu,
+    //                 'sysid' => $memoExp->sys_id,
+    //                 'code_id' => $this->generateCode($this->modulename),
+    //                 'user_id' => $this->getAuth()->id,
+    //                 'created_at' => now(),
+    //                 'updated_at' => now()
+    //             ]);
+    //             $id = $newId;
+    //             $data = $this->model->where('id', $newId)->first();
+    //             } else {
+    //                 $data = $existing;
+    //                 $user_id = $this->getAuth()->id;
+    //                 $module_id = $this->getModuleId($this->modulename);
+    //                 $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
+    //                 FROM tbl_approverListReq l
+    //                 LEFT JOIN tbl_approver a ON l.approver_id = a.id
+    //                 LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
+    //                 WHERE l.ApprovalAction = '1' 
+    //                 AND l.req_id = request_memorandum.id 
+    //                 AND l.module_id = '".$module_id."' 
+    //                 AND request_memorandum.requestStatus = '1'
+    //                 ORDER BY a.sequence)";
 
+    //                 $data = $this->model->selectRaw("
+    //                         request_memorandum.*, 
+    //                         codes.code,
+    //                         CASE WHEN request_memorandum.user_id='".$user_id."' THEN 1 ELSE 0 END AS isMine,
+    //                         ".$subquery." AS isPendingOnMe
+    //                     ")
+    //                     ->with(['user', 'approverlist', 'request_memorandum_his'])
+    //                     ->leftJoin('codes', 'request_memorandum.code_id', 'codes.id')
+    //                     ->where('request_memorandum.id', $data->id)
+    //                     ->first();
+    //             }
+    //         }
+    //         $memoExpExtraData = DB::table('memoExp')->where('sys_id', $data->sysid)->first();
+
+    //         if ($memoExpExtraData) {
+    //             foreach ($memoExpExtraData as $key => $value) {
+    //                 if (!isset($data->$key)) { // Pastikan hanya menambahkan data yang belum ada
+    //                     $data->$key = $value;
+    //                 }
+    //             }
+    //         }
+    //         // dd($data);
+
+    //         return response()->json([
+    //             'status' => "show",
+    //             'message' => "Data ditemukan atau baru dibuat",
+    //             'data' => $data
+    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+    
+    //     } catch (\Exception $e) {
+    //         return response()->json(["status" => "error", "message" => $e->getMessage()]);
+    //     }
+    // }
 
     // {
     //     try {
@@ -236,35 +276,27 @@ class MemorandumController extends Controller
     // }
     public function update(Request $request, $id)
     {
-        DB::beginTransaction();
         try {
-            $requestData = $request->all();
+            $data = $this->model->findOrFail($id);
 
-            if (!isset($requestData['contractList']) || !is_array($requestData['contractList'])) {
-                return response()->json(["status" => "error", "message" => "ContractList data is required and should be an array."]);
-            }
+            $data->update([
+                'additional_approver' => $request->input('additional_approver')
+            ]);
 
-            dd($requestData['contractList']);
-
-            foreach ($requestData['contractList'] as $contract) {
-                $updateData = array_filter($contract, function ($value) {
-                    return $value !== null;
-                });
-
-                if (!empty($updateData)) {
-                    MemorandumHis::where('id', $contract['memorandum_id'])
-                        ->update($updateData);
-                }
-            }
-
-            DB::commit();
-            return response()->json(["status" => "success", "message" => "ContractList updated successfully"]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Additional approver berhasil ditambahkan.'
+            ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
         }
     }
+
+
 
     public function destroy($id)
     {
@@ -323,7 +355,7 @@ class MemorandumController extends Controller
                 'employee.tbl_designation.DesignationName as DesignationName',
             )
             ->leftJoin('users', 'request_memorandum.user_id', 'users.id')
-            ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
+            ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
             ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
             ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
             ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
@@ -333,15 +365,23 @@ class MemorandumController extends Controller
         if (!$data || !$data->approverHistory) {
             return response()->json(["status" => "error", "message" => "Data or approver history not found"]);
         }
-        $contracts = DB::table('request_memorandum as rm_his')
-        ->select('rm_his.sequence',
-        'rm_his.startContract', 
-        'rm_his.endContract',
-        'rm_his.remarks')
-        ->get();
+
+        $contracts = DB::table('request_memorandum_his')
+            ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
+            ->select('request_memorandum_his.*', 'codes.code') // ambil kolom code
+            ->where('req_id', $id)
+            ->orderBy('sequence')
+            ->get();
+
+        $hisCreated = $contracts->last()->created_at ?? null;
+        $lastRemarks = $contracts->last()->remarks ?? '-';
+        $lastCode = $contracts->last()->code ?? '-';        
 
         if ($contracts->isEmpty()) {
-            \Log::warning('No contracts found for request ID: ' . $id);
+            return response()->json([
+                'status' => 'error',
+                'message' => "kontrak kosng untuk $id"
+            ]);
         }
         $today = Carbon::today();
         $oldContracts = []; 
@@ -359,6 +399,7 @@ class MemorandumController extends Controller
                 $newContracts[] = $contract;
             }
         }
+        
         try {
             $birthDate = Carbon::parse($data->BirthOfDate);
             $usia = $birthDate 
@@ -395,13 +436,14 @@ class MemorandumController extends Controller
             $Worksheet->Range("E18")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' '); 
             $Worksheet->Range("E21")->Value = $data->DesignationName ?? ''; 
             $Worksheet->Range("F21")->Value = $data->sys_id ?? ''; 
-            $Worksheet->Range("C36")->Value = $data->remarks ?? ''; 
+            $Worksheet->Range("C36")->Value = $lastRemarks;
+            $Worksheet->Range("G11")->Value = $lastCode;
             $Worksheet->Range("C63")->Value = $data->DesignationName ?? ''; 
             $Worksheet->Range("A56")->Value = $data->superiorName ?? ''; 
             $Worksheet->Range("B56")->Value = $data->deptheadName ?? ''; 
             $Worksheet->Range("E39")->Value = $data->deptheadName ?? ''; 
             $Worksheet->Range("C62")->Value = $data->Pendidikan ?? '-'; 
-            $Worksheet->Range("G11")->Value = $data->code ?? '-'; 
+            // $Worksheet->Range("G11")->Value = $data->code ?? '-'; 
             $Worksheet->Range("C64")->Value = $data->Usia ?? '-'; 
             $Worksheet->Range("C61")->Value = $data->BirthOfDate 
                 ? Carbon::parse($data->BirthOfDate)->locale('id')->translatedFormat('j F Y')
@@ -411,31 +453,64 @@ class MemorandumController extends Controller
             $Worksheet->Range("E24")->Value = $data->JoinDate 
                 ? Carbon::parse($data->JoinDate)->locale('id')->translatedFormat('j F Y')
                 : '';
-            $Worksheet->Range("G10")->Value = $data->created_at 
-                ? Carbon::parse($data->created_at)->locale('id')->translatedFormat('j F Y')
+            $Worksheet->Range("G10")->Value = $hisCreated  
+                ? Carbon::parse($hisCreated)->locale('id')->translatedFormat('j F Y')
                 : '';
-            $startRow = 61; // Baris awal untuk kontrak
-            $filteredContracts = array_merge($oldContracts, $currentContracts); // Gabungkan kontrak lama dan sekarang
-            foreach ($filteredContracts as $index => $contract) {
-                $row = $startRow + $index * 1;
-                $Worksheet->Range("E{$row}")->Value = "Kontrak " . ($index + 1); // Label Kontrak
-                $Worksheet->Range("F{$row}")->Value = $contract->startContract && $contract->endContract
-                    ? Carbon::parse($contract->startContract)->format('d-m-Y') . ' - ' . Carbon::parse($contract->endContract)->format('d-m-Y')
-                    : ' - '; // Periode Kontrak
+            $today = Carbon::today();
+
+            $currentStartContract = null;
+            $currentEndContract   = null;
+            $newStartContract     = null;
+            $newEndContract       = null;
+
+            // Jika status Permanent, langsung set tanggal pensiun sebagai akhir masa kerja
+            if ($data->contract_status === "Permanent") {
+                $birthDate = $data->BirthOfDate ? Carbon::parse($data->BirthOfDate) : null;
+                $currentEndContract = $birthDate ? $birthDate->copy()->addYears(55) : null;
             }
-            if (!empty($currentContracts)) {
-                $currentEndContract = $currentContracts[0]->endContract; // Ambil endContract dari kontrak aktif pertama
-                $Worksheet->Range("E27")->Value = Carbon::parse($currentEndContract)->locale('id')->translatedFormat('j F Y'); // Format menjadi dd-month(string)-yyyy
-            } else {
-                $Worksheet->Range("E27")->Value = ' - '; // Jika tidak ada kontrak aktif
+
+            // Loop kontrak untuk cari kontrak aktif dan kontrak baru
+            foreach ($contracts as $contract) {
+                $start = Carbon::parse($contract->startContract);
+                $end   = Carbon::parse($contract->endContract);
+
+                if ($data->contract_status === "Contract" && $start->lt($today) && $end->gt($today)) {
+                    $currentStartContract = $start;
+                    $currentEndContract   = $end;
+                }
+
+                if ($start->gt($today) && !$newStartContract && !$newEndContract) {
+                    $newStartContract = $start;
+                    $newEndContract   = $end;
+                }
             }
-            if (!empty($newContracts)) {
-                $newStartContract = $newContracts[0]->startContract; // Ambil startContract dari kontrak baru pertama
-                $newEndContract = $newContracts[0]->endContract; // Ambil endContract dari kontrak baru pertama
-                $Worksheet->Range("D33")->Value = Carbon::parse($newStartContract)->locale('id')->translatedFormat('j F Y') . ' sampai dengan ' . Carbon::parse($newEndContract)->locale('id')->translatedFormat('j F Y'); // Isi di D33
-            } else {
-                $Worksheet->Range("D33")->Value = ' - '; // Jika tidak ada kontrak baru
+
+            // Tulis akhir masa kerja ke sel E27
+            $Worksheet->Range("E27")->Value = $currentEndContract
+                ? $currentEndContract->locale('id')->translatedFormat('j F Y')
+                : ' - ';
+
+            // Tulis kontrak baru ke sel C33
+            $Worksheet->Range("C33")->Value = ($newStartContract && $newEndContract)
+                ? 'dari ' . $newStartContract->locale('id')->translatedFormat('j F Y') .
+                ' sampai dengan ' . $newEndContract->locale('id')->translatedFormat('j F Y')
+                : ' - ';
+
+            // Jika status Contract, cetak daftar kontrak lama & aktif ke Excel
+            if ($data->contract_status === "Contract") {
+                $filteredContracts = array_merge($oldContracts, $currentContracts);
+
+                $startRow = 61;
+                foreach ($filteredContracts as $index => $contract) {
+                    $row = $startRow + $index;
+                    $Worksheet->Range("E{$row}")->Value = "Kontrak " . ($index + 1);
+                    $Worksheet->Range("F{$row}")->Value = ($contract->startContract && $contract->endContract)
+                        ? Carbon::parse($contract->startContract)->format('d-m-Y') . ' - ' .
+                        Carbon::parse($contract->endContract)->format('d-m-Y')
+                        : ' - ';
+                }
             }
+
 
             $picpath = public_path("assets/images/approved.png");
 
@@ -450,13 +525,13 @@ class MemorandumController extends Controller
             foreach ($dataAppr as $appr) {
                 if ($appr->sequence == 1) {
                     if ($appr->approvalAction == 3) {
-                        // $Worksheet->Range("A53")->Value = $appr->apprname;
+                        $Worksheet->Range("A56")->Value = $appr->apprname;
                         // $Worksheet->Range("A54")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 1, 40, $excel, 25);                        
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 3, 40, $excel, 25);
+                        addPictureToWorksheet($Worksheet, $picpath, 55, 2, 40, $excel, 25);                        
                         addPictureToWorksheet($Worksheet, $picpath, 55, 4, 40, $excel, 25);
                         addPictureToWorksheet($Worksheet, $picpath, 55, 5, 40, $excel, 25);
                         addPictureToWorksheet($Worksheet, $picpath, 55, 7, 40, $excel, 25);
+                        // addPictureToWorksheet($Worksheet, $picpath, 53, 7, 40, $excel, 25);
                     }
                 }
                 if ($appr->sequence == 2) {
@@ -490,12 +565,19 @@ class MemorandumController extends Controller
 			unset($excel);
 			
             $pathfilename = 'public/template/memo/pdf/' . $fileName;
-            DB::table('request_memorandum')
-            ->where('id', $id) 
-            ->update(['approveddoc' => $pathfilename]);
+
+            // Update baris terakhir atau tertentu dari request_memorandum_his
+            DB::table('request_memorandum_his')
+                ->where('req_id', $id) // pakai foreign key yang benar
+                ->orderByDesc('sequence')    // atau orderBy('sequence', 'desc') kalau pakai urutan
+                ->limit(1)
+                ->update(['approveddoc' => $pathfilename]);
+
             $this->processcopy($pathfilename);
 
-			return $pathfilename;
+            return $pathfilename;
+
+
         } catch (\Exception $e) {
             // Logging error
             $this->logerror($request->ip(), $request->url(), 'gen-pdf-memorandum', $e->getMessage());
