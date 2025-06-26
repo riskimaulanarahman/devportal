@@ -21,25 +21,21 @@ class MemorandumHis extends Model
     protected $guarded = ['id'];
     protected $fillable = [
         'code_id',
-        'requestStatus',        
         'user_id',
-        'bu',
         'startContract',
         'remarks',
         'endContract',
-        'superiorName',
+        'superior_id',
         'sequence',
-        'module_id',
         'req_id',
-        'sysid'
+        'sysid',
+        'isActive'
         ];
     protected $casts = [
-        'requestStatus' => 'integer',
         'user_id' => 'integer',
         'isMine' => 'integer',
         'code_id' => 'integer',
         'req_id' => 'integer',
-        'module_id' => 'integer',
         'sequence' => 'integer',
         'isPendingOnMe' => 'integer'
     ];

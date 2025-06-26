@@ -51,8 +51,9 @@ Route::group(['prefix' => 'api'], function () {
         'capexquestion' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestQuestionController::class,
         'capexquestioncf' => App\Http\Controllers\Submission\Financial\Capex\CapexRequestQuestionCFController::class,
         
-        //memor
+        //memorandum
         'memorandum_request' => App\Http\Controllers\Submission\MemorandumController::class,
+        'memorandumhis' => App\Http\Controllers\Submission\ContractHistoryController::class,
         // 'request_memorandumhis' => App\Http\Controllers\Submission\ContractHistoryController::class,
         // 'memo_request' => App\Http\Controllers\Submission\MemoController::class,
 
@@ -125,8 +126,8 @@ Route::group(['prefix' => 'api'], function () {
     //memorhistorycal
     Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
     Route::get('memorandumhis/{reqid}/{modulename}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'getList']); //get list contract history by req_id of module
-    Route::get('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
-    Route::get('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'show']); //get list contract history by req_id of module
-    Route::post('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'store']); //get list contract history by req_id of module
-    Route::delete('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'destroy']); 
+    // Route::get('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
+    // Route::get('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'show']); //get list contract history by req_id of module
+    // Route::post('memorandumhis',[App\Http\Controllers\Submission\ContractHistoryController::class, 'store']); //get list contract history by req_id of module
+    // Route::delete('memorandumhis/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'destroy']); 
 });

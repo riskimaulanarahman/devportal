@@ -30,6 +30,8 @@ trait HasMessage {
             'nothaveaccess' => 'Error: Unauthorized Access - You do not have the necessary permissions to perform this action.',
             'accessformanageronly' => 'Error: Unauthorized Access - Only for Manager Up, You do not have the necessary permissions to perform this action.',
             'usernotregisteredldap' => 'User Not Registered on LDAP.',
+            'contractexist' => 'The contract already exists. Only one contract can be added and submitted.',
+
         ];
 
         return $message;

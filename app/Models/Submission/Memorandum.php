@@ -32,8 +32,9 @@ class Memorandum extends Model
         ];
 
     protected $casts = [
-            'user_id' => 'integer',
-            'employee_id' => 'integer'
+        'user_id' => 'integer',
+        'requestStatus' => 'integer',
+        'employee_id' => 'integer'
     ];
 
     public static function getFillableColumns()

@@ -40,15 +40,7 @@ class MemorandumController extends Controller
         $this->module = new Module();
         $this->user = new User();
     }
-    // public function index()
-    // {
-    //     $data = DB::table('memoExp')->select('*')->get(); 
-    //         return response()->json([
-    //             'status' => "show",
-    //             'message' => $this->getMessage()['show'],
-    //             'data' => $data
-    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);        
-    // }
+
     public function index()
     {
         try {
@@ -77,13 +69,18 @@ class MemorandumController extends Controller
                 }
             }
 
+            $getAccess = "(select TOP 1 CASE WHEN l.employee_id='".$user_id."' then 1 else 0 end 
+            from [authorization].tbl_useraccess l
+            where l.module_id = '".$module_id."' and l.allowView='1')";
+
             // Sekarang data sudah sinkron, tinggal ambil view gabungannya
             $data = DB::table('request_memorandum AS r')
-                // ->leftJoin('request_memorandum_his AS h', 'r.id', '=', 'h.req_id')
+                ->leftJoin('codes','r.code_id','codes.id')
                 ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
                 ->leftjoin('memoExp AS m', 'r.employee_id', '=', 'm.id')
                 ->selectRaw("
                         r.*, 
+                        codes.code,
                         m.FullName,
                         m.JoinDate,
                         m.BirthOfDate,
@@ -93,7 +90,7 @@ class MemorandumController extends Controller
                         m.Location,
                         m.DesignationName,
                         m.bu,
-                        CASE WHEN r.user_id = ? THEN 1 ELSE 0 END AS isMine,
+                        ".$getAccess." as isMine,
                         (
                             SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END
                             FROM tbl_approverListReq l
@@ -104,7 +101,7 @@ class MemorandumController extends Controller
                             AND l.module_id = ? 
                             ORDER BY a.sequence
                         ) AS isPendingOnMe
-                    ", [$user_id, $user_id, $module_id])
+                    ", [$user_id, $module_id])
                     ->orderByDesc('r.id')
                     ->get();
 
@@ -133,6 +130,7 @@ class MemorandumController extends Controller
 
                 $data = $this->model->select('request_memorandum.*',
                  'm.FullName',
+                 'codes.code',
                  'm.JoinDate',
                  'm.BirthOfDate',
                  'm.contract_status',
@@ -155,133 +153,10 @@ class MemorandumController extends Controller
             }
         }
 
-    // public function show($id)
-    // {
-    //     try {
-    //     // Coba cari dari request_memorandum.id langsung
-    //     $data = $this->model->where('id', $id)->first();
-    //         // Kalau nggak ada, cek apakah ini ID memoExp yang belum pernah dibuka
-    //     if (!$data) {
-    //         $memoExp = DB::table('memoExp')->where('id', $id)->first();
-
-    //         if (!$memoExp) {
-    //             return response()->json(["status" => "error", "message" => "Data tidak ditemukan"]);
-    //         }
-    
-    //             // Cek apakah sudah ada entri request_memorandum untuk memo tersebut
-    //         $existing = DB::table('request_memorandum')->where('employee_id', $memoExp->id)->first();
-
-    //         if (!$existing) {
-    //             // Buat baru kalau belum ada
-    //             $newId = DB::table('request_memorandum')->insertGetId([
-    //                 'employee_id' => $memoExp->id,
-    //                 'requestStatus' => 0,
-    //                 'bu' => $memoExp->bu,
-    //                 'sysid' => $memoExp->sys_id,
-    //                 'code_id' => $this->generateCode($this->modulename),
-    //                 'user_id' => $this->getAuth()->id,
-    //                 'created_at' => now(),
-    //                 'updated_at' => now()
-    //             ]);
-    //             $id = $newId;
-    //             $data = $this->model->where('id', $newId)->first();
-    //             } else {
-    //                 $data = $existing;
-    //                 $user_id = $this->getAuth()->id;
-    //                 $module_id = $this->getModuleId($this->modulename);
-    //                 $subquery = "(SELECT TOP 1 CASE WHEN a.user_id = '".$user_id."' THEN 1 ELSE 0 END 
-    //                 FROM tbl_approverListReq l
-    //                 LEFT JOIN tbl_approver a ON l.approver_id = a.id
-    //                 LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id 
-    //                 WHERE l.ApprovalAction = '1' 
-    //                 AND l.req_id = request_memorandum.id 
-    //                 AND l.module_id = '".$module_id."' 
-    //                 AND request_memorandum.requestStatus = '1'
-    //                 ORDER BY a.sequence)";
-
-    //                 $data = $this->model->selectRaw("
-    //                         request_memorandum.*, 
-    //                         codes.code,
-    //                         CASE WHEN request_memorandum.user_id='".$user_id."' THEN 1 ELSE 0 END AS isMine,
-    //                         ".$subquery." AS isPendingOnMe
-    //                     ")
-    //                     ->with(['user', 'approverlist', 'request_memorandum_his'])
-    //                     ->leftJoin('codes', 'request_memorandum.code_id', 'codes.id')
-    //                     ->where('request_memorandum.id', $data->id)
-    //                     ->first();
-    //             }
-    //         }
-    //         $memoExpExtraData = DB::table('memoExp')->where('sys_id', $data->sysid)->first();
-
-    //         if ($memoExpExtraData) {
-    //             foreach ($memoExpExtraData as $key => $value) {
-    //                 if (!isset($data->$key)) { // Pastikan hanya menambahkan data yang belum ada
-    //                     $data->$key = $value;
-    //                 }
-    //             }
-    //         }
-    //         // dd($data);
-
-    //         return response()->json([
-    //             'status' => "show",
-    //             'message' => "Data ditemukan atau baru dibuat",
-    //             'data' => $data
-    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-    
-    //     } catch (\Exception $e) {
-    //         return response()->json(["status" => "error", "message" => $e->getMessage()]);
-    //     }
-    // }
-
-    // {
-    //     try {
-    //         $user_id = $this->getAuth()->id;
-    //         $module = $this->module->select('id', 'module')->where('module', $modulename)->first();
-            
-    //         if ($module) {
-    //             $data = $this->model->selectRaw("
-    //                 request_memorandum_his.*, 
-    //                 codes.code,
-    //                 CASE WHEN request_memorandum_his.user_id = ? THEN 1 ELSE 0 END AS isMine,
-    //                 (SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END 
-    //                 FROM tbl_approverListReq l
-    //                 LEFT JOIN tbl_approver a ON l.approver_id = a.id
-    //                 WHERE l.req_id = request_memorandum_his.id 
-    //                 AND l.module_id = ? 
-    //                 AND request_memorandum_his.requestStatus = '1'
-    //                 ORDER BY a.sequence) AS isPendingOnMe
-    //             ", [$user_id, $user_id, $module->id]) 
-                
-    //             ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
-    //             ->with(['user', 'approverlist'])
-    //             ->where('req_id', $id)
-    //             ->orderBy('sequence', 'DESC')
-    //             ->get();
-
-    //             return response()->json([
-    //                 "status" => "show", 
-    //                 "message" => $this->getMessage()['show'], 
-    //                 "data" => $data
-    //             ]);
-    //         } else {
-    //             return response()->json([
-    //                 "status" => "show", 
-    //                 "message" => $this->getMessage()['errornotfound']
-    //             ]);
-    //         }
-
-    //     } catch (\Exception $e) {
-    //         return response()->json(["status" => "error", "message" => $e->getMessage()]);
-    //     }
-    // }
     public function update(Request $request, $id)
     {
         try {
             $data = $this->model->findOrFail($id);
-
-            $data->update([
-                'additional_approver' => $request->input('additional_approver')
-            ]);
 
             return response()->json([
                 'status' => 'success',
