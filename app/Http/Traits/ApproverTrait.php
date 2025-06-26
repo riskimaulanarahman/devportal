@@ -395,13 +395,7 @@ trait ApproverTrait {
             $getemployee = Employee::find($employeeID);
             $getuser = User::where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
             //START approver for Chairman
-            // $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Additional Approver')->first();
-            $getIDapprType = Approvaltype::where('Module', $moduleName)
-                ->where(function($query) {
-                    $query->where('ApprovalType', 'Additional Approver')
-                        ->orWhere('ApprovalType', 'Superior');
-                })
-                ->first();
+            $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Additional Approver')->first();
 
             $checkExistAppr = Approvaluser::where('module',$moduleName)
                                         ->where('employee_id',$employeeID)
