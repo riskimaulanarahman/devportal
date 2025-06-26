@@ -38,7 +38,7 @@ class Legal extends Model
         'skNumber',
         'contractNumber',
         'sk',           
-        'additional_approver'
+        'Superior'
     ];
 
     protected $casts = [
@@ -55,7 +55,7 @@ class Legal extends Model
             // 'financialAmount',
             'contractNumber',
             'submissionDate',
-            'additional_approver',
+            'Superior',
         ]);
         return $fillable;
     }
