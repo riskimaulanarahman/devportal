@@ -502,7 +502,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 caption: 'Superior',
-                                dataField: 'additional_approver',
+                                dataField: 'Superior',
                                 lookup: {
                                     dataSource: listOption('/list-employee','id','fullname'),
                                     valueExpr: 'id',
