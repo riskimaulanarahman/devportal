@@ -22,13 +22,13 @@ class MemorandumHis extends Model
     protected $fillable = [
         'code_id',
         'user_id',
-        'startContract',
-        'remarks',
-        'endContract',
-        'superior_id',
-        'sequence',
         'req_id',
+        'sequence',
+        'startContract',
+        'endContract',
+        'remarks',
         'sysid',
+        'superior_id',
         'isActive'
         ];
     protected $casts = [
