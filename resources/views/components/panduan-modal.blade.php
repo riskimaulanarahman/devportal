@@ -17,7 +17,7 @@
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/HRSC Panduan.pdf', '_blank')">HR Service Care</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/IT Active Directory Panduan.pdf', '_blank')">IT - Active Directory</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/JDI Online.pdf', '_blank')">JDI Online</button></li>
-                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Legal Checklsit.pdf', '_blank')">Legal Checklist</button></li>
+                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Legal Checklist.pdf', '_blank')">Legal Checklist</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Material Request.pdf', '_blank')">Material Request</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Mom Online.pdf', '_blank')">MoM Online</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/SKYMAP System.pdf', '_blank')">SKYMAP</button></li>
