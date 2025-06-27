@@ -217,7 +217,7 @@ class LegalRequestController extends Controller
             $data = $this->model->findOrFail($id);
 
             if($request->Superior) {
-                $this->createApprAdditionalApprover($request->Superior, $this->modulename, $id);
+                $this->createApprSuperior($request->Superior, $this->modulename, $id);
             }
 
             $data->update($requestData);
