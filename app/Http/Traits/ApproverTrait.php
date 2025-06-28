@@ -140,6 +140,7 @@ trait ApproverTrait {
                     ->whereNotIn('tbl_approvaltype.ApprovalType',[
                         'Department Head',
                         'Superior/Department Head',
+                        'Superior',
                         'BCID Manager','Finance' // for JDI savingCost
                     ]);
         }

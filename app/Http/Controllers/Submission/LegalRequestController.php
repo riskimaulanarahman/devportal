@@ -380,43 +380,43 @@ class LegalRequestController extends Controller
                 }
 
                 foreach ($dataAppr as $appr) {
-                    if ($appr->sequence == 1 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 2 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B38")->Value = $appr->apprname;
                         $Worksheet->Range("D38")->Value = $appr->apprtype;
                         $Worksheet->Range("E38")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 38, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 2 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 3 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B39")->Value = $appr->apprname;
                         $Worksheet->Range("D39")->Value = $appr->apprtype;
                         $Worksheet->Range("E39")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 39, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 3 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 4 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B40")->Value = $appr->apprname;
                         $Worksheet->Range("D40")->Value = $appr->apprtype;
                         $Worksheet->Range("E40")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 40, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 4 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 5 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B41")->Value = $appr->apprname;
                         $Worksheet->Range("D41")->Value = $appr->apprtype;
                         $Worksheet->Range("E41")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 41, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 5 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 6 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B42")->Value = $appr->apprname;
                         $Worksheet->Range("D42")->Value = $appr->apprtype;
                         $Worksheet->Range("E42")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 42, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 6 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 7 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B43")->Value = $appr->apprname;
                         $Worksheet->Range("D43")->Value = $appr->apprtype;
                         $Worksheet->Range("E43")->Value = $appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 43, 7, 36, $excel);
                     }
-                    if ($appr->sequence == 7 && $appr->approvalAction == 3) {
+                    if ($appr->sequence == 8 && $appr->approvalAction == 3) {
                         $Worksheet->Range("B44")->Value = $appr->apprname;
                         $Worksheet->Range("D44")->Value = $appr->apprtype;
                         $Worksheet->Range("E44")->Value = $appr->approvalDate;
