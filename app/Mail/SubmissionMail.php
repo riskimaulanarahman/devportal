@@ -317,7 +317,9 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
-            //legal
+        // Jdi MODULE
+
+        // LEGAL MODULE
             if($modulename == 'Legal') {
                 $request = new Request();
                 $legalController = new LegalRequestController();
@@ -339,7 +341,8 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
-            //Memorandum
+        // LEGAL MODULE
+        // MEMORANDUM MODULE
             if($modulename == 'Memorandum') {
                 $request = new Request();
                 $memorandumController = new MemorandumController();
@@ -361,7 +364,7 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
-        // Jdi MODULE
+        // MEMORANDUM MODULE
 
         // ActiveDirectory MODULE
             if($modulename == 'ActiveDirectory') {
@@ -507,6 +510,12 @@ class SubmissionMail extends Mailable
                 break;
             case 'Hris':
                 $viewblade = 'emails.HRIS.hrisrequestmail';
+                break;
+            case 'Legal':
+                $viewblade = 'emails.legalrequestmail';
+                break;
+            case 'Memorandum':
+                $viewblade = 'emails.memorandummail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';

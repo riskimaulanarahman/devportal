@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\User;
 use App\Models\Code;
-use App\Models\Submission\MemorandumHis;
+use App\Models\Submission\MemorandumDetail;
 use App\Models\Employee;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
@@ -56,9 +56,9 @@ class Memorandum extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function request_memorandum_his()
+    public function request_memorandum_detail()
     {
-        return $this->hasMany(MemorandumHis::class, 'req_id', 'id');
+        return $this->hasMany(MemorandumDetail::class, 'req_id', 'id');
     }   
     
     public function employee()

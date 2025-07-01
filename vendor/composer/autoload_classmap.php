@@ -182,7 +182,7 @@ return array(
     'App\\Models\\Submission\\UavMission' => $baseDir . '/app/Models/Submission/UavMission.php',
     'App\\Models\\Submission\\UavMissionDetail' => $baseDir . '/app/Models/Submission/UavMissionDetail.php',
     'App\\Models\\Submission\\Legal' => $baseDir . '/app/Models/Submission/Legal.php',
-    'App\\Models\\Submission\\MemorandumHis' => $baseDir . '/app/Models/Submission/MemorandumHis.php',
+    'App\\Models\\Submission\\MemorandumDetail' => $baseDir . '/app/Models/Submission/MemorandumDetail.php',
     'App\\Models\\Theme' => $baseDir . '/app/Models/Theme.php',
     'App\\Models\\UavAsset' => $baseDir . '/app/Models/UavAsset.php',
     'App\\Models\\Unit' => $baseDir . '/app/Models/Unit.php',

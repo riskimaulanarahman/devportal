@@ -14,7 +14,7 @@ use App\Models\Useraccess;
 use App\Mail\SubmissionMail;
 use App\Models\Approvaluser;
 use Illuminate\Http\Request;
-use App\Models\Submission\MemorandumHis;
+use App\Models\Submission\MemorandumDetail;
 use Illuminate\Support\Carbon;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
@@ -69,9 +69,20 @@ class MemorandumController extends Controller
                 }
             }
 
-            $getAccess = "(select TOP 1 CASE WHEN l.employee_id='".$user_id."' then 1 else 0 end 
-            from [authorization].tbl_useraccess l
-            where l.module_id = '".$module_id."' and l.allowView='1')";
+            // $getAccess = "(select TOP 1 CASE WHEN l.employee_id='".$user_id."' then 1 else 0 end 
+            // from [authorization].tbl_useraccess l
+            // where l.module_id = '".$module_id."' and l.allowView='1')";
+            $getAccess = "(
+                            SELECT CASE 
+                                WHEN EXISTS (
+                                    SELECT 1 
+                                    FROM [authorization].tbl_useraccess l 
+                                    WHERE l.module_id = '".$module_id."'
+                                    AND l.allowView = '1'
+                                    AND l.employee_id = '".$user_id."'
+                                ) THEN 1 ELSE 0 
+                            END
+                        )";
 
             // Sekarang data sudah sinkron, tinggal ambil view gabungannya
             $data = DB::table('request_memorandum AS r')
@@ -90,6 +101,8 @@ class MemorandumController extends Controller
                         m.Location,
                         m.DesignationName,
                         m.bu,
+                        m.end_contract_date,
+                        m.retirement_date,
                         ".$getAccess." as isMine,
                         (
                             SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END
@@ -142,7 +155,7 @@ class MemorandumController extends Controller
                 ->leftJoin('codes','request_memorandum.code_id','codes.id')
                 ->leftjoin('memoExp AS m', 'request_memorandum.employee_id', '=', 'm.id')                
                 ->where('request_memorandum.id',$id)
-                ->with(['user', 'approverlist', 'request_memorandum_his'])
+                ->with(['user', 'approverlist', 'request_memorandum_detail'])
                 ->first();
 
                 return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
@@ -241,16 +254,16 @@ class MemorandumController extends Controller
             return response()->json(["status" => "error", "message" => "Data or approver history not found"]);
         }
 
-        $contracts = DB::table('request_memorandum_his')
-            ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
-            ->select('request_memorandum_his.*', 'codes.code') // ambil kolom code
+        $contracts = DB::table('request_memorandum_detail')
+            ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
+            ->select('request_memorandum_detail.*', 'codes.code') // ambil kolom code
             ->where('req_id', $id)
             ->orderBy('sequence')
             ->get();
 
         $hisCreated = $contracts->last()->created_at ?? null;
         $lastRemarks = $contracts->last()->remarks ?? '-';
-        $lastCode = $contracts->last()->code ?? '-';        
+        $lastCode = $contracts->last()->code ?? '-';     
 
         if ($contracts->isEmpty()) {
             return response()->json([
@@ -283,54 +296,39 @@ class MemorandumController extends Controller
                 : null;
             $excel = new \COM("Excel.Application") or die("ERROR: Unable to instantiate COM!\r\n");
             $excel->Visible = false;
-            $file = ""; // Inisialisasi sebagai string kosong
+            $file = ""; 
+            $file = public_path("template/memo/template.xlsx"); 
 
-            if ($data->contract_status === "Contract") {
-                $file = public_path("template/memo/ihm-kontrak.xlsx");
-            } elseif ($data->contract_status === "Permanent") {
-                $file = public_path("template/memo/ihm-pensiun.xlsx");
-            } else {
+            $bu = strtoupper(trim($data->bu)); 
+            $status = strtoupper(trim($data->contract_status)); 
+
+            $statusMap = [
+                'CONTRACT' => 'KONTRAK',
+                'PERMANENT' => 'PENSIUN'
+            ];
+
+            // Validasi status
+            if (!array_key_exists($status, $statusMap)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unknown contract status: ' . ($data->contract_status ?: 'NULL')
                 ]);
             }
+            $sheetName = "{$bu}_{$statusMap[$status]}"; 
 
+            // Validasi file template
+            if (!file_exists($file)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'File template tidak ditemukan: ' . $file
+                ]);
+            }
             if (!is_string($file) || empty($file) || !file_exists($file)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'File not found: ' . ($file ?: 'Undefined file path')
                 ]);
             }
-
-            $Workbook = $excel->Workbooks->Open($file, false, true);
-            $Worksheet = $Workbook->Worksheets(1);
-            $Worksheet->Activate;
-            $Worksheet->Range("B10")->Value = $data->deptheadName ?? ''; 
-            $Worksheet->Range("E15")->Value = $data->deptheadName ?? ''; 
-            $Worksheet->Range("E18")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' '); 
-            $Worksheet->Range("E21")->Value = $data->DesignationName ?? ''; 
-            $Worksheet->Range("F21")->Value = $data->sys_id ?? ''; 
-            $Worksheet->Range("C36")->Value = $lastRemarks;
-            $Worksheet->Range("G11")->Value = $lastCode;
-            $Worksheet->Range("C63")->Value = $data->DesignationName ?? ''; 
-            $Worksheet->Range("A56")->Value = $data->superiorName ?? ''; 
-            $Worksheet->Range("B56")->Value = $data->deptheadName ?? ''; 
-            $Worksheet->Range("E39")->Value = $data->deptheadName ?? ''; 
-            $Worksheet->Range("C62")->Value = $data->Pendidikan ?? '-'; 
-            // $Worksheet->Range("G11")->Value = $data->code ?? '-'; 
-            $Worksheet->Range("C64")->Value = $data->Usia ?? '-'; 
-            $Worksheet->Range("C61")->Value = $data->BirthOfDate 
-                ? Carbon::parse($data->BirthOfDate)->locale('id')->translatedFormat('j F Y')
-                : '';
-            $Worksheet->Range("C62")->Value = $usia ?? 'N/A';
-            
-            $Worksheet->Range("E24")->Value = $data->JoinDate 
-                ? Carbon::parse($data->JoinDate)->locale('id')->translatedFormat('j F Y')
-                : '';
-            $Worksheet->Range("G10")->Value = $hisCreated  
-                ? Carbon::parse($hisCreated)->locale('id')->translatedFormat('j F Y')
-                : '';
             $today = Carbon::today();
 
             $currentStartContract = null;
@@ -360,14 +358,25 @@ class MemorandumController extends Controller
                 }
             }
 
-            // Tulis akhir masa kerja ke sel E27
-            $Worksheet->Range("E27")->Value = $currentEndContract
-                ? $currentEndContract->locale('id')->translatedFormat('j F Y')
-                : ' - ';
+            $Workbook = $excel->Workbooks->Open($file, false, true);
+            $Worksheet = $Workbook->Worksheets($sheetName);
+            $Worksheet->Activate();
 
-            // Tulis kontrak baru ke sel C33
-            $Worksheet->Range("C33")->Value = ($newStartContract && $newEndContract)
-                ? 'dari ' . $newStartContract->locale('id')->translatedFormat('j F Y') .
+            $Worksheet->Range("A53")->Value = $data->superiorName ?? ''; 
+
+            $Worksheet->Range("B8")->Value = $data->deptheadName ?? ''; 
+
+            $Worksheet->Range("D34")->Value = $lastRemarks;            
+            $Worksheet->Range("C59")->Value = $data->Pendidikan ?? '-'; 
+            $Worksheet->Range("C58")->Value = $data->DesignationName ?? ''; 
+            $Worksheet->Range("C56")->Value = $data->BirthOfDate 
+                ? Carbon::parse($data->BirthOfDate)->locale('id')->translatedFormat('j F Y')
+                : '';
+            $Worksheet->Range("C57")->Value = $usia ?? 'N/A';
+                
+            // Tulis kontrak baru ke sel D33
+            $Worksheet->Range("D31")->Value = ($newStartContract && $newEndContract)
+                ? 'Dari ' . $newStartContract->locale('id')->translatedFormat('j F Y') .
                 ' sampai dengan ' . $newEndContract->locale('id')->translatedFormat('j F Y')
                 : ' - ';
 
@@ -375,48 +384,77 @@ class MemorandumController extends Controller
             if ($data->contract_status === "Contract") {
                 $filteredContracts = array_merge($oldContracts, $currentContracts);
 
-                $startRow = 61;
+                $startRow = 56;
                 foreach ($filteredContracts as $index => $contract) {
                     $row = $startRow + $index;
-                    $Worksheet->Range("E{$row}")->Value = "Kontrak " . ($index + 1);
-                    $Worksheet->Range("F{$row}")->Value = ($contract->startContract && $contract->endContract)
+                    $range = $Worksheet->Range("D{$row}");
+
+                    $label = "Kontrak " . ($index + 1) . " :";
+                    $period = ($contract->startContract && $contract->endContract)
                         ? Carbon::parse($contract->startContract)->format('d-m-Y') . ' - ' .
                         Carbon::parse($contract->endContract)->format('d-m-Y')
                         : ' - ';
+
+                    $range->Value = "{$label} {$period}";
                 }
+            }
+            $Worksheet->Range("E13")->Value = $data->deptheadName ?? ''; 
+            $Worksheet->Range("E16")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' '); 
+            $Worksheet->Range("E19")->Value = $data->DesignationName ?? '-'; 
+            $Worksheet->Range("E37")->Value = $data->deptheadName ?? ''; 
+            $Worksheet->Range("E22")->Value = $data->JoinDate 
+                ? Carbon::parse($data->JoinDate)->locale('id')->translatedFormat('j F Y')
+                : '';
+            // Tulis akhir masa kerja ke sel E27
+            if ($currentEndContract) {
+                $sequence = $currentEndContract->sequence ?? '-';
+                $tanggal = $currentEndContract->locale('id')->translatedFormat('j F Y');
+
+                $Worksheet->Range("E25")->Value = ": {$tanggal} ( Habis Kontrak ke {$sequence} )";
+            } else {
+                $Worksheet->Range("E25")->Value = ": -";
             }
 
 
+            $Worksheet->Range("G9")->Value = $lastCode;
+            $Worksheet->Range("G8")->Value = $hisCreated  
+                ? Carbon::parse($hisCreated)->locale('id')->translatedFormat('j F Y')
+                : '';
+            
             $picpath = public_path("assets/images/approved.png");
-
             function addPictureToWorksheet($Worksheet, $picPath, $row, $column, $height, $excel, $offset = 0) {
                 $pic = $Worksheet->Shapes->AddPicture($picPath, False, True, 0, 0, -1, -1);
                 $pic->Height = $height;
                 $pic->Top = $excel->Cells($row, $column)->Top - $offset; // Offset untuk menggeser gambar ke atas
-                $pic->Left = $excel->Cells($row, $column)->Left;
-                
+                $pic->Left = $excel->Cells($row, $column)->Left;                
             }
-
             foreach ($dataAppr as $appr) {
-                if ($appr->sequence == 1) {
-                    if ($appr->approvalAction == 3) {
-                        $Worksheet->Range("A56")->Value = $appr->apprname;
-                        // $Worksheet->Range("A54")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 2, 40, $excel, 25);                        
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 4, 40, $excel, 25);
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 5, 40, $excel, 25);
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 7, 40, $excel, 25);
-                        // addPictureToWorksheet($Worksheet, $picpath, 53, 7, 40, $excel, 25);
-                    }
-                }
                 if ($appr->sequence == 2) {
                     if ($appr->approvalAction == 3) {
-                        // $Worksheet->Range("E56")->Value = $appr->apprname;
-                        // $Worksheet->Range("E57")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 3, 40, $excel, 25);
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 4, 40, $excel, 25);
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 5, 40, $excel, 25);
-                        addPictureToWorksheet($Worksheet, $picpath, 55, 7, 40, $excel, 25);
+                        $Worksheet->Range("A53")->Value = $appr->apprname;
+                        $Worksheet->Range("A54")->Value = $appr->apprtype;
+                        addPictureToWorksheet($Worksheet, $picpath, 52, 1, 40, $excel, 25);
+                    }
+                }
+                if ($appr->sequence == 3) {
+                    if ($appr->approvalAction == 3) {
+                        $Worksheet->Range("D53")->Value = $appr->apprname;
+                        $Worksheet->Range("D54")->Value = $appr->apprtype;
+                        addPictureToWorksheet($Worksheet, $picpath, 52, 4, 40, $excel, 25);
+                    }
+                }
+                if ($appr->sequence == 4) {
+                    if ($appr->approvalAction == 3) {
+                        $Worksheet->Range("E53")->Value = $appr->apprname;
+                        $Worksheet->Range("E54")->Value = $appr->apprtype;
+                        addPictureToWorksheet($Worksheet, $picpath, 52, 5, 40, $excel, 25);
+                    }
+                }
+                if ($appr->sequence == 5) {
+                    if ($appr->approvalAction == 3) {
+                        $Worksheet->Range("G53")->Value = $appr->apprname;
+                        $Worksheet->Range("G54")->Value = $appr->apprtype;
+                        addPictureToWorksheet($Worksheet, $picpath, 52, 7, 40, $excel, 25);
                     }
                 }
             }
@@ -429,30 +467,24 @@ class MemorandumController extends Controller
 			if (file_exists($filePath)) {
 				unlink($filePath);
 			}
-			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);
-			
+			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);			
 			$excel->CutCopyMode = false;
 			$Workbook->Close(false);
 			unset($Worksheet);
 			unset($Workbook);
 			$excel->Workbooks->Close();
 			$excel->Quit();
-			unset($excel);
-			
+			unset($excel);			
             $pathfilename = 'public/template/memo/pdf/' . $fileName;
-
-            // Update baris terakhir atau tertentu dari request_memorandum_his
-            DB::table('request_memorandum_his')
-                ->where('req_id', $id) // pakai foreign key yang benar
-                ->orderByDesc('sequence')    // atau orderBy('sequence', 'desc') kalau pakai urutan
+            // Update baris terakhir atau tertentu dari request_memorandum_detail
+            DB::table('request_memorandum_detail')
+                ->where('req_id', $id)
+                ->orderByDesc('sequence')
                 ->limit(1)
                 ->update(['approveddoc' => $pathfilename]);
-
             $this->processcopy($pathfilename);
 
             return $pathfilename;
-
-
         } catch (\Exception $e) {
             // Logging error
             $this->logerror($request->ip(), $request->url(), 'gen-pdf-memorandum', $e->getMessage());

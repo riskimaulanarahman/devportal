@@ -56,10 +56,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     columns: [
         {
+            caption: 'Code',
+            dataField: 'code',
+            width: 220,
+        },
+        {
             caption: 'Action',
             width: 140,
             cellTemplate: function(container, options) {
-
                 var isMine = options.data.isMine;
                 var isPendingOnMe = options.data.isPendingOnMe;
                 var reqid = options.data.id;
@@ -113,39 +117,41 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Employee Name",
             dataField: 'FullName',
             alignment: "left",
-            width: 180,
+            // width: 180,
         },
         {
             caption: "Contract Status",
             dataField: 'contract_status',
             alignment: "left",
-            width: 180,
+            // width: 180,
         },
         { 
             caption: 'Join Date',
             dataField: "JoinDate",
-            alignment: "left"
+            alignment: "left",
+            dataType: "date",
+            // width: 180,
+            format: "dd-MM-yyyy"
         },       
         { 
             caption: 'Retirement Date',
-            dataField: "pensiunDate",
-            width: 120,
-            alignment: "left"
+            dataField: "retirement_date",
+            // width: 180,
+            alignment: "left",
+            dataType: "date",
+            format: "dd-MM-yyyy"
         },
         { 
             caption: 'End Contract',
-            dataField: "endContract",
-            width: 120,
-            alignment: "left"
-        }, 
-        {
-            caption: "Status",
-            dataField: 'status_now',
-            alignment: "left"
+            dataField: "end_contract_date",
+            // width: 180,
+            alignment: "left",
+            dataType: "date",
+            format: "dd-MM-yyyy"
         },
         {
             dataField: 'requestStatus',
-            width: 240,
+            // width: 240,
             encodeHtml: false,
             allowFiltering: false,
             allowHeaderFiltering: true,
@@ -570,7 +576,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                 var infoContentcontract = $("<div id='infoContentcontract'>");
                 if(data.ID == 2) {
                     let formDataContract = $("<div id='formcontract'>").dxDataGrid({    
-                        dataSource: storewithmodule('memorandumhis',modelclass,reqid),    
+                        dataSource: storewithmodule('memorandum_detail',modelclass,reqid),    
                         // dataSource: storedetail(modname,reqid),
                         allowColumnReordering: true,
                         allowColumnResizing: true,

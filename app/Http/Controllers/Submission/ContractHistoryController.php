@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Submission;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
-use App\Models\Submission\MemorandumHis;
+use App\Models\Submission\MemorandumDetail;
 use App\Models\Useraccess;
 use Illuminate\Http\Request;
 use DB;
@@ -21,7 +21,7 @@ class ContractHistoryController extends Controller
 
     public function __construct()
     {
-        $this->model = new MemorandumHis();
+        $this->model = new MemorandumDetail();
         $this->modulename = 'Memorandum';
         $this->codename = 'ContractEmp';
         $this->module = new Module();
@@ -37,7 +37,7 @@ class ContractHistoryController extends Controller
     {
         DB::beginTransaction();
 
-        try {            
+        try {
             $request->validate([
                 'superior_id' => 'required|integer',
                 'startContract' => 'required|date',
@@ -50,9 +50,9 @@ class ContractHistoryController extends Controller
                 ->where('id', $requestData['req_id'])
                 ->select('sys_id', 'bu')
                 ->first();
-         
-            $getMaxSequence = MemorandumHis::where('req_id',$requestData['req_id'])->orderBy('sequence','desc')->value('sequence');
-            
+
+            $getMaxSequence = MemorandumDetail::where('req_id',$requestData['req_id'])->orderBy('sequence','desc')->value('sequence');
+
             $requestData['user_id'] = $this->getAuth()->id;
             $requestData['sequence'] = $getMaxSequence+1;
             $requestData['code_id'] = $code_id;
@@ -66,10 +66,33 @@ class ContractHistoryController extends Controller
             if($checkdata > 0) {
                 return response()->json(["status" => "error", "message" => $this->getMessage()['contractexist']]);
             }
-            $data = MemorandumHis::where('req_id',$request->req_id)->first();
-            if(in_array($data->Memorandum->requestStatus, [1, 4])) {
-                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
-            }
+
+            // $data = MemorandumDetail::where('req_id', $request->req_id)->first();
+            // if (!$data) {
+            //     return response()->json([
+            //         "status" => "error",
+            //         "message" => "Data memorandum detail tidak ditemukan."
+            //     ]);
+            // }
+
+            // if (!$data->Memorandum) {
+            //     return response()->json([
+            //         "status" => "error",
+            //         "message" => "Relasi ke Memorandum tidak tersedia atau belum dimuat."
+            //     ]);
+            // }
+
+            // if (in_array($data->Memorandum->requestStatus, [1, 4])) {
+            //     return response()->json([
+            //         "status" => "error",
+            //         "message" => $this->getMessage()['nothaveaccess']
+            //     ]);
+            // }
+
+            // $data = MemorandumDetail::where('req_id',$request->req_id)->first();
+            // if(in_array($data->Memorandum->requestStatus, [1, 4])) {
+            //     return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
+            // }
             
             $this->model->create($requestData);
 
@@ -86,9 +109,9 @@ class ContractHistoryController extends Controller
     {
         try {
             $data = $this->model
-                ->select('request_memorandum_his.*', 'codes.code')                
-                ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
-                ->where('request_memorandum_his.id', $id)
+                ->select('request_memorandum_detail.*', 'codes.code')                
+                ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
+                ->where('request_memorandum_detail.id', $id)
                 ->with(['user'])
                 ->first();
 
@@ -124,18 +147,18 @@ class ContractHistoryController extends Controller
         try {
             $user_id = $this->getAuth()->id;
             $data = $this->model->selectRaw("
-                    request_memorandum_his.*, 
+                    request_memorandum_detail.*, 
                     codes.code,
-                    CAST(CASE WHEN request_memorandum_his.user_id = ? THEN 1 ELSE 0 END AS INT) AS isMine,
+                    CAST(CASE WHEN request_memorandum_detail.user_id = ? THEN 1 ELSE 0 END AS INT) AS isMine,
                     COALESCE((
                         SELECT TOP 1 CAST(CASE WHEN a.user_id = ? THEN 1 ELSE 0 END AS INT)
                         FROM tbl_approverListReq l
                         LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                        WHERE l.req_id = request_memorandum_his.id 
+                        WHERE l.req_id = request_memorandum_detail.id 
                         ORDER BY a.sequence
                     ), 0) AS isPendingOnMe
                 ", [$user_id, $user_id]) 
-                ->leftJoin('codes', 'request_memorandum_his.code_id', '=', 'codes.id')
+                ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
                 ->with(['user', 'approverlist'])
                 ->where('req_id', $id)
                 ->orderBy('sequence', 'DESC')
@@ -223,7 +246,7 @@ class ContractHistoryController extends Controller
             // Hapus data
             $data->delete();
             // Cek apakah masih ada data his yang tersisa untuk req_id yang sama
-            // $remaining = DB::table('request_memorandum_his')
+            // $remaining = DB::table('request_memorandum_detail')
             //     ->where('req_id', $reqId)
             //     ->exists();
 

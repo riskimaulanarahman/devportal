@@ -35,7 +35,7 @@ use App\Models\Purchasinguser;
 use App\Models\RekeningCcm;
 use App\Models\Ghm_room;
 use App\Models\Rfc;
-use App\Models\Submission\MemorandumHis;
+use App\Models\Submission\MemorandumDetail;
 use Auth;
 
 class ListController extends Controller
@@ -259,7 +259,7 @@ class ListController extends Controller
     }
 
     public function ListContract() {
-        return MemorandumHis::select('req_id', 'sequence', 'startContract', 'endContract')->orderBy('req_id','asc')->get();
+        return MemorandumDetail::select('req_id', 'sequence', 'startContract', 'endContract')->orderBy('req_id','asc')->get();
     }
 
     public function listRfc() { // not have account/loginName

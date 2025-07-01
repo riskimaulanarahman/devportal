@@ -12,11 +12,11 @@ use App\Models\Submission\Memorandum;
 use App\Models\Employee;
 use App\Models\ApproverListHistory;
 
-class MemorandumHis extends Model
+class MemorandumDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'request_memorandum_his';
+    protected $table = 'request_memorandum_detail';
     
     protected $guarded = ['id'];
     protected $fillable = [

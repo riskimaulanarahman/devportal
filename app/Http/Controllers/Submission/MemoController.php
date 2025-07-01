@@ -13,7 +13,7 @@ use App\Models\Useraccess;
 use App\Mail\SubmissionMail;
 use App\Models\Approvaluser;
 use Illuminate\Http\Request;
-use App\Models\MemorandumHis;
+use App\Models\MemorandumDetail;
 use Illuminate\Support\Carbon;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
@@ -86,7 +86,7 @@ class MemoController extends Controller
                     request_memorandum.user_id,
                     request_memorandum.requestStatus,
                     request_memorandum.bu,  
-                    request_memorandum_his.sequence, 
+                    request_memorandum_detail.sequence, 
                     employee.tbl_employee.FullName,
                     employee.tbl_employee.companycode, 
                     employee.tbl_employee.contract_status, 
@@ -98,7 +98,7 @@ class MemoController extends Controller
                 ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
                 ->leftJoin('users', 'request_memorandum.user_id', '=', 'users.id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-                ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')
+                ->leftJoin('request_memorandum_detail', 'request_memorandum.id', '=', 'request_memorandum_detail.req_id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $getAllview) {
@@ -134,7 +134,7 @@ class MemoController extends Controller
                     'request_memorandum.employee_id',
                     'request_memorandum.bu',
                     'request_memorandum.sysid',
-                    'request_memorandum_his.sequence',
+                    'request_memorandum_detail.sequence',
                     'codes.code',
                     'users.fullname',
                     'employee.tbl_employee.FullName',
@@ -224,7 +224,7 @@ class MemoController extends Controller
                 'employee.tbl_employee.BirthOfDate')
                 ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
                 ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-                // ->leftJoin('request_memorandum_his', 'request_memorandum.id', '=', 'request_memorandum_his.req_id')
+                // ->leftJoin('request_memorandum_detail', 'request_memorandum.id', '=', 'request_memorandum_detail.req_id')
                 ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
                 ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
                 ->where('request_memorandum.id', $id)

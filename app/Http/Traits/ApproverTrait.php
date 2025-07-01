@@ -625,12 +625,23 @@ trait ApproverTrait {
     }
 
     public function createApprSuperiorDepthead($employeeID, $moduleName, $reqID) {
-        // if($moduleName == 'Jdi') {
+        // if($moduleName == 'Memorandum') {
             $getemployee = Employee::find($employeeID);
             $getuser = $this->user->where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
             //START approver for Chairman
             $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Superior/Department Head')->first();
+            
+            // $getIDapprType = Approvaltype::where('Module', $moduleName)
+            //     ->where('ApprovalType', 'Superior/Department Head')
+            //     ->first();
 
+            // if (!$getIDapprType) {
+            //     return response()->json([
+            //         "status" => "error",
+            //         "message" => "Approval type untuk module '$moduleName' tidak ditemukan."
+            //     ]);
+            // }
+            
             $checkExistAppr = Approvaluser::where('module',$moduleName)
                                         ->where('employee_id',$employeeID)
                                         ->where('approvaltype_id',$getIDapprType->id)
@@ -694,7 +705,7 @@ trait ApproverTrait {
         // }
     }
     public function createApprSuperior($employeeID, $moduleName, $reqID) {
-        // if($moduleName == 'Jdi') {
+        // if($moduleName == 'Legal') {
             $getemployee = Employee::find($employeeID);
             $getuser = $this->user->where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
             //START approver for Chairman
