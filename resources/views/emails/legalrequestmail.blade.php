@@ -75,7 +75,9 @@
                 </tr>                
                 <tr>
                     <th>Submit Date</th>
-                    <td>{{ $mailData['submission']->submitDate }}</td>
+                    {{-- <td>{{ $mailData['submission']->submitDate }}</td> --}}
+                    <td>{{ \Carbon\Carbon::parse($mailData['submission']->submitDate)->format('j/F/Y') }}</td>
+
                 </tr>
                 <tr>
                     <th>BU</th>
