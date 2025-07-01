@@ -72,11 +72,7 @@
                 <tr>
                     <th>Code No</th>
                     <td>{{ $code }}</td>
-                </tr>
-                <tr>
-                    <th>countersigningParty</th>
-                    <td>{{ $mailData['submission']->countersigningParty }}</td>
-                </tr>
+                </tr>                
                 <tr>
                     <th>Submit Date</th>
                     <td>{{ $mailData['submission']->submitDate }}</td>
@@ -86,7 +82,11 @@
                     <td>{{ $mailData['submission']->bu }}</td>
                 </tr>
                 <tr>
-                    <th>Sector</th>
+                    <th>countersigningParty</th>
+                    <td>{{ $mailData['submission']->countersigningParty }}</td>
+                </tr>
+                <tr>
+                    <th>Title Of Document</th>
                     <td>{{ $mailData['submission']->titleOfDocument }}</td>
                 </tr>
             </tbody>
