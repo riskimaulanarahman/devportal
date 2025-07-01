@@ -82,7 +82,7 @@
                     <td>{{ $mailData['submission']->bu }}</td>
                 </tr>
                 <tr>
-                    <th>countersigningParty</th>
+                    <th>Contractor</th>
                     <td>{{ $mailData['submission']->countersigningParty }}</td>
                 </tr>
                 <tr>
