@@ -80,20 +80,16 @@
                     </tr> --}}
                 {{-- @endif --}}
                 <tr>
-                    <th>Title</th>
-                    <td>{{ $mailData['submission']->title }}</td>
+                    <th>Employee Name</th>
+                    <td>{{ $mailData['submission']->sysid }}</td>
                 </tr>
                 <tr>
-                    <th>Submit Date</th>
-                    <td>{{ $mailData['submission']->submitDate }}</td>
+                    <th>Periode</th>
+                    <td>{{ $mailData['submission']->created_at }}</td>
                 </tr>
                 <tr>
-                    <th>BU</th>
+                    <th>komentar</th>
                     <td>{{ $mailData['submission']->bu }}</td>
-                </tr>
-                <tr>
-                    <th>Sector</th>
-                    <td>{{ $mailData['submission']->sector }}</td>
                 </tr>
             </tbody>
         </table>

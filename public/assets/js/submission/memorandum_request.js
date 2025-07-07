@@ -598,7 +598,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             mode:"cell",
                             allowAdding: true,
                             allowUpdating: true,
-                            allowDeleting: true,
+                            allowDeleting: false,
                             },
                         scrolling: {
                             mode: "virtual"
@@ -616,7 +616,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         columns: [
                             {
                                 caption: 'Action',
-                                width: 140,
+                                width: 100,
                                 cellTemplate: function(container, options) {     
                                     if(!options.data.approveddoc) {
                                         $('<button id="btn-submit" type="button" class="btn btn-primary" onClick="btnreqsubmit('+reqid+',\''+mode+'\')"><i class="bx bx-check-double label-icon"></i> Submit</button>').appendTo(container);

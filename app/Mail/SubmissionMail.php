@@ -32,7 +32,7 @@ use App\Http\Controllers\Submission\MMF\M30RequestController;
 use App\Models\Submission\HRIS\Hris;
 use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
 use App\Http\Controllers\Submission\Financial\Capex\CapexRequestController;
-use App\Http\Controllers\Submission\MemorandumController;
+use App\Http\Controllers\Submission\MemorandumRequestController;
 use Storage;
 use DB;
 use App\Http\Traits\HasGetModule;
@@ -342,10 +342,11 @@ class SubmissionMail extends Mailable
                 }
             }
         // LEGAL MODULE
+        
         // MEMORANDUM MODULE
             if($modulename == 'Memorandum') {
                 $request = new Request();
-                $memorandumController = new MemorandumController();
+                $memorandumRequestController = new MemorandumRequestController();
                 if($final == 1) {
                     // save no registrasi
                     // if($mailData['submission']->noRegistration == null || $mailData['submission']->noRegistration == '') {
@@ -357,7 +358,7 @@ class SubmissionMail extends Mailable
                     //     );
                     // }
                     // end save no registrasi
-                    $pdf = $memorandumController->genPdfmemorandumReq($request,$mailData['submission']->id);
+                    $pdf = $memorandumRequestController->genPdfmemorandumReq($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
                     foreach ($Mailrecipient as $cc) {
                         $this->cc($cc->email); // cc bcid
@@ -515,7 +516,7 @@ class SubmissionMail extends Mailable
                 $viewblade = 'emails.legalrequestmail';
                 break;
             case 'Memorandum':
-                $viewblade = 'emails.memorandummail';
+                $viewblade = 'emails.HRIS.memorandummail';
                 break;
             default:
                 $viewblade = 'emails.defaultmail';

@@ -10,7 +10,7 @@ use App\Models\Useraccess;
 use Illuminate\Http\Request;
 use DB;
 
-class ContractHistoryController extends Controller
+class MemorandumDetailController extends Controller
 {
     
     public $model;

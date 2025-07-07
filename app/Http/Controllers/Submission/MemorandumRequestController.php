@@ -24,7 +24,7 @@ use App\Models\Submission\Memorandum;
 
 use function PHPUnit\Framework\fileExists;
 
-class MemorandumController extends Controller
+class MemorandumRequestController extends Controller
 {
     public $model;
     public $modulename;
@@ -166,10 +166,86 @@ class MemorandumController extends Controller
             }
         }
 
+    // public function update(Request $request, $id)
+    // {
+    //     try {
+    //         $data = $this->model->findOrFail($id);
+
+    //         if(isset($request->ticketStatus) && $data->requestStatus == 3) {
+    //             $getSubmissionData = $this->model->findOrFail($id);
+
+    //             $mailData = [
+    //                 "id" => 30, // final approved
+    //                 "action_id" => 5, // update id
+    //                 "submission" => $getSubmissionData,
+    //                 "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
+    //                 "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
+    //                 "message" => $this->mailMessage()['newActivity'],                    
+    //                 "emp_name" => $request->emp_name (request_memorandum.employee_id = memoExp.id get FullName as emp_name),
+    //                 "startContract" => $request->startContract (request_memorandum.id = request_memorandum_detail.req_id get startContract),
+    //                 "endContract" => $request->endContract (request_memorandum.id = request_memorandum_detail.req_id get endContract),
+    //                 "remarks" => $request->remarks (request_memorandum.id = request_memorandum_detail.req_id get endContract)
+    //             ];
+    //             Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
+    //         }
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Additional approver berhasil ditambahkan.'
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ]);
+    //     }
+    // }
+
     public function update(Request $request, $id)
     {
         try {
             $data = $this->model->findOrFail($id);
+
+            if (isset($request->ticketStatus) && $data->requestStatus == 3) {
+                $getSubmissionData = $this->model->findOrFail($id);
+                $user = $this->getUserByid($getSubmissionData->user_id);
+
+                // Ambil semua detail kontrak untuk RM ini
+                $details = DB::table('request_memorandum_detail')
+                    ->where('req_id', $getSubmissionData->id)
+                    ->orderBy('sequence')
+                    ->get();
+
+                // Ambil nama karyawan dari memoExp
+                $employee = DB::table('memoExp')
+                    ->where('id', $getSubmissionData->employee_id)
+                    ->first();
+
+                // Susun daftar periode kontrak
+                $contractPeriods = $details->map(function ($detail, $index) {
+                    $start = $detail->startContract ? Carbon::parse($detail->startContract)->format('d-m-Y') : '-';
+                    $end   = $detail->endContract ? Carbon::parse($detail->endContract)->format('d-m-Y') : '-';
+                    return ". {$start} s.d {$end}";
+                })->toArray();
+
+                // Ambil remarks terakhir
+                $lastRemarks = $details->last()->remarks ?? '-';
+
+                $mailData = [
+                    'id'              => 30,
+                    'action_id'       => 5,
+                    'submission'      => $getSubmissionData,
+                    'email'           => $user->email ?? null,
+                    'fullname'        => $user->fullname ?? '-',
+                    'message'         => $this->mailMessage()['newActivity'],
+                    'emp_name'        => $employee->FullName ?? '-',
+                    'contractPeriods' => $contractPeriods,
+                    'komentar'         => $lastRemarks,
+                ];
+
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData, $this->modulename, 1));
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -239,7 +315,7 @@ class MemorandumController extends Controller
                 'employee.tbl_employee.deptheadName as deptheadName',
                 'employee.tbl_employee.contract_status as contract_status',
                 'employee.tbl_employee.BirthOfDate as BirthOfDate',
-                'employee.tbl_level.Level as Level',
+                'employee.tbl_level.Level as Level',  
                 'employee.tbl_designation.DesignationName as DesignationName',
             )
             ->leftJoin('users', 'request_memorandum.user_id', 'users.id')
@@ -254,40 +330,86 @@ class MemorandumController extends Controller
             return response()->json(["status" => "error", "message" => "Data or approver history not found"]);
         }
 
+        // Ambil semua kontrak berdasarkan req_id
         $contracts = DB::table('request_memorandum_detail')
             ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
-            ->select('request_memorandum_detail.*', 'codes.code') // ambil kolom code
+            ->select('request_memorandum_detail.*', 'codes.code')
             ->where('req_id', $id)
             ->orderBy('sequence')
             ->get();
 
-        $hisCreated = $contracts->last()->created_at ?? null;
-        $lastRemarks = $contracts->last()->remarks ?? '-';
-        $lastCode = $contracts->last()->code ?? '-';     
-
         if ($contracts->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => "kontrak kosng untuk $id"
+                'message' => "Kontrak kosong untuk req_id: $id"
             ]);
         }
+
+        // Ambil informasi dari baris terakhir
+        $lastDetail   = $contracts->last();
+        $hisCreated   = $lastDetail->created_at ?? null;
+        $lastRemarks  = $lastDetail->remarks ?? '-';
+        $lastCode     = $lastDetail->code ?? '-';
+        $lastcontract = $lastDetail->endContract ?? '-';
+        $lss = $lastDetail->sequence ?? '-';
+
+        // Ambil sequence dari baris saat ini
+        $currentId    = $data->id ?? null;
+        $currentDetail = $contracts->firstWhere('id', $currentId);
+
         $today = Carbon::today();
-        $oldContracts = []; 
-        $currentContracts = []; 
-        $newContracts = []; 
+        $oldContracts = [];
+        $currentContracts = [];
+        $newContracts = [];
+        $currentContract = null; // Ini yang akan kita gunakan untuk ambil sequence aktif
+
         foreach ($contracts as $contract) {
-            if ($contract->endContract < $today) {
-                // Kontrak Lama: Berakhir sebelum hari ini
+            $start = Carbon::parse($contract->startContract);
+            $end   = Carbon::parse($contract->endContract);
+
+            if ($end->lt($today)) {
                 $oldContracts[] = $contract;
-            } elseif ($contract->startContract <= $today && $contract->endContract >= $today) {
-                // Kontrak Sekarang: Sedang berlangsung hari ini
+            } elseif ($start->lte($today) && $end->gte($today)) {
                 $currentContracts[] = $contract;
-            } elseif ($contract->startContract > $today) {
-                // Kontrak Baru: Dimulai setelah hari ini
+
+                // Simpan kontrak aktif pertama
+                if (!$currentContract) {
+                    $currentContract = $contract;
+                }
+            } elseif ($start->gt($today)) {
                 $newContracts[] = $contract;
             }
         }
-        
+        // Tentukan kontrak aktif dan kontrak baru
+        $currentEndContract = null;
+        if (strtoupper($data->contract_status) === 'PERMANENT') {
+            $birthDate = $data->BirthOfDate ? Carbon::parse($data->BirthOfDate) : null;
+            $currentEndContract = $birthDate ? $birthDate->copy()->addYears(55) : null;
+        } elseif ($currentContract) {
+            $currentEndContract = Carbon::parse($currentContract->endContract);
+        }
+        $sequence = $currentContract->sequence ?? '-';
+        $currentEndContract   = null;
+        $newStartContract     = null;
+        $newEndContract       = null;
+        $sequence = $currentContract->sequence ?? '-';
+        if (strtoupper($data->contract_status) === "PERMANENT") {
+            $birthDate = $data->BirthOfDate ? Carbon::parse($data->BirthOfDate) : null;
+            $currentEndContract = $birthDate ? $birthDate->copy()->addYears(55) : null;
+        } else {
+            foreach ($currentContracts as $contract) {
+                $currentStartContract = Carbon::parse($contract->startContract);
+                $currentEndContract   = Carbon::parse($contract->endContract);
+                break; // Ambil kontrak aktif pertama
+            }
+
+            foreach ($newContracts as $contract) {
+                $newStartContract = Carbon::parse($contract->startContract);
+                $newEndContract   = Carbon::parse($contract->endContract);
+                break; // Ambil kontrak baru pertama
+            }
+        }
+
         try {
             $birthDate = Carbon::parse($data->BirthOfDate);
             $usia = $birthDate 
@@ -296,82 +418,115 @@ class MemorandumController extends Controller
                 : null;
             $excel = new \COM("Excel.Application") or die("ERROR: Unable to instantiate COM!\r\n");
             $excel->Visible = false;
-            $file = ""; 
-            $file = public_path("template/memo/template.xlsx"); 
 
-            $bu = strtoupper(trim($data->bu)); 
-            $status = strtoupper(trim($data->contract_status)); 
+            // $file = ""; 
+            $file = public_path("template/memo/template.xlsx");
+
+            $bu = strtoupper(trim($data->bu));
+            $status = strtoupper(trim($data->contract_status));
 
             $statusMap = [
                 'CONTRACT' => 'KONTRAK',
                 'PERMANENT' => 'PENSIUN'
             ];
 
-            // Validasi status
             if (!array_key_exists($status, $statusMap)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unknown contract status: ' . ($data->contract_status ?: 'NULL')
                 ]);
             }
-            $sheetName = "{$bu}_{$statusMap[$status]}"; 
 
-            // Validasi file template
+            function addKopSuratStatis($Worksheet, $bu, $excel) {
+            $picPath = '';
+
+            if ($bu === 'AHL') {
+                $picPath = public_path('template/memo/kop/AHL.png');
+            } elseif ($bu === 'IHM') {
+                $picPath = public_path('template/memo/kop/IHM.png');
+            } elseif ($bu === 'NKL') {
+                $picPath = public_path('template/memo/kop/NKL.png');
+            } elseif ($bu === 'KPS') {
+                $picPath = public_path('template/memo/kop/KPS.png');
+            } elseif ($bu === 'KPSI') {
+                $picPath = public_path('template/memo/kop/KPSI.png');
+            } elseif ($bu === 'GMS') {
+                $picPath = public_path('template/memo/kop/GMS.png');
+            }
+
+            if (!$picPath || !file_exists($picPath)) {
+                return; // Jika tidak ditemukan, abaikan
+            }
+
+            // Ambil range A1
+            $range = $Worksheet->Range("A1");
+
+            // Pastikan A1 sudah di-merge
+            if (!$range->MergeCells) {
+                return;
+            }
+
+            // Ambil area hasil merge
+            $mergedArea = $range->MergeArea;
+
+            // Ukuran target dalam cm → konversi ke points (1 cm = 28.35 pt)
+            $targetWidth  = 24 * 28.35; // 24 cm
+            $targetHeight = 3.2 * 28.35; // 3.2 cm
+
+            // Hitung posisi agar gambar berada di tengah area merge
+            $top  = $mergedArea->Top + ($mergedArea->Height - $targetHeight) / 2;
+            $left = $mergedArea->Left + ($mergedArea->Width - $targetWidth) / 2;
+
+            // Sisipkan gambar
+            $pic = $Worksheet->Shapes->AddPicture($picPath, false, true, 0, 0, -1, -1);
+
+            // Paksa ukuran dan posisi
+            $pic->LockAspectRatio = false;
+            $pic->Top    = $top;
+            $pic->Left   = $left;
+            $pic->Width  = $targetWidth;
+            $pic->Height = $targetHeight;
+
+            // Opsional: kunci gambar agar ikut sel
+            $pic->Placement = 1; // xlMoveAndSize
+        }
+
+
+            $sheetName = $statusMap[$status];
+
             if (!file_exists($file)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'File template tidak ditemukan: ' . $file
                 ]);
             }
-            if (!is_string($file) || empty($file) || !file_exists($file)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'File not found: ' . ($file ?: 'Undefined file path')
-                ]);
-            }
-            $today = Carbon::today();
-
-            $currentStartContract = null;
-            $currentEndContract   = null;
-            $newStartContract     = null;
-            $newEndContract       = null;
-
-            // Jika status Permanent, langsung set tanggal pensiun sebagai akhir masa kerja
-            if ($data->contract_status === "Permanent") {
-                $birthDate = $data->BirthOfDate ? Carbon::parse($data->BirthOfDate) : null;
-                $currentEndContract = $birthDate ? $birthDate->copy()->addYears(55) : null;
-            }
-
-            // Loop kontrak untuk cari kontrak aktif dan kontrak baru
-            foreach ($contracts as $contract) {
-                $start = Carbon::parse($contract->startContract);
-                $end   = Carbon::parse($contract->endContract);
-
-                if ($data->contract_status === "Contract" && $start->lt($today) && $end->gt($today)) {
-                    $currentStartContract = $start;
-                    $currentEndContract   = $end;
-                }
-
-                if ($start->gt($today) && !$newStartContract && !$newEndContract) {
-                    $newStartContract = $start;
-                    $newEndContract   = $end;
-                }
-            }
 
             $Workbook = $excel->Workbooks->Open($file, false, true);
             $Worksheet = $Workbook->Worksheets($sheetName);
             $Worksheet->Activate();
 
-            $Worksheet->Range("A53")->Value = $data->superiorName ?? ''; 
+            addKopSuratStatis($Worksheet, $bu, $excel); 
 
-            $Worksheet->Range("B8")->Value = $data->deptheadName ?? ''; 
-
-            $Worksheet->Range("D34")->Value = $lastRemarks;            
+            // Contoh pengisian data
+            $Worksheet->Range("A53")->Value = $data->superiorName ?? '';
+            $Worksheet->Range("B8")->Value = $data->deptheadName ?? '';
+            // $Worksheet->Range("D34")->Value = $lastRemarks;      
+            $Worksheet->Range("D34")->Value = ": " . ($lastRemarks ?? '-');      
             $Worksheet->Range("C59")->Value = $data->Pendidikan ?? '-'; 
             $Worksheet->Range("C58")->Value = $data->DesignationName ?? ''; 
-            $Worksheet->Range("C56")->Value = $data->BirthOfDate 
-                ? Carbon::parse($data->BirthOfDate)->locale('id')->translatedFormat('j F Y')
-                : '';
+            // $Worksheet->Range("C56")->Value = $data->BirthOfDate 
+                // ? Carbon::parse($data->BirthOfDate)->locale('id')->translatedFormat('j F Y')
+                // : '';
+
+            $BirthOfDateRaw = $data->BirthOfDate ?? null;
+            if ($BirthOfDateRaw) {
+                $BirthOfDate = Carbon::parse($BirthOfDateRaw)->locale('id');
+                $formattedBirthOfDate = "'" . $BirthOfDate->translatedFormat('j F Y'); // tanda kutip satu untuk paksa teks
+                $Worksheet->Range("C56")->Value = $formattedBirthOfDate;
+            } else {
+                $Worksheet->Range("C56")->Value = '';
+            }
+
             $Worksheet->Range("C57")->Value = $usia ?? 'N/A';
                 
             // Tulis kontrak baru ke sel D33
@@ -382,39 +537,67 @@ class MemorandumController extends Controller
 
             // Jika status Contract, cetak daftar kontrak lama & aktif ke Excel
             if ($data->contract_status === "Contract") {
-                $filteredContracts = array_merge($oldContracts, $currentContracts);
+            $filteredContracts = array_merge($oldContracts, $currentContracts);
 
-                $startRow = 56;
-                foreach ($filteredContracts as $index => $contract) {
-                    $row = $startRow + $index;
-                    $range = $Worksheet->Range("D{$row}");
+            $startRow = 56;
+            $startNumber = 5;
 
-                    $label = "Kontrak " . ($index + 1) . " :";
-                    $period = ($contract->startContract && $contract->endContract)
-                        ? Carbon::parse($contract->startContract)->format('d-m-Y') . ' - ' .
-                        Carbon::parse($contract->endContract)->format('d-m-Y')
-                        : ' - ';
+            foreach ($filteredContracts as $index => $contract) {
+                $number = $startNumber + $index;
 
-                    $range->Value = "{$label} {$period}";
+                // Format tanggal kontrak
+                $startDate = $contract->startContract ? Carbon::parse($contract->startContract)->format('d/m/Y') : '-';
+                $endDate   = $contract->endContract ? Carbon::parse($contract->endContract)->format('d/m/Y') : '-';
+                $period    = "{$startDate} - {$endDate}";
+
+                // Label + periode
+                $label = "{$number}. Kontrak " . ($index + 1) . " : {$period}";
+
+                // Tentukan kolom dan baris
+                if ($number <= 8) {
+                    $row = $startRow + ($number - 5);
+                    $Worksheet->Range("D{$row}")->Value = $label;
+                } else {
+                    $row = $startRow + ($number - 9);
+                    $Worksheet->Range("E{$row}")->Value = $label;
                 }
             }
+        }
             $Worksheet->Range("E13")->Value = $data->deptheadName ?? ''; 
             $Worksheet->Range("E16")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' '); 
             $Worksheet->Range("E19")->Value = $data->DesignationName ?? '-'; 
             $Worksheet->Range("E37")->Value = $data->deptheadName ?? ''; 
-            $Worksheet->Range("E22")->Value = $data->JoinDate 
-                ? Carbon::parse($data->JoinDate)->locale('id')->translatedFormat('j F Y')
-                : '';
-            // Tulis akhir masa kerja ke sel E27
-            if ($currentEndContract) {
-                $sequence = $currentEndContract->sequence ?? '-';
-                $tanggal = $currentEndContract->locale('id')->translatedFormat('j F Y');
-
-                $Worksheet->Range("E25")->Value = ": {$tanggal} ( Habis Kontrak ke {$sequence} )";
+            $joinDateRaw = $data->JoinDate ?? null;
+            if ($joinDateRaw) {
+                $joinDate = Carbon::parse($joinDateRaw)->locale('id');
+                $formattedJoinDate = "'" . $joinDate->translatedFormat('j F Y'); // tanda kutip satu untuk paksa teks
+                $Worksheet->Range("E22")->Value = $formattedJoinDate;
             } else {
-                $Worksheet->Range("E25")->Value = ": -";
+                $Worksheet->Range("E22")->Value = '';
             }
 
+            // $lastcontractRaw = $lastcontract ?? null;
+            // if ($lastcontractRaw) {
+            //     $lastcontract = Carbon::parse($lastcontractRaw)
+            //     ->locale('id');
+            //     $formattedlastcontract = "'" . $lastcontract
+            //     ->translatedFormat('j F Y'); // tanda kutip satu untuk paksa teks
+            //     $Worksheet->Range("E25")->Value = $formattedlastcontract;
+            // } else {
+            //     $Worksheet->Range("E25")->Value = '';
+            // }
+
+            $endContractRaw = $lastDetail->endContract ?? null;
+            if ($endContractRaw) {
+                $formattedEndContract = "'" . Carbon::parse($endContractRaw)
+                    ->locale('id')
+                    ->translatedFormat('j F Y');
+
+                $Worksheet->Range("E25")->Value = $formattedEndContract;
+            } else {
+                $Worksheet->Range("E25")->Value = '';
+            }
+            $Worksheet->Range("E25")->Value = ": {$formattedEndContract} ( Habis Kontrak ke {$lss} )";
 
             $Worksheet->Range("G9")->Value = $lastCode;
             $Worksheet->Range("G8")->Value = $hisCreated  
@@ -458,10 +641,11 @@ class MemorandumController extends Controller
                     }
                 }
             }
+
             $xlTypePDF = 0;
             $xlQualityStandard = 0;
             $code_sanitized = str_replace('/', '_', $data->code);
-			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
+			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") .'-'. $lss. '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
             $filePath = public_path('template/memo/pdf/' . $fileName);
 			if (file_exists($filePath)) {
@@ -477,11 +661,15 @@ class MemorandumController extends Controller
 			unset($excel);			
             $pathfilename = 'public/template/memo/pdf/' . $fileName;
             // Update baris terakhir atau tertentu dari request_memorandum_detail
-            DB::table('request_memorandum_detail')
+            $lastDetail = DB::table('request_memorandum_detail')
                 ->where('req_id', $id)
                 ->orderByDesc('sequence')
-                ->limit(1)
+                ->first();
+
+            DB::table('request_memorandum_detail')
+                ->where('id', $lastDetail->id)
                 ->update(['approveddoc' => $pathfilename]);
+
             $this->processcopy($pathfilename);
 
             return $pathfilename;

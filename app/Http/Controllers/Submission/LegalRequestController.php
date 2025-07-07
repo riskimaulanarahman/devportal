@@ -13,6 +13,7 @@ use App\Models\Approvaluser;
 use App\Models\Module;
 use App\Models\Attachment;
 use App\Models\User;
+use App\Mail\SubmissionMail;
 use DB;
 use COM;
 
@@ -38,7 +39,6 @@ class LegalRequestController extends Controller
             $id = $request->id;
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
-            $isAdmin = $this->getAuth()->isAdmin;
 
             $dataquery = $this->model->query();
             $subquery = "(select TOP 1 
@@ -59,17 +59,11 @@ class LegalRequestController extends Controller
                 ")
                 ->leftJoin('codes','request_legal.code_id','codes.id')
                 ->with(['user','approverlist'])
-                ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
+                ->where(function ($query) use ($subquery, $user_id) {
                     $query->whereRaw($subquery . " = 1")
-                        ->orWhere(function ($query) use ($user_id, $isAdmin) {
-                            if ($isAdmin) {
+                        ->orWhere(function ($query) use ($user_id) {
                                 $query->where("request_legal.user_id", "!=", $user_id)
                                     ->whereIn("request_legal.requestStatus", [1,3,4]);
-                            } else {
-                                $query->where("request_legal.user_id", "!=", $user_id)
-                                    ->whereIn("request_legal.requestStatus", [3])
-                                    ->where("bu",$this->getEmployeeID()->companycode);
-                            }
                         })      
                         ->orWhere("request_legal.user_id", $user_id);
                 })
