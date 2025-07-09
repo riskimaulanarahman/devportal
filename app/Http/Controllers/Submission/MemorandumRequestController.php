@@ -202,63 +202,63 @@ class MemorandumRequestController extends Controller
     //     }
     // }
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $data = $this->model->findOrFail($id);
+    // public function update(Request $request, $id)
+    // {
+    //     try {
+    //         $data = $this->model->findOrFail($id);
 
-            if (isset($request->ticketStatus) && $data->requestStatus == 3) {
-                $getSubmissionData = $this->model->findOrFail($id);
-                $user = $this->getUserByid($getSubmissionData->user_id);
+    //         if (isset($request->ticketStatus) && $data->requestStatus == 3) {
+    //             $getSubmissionData = $this->model->findOrFail($id);
+    //             $user = $this->getUserByid($getSubmissionData->user_id);
 
-                // Ambil semua detail kontrak untuk RM ini
-                $details = DB::table('request_memorandum_detail')
-                    ->where('req_id', $getSubmissionData->id)
-                    ->orderBy('sequence')
-                    ->get();
+    //             // Ambil semua detail kontrak untuk RM ini
+    //             $details = DB::table('request_memorandum_detail')
+    //                 ->where('req_id', $getSubmissionData->id)
+    //                 ->orderBy('sequence')
+    //                 ->get();
 
-                // Ambil nama karyawan dari memoExp
-                $employee = DB::table('memoExp')
-                    ->where('id', $getSubmissionData->employee_id)
-                    ->first();
+    //             // Ambil nama karyawan dari memoExp
+    //             $employee = DB::table('memoExp')
+    //                 ->where('id', $getSubmissionData->employee_id)
+    //                 ->first();
 
-                // Susun daftar periode kontrak
-                $contractPeriods = $details->map(function ($detail, $index) {
-                    $start = $detail->startContract ? Carbon::parse($detail->startContract)->format('d-m-Y') : '-';
-                    $end   = $detail->endContract ? Carbon::parse($detail->endContract)->format('d-m-Y') : '-';
-                    return ". {$start} s.d {$end}";
-                })->toArray();
+    //             // Susun daftar periode kontrak
+    //             $contractPeriods = $details->map(function ($detail, $index) {
+    //                 $start = $detail->startContract ? Carbon::parse($detail->startContract)->format('d-m-Y') : '-';
+    //                 $end   = $detail->endContract ? Carbon::parse($detail->endContract)->format('d-m-Y') : '-';
+    //                 return ". {$start} s.d {$end}";
+    //             })->toArray();
 
-                // Ambil remarks terakhir
-                $lastRemarks = $details->last()->remarks ?? '-';
+    //             // Ambil remarks terakhir
+    //             $lastRemarks = $details->last()->remarks ?? '-';
 
-                $mailData = [
-                    'id'              => 30,
-                    'action_id'       => 5,
-                    'submission'      => $getSubmissionData,
-                    'email'           => $user->email ?? null,
-                    'fullname'        => $user->fullname ?? '-',
-                    'message'         => $this->mailMessage()['newActivity'],
-                    'emp_name'        => $employee->FullName ?? '-',
-                    'contractPeriods' => $contractPeriods,
-                    'komentar'         => $lastRemarks,
-                ];
+    //             $mailData = [
+    //                 'id'              => 30,
+    //                 'action_id'       => 5,
+    //                 'submission'      => $getSubmissionData,
+    //                 'email'           => $user->email ?? null,
+    //                 'fullname'        => $user->fullname ?? '-',
+    //                 'message'         => $this->mailMessage()['newActivity'],
+    //                 'emp_name'        => $employee->FullName ?? '-',
+    //                 'contractPeriods' => $contractPeriods,
+    //                 'komentar'         => $lastRemarks,
+    //             ];
 
-                Mail::to($mailData['email'])->send(new SubmissionMail($mailData, $this->modulename, 1));
-            }
+    //             Mail::to($mailData['email'])->send(new SubmissionMail($mailData, $this->modulename, 1));
+    //         }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Additional approver berhasil ditambahkan.'
-            ]);
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Additional approver berhasil ditambahkan.'
+    //         ]);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ]);
+    //     }
+    // }
 
 
 

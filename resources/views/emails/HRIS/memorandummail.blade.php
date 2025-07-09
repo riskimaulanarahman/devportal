@@ -73,23 +73,24 @@
                     <th>Code No</th>
                     <td>{{ $code }}</td>
                 </tr>
-                {{-- @if ($final == 1 )
-                    {{-- <tr>
-                        <th>No Registration</th>
-                        <td>{{ $code['submission']->noRegistration }}</td>
-                    </tr> --}}
-                {{-- @endif --}}
                 <tr>
                     <th>Employee Name</th>
-                    <td>{{ $mailData['submission']->sysid }}</td>
+                    <td>{{ $mailData['submission']->emp_name ?? '-' }}</td>
                 </tr>
                 <tr>
                     <th>Periode</th>
-                    <td>{{ $mailData['submission']->created_at }}</td>
+                    <td>
+                        {{ $mailData['submission']->startContract ?? '-' }} s.d
+                        {{ $mailData['submission']->endContract ?? '-' }}
+                    </td>
                 </tr>
                 <tr>
-                    <th>komentar</th>
-                    <td>{{ $mailData['submission']->bu }}</td>
+                    <th>Kontrak</th>
+                    <td>{{ $mailData['submission']->sequence ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <th>Komentar</th>
+                    <td>{{ $mailData['submission']->remarks ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
