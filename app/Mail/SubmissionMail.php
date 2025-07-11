@@ -321,27 +321,35 @@ class SubmissionMail extends Mailable
         // Jdi MODULE
 
         // LEGAL MODULE
-            if($modulename == 'Legal') {
+            if ($modulename == 'Legal') {
                 $request = new Request();
                 $legalController = new LegalRequestController();
-                if($final == 1) {
-                    // save no registrasi
-                    // if($mailData['submission']->noRegistration == null || $mailData['submission']->noRegistration == '') {
-                    //     Legal::where('id',$mailData['submission']->id)
-                    //     ->update(
-                    //         [
-                    //             "noRegistration" => $this->generateCodeLegalNoreg($mailData['submission']->bu)
-                    //         ]
-                    //     );
-                    // }
-                    // end save no registrasi
-                    $pdf = $legalController->genPdfLegal($request,$mailData['submission']->id);
-                    $this->attach($url."devportal/".$pdf); // add attachment to mail
+
+                if ($final == 1) {
+                    $legal = DB::table('tbl_approverListReq')
+                        ->join('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                        ->join('users', 'tbl_approver.user_id', '=', 'users.id')
+                        ->select('tbl_approver.*', 'users.email')
+                        ->where('tbl_approverListReq.req_id', $mailData['submission']->id)
+                        ->where('tbl_approverListReq.module_id', $this->getModuleId($modulename))
+                        ->whereIn('tbl_approver.sequence', [3, 4]) // 🔍 Filter sesuai titah
+                        ->get();
+
+                    $this->developer = $legal;
+
+                    foreach ($legal as $devemail) {
+                        $this->cc($devemail->email);
+                    }
+
+                    $pdf = $legalController->genPdfLegal($request, $mailData['submission']->id);
+                    $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
+
                     foreach ($Mailrecipient as $cc) {
-                        $this->cc($cc->email); // cc bcid
+                        $this->cc($cc->email); // CC ke penerima internal
                     }
                 }
             }
+
         // LEGAL MODULE
         
         // MEMORANDUM MODULE
@@ -349,7 +357,7 @@ class SubmissionMail extends Mailable
             $request = new Request();
             $memorandumRequestController = new MemorandumRequestController();
 
-            // if ($final == 1) {
+            if ($final == 1) {
                 $submission = $mailData['submission'];
 
                 $memo = DB::table('request_memorandum')
@@ -385,7 +393,7 @@ class SubmissionMail extends Mailable
                         $this->cc($cc->email);
                     }
                 }
-            // }
+            }
         }
 
         // MEMORANDUM MODULE
