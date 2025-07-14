@@ -79,7 +79,7 @@
                 </tr>
                 <tr>
                     <th>RFC Number</th>
-                    <td>{{ \Carbon\Carbon::parse($mailData['submission']->rfcNumber )}}</td>
+                    <td>{{ $mailData['submission']->rfcNumber }}</td>
                 </tr>
                 <tr>
                     <th>BU</th>

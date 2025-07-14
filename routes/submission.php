@@ -53,10 +53,8 @@ Route::group(['prefix' => 'api'], function () {
         
         //memorandum
         'memorandum_request' => App\Http\Controllers\Submission\MemorandumRequestController::class,
-        'memorandum_detail' => App\Http\Controllers\Submission\MemorandumDetailController::class,
-        // 'MemorandumDetail' => App\Http\Controllers\Submission\MemorandumDetailController::class,
-        // 'memo_request' => App\Http\Controllers\Submission\MemoController::class,
-
+        'memorandum_detail' => App\Http\Controllers\Submission\MemorandumDetailController::class,        
+        
         //
         'legalrequest' => App\Http\Controllers\Submission\LegalRequestController::class,
 
@@ -125,9 +123,8 @@ Route::group(['prefix' => 'api'], function () {
     
     //memorhistorycal
     Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
-    Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module
-    // Route::get('MemorandumDetail',[App\Http\Controllers\Submission\ContractHistoryController::class, 'index']); //get list contract history by req_id of module
-    // Route::get('MemorandumDetail/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'show']); //get list contract history by req_id of module
-    // Route::post('MemorandumDetail',[App\Http\Controllers\Submission\ContractHistoryController::class, 'store']); //get list contract history by req_id of module
-    // Route::delete('MemorandumDetail/{id}',[App\Http\Controllers\Submission\ContractHistoryController::class, 'destroy']); 
+    Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module 
+
+    //Memorandum Report
+    Route::get('memorandum_report', [App\http\controllers\Submission\MemorandumRequestController::class, 'report']);
 });

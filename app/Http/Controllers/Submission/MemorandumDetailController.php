@@ -39,71 +39,81 @@ class MemorandumDetailController extends Controller
 
         try {
             $request->validate([
-                'superior_id' => 'required|integer',
-                'startContract' => 'required|date',
-                'endContract' => 'required|date|after_or_equal:startContract',
+                'superior_id'    => 'required|integer',
+                'startContract'  => 'required|date',
+                'endContract'    => 'required|date|after_or_equal:startContract',
             ]);
 
             $code_id = $this->generateCode($this->codename);
             $requestData = $request->all();
+
             $getme = DB::table('memoExp')
                 ->where('id', $requestData['req_id'])
                 ->select('sys_id', 'bu')
                 ->first();
 
-            $getMaxSequence = MemorandumDetail::where('req_id',$requestData['req_id'])->orderBy('sequence','desc')->value('sequence');
+            $getMaxSequence = MemorandumDetail::where('req_id', $requestData['req_id'])
+                ->orderBy('sequence', 'desc')
+                ->value('sequence');
 
-            $requestData['user_id'] = $this->getAuth()->id;
-            $requestData['sequence'] = $getMaxSequence+1;
-            $requestData['code_id'] = $code_id;
+            $requestData['user_id']   = $this->getAuth()->id;
+            $requestData['sequence']  = $getMaxSequence + 1;
+            $requestData['code_id']   = $code_id;
 
-            if($request->superior_id) {
+            if ($request->superior_id) {
                 $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $request->req_id);
             }
 
-            $checkdata = $this->model->where('req_id',$request->req_id)->whereNull('approveddoc')->count();
+            $checkdata = $this->model
+                ->where('req_id', $request->req_id)
+                ->whereNull('approveddoc')
+                ->count();
 
-            if($checkdata > 0) {
-                return response()->json(["status" => "error", "message" => $this->getMessage()['contractexist']]);
+            if ($checkdata > 0) {
+                return response()->json([
+                    "status"  => "error",
+                    "message" => $this->getMessage()['contractexist']
+                ]);
             }
 
-            // $data = MemorandumDetail::where('req_id', $request->req_id)->first();
-            // if (!$data) {
-            //     return response()->json([
-            //         "status" => "error",
-            //         "message" => "Data memorandum detail tidak ditemukan."
-            //     ]);
-            // }
-
-            // if (!$data->Memorandum) {
-            //     return response()->json([
-            //         "status" => "error",
-            //         "message" => "Relasi ke Memorandum tidak tersedia atau belum dimuat."
-            //     ]);
-            // }
-
-            // if (in_array($data->Memorandum->requestStatus, [1, 4])) {
-            //     return response()->json([
-            //         "status" => "error",
-            //         "message" => $this->getMessage()['nothaveaccess']
-            //     ]);
-            // }
-
-            // $data = MemorandumDetail::where('req_id',$request->req_id)->first();
-            // if(in_array($data->Memorandum->requestStatus, [1, 4])) {
-            //     return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
-            // }
-            
             $this->model->create($requestData);
 
+            // 🔹 Cek dan ubah contract_status karyawan jadi 'CONTRACT'
+            if ($requestData['sequence'] == 2) {
+            $employeeId = DB::table('request_memorandum')
+                ->where('id', $requestData['req_id'])
+                ->value('employee_id');
+
+            if ($employeeId) {
+                $currentStatus = DB::table('employee.tbl_employee')
+                ->where('id', $employeeId)
+                ->value('contract_status');
+
+                if (strtoupper($currentStatus) === 'PERMANENT') {
+                    DB::table('employee.tbl_employee')
+                        ->where('id', $employeeId)
+                        ->update(['contract_status' => 'Contract']);
+                }
+            }
+        }
+
+
             DB::commit();
-            
-            return response()->json(["status" => "success", "message" => $this->getMessage()['store']]);
+
+            return response()->json([
+                "status"  => "success",
+                "message" => $this->getMessage()['store']
+            ]);
 
         } catch (\Exception $e) {
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+            DB::rollBack(); // Tambahkan rollback agar transaksi aman
+            return response()->json([
+                "status"  => "error",
+                "message" => $e->getMessage()
+            ]);
         }
     }
+
 
     public function show($id)
     {

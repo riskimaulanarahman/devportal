@@ -7,6 +7,7 @@ use COM;
 use Log;
 use App\Models\User;
 use App\Models\Module;
+use Carbon\Carbon;
 
 use App\Models\Employee;
 use App\Models\Attachment;
@@ -15,7 +16,7 @@ use App\Mail\SubmissionMail;
 use App\Models\Approvaluser;
 use Illuminate\Http\Request;
 use App\Models\Submission\MemorandumDetail;
-use Illuminate\Support\Carbon;
+// use Illuminate\Support\Carbon;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Http\Controllers\Controller;
@@ -137,6 +138,56 @@ class MemorandumRequestController extends Controller
         }
     }
 
+    public function report()
+    {
+        $tasks = [];
+
+        $requests = Memorandum::select('id', 'employee_id', 'created_at')
+            ->with(['employee:id,FullName']) // Ambil nama karyawan saja
+            ->get();
+
+        foreach ($requests as $req) {
+            $reqId       = $req->id;
+            $employeeId  = $req->employee_id;
+            $employeeName= $req->employee->FullName ?? 'Unknown';
+
+            // 🟦 Parent node: Request Memorandum
+            $tasks[] = [
+                'Task_ID'                  => 'req-' . $reqId,
+                'Task_Parent_ID'           => 0,
+                'Task_Subject'             => "Memo #{$reqId} - {$employeeName}",
+                'Task_Start_Date'          => $req->created_at,
+                'Task_Assigned_Employee_ID'=> $employeeId,
+            ];
+
+            // 🟩 Child nodes: Kontrak Detail
+            $details = DB::table('request_memorandum_detail')
+                ->where('req_id', $reqId)
+                ->orderBy('sequence')
+                ->get();
+
+            foreach ($details as $detail) {
+                $tasks[] = [
+                    'Task_ID'                  => 'contract-' . $detail->id,
+                    'Task_Parent_ID'           => 'req-' . $reqId,
+                    'Task_Subject'             => "Kontrak #{$detail->sequence} - {$detail->code_id}",
+                    'Task_Start_Date'          => $detail->startContract,
+                    'Task_Due_Date'            => $detail->endContract,
+                    'Task_Assigned_Employee_ID'=> $employeeId,
+                ];
+            }
+        }
+
+        // dd($tasks);
+        return response()->json([
+            'status' => 'success',
+            'tasks' => $tasks
+        ]);
+    }
+
+
+
+
     public function show($id)
         {
             try {
@@ -166,6 +217,7 @@ class MemorandumRequestController extends Controller
             }
         }
 
+    
     // public function update(Request $request, $id)
     // {
     //     try {
@@ -201,66 +253,6 @@ class MemorandumRequestController extends Controller
     //         ]);
     //     }
     // }
-
-    // public function update(Request $request, $id)
-    // {
-    //     try {
-    //         $data = $this->model->findOrFail($id);
-
-    //         if (isset($request->ticketStatus) && $data->requestStatus == 3) {
-    //             $getSubmissionData = $this->model->findOrFail($id);
-    //             $user = $this->getUserByid($getSubmissionData->user_id);
-
-    //             // Ambil semua detail kontrak untuk RM ini
-    //             $details = DB::table('request_memorandum_detail')
-    //                 ->where('req_id', $getSubmissionData->id)
-    //                 ->orderBy('sequence')
-    //                 ->get();
-
-    //             // Ambil nama karyawan dari memoExp
-    //             $employee = DB::table('memoExp')
-    //                 ->where('id', $getSubmissionData->employee_id)
-    //                 ->first();
-
-    //             // Susun daftar periode kontrak
-    //             $contractPeriods = $details->map(function ($detail, $index) {
-    //                 $start = $detail->startContract ? Carbon::parse($detail->startContract)->format('d-m-Y') : '-';
-    //                 $end   = $detail->endContract ? Carbon::parse($detail->endContract)->format('d-m-Y') : '-';
-    //                 return ". {$start} s.d {$end}";
-    //             })->toArray();
-
-    //             // Ambil remarks terakhir
-    //             $lastRemarks = $details->last()->remarks ?? '-';
-
-    //             $mailData = [
-    //                 'id'              => 30,
-    //                 'action_id'       => 5,
-    //                 'submission'      => $getSubmissionData,
-    //                 'email'           => $user->email ?? null,
-    //                 'fullname'        => $user->fullname ?? '-',
-    //                 'message'         => $this->mailMessage()['newActivity'],
-    //                 'emp_name'        => $employee->FullName ?? '-',
-    //                 'contractPeriods' => $contractPeriods,
-    //                 'komentar'         => $lastRemarks,
-    //             ];
-
-    //             Mail::to($mailData['email'])->send(new SubmissionMail($mailData, $this->modulename, 1));
-    //         }
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Additional approver berhasil ditambahkan.'
-    //         ]);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => $e->getMessage()
-    //         ]);
-    //     }
-    // }
-
-
 
     public function destroy($id)
     {
@@ -349,13 +341,11 @@ class MemorandumRequestController extends Controller
         $lastDetail   = $contracts->last();
         $hisCreated   = $lastDetail->created_at ?? null;
         $lastRemarks  = $lastDetail->remarks ?? '-';
-        $lastCode     = $lastDetail->code ?? '-';
-        $lastcontract = $lastDetail->endContract ?? '-';
+        $laststartcontract  = $lastDetail->startContract ?? '-';
+        $lastsendcontract  = $lastDetail->endContract ?? '-';
+        $lastCode     = $lastDetail->code ?? '-';        
         $lss = $lastDetail->sequence ?? '-';
 
-        // Ambil sequence dari baris saat ini
-        $currentId    = $data->id ?? null;
-        $currentDetail = $contracts->firstWhere('id', $currentId);
 
         $today = Carbon::today();
         $oldContracts = [];
@@ -510,13 +500,9 @@ class MemorandumRequestController extends Controller
             // Contoh pengisian data
             $Worksheet->Range("A53")->Value = $data->superiorName ?? '';
             $Worksheet->Range("B8")->Value = $data->deptheadName ?? '';
-            // $Worksheet->Range("D34")->Value = $lastRemarks;      
             $Worksheet->Range("D34")->Value = ": " . ($lastRemarks ?? '-');      
             $Worksheet->Range("C59")->Value = $data->Pendidikan ?? '-'; 
             $Worksheet->Range("C58")->Value = $data->DesignationName ?? ''; 
-            // $Worksheet->Range("C56")->Value = $data->BirthOfDate 
-                // ? Carbon::parse($data->BirthOfDate)->locale('id')->translatedFormat('j F Y')
-                // : '';
 
             $BirthOfDateRaw = $data->BirthOfDate ?? null;
             if ($BirthOfDateRaw) {
@@ -529,13 +515,15 @@ class MemorandumRequestController extends Controller
 
             $Worksheet->Range("C57")->Value = $usia ?? 'N/A';
                 
-            // Tulis kontrak baru ke sel D33
-            $Worksheet->Range("D31")->Value = ($newStartContract && $newEndContract)
-                ? 'Dari ' . $newStartContract->locale('id')->translatedFormat('j F Y') .
-                ' sampai dengan ' . $newEndContract->locale('id')->translatedFormat('j F Y')
+            // Tulis kontrak baru ke sel D31
+            $startDated = $laststartcontract ? Carbon::parse($laststartcontract) : null;
+            $endDated   = $lastsendcontract ? Carbon::parse($lastsendcontract) : null;
+
+            $Worksheet->Range("D31")->Value = ($startDated && $endDated)
+                ? 'Dari ' . $startDated->locale('id')->translatedFormat('j F Y') .
+                ' sampai dengan ' . $endDated->locale('id')->translatedFormat('j F Y')
                 : ' - ';
 
-            // Jika status Contract, cetak daftar kontrak lama & aktif ke Excel
             if ($data->contract_status === "Contract") {
             $filteredContracts = array_merge($oldContracts, $currentContracts);
 
@@ -575,29 +563,33 @@ class MemorandumRequestController extends Controller
             } else {
                 $Worksheet->Range("E22")->Value = '';
             }
+            $sequence            = $lastDetail->sequence ?? 1;
+            $status              = strtoupper($data->contract_status);
+            $endLastContractRaw  = $lastDetail->endContract ?? null;
+            $formattedEndContract = '-';
 
-            // $lastcontractRaw = $lastcontract ?? null;
-            // if ($lastcontractRaw) {
-            //     $lastcontract = Carbon::parse($lastcontractRaw)
-            //     ->locale('id');
-            //     $formattedlastcontract = "'" . $lastcontract
-            //     ->translatedFormat('j F Y'); // tanda kutip satu untuk paksa teks
-            //     $Worksheet->Range("E25")->Value = $formattedlastcontract;
-            // } else {
-            //     $Worksheet->Range("E25")->Value = '';
-            // }
+            if ($status === 'CONTRACT' && $endLastContractRaw) {
+                // Sudah status kontrak aktif → tampilkan akhir kontrak
+                $formattedEndContract = "'" . Carbon::parse($endLastContractRaw)->locale('id')->translatedFormat('j F Y');
+                $Worksheet->Range("E25")->Value = ": {$formattedEndContract} ( Habis Kontrak ke {$sequence} )";
 
-            $endContractRaw = $lastDetail->endContract ?? null;
-            if ($endContractRaw) {
-                $formattedEndContract = "'" . Carbon::parse($endContractRaw)
-                    ->locale('id')
-                    ->translatedFormat('j F Y');
+            } elseif ($status === 'PERMANENT') {
+                if ($sequence == 1 && $currentEndContract) {
+                    // Kontrak pertama → tampilkan tanggal pensiun
+                    $formattedEndContract = "'" . $currentEndContract->locale('id')->translatedFormat('j F Y');
+                    $Worksheet->Range("E25")->Value = $formattedEndContract;
 
-                $Worksheet->Range("E25")->Value = $formattedEndContract;
+                } elseif ($sequence >= 2 && $endLastContractRaw) {
+                    // Kontrak lanjutan meski status masih permanent → anggap sebagai kontrak biasa
+                    $formattedEndContract = "'" . Carbon::parse($endLastContractRaw)->locale('id')->translatedFormat('j F Y');
+                    $Worksheet->Range("E25")->Value = ": {$formattedEndContract} ( Habis Kontrak ke {$sequence} )";
+
+                } else {
+                    $Worksheet->Range("E25")->Value = '-';
+                }
             } else {
-                $Worksheet->Range("E25")->Value = '';
+                $Worksheet->Range("E25")->Value = '-';
             }
-            $Worksheet->Range("E25")->Value = ": {$formattedEndContract} ( Habis Kontrak ke {$lss} )";
 
             $Worksheet->Range("G9")->Value = $lastCode;
             $Worksheet->Range("G8")->Value = $hisCreated  

@@ -204,7 +204,7 @@
         '/request_capex': 'submission/Financial/Capex/capex_request.js',
         //submission/Memo
         '/memorandum_request': 'submission/memorandum_request.js',
-        // '/memo_request': 'submission/data_memo.js',
+        '/memorandum_report': 'submission/memorandum_report.js',
         //Submission/Legal
         '/legal_request' : 'submission/legal_request.js'
     }
