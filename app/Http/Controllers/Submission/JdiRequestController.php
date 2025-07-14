@@ -307,7 +307,7 @@ class JdiRequestController extends Controller
 
             $file = public_path("template/jdi/jdi.xlsx");
 
-			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
+			$Workbook = $excel->Workbooks->Open($file, false, false) or die("ERROR: Unable to open " . $file . "!\r\n");
 			$Worksheet = $Workbook->Worksheets(1);
 			$Worksheet->Activate;
             $separatorbreak = "\n \nBenefit:\n";

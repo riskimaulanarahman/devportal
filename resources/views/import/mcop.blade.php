@@ -22,14 +22,15 @@
                     </div>
                 @endif
 
-                <form action="{{ route('import.mcopcsv') }}" method="POST" enctype="multipart/form-data">
+                <form id="form-import" action="{{ route('import.mcopcsv') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <label for="csv_file" class="form-label">Pilih File CSV</label>
                         <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
                         <small class="form-text text-muted">File harus berformat CSV dan sesuai dengan template yang disediakan.</small>
+                        <small>Catatan :</small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Import</button>
+                    <button type="submit" id="btn-submit" class="btn btn-primary">Import</button>
                 </form>
             </div>
         </div>
@@ -47,6 +48,11 @@
             alert('File harus berformat CSV.');
             event.target.value = ''; // Reset input file
         }
+    });
+
+    $('#form-import').on('submit', function () {
+        showLoadingScreen();
+        $('#btn-submit').prop('disabled', true);
     });
 </script>
 @endsection

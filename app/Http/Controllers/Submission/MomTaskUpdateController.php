@@ -148,6 +148,30 @@ class MomTaskUpdateController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        try {
+
+            $data = $this->model->findOrFail($id);
+
+            $getTaskBound = $this->taskbound->where('task_id',$data->task_id)
+            ->where('employee_id',$this->getEmployeeID()->id)
+            ->get();
+
+            if(count($getTaskBound) < 1) {
+                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
+            }
+
+            $data->delete();
+
+            return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
     public function taskactions(Request $request, $id, $modulename) 
     {
 
@@ -322,29 +346,5 @@ class MomTaskUpdateController extends Controller
         $pdf->set_paper('letter', 'landscape');
 
         return $pdf->stream('document.pdf');
-    }
-
-    public function destroy($id)
-    {
-        try {
-
-            $data = $this->model->findOrFail($id);
-
-            $getTaskBound = $this->taskbound->where('task_id',$data->task_id)
-            ->where('employee_id',$this->getEmployeeID()->id)
-            ->get();
-
-            if(count($getTaskBound) < 1) {
-                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
-            }
-
-            $data->delete();
-
-            return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
-
-        } catch (\Exception $e) {
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-        }
     }
 }

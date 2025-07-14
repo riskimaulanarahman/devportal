@@ -54,6 +54,7 @@ trait HasMessage {
             'momTaskSummary' => 'We are proud to inform you regarding this MoM. Please check it.',
             'addPRCreator' => 'We would like to inform you that you have been added as the PR Creator in this submission.',
             'accountInfoAD' => 'This Submission already have new username and password.',
+            'mcopExpiredReminder' => 'The contract and vehicle registration (STNK) for this data are nearing expiration. Please review them.',
         ];
 
         return $message;
