@@ -32,6 +32,7 @@ Route::middleware(['session.check'])->group(function () {
 
     // Scheduler
     Route::get('/mom-reminder/{mode}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'reminderNotificationMessage'])->name('mom-reminder');
+    Route::get('/mcop-reminder/{mode}/{bu}',[App\Http\Controllers\Submission\HRIS\Mcop\McopMonitoringController::class, 'reminderNotificationMessage'])->name('mcop-reminder');
 
     // Generate PDF
     Route::get('/gen-pdf/jdi/{id}',[App\Http\Controllers\Submission\JdiRequestController::class, 'genPdfJdi'])->name('gen-pdf-jdi');

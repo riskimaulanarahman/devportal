@@ -354,38 +354,38 @@ class SubmissionMail extends Mailable
         
         // MEMORANDUM MODULE
             if ($modulename == 'Memorandum') {
-            $request = new Request();
-            $memorandumRequestController = new MemorandumRequestController();
+                $request = new Request();
+                $memorandumRequestController = new MemorandumRequestController();
 
             if ($final == 1) {
                 $submission = $mailData['submission'];
 
-                $memo = DB::table('request_memorandum')
-                    ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-                    ->leftJoin('request_memorandum_detail', 'request_memorandum.id', '=', 'request_memorandum_detail.req_id')
-                    ->select(
-                        'request_memorandum.*',
-                        'request_memorandum_detail.sequence',
-                        'request_memorandum_detail.startContract',
-                        'request_memorandum_detail.endContract',
-                        'request_memorandum_detail.remarks',
-                        'employee.tbl_employee.FullName as emp_name'
-                    )
-                    ->where('request_memorandum.id', $submission->id)
-                    ->orderByDesc('request_memorandum_detail.sequence')
-                    ->first();
-                    if (!$memo) {
-                        dd('Data memorandum tidak ditemukan untuk ID: ' . $submission->id);
-                    }
-                    $submission->emp_name      = $memo->emp_name ?? '-';
-                    $submission->sequence      = $memo->sequence ?? '-';
-                    $submission->startContract = $memo->startContract ?? '-';
-                    $submission->endContract   = $memo->endContract ?? '-';
-                    $submission->remarks       = $memo->remarks ?? '-';
+                    $memo = DB::table('request_memorandum')
+                        ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
+                        ->leftJoin('request_memorandum_detail', 'request_memorandum.id', '=', 'request_memorandum_detail.req_id')
+                        ->select(
+                            'request_memorandum.*',
+                            'request_memorandum_detail.sequence',
+                            'request_memorandum_detail.startContract',
+                            'request_memorandum_detail.endContract',
+                            'request_memorandum_detail.remarks',
+                            'employee.tbl_employee.FullName as emp_name'
+                        )
+                        ->where('request_memorandum.id', $submission->id)
+                        ->orderByDesc('request_memorandum_detail.sequence')
+                        ->first();
+                        if (!$memo) {
+                            dd('Data memorandum tidak ditemukan untuk ID: ' . $submission->id);
+                        }
+                        $submission->emp_name      = $memo->emp_name ?? '-';
+                        $submission->sequence      = $memo->sequence ?? '-';
+                        $submission->startContract = $memo->startContract ?? '-';
+                        $submission->endContract   = $memo->endContract ?? '-';
+                        $submission->remarks       = $memo->remarks ?? '-';
 
-                // Generate PDF dan lampirkan
-                $pdf = $memorandumRequestController->genPdfmemorandumReq($request, $submission->id);
-                $this->attach($url . "devportal/" . $pdf);
+                    // Generate PDF dan lampirkan
+                    $pdf = $memorandumRequestController->genPdfmemorandumReq($request, $submission->id);
+                    $this->attach($url . "devportal/" . $pdf);
 
                 // Kirim CC ke semua Mailrecipient
                 foreach ($Mailrecipient as $cc) {
@@ -484,8 +484,8 @@ class SubmissionMail extends Mailable
                     }
                 }
 
-        }
-    // hcrf MODULE
+            }
+        // hcrf MODULE
 
         // Capex MODULE
             if($modulename == 'Capex') {
