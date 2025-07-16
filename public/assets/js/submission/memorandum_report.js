@@ -1,4 +1,4 @@
-var modname = 'memorandum_request';
+var modname = 'memorandum_report';
 var modelclass = 'Memorandum';
 var popupmode;
 
@@ -21,206 +21,235 @@ async function fetchAndStorePermissions() {
     }
 }
 
-fetchAndStorePermissions();
+$.getJSON(apiurl + "/" + modname, function(res) {
+  const employees = res.employees || [];
+  const contracts = res.contracts || [];
 
-var dataGrid = $("#gridContainer").dxTreeList({    
-    dataSource: store(modname),
-    keyExpr: 'Task_ID',
-    parentIdExpr: 'Task_Parent_ID',
-    allowColumnReordering: true,
-    allowColumnResizing: true,
-    // columnsAutoWidth: true,
-    columnHidingEnabled: true,
-    rowAlternationEnabled: false,
-    wordWrapEnabled: true,
-    // focusedRowEnabled: true,
-    autoExpandAll: true,
+  const dataGrid = $("#gridContainer").dxDataGrid({
+    dataSource: employees,
+    keyExpr: 'ID',
     showBorders: true,
+    columnAutoWidth: true,
+    allowColumnResizing: true,
+    rowAlternationEnabled: true,
+    wordWrapEnabled: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    selection: {
-        mode: 'multiple',
-        recursive: true,
-    },
-    // stateStoring: {
-    //     enabled: true,
-    //     type: 'sessionStorage',
-    //     storageKey: 'treeListStorage',
-    // },
     searchPanel: {
-        visible: true,
-        width: 240,
-        placeholder: 'Search...',
+      visible: true,
+      width: 240,
+      placeholder: "Search..."
     },
-    editing: {
-        useIcons:true,
-        mode: "popup",
-        allowAdding: false,
-        allowUpdating: false,
-        allowDeleting: true,
-    },
-    scrolling: {
-        mode: "virtual"
-    },
+    grouping: { autoExpandAll: true },
+    groupPanel: { visible: false },
+
+    export: { enabled: false },
+
+    selection: { mode: "multiple" },
+    paging: { enabled: false },
     pager: {
-        visible: false,
-        // allowedPageSizes: [5, 10, 'all'],
-        // showPageSizeSelector: true,
-        showInfo: true,
-        // showNavigationButtons: true,
+      visible: true,
+      showInfo: true,
+      showNavigationButtons: true
     },
+
     columns: [
-        {
-            dataField: 'nameSystem',
-            width: 350,
-            sortOrder: "asc",
-        },
-        {
-            caption: 'Action',
-            width: 140,
-            cellTemplate: function(container, options) {
-
-                var isMine = options.data.isMine;
-                var isPendingOnMe = options.data.isPendingOnMe;
-                var reqid = options.data.id;
-                var reqstatus = options.data.requestStatus;
-                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
-                var arrColor = [
-                    "btn-secondary",
-                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                    "btn-warning",
-                    "btn-success",
-                    "btn-danger",
-                ];
-
-                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
-    
-                $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
-                    evt.stopPropagation();
-                
-                            popup.option({
-                                contentTemplate: () => popupContentTemplate(reqid,mode,options),
-                            });
-                            popup.show();
-
-                }).appendTo(container);
-                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                    $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
-                        evt.stopPropagation();
-                            
-                        var result = confirm('Are you sure you want to cancel this submission ?');
-
-                        if (result) {
-                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
-                                requestStatus:0,
-                                action:'submission',
-                                approvalAction: 0
-                            }).then(function(response){
-                                if(response.status != 'error') {
-                                    dataGrid.refresh();
-                                }
-                            });
-                        } else {
-                            alert('Cancelled.');
-                        }
-    
-                    }).appendTo(container); 
-                }
-            
-            }
-        },
-        {
-            caption: "Code",
-            dataField: 'code',
-            width: 180
-        },
-        { 
-			dataField: "user.fullname",
-            caption: 'Creator Name',
-            width: 180
-        },
-        {
-            dataField: 'requestStatus',
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
-                var arrText = [
-                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
-                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
-                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
-                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                ];
-                return arrText[e.value];
-            },
-            // width: 110
-        },
-        {
-            dataField: 'projectStatus',
-            encodeHtml: false,
-            sortOrder: "desc",
-            customizeText: function (e) {
-                if(e.value == 'Completed') {
-                    return "<span class='btn btn-success btn-xs btn-status'>Completed</span>"
-                } else if(e.value == 'Progress') {
-                    return "<span class='btn btn-warning btn-xs btn-status'>Progress</span>"
-                } else {
-                    return "<span class='btn btn-primary btn-xs btn-status'>Waiting</span>"
-                }
-            },
-            // width: 110
-        },
-      
+      { dataField: "EmployeeName", caption: "Employee Name" },
+      { dataField: "deptheadName", caption: "Department Head" },
+      { dataField: "BU", caption: "Business Unit" },
+      { dataField: "sys_id", caption: "SYSID" },
+      {
+        dataField: "BirthOfDate",
+        caption: "Birth Date",
+        dataType: "date",
+        format: "dd MMM yyyy"
+      }
     ],
-    export: {
-        enabled: true,
-        fileName: modname,
-        excelFilterEnabled: true,
-        allowExportSelectedData: true
-    },
-    onContentReady: function(e){
-        moveEditColumnToLeft(e.component);
-        runpopup();
-    },
-    onCellPrepared: function (e) {
-        if (e.rowType == "data") {
-            if(e.data.isParent === 1) {
-                e.cellElement.css('background','rgba(128, 128, 0,0.1)')
-            }
-        }
-        // if (e.column.index == 0 && e.rowType == "data") {
-        //     if(e.data.requestStatus == 3) {
-        //         $("#formdata").dxDataGrid('columnOption','priority', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','progress', 'visible', true);
-        //         $("#formdata").dxDataGrid('columnOption','projectStatus', 'visible', true);
-        //     }
-        // }
-    },
-    onToolbarPreparing: function(e) {
-        dataGrid = e.component;
 
-        e.toolbarOptions.items.unshift({						
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function() {
-                    dataGrid.refresh();
+    masterDetail: {
+      enabled: true,
+      template: function(container, options) {
+        const currentEmployee = options.data;
+        const detailRows = contracts.filter(c => c.EmployeeID === currentEmployee.ID);
+
+        $("<div>")
+          .addClass("master-detail-caption")
+          .appendTo(container);
+
+        $("<div>").dxDataGrid({
+          dataSource: detailRows,
+          keyExpr: "EmployeeID",
+          columnAutoWidth: true,
+          showBorders: true,
+          columns: [
+            { dataField: "ContractLabel", caption: "Contract" },
+            {
+              dataField: "StartDate",
+              caption: "Start Date",
+              dataType: "date",
+              format: "dd MMM yyyy"
+            },
+            {
+              dataField: "EndDate",
+              caption: "End Date",
+              dataType: "date",
+              format: "dd MMM yyyy"
+            },
+            { dataField: "Remarks", caption: "Remarks" },
+            {
+              dataField: "ApprovedDoc",
+              caption: "Approved Doc",
+              cellTemplate: function(container, options) {
+                if (options.value) {
+                  $("<div />").dxButton({
+                    icon: "download",
+                    type: "success",
+                    text: "Download",
+                    onClick: () => window.open(options.value, "_blank")
+                  }).appendTo(container);
                 }
+              }
             }
-        })
+          ]
+        }).appendTo(container);
+      }
     },
-    onDataErrorOccurred: function(e) {
-        // Menampilkan pesan kesalahan
-        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
-        // Memuat ulang Page
-        location.reload();
+    onToolbarPreparing: function(e) {
+      e.toolbarOptions.items.unshift({
+        location: "after",
+        widget: "dxButton",
+        options: {
+          icon: "refresh",
+          hint: "Refresh Data",
+          onClick: function() {
+            dataGrid.refresh();
+          }
+        }
+      });
+
+      e.toolbarOptions.items.unshift({
+        location: "after",
+        widget: "dxButton",
+        options: {
+          icon: "exportxlsx",
+          text: "",
+          hint: "Export master-detail manual",
+          onClick: function() {
+            dataGrid.exportToExcel();
+          }
+        }
+      });
+    },
+
+    onContentReady: function(e) {
+      runpopup();
+    },
+
+    onDataErrorOccurred: function(e) {
+      console.log("Gagal memuat data:", e.error.message);
+      location.reload();
     }
-}).dxTreeList("instance");
+  }).dxDataGrid("instance");
+
+  // Helper format & sanitizer
+  const formatDate = date => {
+    const parsed = new Date(date);
+    return isNaN(parsed.getTime())
+      ? "-"
+      : parsed.toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric"
+        });
+  };
+
+  const sanitize = value => {
+    if (value === undefined || value === null) return "-";
+    if (typeof value === "object") return JSON.stringify(value);
+    return value;
+  };
+
+  // Export logic
+  dataGrid.exportToExcel = function() {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Kontrak employee");
+
+    const headerRow = worksheet.addRow([
+    "Employee Name", "Department Head", "Business Unit", "SYSID", "Birth Date"
+    ]);
+
+    headerRow.eachCell(cell => {
+    cell.font = { bold: true };
+    cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFDDEEFF" }
+    };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+
+
+    const employee = dataGrid.getVisibleRows().map(r => r.data);
+
+    employee.forEach(emp => {
+      worksheet.addRow([
+        sanitize(emp.EmployeeName),
+        sanitize(emp.deptheadName),
+        sanitize(emp.BU),
+        sanitize(emp.sys_id),
+        sanitize(formatDate(emp.BirthOfDate))
+      ]);
+
+      worksheet.addRow(["", "Contract", "Start Date", "End Date", "Remarks", "Approved Doc"]);
+
+      const kontrak = contracts.filter(k => k.EmployeeID === emp.ID);
+      kontrak.forEach(c => {
+        const detailRow = worksheet.addRow([
+        "",
+          sanitize(c.ContractLabel),
+          sanitize(formatDate(c.StartDate)),
+          sanitize(formatDate(c.EndDate)),
+          sanitize(c.Remarks),
+          ""
+        ]);
+        detailRow.eachCell(cell => {
+        cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFDDEEFF" } // Sama seperti warna header
+        };
+        cell.alignment = { vertical: "middle", horizontal: "left" };
+        });
+        if (
+          detailRow &&
+          typeof detailRow.getCell === "function" &&
+          typeof c.ApprovedDoc === "string" &&
+          c.ApprovedDoc.startsWith("http")
+        ) {
+          row.getCell(6).value = {
+            text: "Download",
+            hyperlink: c.ApprovedDoc
+          };
+        }
+      });
+
+      worksheet.addRow([]);
+    });
+
+    workbook.xlsx.writeBuffer().then(buffer => {
+      if (buffer.byteLength === 0) {
+        console.error("Buffer kosong — workbook gagal dibuat.");
+        return;
+      }
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+      saveAs(blob, "Kontrak-employee.xlsx");
+    });
+  };
+});
 
 
 $('#btnadd').on('click',function(){

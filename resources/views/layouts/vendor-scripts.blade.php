@@ -7,6 +7,9 @@
 <script src="{{ URL::asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 <script src="{{ URL::asset('/assets/js/app.min.js') }}"></script>
 
+<script src="{{ URL::asset('assets/libs/excel-js/ExcelJS.min.js') }}"></script>
+<script src="{{ URL::asset('assets/libs/excel-js/FileS.min.js') }}"></script>
+
 <script type="text/javascript" src="{{ asset('assets/js/jquery-3.5.1.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('assets/js/jszip.js') }}"></script>
 <script type="text/javascript" src="{{ asset('assets/js/dx-quill.min.js') }}"></script>

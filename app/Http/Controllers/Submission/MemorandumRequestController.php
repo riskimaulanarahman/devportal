@@ -48,7 +48,6 @@ class MemorandumRequestController extends Controller
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
 
-            // Ambil semua data dari memoExp sebagai sumber
             $memos = DB::table('memoExp')->get();
 
             foreach ($memos as $memo) {
@@ -69,10 +68,6 @@ class MemorandumRequestController extends Controller
                     ]);
                 }
             }
-
-            // $getAccess = "(select TOP 1 CASE WHEN l.employee_id='".$user_id."' then 1 else 0 end 
-            // from [authorization].tbl_useraccess l
-            // where l.module_id = '".$module_id."' and l.allowView='1')";
             $getAccess = "(
                             SELECT CASE 
                                 WHEN EXISTS (
@@ -137,56 +132,6 @@ class MemorandumRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-
-    public function report()
-    {
-        $tasks = [];
-
-        $requests = Memorandum::select('id', 'employee_id', 'created_at')
-            ->with(['employee:id,FullName']) // Ambil nama karyawan saja
-            ->get();
-
-        foreach ($requests as $req) {
-            $reqId       = $req->id;
-            $employeeId  = $req->employee_id;
-            $employeeName= $req->employee->FullName ?? 'Unknown';
-
-            // 🟦 Parent node: Request Memorandum
-            $tasks[] = [
-                'Task_ID'                  => 'req-' . $reqId,
-                'Task_Parent_ID'           => 0,
-                'Task_Subject'             => "Memo #{$reqId} - {$employeeName}",
-                'Task_Start_Date'          => $req->created_at,
-                'Task_Assigned_Employee_ID'=> $employeeId,
-            ];
-
-            // 🟩 Child nodes: Kontrak Detail
-            $details = DB::table('request_memorandum_detail')
-                ->where('req_id', $reqId)
-                ->orderBy('sequence')
-                ->get();
-
-            foreach ($details as $detail) {
-                $tasks[] = [
-                    'Task_ID'                  => 'contract-' . $detail->id,
-                    'Task_Parent_ID'           => 'req-' . $reqId,
-                    'Task_Subject'             => "Kontrak #{$detail->sequence} - {$detail->code_id}",
-                    'Task_Start_Date'          => $detail->startContract,
-                    'Task_Due_Date'            => $detail->endContract,
-                    'Task_Assigned_Employee_ID'=> $employeeId,
-                ];
-            }
-        }
-
-        // dd($tasks);
-        return response()->json([
-            'status' => 'success',
-            'tasks' => $tasks
-        ]);
-    }
-
-
-
 
     public function show($id)
         {

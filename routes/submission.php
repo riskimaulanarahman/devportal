@@ -53,11 +53,11 @@ Route::group(['prefix' => 'api'], function () {
         
         //memorandum
         'memorandum_request' => App\Http\Controllers\Submission\MemorandumRequestController::class,
+        'memorandum_report' => App\Http\Controllers\MemorandumReportController::class,        
         'memorandum_detail' => App\Http\Controllers\Submission\MemorandumDetailController::class,        
         
         //
         'legalrequest' => App\Http\Controllers\Submission\LegalRequestController::class,
-
 
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -123,8 +123,5 @@ Route::group(['prefix' => 'api'], function () {
     
     //memorhistorycal
     Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
-    Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module 
-
-    //Memorandum Report
-    Route::get('memorandum_report', [App\http\controllers\Submission\MemorandumRequestController::class, 'report']);
+    Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module     
 });

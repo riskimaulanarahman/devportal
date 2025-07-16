@@ -45,7 +45,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         mode: "popup",
         allowAdding: false,
         allowUpdating: false,
-        allowDeleting: true,
+        allowDeleting: false,
     },
     scrolling: {
         mode: "virtual"
@@ -117,20 +117,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Employee Name",
             dataField: 'FullName',
             alignment: "left",
-            // width: 180,
         },
         {
             caption: "Contract Status",
             dataField: 'contract_status',
             alignment: "left",
-            // width: 180,
         },
         { 
             caption: 'Join Date',
             dataField: "JoinDate",
             alignment: "left",
             dataType: "date",
-            // width: 180,
             format: "dd-MM-yyyy"
         },       
         { 
@@ -557,14 +554,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            // if ( e.rowType == "data" && (e.column.index==1 || e.column.index>2 && e.column.index<8)) {
-                            //     if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                            //         e.cellElement.css({
-                            //             "backgroundColor": "#ffe6e6",
-                            //             "border": "0.5px solid #f56e6e"
-                            //         })
-                            //     }
-                            // }
+                            
                         },
                         onDataErrorOccurred: function(e) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);     
