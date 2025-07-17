@@ -34,7 +34,6 @@ class MemorandumDetail extends Model
     protected $casts = [
         'user_id' => 'integer',
         'isMine' => 'integer',
-        'code_id' => 'integer',
         'req_id' => 'integer',
         'sequence' => 'integer',
         'isPendingOnMe' => 'integer'
@@ -78,8 +77,8 @@ class MemorandumDetail extends Model
     {
         return $this->hasMany(approvaltype::class,'req_id');
     }
-    public function code()
-    {
-        return $this->belongsTo(Code::class, 'code_id');
-    }
+    // public function code()
+    // {
+    //     return $this->belongsTo(Code::class, 'code_id');
+    // }
 }

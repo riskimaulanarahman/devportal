@@ -244,7 +244,6 @@ class MemorandumRequestController extends Controller
         $dataAppr = DB::table('memoApprover')->select('*')->where('id',$id)->get(); 
         $data = $this->model->select(
                 'request_memorandum.*',
-                'codes.code',
                 'employee.tbl_employee.FullName as FullName', 
                 'employee.tbl_employee.sys_id as sys_id', 
                 'employee.tbl_employee.SAPID as SAPID',
@@ -256,7 +255,7 @@ class MemorandumRequestController extends Controller
                 'employee.tbl_designation.DesignationName as DesignationName',
             )
             ->leftJoin('users', 'request_memorandum.user_id', 'users.id')
-            ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
+            // ->leftJoin('codes', 'request_memorandum.code_id', '=', 'codes.id')
             ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
             ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
             ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
@@ -269,8 +268,8 @@ class MemorandumRequestController extends Controller
 
         // Ambil semua kontrak berdasarkan req_id
         $contracts = DB::table('request_memorandum_detail')
-            ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
-            ->select('request_memorandum_detail.*', 'codes.code')
+            // ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
+            ->select('request_memorandum_detail.*')
             ->where('req_id', $id)
             ->orderBy('sequence')
             ->get();
@@ -288,7 +287,7 @@ class MemorandumRequestController extends Controller
         $lastRemarks  = $lastDetail->remarks ?? '-';
         $laststartcontract  = $lastDetail->startContract ?? '-';
         $lastsendcontract  = $lastDetail->endContract ?? '-';
-        $lastCode     = $lastDetail->code ?? '-';        
+        $lastCode     = $lastDetail->code_id ?? '-';        
         $lss = $lastDetail->sequence ?? '-';
 
 
@@ -581,13 +580,16 @@ class MemorandumRequestController extends Controller
 
             $xlTypePDF = 0;
             $xlQualityStandard = 0;
-            $code_sanitized = str_replace('/', '_', $data->code);
-			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") .'-'. $lss. '.pdf';
-			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
-            $filePath = public_path('template/memo/pdf/' . $fileName);
-			if (file_exists($filePath)) {
-				unlink($filePath);
-			}
+            $code_sanitized = str_replace('/', '_', $data->code_id); // Ubah pemisah menjadi underscore
+            $todayDate = date('Ymd'); // Format tanggal hari ini: 20250717
+
+            $fileName = "{$data->id}_Memorandum_{$code_sanitized}_{$todayDate}-{$lss}.pdf";
+            $fileName = preg_replace("/[^a-z0-9_\-\.]/i", '', $fileName); // Bersihkan karakter tidak aman
+            $filePath = public_path("template/memo/pdf/{$fileName}");
+
+            if (file_exists($filePath)) {
+                unlink($filePath); // Hapus jika file sudah ada
+            }
 			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);			
 			$excel->CutCopyMode = false;
 			$Workbook->Close(false);
