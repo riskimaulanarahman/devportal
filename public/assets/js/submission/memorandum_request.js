@@ -617,7 +617,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 caption: 'code',
-                                dataField: 'code',
+                                dataField: 'code_id',
                                 width: 220,
                                 editorOptions: { 
                                     readOnly: true,

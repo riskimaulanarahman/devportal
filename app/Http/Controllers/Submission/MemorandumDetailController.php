@@ -9,6 +9,7 @@ use App\Models\Submission\MemorandumDetail;
 use App\Models\Useraccess;
 use Illuminate\Http\Request;
 use DB;
+use Carbon\Carbon;
 
 class MemorandumDetailController extends Controller
 {
@@ -35,6 +36,7 @@ class MemorandumDetailController extends Controller
 
     public function store(Request $request)
     {
+        
         DB::beginTransaction();
 
         try {
@@ -44,8 +46,16 @@ class MemorandumDetailController extends Controller
                 'endContract'    => 'required|date|after_or_equal:startContract',
             ]);
 
-            $code_id = $this->generateCode($this->codename);
+            $now = Carbon::now();
+            $year = $now->year;
+            $month = $now->format('m');
+            $count = MemorandumDetail::whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->count();
+            $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+            $code_id = "ContractEmp/{$year}/{$month}/{$sequence}";
             $requestData = $request->all();
+            $requestData['code_id'] = $code_id;
 
             $getme = DB::table('memoExp')
                 ->where('id', $requestData['req_id'])
@@ -97,7 +107,6 @@ class MemorandumDetailController extends Controller
             }
         }
 
-
             DB::commit();
 
             return response()->json([
@@ -119,8 +128,8 @@ class MemorandumDetailController extends Controller
     {
         try {
             $data = $this->model
-                ->select('request_memorandum_detail.*', 'codes.code')                
-                ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
+                ->select('request_memorandum_detail.*')                
+                // ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
                 ->where('request_memorandum_detail.id', $id)
                 ->with(['user'])
                 ->first();
@@ -132,9 +141,17 @@ class MemorandumDetailController extends Controller
                 ]);
             }
 
+            // if ($data->code_id == null) {
+            //     $data->code_id = $this->generateCode($this->modulename);
+            //     $data->save();
+            // }
             if ($data->code_id == null) {
-                $data->code_id = $this->generateCode($this->modulename);
-                $data->save();
+            // Buat kode manual tanpa generateCode()
+            $datePart = now()->format('Ymd');
+            $sequence = str_pad($data->sequence ?? 1, 3, '0', STR_PAD_LEFT); // default ke 001 kalau sequence belum ada
+
+            $data->code_id = "Memo-{$datePart}-{$sequence}";
+            $data->save();
             }
 
             return response()->json([
@@ -158,7 +175,6 @@ class MemorandumDetailController extends Controller
             $user_id = $this->getAuth()->id;
             $data = $this->model->selectRaw("
                     request_memorandum_detail.*, 
-                    codes.code,
                     CAST(CASE WHEN request_memorandum_detail.user_id = ? THEN 1 ELSE 0 END AS INT) AS isMine,
                     COALESCE((
                         SELECT TOP 1 CAST(CASE WHEN a.user_id = ? THEN 1 ELSE 0 END AS INT)
@@ -168,7 +184,7 @@ class MemorandumDetailController extends Controller
                         ORDER BY a.sequence
                     ), 0) AS isPendingOnMe
                 ", [$user_id, $user_id]) 
-                ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
+                // ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
                 ->with(['user', 'approverlist'])
                 ->where('req_id', $id)
                 ->orderBy('sequence', 'DESC')
