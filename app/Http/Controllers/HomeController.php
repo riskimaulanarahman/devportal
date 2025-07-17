@@ -187,9 +187,9 @@ class HomeController extends Controller
                             case 'request_legal':
                                 $url = 'legal_request';
                                 break;
-                            case 'request_capex':
-                                $url = 'request_capex';
-                                break;
+                            // case 'request_capex':
+                            //     $url = 'request_capex';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -283,9 +283,9 @@ class HomeController extends Controller
                             case 'request_legal':
                                 $url = 'legal_request';
                                 break;
-                            case 'request_capex':
-                                $url = 'request_capex';
-                                break;
+                            // case 'request_capex':
+                            //     $url = 'request_capex';
+                            //     break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
