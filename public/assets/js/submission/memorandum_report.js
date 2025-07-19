@@ -191,7 +191,9 @@ $.getJSON(apiurl + "/" + modname, function(res) {
     });
 
 
-    const employee = dataGrid.getVisibleRows().map(r => r.data);
+    // const employee = dataGrid.getVisibleRows().map(r => r.data);
+    const employee = dataGrid.getDataSource().items();
+
 
     employee.forEach(emp => {
       worksheet.addRow([
@@ -202,10 +204,10 @@ $.getJSON(apiurl + "/" + modname, function(res) {
         sanitize(formatDate(emp.BirthOfDate))
       ]);
 
-      worksheet.addRow(["", "Contract", "Start Date", "End Date", "Remarks", "Approved Doc"]);
+    worksheet.addRow(["", "Contract", "Start Date", "End Date", "Remarks", "Approved Doc"]);
 
-      const kontrak = contracts.filter(k => k.EmployeeID === emp.ID);
-      kontrak.forEach(c => {
+    const kontrak = contracts.filter(k => k.EmployeeID === emp.ID);
+    kontrak.forEach(c => {
         const detailRow = worksheet.addRow([
         "",
           sanitize(c.ContractLabel),
