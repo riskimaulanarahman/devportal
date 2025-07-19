@@ -444,7 +444,7 @@ class MemorandumRequestController extends Controller
             // Contoh pengisian data
             $Worksheet->Range("A53")->Value = $data->superiorName ?? '';
             $Worksheet->Range("B8")->Value = $data->deptheadName ?? '';
-            $Worksheet->Range("D34")->Value = ": " . ($lastRemarks ?? '-');      
+            $Worksheet->Range("D34")->Value = $lastRemarks ?? '';      
             $Worksheet->Range("C59")->Value = $data->Pendidikan ?? '-'; 
             $Worksheet->Range("C58")->Value = $data->DesignationName ?? ''; 
 
@@ -468,33 +468,25 @@ class MemorandumRequestController extends Controller
                 ' sampai dengan ' . $endDated->locale('id')->translatedFormat('j F Y')
                 : ' - ';
 
-            if ($data->contract_status === "Contract") {
-            $filteredContracts = array_merge($oldContracts, $currentContracts);
+            $startRow     = 56;
+            $startNumber  = 5; // Nomor urutan cetak di Excel
+            $maxSequence  = $contracts->max('sequence');
 
-            $startRow = 56;
-            $startNumber = 5;
+            // Filter hanya kontrak yang bukan kontrak terakhir (bukan max)
+            $historyContracts = $contracts->filter(fn($c) => $c->sequence < $maxSequence)->values();
 
-            foreach ($filteredContracts as $index => $contract) {
-                $number = $startNumber + $index;
+            foreach ($historyContracts as $index => $contract) {
+                $number         = $startNumber + $index;
+                $contractLabel  = $contract->sequence;
+                $histart        = $contract->startContract ? Carbon::parse($contract->startContract)->format('d/m/Y') : '-';
+                $hisend         = $contract->endContract ? Carbon::parse($contract->endContract)->format('d/m/Y') : '-';
+                $label          = "{$number}. Kontrak {$contractLabel} : {$histart} - {$hisend}";
 
-                // Format tanggal kontrak
-                $startDate = $contract->startContract ? Carbon::parse($contract->startContract)->format('d/m/Y') : '-';
-                $endDate   = $contract->endContract ? Carbon::parse($contract->endContract)->format('d/m/Y') : '-';
-                $period    = "{$startDate} - {$endDate}";
-
-                // Label + periode
-                $label = "{$number}. Kontrak " . ($index + 1) . " : {$period}";
-
-                // Tentukan kolom dan baris
-                if ($number <= 8) {
-                    $row = $startRow + ($number - 5);
-                    $Worksheet->Range("D{$row}")->Value = $label;
-                } else {
-                    $row = $startRow + ($number - 9);
-                    $Worksheet->Range("E{$row}")->Value = $label;
-                }
+                // Cetak ke worksheet
+                $row = $startRow + ($index % 4);
+                $column = $index < 4 ? "D" : "E";
+                $Worksheet->Range("{$column}{$row}")->Value = $label;
             }
-        }
             $Worksheet->Range("E13")->Value = $data->deptheadName ?? ''; 
             $Worksheet->Range("E16")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' '); 
             $Worksheet->Range("E19")->Value = $data->DesignationName ?? '-'; 
@@ -507,30 +499,36 @@ class MemorandumRequestController extends Controller
             } else {
                 $Worksheet->Range("E22")->Value = '';
             }
-            $sequence            = $lastDetail->sequence ?? 1;
-            $status              = strtoupper($data->contract_status);
-            $endLastContractRaw  = $lastDetail->endContract ?? null;
+
+            $sequence             = $lastDetail->sequence ?? 1;
+            $status               = strtoupper($data->contract_status);
+            $lastminones          = $contracts->max('sequence') - 1;
+            $previousContract     = $contracts->firstWhere('sequence', $lastminones);
             $formattedEndContract = '-';
 
-            if ($status === 'CONTRACT' && $endLastContractRaw) {
-                // Sudah status kontrak aktif → tampilkan akhir kontrak
-                $formattedEndContract = "'" . Carbon::parse($endLastContractRaw)->locale('id')->translatedFormat('j F Y');
-                $Worksheet->Range("E25")->Value = ": {$formattedEndContract} ( Habis Kontrak ke {$sequence} )";
+            if ($status === 'CONTRACT' && $previousContract->endContract) {
+                $formattedEndContract = Carbon::parse($previousContract->endContract)
+                    ->locale('id')->translatedFormat('j F Y');
+
+                $Worksheet->Range("E25")->Value = "{$formattedEndContract} ( Habis Kontrak ke {$lastminones} )";
 
             } elseif ($status === 'PERMANENT') {
-                if ($sequence == 1 && $currentEndContract) {
-                    // Kontrak pertama → tampilkan tanggal pensiun
-                    $formattedEndContract = "'" . $currentEndContract->locale('id')->translatedFormat('j F Y');
+                if ($lastminones === 1 && isset($currentEndContract)) {
+                    $formattedEndContract = "'" . $currentEndContract
+                        ->locale('id')->translatedFormat('j F Y');
+
                     $Worksheet->Range("E25")->Value = $formattedEndContract;
 
-                } elseif ($sequence >= 2 && $endLastContractRaw) {
-                    // Kontrak lanjutan meski status masih permanent → anggap sebagai kontrak biasa
-                    $formattedEndContract = "'" . Carbon::parse($endLastContractRaw)->locale('id')->translatedFormat('j F Y');
-                    $Worksheet->Range("E25")->Value = ": {$formattedEndContract} ( Habis Kontrak ke {$sequence} )";
+                } elseif ($lastminones >= 2 && $previousContract->endContract) {
+                    $formattedEndContract = Carbon::parse($previousContract->endContract)
+                        ->locale('id')->translatedFormat('j F Y');
+
+                    $Worksheet->Range("E25")->Value = "{$formattedEndContract} ( Habis Kontrak ke {$lastminones} )";
 
                 } else {
                     $Worksheet->Range("E25")->Value = '-';
                 }
+
             } else {
                 $Worksheet->Range("E25")->Value = '-';
             }
