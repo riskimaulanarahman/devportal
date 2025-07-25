@@ -332,7 +332,7 @@ class SubmissionMail extends Mailable
                         ->select('tbl_approver.*', 'users.email')
                         ->where('tbl_approverListReq.req_id', $mailData['submission']->id)
                         ->where('tbl_approverListReq.module_id', $this->getModuleId($modulename))
-                        ->whereIn('tbl_approver.sequence', [3, 4]) // 🔍 Filter sesuai titah
+                        ->whereIn('tbl_approver.sequence', [3, 4]) 
                         ->get();
 
                     $this->developer = $legal;

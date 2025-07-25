@@ -118,6 +118,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'FullName',
             alignment: "left",
         },
+        { 
+            dataField: "bu",
+            caption: "BU",
+        }, 
         {
             caption: "Contract Status",
             dataField: 'contract_status',
