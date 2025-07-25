@@ -205,6 +205,7 @@
         //submission/Memo
         '/memorandum_request': 'submission/memorandum_request.js',
         '/memorandum_report': 'submission/memorandum_report.js',
+        '/memorandum_approver': 'submission/memorandum_approver.js',
         //Submission/Legal
         '/legal_request' : 'submission/legal_request.js'
     }

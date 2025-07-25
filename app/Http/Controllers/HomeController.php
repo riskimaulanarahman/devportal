@@ -208,9 +208,6 @@ class HomeController extends Controller
             }
         }
 
-
-
-        
         // list need your approval
         foreach ($tables as $table => $module_id) {
             if($table == 'request_mmf') {

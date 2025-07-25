@@ -1,4 +1,4 @@
-var modname = 'memorandum_report';
+var modname = 'memorandum_approver';
 var modelclass = 'Memorandum';
 var popupmode;
 
@@ -21,238 +21,189 @@ async function fetchAndStorePermissions() {
     }
 }
 
-$.getJSON(apiurl + "/" + modname, function(res) {
-  const employees = res.employees || [];
-  const contracts = res.contracts || [];
+fetchAndStorePermissions();
 
-  const dataGrid = $("#gridContainer").dxDataGrid({
-    dataSource: employees,
-    keyExpr: 'ID',
-    showBorders: true,
-    columnAutoWidth: true,
+var dataGrid = $("#gridContainer").dxDataGrid({
+    dataSource: store(modname),
+    allowColumnReordering: true,
     allowColumnResizing: true,
-    rowAlternationEnabled: true,
+    columnHidingEnabled: true,
+    rowAlternationEnabled: false,
     wordWrapEnabled: true,
+    autoExpandAll: true,
+    showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
     searchPanel: {
-      visible: true,
-      width: 240,
-      placeholder: "Search..."
+        visible: true,
+        width: 240,
+        placeholder: 'Search...',
     },
-    grouping: { autoExpandAll: true },
-    groupPanel: { visible: false },
-
-    export: { enabled: false },
-
-    selection: { mode: "multiple" },
-    paging: { enabled: false },
+    editing: {
+        useIcons:true,
+        mode: "popup",
+        allowAdding: false,
+        allowUpdating: false,
+        allowDeleting: false,
+    },
+    scrolling: {
+        mode: "virtual"
+    },
     pager: {
-      visible: true,
-      showInfo: true,
-      showNavigationButtons: true
+        visible: false,
+        showInfo: true,
     },
-
     columns: [
-      { dataField: "EmployeeName", caption: "Employee Name" },
-      { dataField: "deptheadName", caption: "Department Head" },
-      { dataField: "BU", caption: "Business Unit" },
-      { dataField: "sys_id", caption: "SYSID" },
-      {
-        dataField: "BirthOfDate",
-        caption: "Birth Date",
-        dataType: "date",
-        format: "dd MMM yyyy"
-      }
-    ],
+        {
+            caption: 'Code',
+            dataField: 'code',
+            width: 220,
+        },
+        {
+            caption: 'Action',
+            width: 140,
+            cellTemplate: function(container, options) {
+                var isMine = options.data.isMine;
+                var isPendingOnMe = options.data.isPendingOnMe;
+                var reqid = options.data.id;
+                var reqstatus = options.data.requestStatus;
+                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
+                var arrColor = [
+                    "btn-secondary",
+                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
+                    "btn-warning",
+                    "btn-success",
+                    "btn-danger",
+                ];
 
-    masterDetail: {
-      enabled: true,
-      template: function(container, options) {
-        const currentEmployee = options.data;
-        const detailRows = contracts.filter(c => c.EmployeeID === currentEmployee.ID);
+                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
+    
+                $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
+                    evt.stopPropagation();
+                
+                            popup.option({
+                                contentTemplate: () => popupContentTemplate(reqid,mode,options),
+                            });
+                            popup.show();
 
-        $("<div>")
-          .addClass("master-detail-caption")
-          .appendTo(container);
+                }).appendTo(container);
+                if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
+                    $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
+                            
+                        var result = confirm('Are you sure you want to cancel this submission ?');
 
-        $("<div>").dxDataGrid({
-          dataSource: detailRows,
-          keyExpr: "EmployeeID",
-          columnAutoWidth: true,
-          showBorders: true,
-          columns: [
-            { dataField: "ContractLabel", caption: "Contract" },
-            {
-              dataField: "StartDate",
-              caption: "Start Date",
-              dataType: "date",
-              format: "dd MMM yyyy"
-            },
-            {
-              dataField: "EndDate",
-              caption: "End Date",
-              dataType: "date",
-              format: "dd MMM yyyy"
-            },
-            { dataField: "Remarks", caption: "Remarks" },
-            {
-              dataField: "ApprovedDoc",
-              caption: "Approved Doc",
-              cellTemplate: function(container, options) {
-                if (options.value) {
-                  $("<div />").dxButton({
-                    icon: "download",
-                    type: "success",
-                    text: "Download",
-                    onClick: () => window.open(options.value, "_blank")
-                  }).appendTo(container);
+                        if (result) {
+                            sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                requestStatus:0,
+                                action:'submission',
+                                approvalAction: 0
+                            }).then(function(response){
+                                if(response.status != 'error') {
+                                    dataGrid.refresh();
+                                }
+                            });
+                        } else {
+                            alert('Cancelled.');
+                        }
+    
+                    }).appendTo(container); 
                 }
-              }
+            
             }
-          ]
-        }).appendTo(container);
-      }
+        },
+        {
+            caption: "Employee Name",
+            dataField: 'FullName',
+            alignment: "left",
+        },
+        {
+            caption: "Contract Status",
+            dataField: 'contract_status',
+            alignment: "left",
+        },
+        { 
+            caption: 'Join Date',
+            dataField: "JoinDate",
+            alignment: "left",
+            dataType: "date",
+            format: "dd-MM-yyyy"
+        },       
+        { 
+            caption: 'Retirement Date',
+            dataField: "retirement_date",
+            // width: 180,
+            alignment: "left",
+            dataType: "date",
+            format: "dd-MM-yyyy"
+        },
+        { 
+            caption: 'End Contract',
+            dataField: "end_contract_date",
+            // width: 180,
+            alignment: "left",
+            dataType: "date",
+            format: "dd-MM-yyyy"
+        },
+        {
+            dataField: 'requestStatus',
+            // width: 240,
+            encodeHtml: false,
+            allowFiltering: false,
+            allowHeaderFiltering: true,
+            customizeText: function (e) {
+                var arrText = [
+                    "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                    "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                    "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                    "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                    "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                ];
+                return arrText[e.value];
+            },
+        },
+    ],
+    columnChooser: {
+    enabled: true,
     },
-
+    export: {
+        enabled: true,
+        fileName: modname,
+        excelFilterEnabled: true,
+        allowExportSelectedData: true
+    },
+    onContentReady: function(e){
+        moveEditColumnToLeft(e.component);
+        runpopup();
+    },
+    onCellPrepared: function (e) {
+        if (e.rowType == "data") {
+            if(e.data.isParent === 1) {
+                e.cellElement.css('background','rgba(128, 128, 0,0.1)')
+            }
+        }
+    },
     onToolbarPreparing: function(e) {
-      e.toolbarOptions.items.unshift({
-        location: "after",
-        widget: "dxButton",
-        options: {
-          icon: "refresh",
-          hint: "Refresh Data",
-          onClick: function() {
-            dataGrid.refresh();
-          }
-        }
-      });
+        dataGrid = e.component;
 
-      e.toolbarOptions.items.unshift({
-        location: "after",
-        widget: "dxButton",
-        options: {
-          icon: "exportxlsx",
-          text: "",
-          hint: "Export master-detail manual",
-          onClick: function() {
-            dataGrid.exportToExcel();
-          }
-        }
-      });
+        e.toolbarOptions.items.unshift({						
+            location: "after",
+            widget: "dxButton",
+            options: {
+                hint: "Refresh Data",
+                icon: "refresh",
+                onClick: function() {
+                    dataGrid.refresh();
+                }
+            }
+        })
     },
-
-    onContentReady: function(e) {
-      runpopup();
-    },
-
     onDataErrorOccurred: function(e) {
-      console.log("Gagal memuat data:", e.error.message);
-      location.reload();
+        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
+        location.reload();
     }
-  }).dxDataGrid("instance");
-
-  // Helper format & sanitizer
-  const formatDate = date => {
-    const parsed = new Date(date);
-    return isNaN(parsed.getTime())
-      ? "-"
-      : parsed.toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric"
-        });
-  };
-
-  const sanitize = value => {
-    if (value === undefined || value === null) return "-";
-    if (typeof value === "object") return JSON.stringify(value);
-    return value;
-  };
-
-  // Export logic
-  dataGrid.exportToExcel = function() {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Kontrak employee");
-
-    const headerRow = worksheet.addRow([
-    "Employee Name", "Department Head", "Business Unit", "SYSID", "Birth Date"
-    ]);
-
-    headerRow.eachCell(cell => {
-    cell.font = { bold: true };
-    cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFDDEEFF" }
-    };
-    cell.alignment = { vertical: "middle", horizontal: "center" };
-    });
-
-
-    // const employee = dataGrid.getVisibleRows().map(r => r.data);
-    const employee = dataGrid.getDataSource().items();
-
-
-    employee.forEach(emp => {
-      worksheet.addRow([
-        sanitize(emp.EmployeeName),
-        sanitize(emp.deptheadName),
-        sanitize(emp.BU),
-        sanitize(emp.sys_id),
-        sanitize(formatDate(emp.BirthOfDate))
-      ]);
-
-    worksheet.addRow(["", "Contract", "Start Date", "End Date", "Remarks", "Approved Doc"]);
-
-    const kontrak = contracts.filter(k => k.EmployeeID === emp.ID);
-    kontrak.forEach(c => {
-        const detailRow = worksheet.addRow([
-        "",
-          sanitize(c.ContractLabel),
-          sanitize(formatDate(c.StartDate)),
-          sanitize(formatDate(c.EndDate)),
-          sanitize(c.Remarks),
-          ""
-        ]);
-        detailRow.eachCell(cell => {
-        cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFDDEEFF" } // Sama seperti warna header
-        };
-        cell.alignment = { vertical: "middle", horizontal: "left" };
-        });
-        if (
-          detailRow &&
-          typeof detailRow.getCell === "function" &&
-          typeof c.ApprovedDoc === "string" &&
-          c.ApprovedDoc.startsWith("http")
-        ) {
-          detailRow.getCell(6).value = {
-            text: "Download",
-            hyperlink: c.ApprovedDoc
-          };
-        }
-      });
-
-      worksheet.addRow([]);
-    });
-
-    workbook.xlsx.writeBuffer().then(buffer => {
-      if (buffer.byteLength === 0) {
-        console.error("Buffer kosong — workbook gagal dibuat.");
-        return;
-      }
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      });
-      saveAs(blob, "Kontrak-employee.xlsx");
-    });
-  };
-});
-
+}).dxDataGrid("instance");
 
 $('#btnadd').on('click',function(){
     showLoadingScreen();
@@ -603,14 +554,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     $("#formdata").dxDataGrid('columnOption','code', 'visible', true);
                                 }
                             }
-                            // if ( e.rowType == "data" && (e.column.index==1 || e.column.index>2 && e.column.index<8)) {
-                            //     if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                            //         e.cellElement.css({
-                            //             "backgroundColor": "#ffe6e6",
-                            //             "border": "0.5px solid #f56e6e"
-                            //         })
-                            //     }
-                            // }
+                            
                         },
                         onDataErrorOccurred: function(e) {
                             console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);     
@@ -673,7 +617,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             },
                             {
                                 caption: 'code',
-                                dataField: 'code',
+                                dataField: 'code_id',
                                 width: 220,
                                 editorOptions: { 
                                     readOnly: true,
