@@ -87,14 +87,25 @@
                     <td>{{ $s->emp_name ?? '-' }}</td>
                     <td>{{ $s->contract_status ?? '-' }}</td>
                     <td>
-                        @if ($s->startContract || $s->endContract)
-                            {{ $s->startContract ?? '-' }} s.d {{ $s->endContract ?? '-' }}
+                        @if (strtotime($s->startContract) && strtotime($s->endContract))
+                            {{ $s->startContract }} s/d {{ $s->endContract }}
                         @else
                             -
                         @endif
                     </td>
+
                     <td>{{ $s->retirement_date ?? '-' }}</td>
-                    <td>{{ $s->dayToExp ?? '-' }}</td>
+                    <td>
+                        @if (is_numeric($s->dayToExp))
+                            @if ($s->dayToExp < 0)
+                                <span style="font-weight:bold; color:red;">{{ $s->dayToExp }}</span>
+                            @else
+                                <span style="font-weight:bold;">{{ $s->dayToExp }}</span>
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
                     <td>{{ $s->sequence ?? '-' }}</td>
                     {{-- <td>{{ $s->remarks ?? '-' }}</td> --}}
                 </tr>

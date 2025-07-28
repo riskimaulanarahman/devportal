@@ -116,6 +116,11 @@ class MemorandumRequestController extends Controller
                     ", [$user_id, $module_id])
                     ->orderByDesc('r.id')
                     ->get();
+            //iki ketika data sudah banyak
+            $data = $data->filter(function ($item) {
+                return is_null($item->dayToExp) || 
+                    (is_numeric($item->dayToExp) && $item->dayToExp < 60);
+            })->values();
 
             if ($data->isEmpty()) {
                 return response()->json([
@@ -124,7 +129,8 @@ class MemorandumRequestController extends Controller
                     'data' => []
                 ])->setEncodingOptions(JSON_NUMERIC_CHECK);
             }
-            // dd($data);
+            
+            // dd($data);  
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
