@@ -116,6 +116,9 @@ class MemorandumApproverController extends Controller
             })
             ->orderByDesc('r.id')
             ->get();
+            $data = $data->filter(function ($item) {
+                return $item->isPendingOnMe == 1;
+            })->values();
             // dd($data);
         return response()->json([
             'status' => "show",
