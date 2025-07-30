@@ -60,40 +60,43 @@
 </head>
 <body>
     <div class="container">
-        <p>Dear, <b>{{ $mailData['fullname'] }}</b></p>
-        @if ($mailData['action_id'] == 1)
-            <p>You have received a New Submission from <b>{{ $mailData['creator'] }}</b></p>
-        @endif
-        <div class="message">
+        <p>Dear All,</p>
+        {{-- @if ($mailData['action_id'] == 1) --}}
+        <p>
+            The following employees are scheduled to enter retirement and reach contract 
+            end within the designated period. Please review and take appropriate action 
+            regarding contract status and remaining tenure.
+        </p>
+        <hr>
+        <p>
+            <i>
+                Berikut adalah daftar karyawan yang akan memasuki masa pensiun dan masa akhir 
+                kontrak dalam periode yang ditentukan. Mohon untuk meninjau dan 
+                melakukan tindak lanjut yang diperlukan terkait status dan sisa masa kontrak.
+            </i>
+        </p>
+    {{-- @endif --}}
+        {{-- <div class="message">
             {{ $mailData['message'] }}
-        </div>
-        <table border="1" cellpadding="5" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Business Unit</th>
-                    <th>Employee Name</th>
-                    <th>Employee Status</th>
-                    <th>Periode</th>
-                    <th>Retirement</th>
-                    <th>Sisa Hari</th>
-                    <th>Kontrak</th>
-                    {{-- <th>Komentar</th> --}}
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($mailData['submissions'] as $s)
+        </div> --}}
+        <h4>List of Employees Approaching Retirement</h4>
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Business Unit</th>
+            <th>Employee Name</th>
+            <th>Employee Status</th>
+            <th>Retirement</th>
+            <th>Days Left</th>
+        </tr>
+    </thead>
+        <tbody>
+            @foreach($mailData['submissions'] as $s)
+                @if($s->contract_status == 'Permanent')
                 <tr>
                     <td>{{ $s->bu ?? '-' }}</td>
                     <td>{{ $s->emp_name ?? '-' }}</td>
-                    <td>{{ $s->contract_status ?? '-' }}</td>
-                    <td>
-                        @if (strtotime($s->startContract) && strtotime($s->endContract))
-                            {{ $s->startContract }} s/d {{ $s->endContract }}
-                        @else
-                            -
-                        @endif
-                    </td>
-
+                    <td>{{ $s->contract_status }}</td>
                     <td>{{ $s->retirement_date ?? '-' }}</td>
                     <td>
                         @if (is_numeric($s->dayToExp))
@@ -106,13 +109,56 @@
                             -
                         @endif
                     </td>
-                    <td>{{ $s->sequence ?? '-' }}</td>
-                    {{-- <td>{{ $s->remarks ?? '-' }}</td> --}}
                 </tr>
-                @endforeach
-            </tbody>
-        </table>
-
+                @endif
+            @endforeach
+        </tbody>
+    </table>
+    <h4>List of Employees Approaching Contract Expiry</h4>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Business Unit</th>
+                <th>Employee Name</th>
+                <th>Employee Status</th>
+                <th>Periode</th>
+                {{-- <th>Retirement</th> --}}
+                <th>Days Left</th>
+                <th>Contract</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($mailData['submissions'] as $s)
+                @if($s->contract_status == 'Contract')
+                <tr>
+                    <td>{{ $s->bu ?? '-' }}</td>
+                    <td>{{ $s->emp_name ?? '-' }}</td>
+                    <td>{{ $s->contract_status }}</td>
+                    <td>
+                        @if (strtotime($s->startContract) && strtotime($s->endContract))
+                            {{ $s->startContract }} s/d {{ $s->endContract }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    {{-- <td>{{ $s->retirement_date ?? '-' }}</td> --}}
+                    <td>
+                        @if (is_numeric($s->dayToExp))
+                            @if ($s->dayToExp < 0)
+                                <span style="font-weight:bold; color:red;">{{ $s->dayToExp }}</span>
+                            @else
+                                <span style="font-weight:bold;">{{ $s->dayToExp }}</span>
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>{{ $s->sequence ?? '-' }}</td>
+                </tr>
+                @endif
+            @endforeach
+        </tbody>
+    </table>
         @if (!empty($mailData['remarks']))
             <div class="remarks">
                 Remarks : {{ ucfirst($mailData['remarks']) }}

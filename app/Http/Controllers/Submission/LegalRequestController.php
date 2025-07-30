@@ -51,11 +51,31 @@ class LegalRequestController extends Controller
                 and l.req_id = request_legal.id and l.module_id = '".$module_id."' 
                 and request_legal.requestStatus='1'
                 order by a.sequence)";
+            
+                // Subquery untuk lastApprovalDate
+            $lastApprovalDate = "(SELECT TOP 1 l.approvalDate
+                FROM tbl_approverListReq l
+                WHERE l.req_id = request_legal.id 
+                AND l.module_id = '".$module_id."' 
+                AND l.approvalDate IS NOT NULL 
+                AND l.ApprovalAction != '1'
+                ORDER BY l.approvalDate DESC)";
 
+            // Subquery untuk nextApproverName
+            $nextApproverName = "(SELECT TOP 1 e.FullName
+                FROM tbl_approverListReq l
+                JOIN tbl_approver a ON l.approver_id = a.id
+                JOIN employee.tbl_employee e ON a.employee_id = e.id
+                WHERE l.req_id = request_legal.id 
+                AND l.module_id = '".$module_id."' 
+                AND l.ApprovalAction = '1'
+                ORDER BY a.sequence ASC)";
             $data = $dataquery
                 ->selectRaw("request_legal.*,codes.code,
                     CASE WHEN request_legal.user_id='".$user_id."' then 1 else 0 end as isMine,
-                    ".$subquery." as isPendingOnMe
+                    ".$subquery." as isPendingOnMe,
+                    ".$lastApprovalDate." as lastApprovalDate,
+                    ".$nextApproverName." as nextApproverName
                 ")
                 ->leftJoin('codes','request_legal.code_id','codes.id')
                 ->with(['user','approverlist'])

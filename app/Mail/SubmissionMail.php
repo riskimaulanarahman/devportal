@@ -325,7 +325,7 @@ class SubmissionMail extends Mailable
                 $request = new Request();
                 $legalController = new LegalRequestController();
 
-                if ($final == 1) {
+                // if ($final == 1) {
                     $legal = DB::table('tbl_approverListReq')
                         ->join('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
                         ->join('users', 'tbl_approver.user_id', '=', 'users.id')
@@ -340,14 +340,15 @@ class SubmissionMail extends Mailable
                     foreach ($legal as $devemail) {
                         $this->cc($devemail->email);
                     }
-
+                    if ($final == 1) {
                     $pdf = $legalController->genPdfLegal($request, $mailData['submission']->id);
-                    $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
+                        $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
 
-                    foreach ($Mailrecipient as $cc) {
-                        $this->cc($cc->email); // CC ke penerima internal
+                        foreach ($Mailrecipient as $cc) {
+                            $this->cc($cc->email); // CC ke penerima internal
+                        }
                     }
-                }
+                // }
             }
 
         // LEGAL MODULE
