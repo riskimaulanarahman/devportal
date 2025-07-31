@@ -72,6 +72,16 @@ class MemorandumApproverController extends Controller
             ORDER BY a.sequence
         ";
 
+        $wasEverPendingCheck = "
+            SELECT TOP 1 CASE WHEN a.user_id = '$user_id' THEN 1 ELSE 0 END
+            FROM tbl_approverListReq l
+            LEFT JOIN tbl_approver a ON l.approver_id = a.id
+            WHERE l.req_id = r.id
+            AND l.module_id = '$module_id'
+            ORDER BY a.sequence
+        ";
+
+
         $data = DB::table('request_memorandum AS r')
             ->leftJoin('codes','r.code_id','codes.id')
             ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
@@ -100,7 +110,8 @@ class MemorandumApproverController extends Controller
                 'm.end_contract_date',
                 'm.retirement_date',
                 DB::raw("($getAccess) AS isMine"),
-                DB::raw("($pendingApprovalCheck) AS isPendingOnMe")
+                DB::raw("($pendingApprovalCheck) AS isPendingOnMe"),
+                DB::raw("($wasEverPendingCheck) AS wasEverPendingCheck")
             ])
             ->where(function ($query) use ($employee_id, $user_id, $module_id, $pendingApprovalCheck) {
                 $query->where('r.user_id', $user_id)
@@ -116,9 +127,13 @@ class MemorandumApproverController extends Controller
             })
             ->orderByDesc('r.id')
             ->get();
+            // $data = $data->filter(function ($item) {
+            //     return $item->isPendingOnMe == 1;
+            // })->values();
             $data = $data->filter(function ($item) {
-                return $item->isPendingOnMe == 1;
+                return $item->isPendingOnMe == 1 || $item->wasEverPendingCheck == 1;
             })->values();
+
             // dd($data);
         return response()->json([
             'status' => "show",

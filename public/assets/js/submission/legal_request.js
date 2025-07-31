@@ -151,7 +151,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: 'Last Approved',
 			dataField: "lastApprovalDate",
-            // width: 180,
             alignment: "left",
         },
         {
@@ -173,11 +172,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 }
             }
         },
-        // {
-        //     dataField: "created_at",
-        //     dataType: "date",
-        //     format: "dd-MM-yyyy", 
-        // },
+        {
+            dataField: "created_at",
+            dataType: "date",
+            format: "dd-MM-yyyy", 
+        },
       
     ],
     columnChooser: {

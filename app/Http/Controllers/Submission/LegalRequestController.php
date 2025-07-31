@@ -90,6 +90,14 @@ class LegalRequestController extends Controller
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->get();
 
+                $data = $data->map(function ($item) {
+                // Format tanggal jika tersedia
+                if (!empty($item->lastApprovalDate)) {
+                    $item->lastApprovalDate = Carbon::parse($item->lastApprovalDate)->format('d-m-Y H:i');
+                }
+
+                return $item;
+            });
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],

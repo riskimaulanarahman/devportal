@@ -358,7 +358,7 @@ class SubmissionMail extends Mailable
                 $request = new Request();
                 $memorandumRequestController = new MemorandumRequestController();
 
-            if ($final == 1) {
+            // if ($final == 1) {
                 $submission = $mailData['submission'];
 
                     $memo = DB::table('request_memorandum')
@@ -384,6 +384,7 @@ class SubmissionMail extends Mailable
                         $submission->endContract   = $memo->endContract ?? '-';
                         $submission->remarks       = $memo->remarks ?? '-';
 
+                if ($final == 1) {
                     // Generate PDF dan lampirkan
                     $pdf = $memorandumRequestController->genPdfmemorandumReq($request, $submission->id);
                     $this->attach($url . "devportal/" . $pdf);
@@ -395,6 +396,7 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
+            // }
         }
 
         // MEMORANDUM MODULE
