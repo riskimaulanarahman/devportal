@@ -337,13 +337,13 @@ class JdiRequestController extends Controller
                 $Worksheet->Range("G13")->Value = $data->reasonNotWasteful;
 
                 if($data->isSaving == 'Ya') {
-                    $Worksheet->Range("B34")->Value = $data->savingFormula;
-                    $Worksheet->Range("B36")->Value = $data->totalSaving;
+                    $Worksheet->Range("B34")->Value = "'" .$data->savingFormula;
+                    $Worksheet->Range("B36")->Value = "'" .$data->totalSaving;
                 }
 
                 $Worksheet->Range("H44")->Value = $data->isRollout;
                 $Worksheet->Range("E46")->Value = $data->savingInfo;
-                $Worksheet->Range("E46")->Value = $data->savingInfo;
+                // $Worksheet->Range("E46")->Value = $data->savingInfo;
                 $Worksheet->Range("F37")->Value = $data->noRegistration;
             // End Form Data
 
