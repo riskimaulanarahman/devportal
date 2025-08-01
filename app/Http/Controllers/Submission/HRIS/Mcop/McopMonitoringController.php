@@ -106,6 +106,19 @@ class McopMonitoringController extends Controller
         return view('import.mcop');
     }
 
+    private function convertDate($date)
+    {
+        if (!$date || trim($date) === '') return null;
+
+        $parts = explode('/', $date);
+        if (count($parts) === 3) {
+            // Format: dd/mm/yyyy → yyyy-mm-dd
+            return $parts[2] . '-' . str_pad($parts[1], 2, '0', STR_PAD_LEFT) . '-' . str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+        }
+
+        return null; // Jika format tidak sesuai
+    }
+
     public function importCsv(Request $request)
     {
         // Tingkatkan batasan waktu dan memori
@@ -166,7 +179,7 @@ class McopMonitoringController extends Controller
                                 'Number_Plate_Old' => $data['Number_Plate_Old'],
                                 'PO_Order' => $data['PO_Order'],
                                 'Unit_From' => $data['Unit_From'],
-                                'Date_of_Receipt' => $data['Date_of_Receipt'],
+                                'Date_of_Receipt' => $this->convertDate($data['Date_of_Receipt']),
                                 'SAP_Asset_Number' => $data['SAP_Asset_Number'],
                                 'Machine_No' => $data['Machine_No'],
                                 'Frame_Number' => $data['Frame_Number'],
@@ -188,7 +201,7 @@ class McopMonitoringController extends Controller
                             [
                                 'SAP_ID' => $data['SAP_ID'],
                                 'Vehicle_ID' => $vehicleId,
-                                'Unit_Handover_Date' => $data['Unit_Handover_Date'],
+                                'Unit_Handover_Date' => $this->convertDate($data['Unit_Handover_Date']),
                                 'Unit_Handover_No' => $data['Unit_Handover_No'],
                                 'Unit_Price' => $data['Unit_Price'],
                                 'Period_Months' => $data['Period_Months'],
@@ -197,8 +210,8 @@ class McopMonitoringController extends Controller
                                 'Previous_Contract_Ended_Date' => $data['Previous_Contract_Ended_Date'] ?: null,
                                 'New_Contract_Value' => $data['New_Contract_Value'],
                                 'Monthly_Fuel_Subsidy' => $data['Monthly_Fuel_Subsidy'],
-                                'Start_Contract' => $data['Start_Contract'] ?: null,
-                                'End_Contract' => $data['End_Contract'] ?: null,
+                                'Start_Contract' => $this->convertDate($data['Start_Contract']) ?: null,
+                                'End_Contract' => $this->convertDate($data['End_Contract']) ?: null,
                                 'Remarks' => $data['Remarks'],
                                 'SPH' => $data['SPH'],
                             ]
@@ -209,8 +222,8 @@ class McopMonitoringController extends Controller
                                 'Vehicle_ID' => $vehicleId,
                             ],
                             [
-                                'Recondition_Start_Date' => $data['Recondition_Start_Date'] ?: null,
-                                'Recondition_End_Date' => $data['Recondition_End_Date'] ?: null,
+                                'Recondition_Start_Date' => $this->convertDate($data['Recondition_Start_Date']) ?: null,
+                                'Recondition_End_Date' => $this->convertDate($data['Recondition_End_Date']) ?: null,
                                 'Recondition_Cost' => $data['Recondition_Cost'],
                                 'Recondition_Contract_Value' => $data['Recondition_Contract_Value'],
                             ]
@@ -221,7 +234,7 @@ class McopMonitoringController extends Controller
                             [
                                 'SAP_ID' => $data['SAP_ID'],
                                 'Vehicle_ID' => $vehicleId,
-                                'STNK_Expiry_Date' => $data['STNK_Expiry_Date'] ?: null,
+                                'STNK_Expiry_Date' => $this->convertDate($data['STNK_Expiry_Date']) ?: null,
                                 'STNK_Tax' => $data['STNK_Tax'],
                                 'STNK_Position' => $data['STNK_Position'],
                             ]

@@ -186,7 +186,7 @@
             { dataField: "b_BPKB_Position", caption: "BPKB Position" }
         ],
         export: {
-            enabled: false,
+            enabled: true,
             fileName: modname,
             excelFilterEnabled: true,
             allowExportSelectedData: true
