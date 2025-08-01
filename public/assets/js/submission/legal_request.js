@@ -44,7 +44,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Reference Number",
             dataField: 'code',
-            width: 180,
+            // width: 180,
             alignment: "left"
         },
         {
@@ -104,26 +104,33 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Contractor",
             dataField: 'countersigningParty',
-            width: 180,
+            // width: 180,
+            alignment: "left"
+        },
+        {
+            caption: "Title of Document",
+            dataField: 'titleOfDocument',
+            // width: 180,
             alignment: "left"
         },
         {
             caption: 'BU',
             dataField: 'bu',
-            width: 100,
+            // width: 100,
             alignment: "left"
         },
         {
             caption: 'Creator Name',
 			dataField: "user.fullname",
-            width: 180,
+            // width: 180,
             alignment: "left",
-        },
+        },        
         {
             dataField: 'requestStatus',
             encodeHtml: false,
             allowFiltering: false,
             allowHeaderFiltering: true,
+            alignment: "left",
             customizeText: function (e) {
                 var arrText = [
                     "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
@@ -134,6 +141,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 ];
                 return arrText[e.value];
             },
+        },
+        {
+            caption: 'Next Approver',
+			dataField: "nextApproverName",
+            // width: 180,
+            alignment: "left",
+        },
+        {
+            caption: 'Last Approved',
+			dataField: "lastApprovalDate",
+            alignment: "left",
         },
         {
             dataField: "approveddoc",

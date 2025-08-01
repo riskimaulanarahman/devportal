@@ -103,7 +103,7 @@ class HomeController extends Controller
             'request_ccm' => $this->getModuleId('Ccm'),
             'request_ghm' => $this->getModuleId('Ghm'),
             'request_capex' => $this->getModuleId('Capex'),
-            // 'request_memorandum' => $this->getModuleId('Memorandum'),
+            'request_memorandum' => $this->getModuleId('Memorandum'),
             'request_legal' => $this->getModuleId('Legal'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
@@ -181,9 +181,9 @@ class HomeController extends Controller
                             case 'request_ghm':
                                 $url = 'ghm_request';
                                 break;
-                            // case 'request_memorandum':
-                            //     $url = 'memorandum_request';
-                            //     break;
+                            case 'request_memorandum':
+                                $url = 'memorandum_request';
+                                break;
                             case 'request_legal':
                                 $url = 'legal_request';
                                 break;
@@ -208,9 +208,6 @@ class HomeController extends Controller
             }
         }
 
-
-
-        
         // list need your approval
         foreach ($tables as $table => $module_id) {
             if($table == 'request_mmf') {
@@ -277,9 +274,9 @@ class HomeController extends Controller
                             case 'request_ghm':
                                 $url = 'ghm_request';
                                 break;
-                            // case 'request_memorandum':
-                            //     $url = 'memorandum_request';
-                            //     break;
+                            case 'request_memorandum':
+                                $url = 'memorandum_approver';
+                                break;
                             case 'request_legal':
                                 $url = 'legal_request';
                                 break;

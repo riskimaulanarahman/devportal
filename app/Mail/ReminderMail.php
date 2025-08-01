@@ -69,6 +69,10 @@ class ReminderMail extends Mailable
                 $subject = $this->mailData['bu'].' MCOP Reminder';
                 $viewblade = 'emails.HRIS.mcopExpired';
                 break;
+            case 'Memorandum';
+                $subject = 'Memorandum Reminder';
+                $viewblade = 'emails.HRIS.memoExpired';
+                break;
             default:
                 $viewblade = 'emails.defaultmail';
                 break;

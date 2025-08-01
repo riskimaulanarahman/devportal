@@ -22,10 +22,10 @@ use App\Models\ApproverListHistory;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Submission\Memorandum;
-use App\Mail\ReminderMail;
+
 use function PHPUnit\Framework\fileExists;
 
-class MemorandumRequestController extends Controller
+class MemorandumApproverController extends Controller
 {
     public $model;
     public $modulename;
@@ -43,163 +43,109 @@ class MemorandumRequestController extends Controller
     }
 
     public function index()
-    {
-        try {
-            $user_id = $this->getAuth()->id;
-            $module_id = $this->getModuleId($this->modulename);
+{
+    try {
+        $user_id = $this->getAuth()->id;
+        $module_id = $this->getModuleId($this->modulename);
 
-            // $memos = DB::table('memoExp')->get();
-            $memos = DB::table('memoExp')->get();
+        $employee_id = DB::table('tbl_approver')
+            ->where('user_id', $user_id)
+            ->value('employee_id');
 
-            foreach ($memos as $memo) {
-                $exists = DB::table('request_memorandum')
-                            ->where('employee_id', $memo->id)
-                            ->exists();
+        $getAccess = "
+            CASE WHEN EXISTS (
+                SELECT 1 
+                FROM [authorization].tbl_useraccess l 
+                WHERE l.module_id = '$module_id'
+                AND l.allowView = '1'
+                AND l.employee_id = '$user_id'
+            ) THEN 1 ELSE 0 END
+        ";
 
-                if (!$exists) {
-                    DB::table('request_memorandum')->insert([
-                        'employee_id' => $memo->id,
-                        'requestStatus' => 0,
-                        'bu' => $memo->bu ?? null,
-                        'sysid' => $memo->sys_id ?? null,
-                        'code_id' => $this->generateCode($this->modulename),
-                        'user_id' => $user_id,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-            }
-            $getAccess = "(
-                            SELECT CASE 
-                                WHEN EXISTS (
-                                    SELECT 1 
-                                    FROM [authorization].tbl_useraccess l 
-                                    WHERE l.module_id = '".$module_id."'
-                                    AND l.allowView = '1'
-                                    AND l.employee_id = '".$user_id."'
-                                ) THEN 1 ELSE 0 
-                            END
-                        )";
+        $pendingApprovalCheck = "
+            SELECT TOP 1 CASE WHEN a.user_id = '$user_id' THEN 1 ELSE 0 END
+            FROM tbl_approverListReq l
+            LEFT JOIN tbl_approver a ON l.approver_id = a.id
+            WHERE l.ApprovalAction = '1'
+            AND l.req_id = r.id
+            AND l.module_id = '$module_id'
+            ORDER BY a.sequence
+        ";
 
-            // Sekarang data sudah sinkron, tinggal ambil view gabungannya
-            $data = DB::table('request_memorandum AS r')
-                ->leftJoin('codes','r.code_id','codes.id')
-                ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
-                ->leftjoin('memoExp AS m', 'r.employee_id', '=', 'm.id')
-                ->whereIn('employee_id', DB::table('memoExp')->pluck('id'))
-                ->selectRaw("
-                        r.*, 
-                        codes.code,
-                        m.FullName,
-                        m.JoinDate,
-                        m.BirthOfDate,
-                        m.contract_status,
-                        m.sys_id,
-                        m.SAPID,
-                        m.Location,
-                        m.DesignationName,
-                        m.bu,
-                        m.end_contract_date,
-                        m.retirement_date,
-                        m.dayToExp,
-                        ".$getAccess." as isMine,
-                        (
-                            SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END
-                            FROM tbl_approverListReq l
-                            LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                            LEFT JOIN tbl_approvaltype t ON a.approvaltype_id = t.id 
-                            WHERE l.ApprovalAction = '1' 
-                            AND l.req_id = r.id 
-                            AND l.module_id = ? 
-                            ORDER BY a.sequence
-                        ) AS isPendingOnMe
-                    ", [$user_id, $module_id])
-                    ->orderByDesc('r.id')
-                    ->get();
-            //iki ketika data sudah banyak
+        $wasEverPendingCheck = "
+            SELECT TOP 1 CASE WHEN a.user_id = '$user_id' THEN 1 ELSE 0 END
+            FROM tbl_approverListReq l
+            LEFT JOIN tbl_approver a ON l.approver_id = a.id
+            WHERE l.req_id = r.id
+            AND l.module_id = '$module_id'
+            ORDER BY a.sequence
+        ";
+
+
+        $data = DB::table('request_memorandum AS r')
+            ->leftJoin('codes','r.code_id','codes.id')
+            ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
+            ->join('memoExp AS m', 'r.employee_id', '=', 'm.id')
+            ->select([
+                'r.id',
+                'r.user_id',
+                'r.employee_id',
+                'r.requestStatus',
+                'r.bu',
+                'r.sector',
+                'r.sysid',
+                'r.additional_approver',
+                'r.created_at',
+                'r.updated_at',
+                'codes.code',
+                'm.FullName',
+                'm.JoinDate',
+                'm.BirthOfDate',
+                'm.contract_status',
+                'm.sys_id',
+                'm.SAPID',
+                'm.Location',
+                'm.DesignationName',
+                'm.bu',
+                'm.end_contract_date',
+                'm.retirement_date',
+                DB::raw("($getAccess) AS isMine"),
+                DB::raw("($pendingApprovalCheck) AS isPendingOnMe"),
+                DB::raw("($wasEverPendingCheck) AS wasEverPendingCheck")
+            ])
+            ->where(function ($query) use ($employee_id, $user_id, $module_id, $pendingApprovalCheck) {
+                $query->where('r.user_id', $user_id)
+                      ->orWhereRaw("($pendingApprovalCheck) = 1")
+                      ->orWhereExists(function ($subquery) use ($employee_id, $module_id) {
+                          $subquery->select(DB::raw(1))
+                                   ->from('tbl_approverListReq AS l')
+                                   ->join('tbl_approver AS a', 'l.approver_id', '=', 'a.id')
+                                   ->whereColumn('l.req_id', 'r.id')
+                                   ->where('a.employee_id', $employee_id)
+                                   ->where('l.module_id', $module_id);
+                      });
+            })
+            ->orderByDesc('r.id')
+            ->get();
+            // $data = $data->filter(function ($item) {
+            //     return $item->isPendingOnMe == 1;
+            // })->values();
             $data = $data->filter(function ($item) {
-                return is_null($item->dayToExp) || 
-                    (is_numeric($item->dayToExp) && $item->dayToExp < 60);
+                return $item->isPendingOnMe == 1 || $item->wasEverPendingCheck == 1;
             })->values();
 
-            if ($data->isEmpty()) {
-                return response()->json([
-                    'status' => "empty",
-                    'message' => "Data tidak ditemukan, silakan tambahkan data baru",
-                    'data' => []
-                ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-            }
-            
-            // dd($data);  
-            return response()->json([
-                'status' => "show",
-                'message' => $this->getMessage()['show'],
-                'data' => $data
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+            // dd($data);
+        return response()->json([
+            'status' => "show",
+            'message' => $this->getMessage()['show'],
+            'data' => $data
+        ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
-        } catch (\Exception $e) {
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
-        }
+    } catch (\Exception $e) {
+        return response()->json(["status" => "error", "message" => $e->getMessage()]);
     }
+}
 
-
-    public function reminderNotificationMessage($mode)
-    {
-        if ($mode == 'reminder') {
-            $getReminderMemo = DB::table('memoExp')->get();
-            $grouped = [];
-
-            foreach ($getReminderMemo as $r) {
-                if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= 0) {
-
-                    $getSubmissionData = DB::table('request_memorandum')
-                        ->where('employee_id', $r->id)
-                        ->first();                        
-
-                    if ($getSubmissionData) {
-                        $getCreator = DB::table('users')->where('id', $getSubmissionData->user_id)->first();
-
-                        $getDetailData = DB::table('request_memorandum_detail')
-                        ->where('req_id', $getSubmissionData->id)
-                        ->first();
-
-                        if ($getCreator && isset($getCreator->email)) {
-                            $email = $getCreator->email;
-                            $grouped[$email]['getCreator'] = $getCreator;
-                            $grouped[$email]['submissions'][] = (object)[
-                                // 'code_id'          => $getDetailData->code_id ?? '-',
-                                'bu'      => $r->bu ?? '-',
-                                'emp_name'      => $r->FullName ?? '-',
-                                'dayToExp'      => $r->dayToExp ?? '-',
-                                'contract_status'      => $r->contract_status ?? '-',
-                                'retirement_date'      => $r->retirement_date ?? '-',
-                                'sequence'      => $getDetailData->sequence ?? '-',
-                                'startContract' => $getDetailData->startContract ?? '-',
-                                'endContract'   => $getDetailData->endContract ?? '-',
-                                'remarks'       => $getDetailData->remarks ?? '-',
-                            ];
-                        }
-                    }
-                }
-            }
-
-            foreach ($grouped as $email => $payload) {
-                $mailData = [
-                    "all" => 1,
-                    "action_id" => 0,
-                    "submission" => null, // supaya tidak trigger email lama
-                    "submissions" => $payload['submissions'],
-                    "email" => $email,
-                    "fullname" => $payload['getCreator']->fullname ?? '-',
-                    "message" => $this->mailMessage()['deadlineTaskReminder'],
-                    "mailType" => "reminder",
-                ];
-
-                // dd($mailData);
-                Mail::to($email)->send(new ReminderMail($mailData, $this->modulename, 1));
-            }
-        }
-    }
 
     public function show($id)
         {
@@ -584,7 +530,7 @@ class MemorandumRequestController extends Controller
                 if ($lastDetail->sequence == 1) {
                     $req = DB::table('request_memorandum')->where('id', $id)->first();
 
-                    DB::table('employee.tbl_employee')
+                    DB::table('tbl_employee')
                         ->where('id', $req->employee_id)
                         ->where('contract_status', 'Permanent')
                         ->update(['contract_status' => 'Contract']);

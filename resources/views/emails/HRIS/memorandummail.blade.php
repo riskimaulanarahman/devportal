@@ -62,7 +62,7 @@
     <div class="container">
         <p>Dear, <b>{{ $mailData['fullname'] }}</b></p>
         @if ($mailData['action_id'] == 1)
-            <p>You have received a New Submission from <b>{{ $mailData['creator'] }}</b></p>
+            <p>You have received a New submission from <b>{{ $mailData['creator'] }}</b></p>
         @endif
         <div class="message">
             {{ $mailData['message'] }}

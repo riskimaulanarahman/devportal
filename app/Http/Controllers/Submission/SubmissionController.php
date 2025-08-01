@@ -266,6 +266,9 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: ApproverList not found. Please ". ($modulename == 'Mom') ? "Select Chairman From Participant" : "add approver."]);
                 }
             }
+            if($modulename == 'Memorandum') {
+                
+            }
 
             $final = 0;
             $mailData = [];
@@ -482,6 +485,7 @@ class SubmissionController extends Controller
                         $getNextApprover = ApproverListReq::leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
                             ->where('tbl_approverListReq.req_id',$getappr->req_id)
                             ->where('tbl_approverListReq.approvalAction',1)
+                            ->where('tbl_approverListReq.module_id', $module_id)
                             ->orderBy('tbl_approver.sequence','asc')
                             ->first(); // get next approver
                         $getUser = User::findOrFail($getNextApprover->user_id); 
@@ -494,8 +498,8 @@ class SubmissionController extends Controller
                             "creator" => $getCreator->fullname,
                             "message" => $this->mailMessage()['waitingapproval'],
                         ];
+                        // dd($mailData);
                         break;
-
                     }
 
                 }
@@ -526,7 +530,5 @@ class SubmissionController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
 
         }
-    }
-
-   
+    }   
 }

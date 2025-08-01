@@ -325,14 +325,14 @@ class SubmissionMail extends Mailable
                 $request = new Request();
                 $legalController = new LegalRequestController();
 
-                if ($final == 1) {
+                // if ($final == 1) {
                     $legal = DB::table('tbl_approverListReq')
                         ->join('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
                         ->join('users', 'tbl_approver.user_id', '=', 'users.id')
                         ->select('tbl_approver.*', 'users.email')
                         ->where('tbl_approverListReq.req_id', $mailData['submission']->id)
                         ->where('tbl_approverListReq.module_id', $this->getModuleId($modulename))
-                        ->whereIn('tbl_approver.sequence', [3, 4]) // 🔍 Filter sesuai titah
+                        ->whereIn('tbl_approver.sequence', [3, 4]) 
                         ->get();
 
                     $this->developer = $legal;
@@ -340,14 +340,15 @@ class SubmissionMail extends Mailable
                     foreach ($legal as $devemail) {
                         $this->cc($devemail->email);
                     }
-
+                    if ($final == 1) {
                     $pdf = $legalController->genPdfLegal($request, $mailData['submission']->id);
-                    $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
+                        $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
 
-                    foreach ($Mailrecipient as $cc) {
-                        $this->cc($cc->email); // CC ke penerima internal
+                        foreach ($Mailrecipient as $cc) {
+                            $this->cc($cc->email); // CC ke penerima internal
+                        }
                     }
-                }
+                // }
             }
 
         // LEGAL MODULE
@@ -357,7 +358,7 @@ class SubmissionMail extends Mailable
                 $request = new Request();
                 $memorandumRequestController = new MemorandumRequestController();
 
-            if ($final == 1) {
+            // if ($final == 1) {
                 $submission = $mailData['submission'];
 
                     $memo = DB::table('request_memorandum')
@@ -383,6 +384,7 @@ class SubmissionMail extends Mailable
                         $submission->endContract   = $memo->endContract ?? '-';
                         $submission->remarks       = $memo->remarks ?? '-';
 
+                if ($final == 1) {
                     // Generate PDF dan lampirkan
                     $pdf = $memorandumRequestController->genPdfmemorandumReq($request, $submission->id);
                     $this->attach($url . "devportal/" . $pdf);
@@ -394,6 +396,7 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
+            // }
         }
 
         // MEMORANDUM MODULE
