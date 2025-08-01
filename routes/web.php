@@ -19,9 +19,10 @@ Route::get('ghm-autoappr',[App\Http\Controllers\Submission\GhmRequestController:
 Route::get('ghm_booking',[App\Http\Controllers\Submission\GhmRequestController::class, 'dashboard'])->name('ghm_booking'); //Ghm_request
 
 Route::middleware(['session.check'])->group(function () {
-    // Import
+    // MCOP
     Route::get('import-mcop',[App\Http\Controllers\Submission\HRIS\MCOP\McopMonitoringController::class, 'import'])->name('import-mcop');
     Route::post('import-mcop-csv', [App\Http\Controllers\Submission\HRIS\MCOP\McopMonitoringController::class, 'importCsv'])->name('import.mcopcsv');
+    Route::get('export-complex-csv', [App\Http\Controllers\Submission\HRIS\MCOP\McopMonitoringController::class, 'exportComplexJoinCsv'])->name('export.complex.csv');
     
     if(Schema::hasTable('reference.side_menus')) {
         $sidemenu = SideMenu::select('route')->where('route','!=','api')->get();
@@ -32,7 +33,7 @@ Route::middleware(['session.check'])->group(function () {
 
     // Scheduler
     Route::get('/mom-reminder/{mode}',[App\Http\Controllers\Submission\MomTaskUpdateController::class, 'reminderNotificationMessage'])->name('mom-reminder');
-    Route::get('/mcop-reminder/{mode}/{bu}',[App\Http\Controllers\Submission\HRIS\Mcop\McopMonitoringController::class, 'reminderNotificationMessage'])->name('mcop-reminder');
+    Route::get('/reminder/{module}/{bu}',[App\Http\Controllers\Submission\HRIS\Mcop\McopMonitoringController::class, 'reminderNotificationMessage'])->name('mcop-reminder');
 
     // Generate PDF
     Route::get('/gen-pdf/jdi/{id}',[App\Http\Controllers\Submission\JdiRequestController::class, 'genPdfJdi'])->name('gen-pdf-jdi');

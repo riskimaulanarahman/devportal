@@ -25,7 +25,7 @@
                 <td style="border:1px solid #000000; padding:6px;">{{ $contract->SAP_ID }}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $contract->Name }}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $contract->Estate }}</td>
-                <td style="border:1px solid #000000; padding:6px;">{{ $contract->Dept }}</td>
+                <td style="border:1px solid #000000; padding:6px;">{!! $contract->Dept !!}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $contract->Position }}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $contract->Contract_No }}</td>
                 <td style="border:1px solid #000000; padding:6px;
@@ -75,7 +75,7 @@
                 <td style="border:1px solid #000000; padding:6px;">{{ $stnk->SAP_ID }}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $stnk->Name }}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $stnk->Estate }}</td>
-                <td style="border:1px solid #000000; padding:6px;">{{ $stnk->Dept }}</td>
+                <td style="border:1px solid #000000; padding:6px;">{!! $stnk->Dept !!}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $stnk->Position }}</td>
                 <td style="border:1px solid #000000; padding:6px;">{{ $stnk->STNK_No }}</td>
                 <td style="border:1px solid #000000; padding:6px;

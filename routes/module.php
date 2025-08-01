@@ -18,5 +18,6 @@ Route::group(['prefix' => 'api'], function () {
         'employeedata' => App\Http\Controllers\Module\EmployeedataController::class,
         'ecatalog' => App\Http\Controllers\Module\EcatalogController::class,
         'purchasinguser' => App\Http\Controllers\Module\PurchasinguserController::class,
+        'mcop' => App\Http\Controllers\Submission\HRIS\MCOP\McopMonitoringController::class,
     ]);
 });
