@@ -144,62 +144,71 @@ class MemorandumRequestController extends Controller
 
 
     public function reminderNotificationMessage($mode)
-    {
-        if ($mode == 'reminder') {
-            $getReminderMemo = DB::table('memoExp')->get();
-            $grouped = [];
+{
+    if ($mode == 'reminder') {
+        $getReminderMemo = DB::table('memoExp')->get();
+        $grouped = [];
 
-            foreach ($getReminderMemo as $r) {
-                if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= 0) {
+        foreach ($getReminderMemo as $r) {
+            if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= 0) {
+                $getSubmissionData = DB::table('request_memorandum')
+                    ->where('employee_id', $r->id)
+                    ->first();
 
-                    $getSubmissionData = DB::table('request_memorandum')
-                        ->where('employee_id', $r->id)
-                        ->first();                        
+                if ($getSubmissionData) {
+                    // Ambil semua user yang punya akses ke modul Memorandum
+                    $getCreators = DB::table(DB::raw('[authorization].[tbl_useraccess] as ua'))
+                        ->join(DB::raw('[users]'), 'ua.employee_id', '=', 'users.id')
+                        ->join(DB::raw('[reference].[tbl_module] as m'), 'ua.module_id', '=', 'm.id')
+                        ->select('users.email', 'users.fullname', 'm.module')
+                        ->where('m.module', 'Memorandum')
+                        ->where('ua.allowView', 1)
+                        ->get();
 
-                    if ($getSubmissionData) {
-                        $getCreator = DB::table('users')->where('id', $getSubmissionData->user_id)->first();
-
-                        $getDetailData = DB::table('request_memorandum_detail')
+                    $getDetailData = DB::table('request_memorandum_detail')
                         ->where('req_id', $getSubmissionData->id)
                         ->first();
 
-                        if ($getCreator && isset($getCreator->email)) {
-                            $email = $getCreator->email;
-                            $grouped[$email]['getCreator'] = $getCreator;
+                    foreach ($getCreators as $creator) {
+                        if (isset($creator->email)) {
+                            $email = $creator->email;
+
+                            $grouped[$email]['getCreator'] = $creator;
                             $grouped[$email]['submissions'][] = (object)[
-                                // 'code_id'          => $getDetailData->code_id ?? '-',
-                                'bu'      => $r->bu ?? '-',
-                                'emp_name'      => $r->FullName ?? '-',
-                                'dayToExp'      => $r->dayToExp ?? '-',
-                                'contract_status'      => $r->contract_status ?? '-',
-                                'retirement_date'      => $r->retirement_date ?? '-',
-                                'sequence'      => $getDetailData->sequence ?? '-',
-                                'startContract' => $getDetailData->startContract ?? '-',
-                                'endContract'   => $getDetailData->endContract ?? '-',
-                                'remarks'       => $getDetailData->remarks ?? '-',
+                                'bu'              => $r->bu ?? '-',
+                                'emp_name'        => $r->FullName ?? '-',
+                                'dayToExp'        => $r->dayToExp ?? '-',
+                                'contract_status' => $r->contract_status ?? '-',
+                                'retirement_date' => $r->retirement_date ?? '-',
+                                'sequence'        => $getDetailData->sequence ?? '-',
+                                'startContract'   => $getDetailData->startContract ?? '-',
+                                'endContract'     => $getDetailData->endContract ?? '-',
+                                'remarks'         => $getDetailData->remarks ?? '-',
                             ];
                         }
                     }
                 }
             }
+        }
 
-            foreach ($grouped as $email => $payload) {
-                $mailData = [
-                    "all" => 1,
-                    "action_id" => 0,
-                    "submission" => null, // supaya tidak trigger email lama
-                    "submissions" => $payload['submissions'],
-                    "email" => $email,
-                    "fullname" => $payload['getCreator']->fullname ?? '-',
-                    "message" => $this->mailMessage()['deadlineTaskReminder'],
-                    "mailType" => "reminder",
-                ];
+        foreach ($grouped as $email => $payload) {
+            $mailData = [
+                "all"         => 1,
+                "action_id"   => 0,
+                "submission"  => null,
+                "submissions" => $payload['submissions'],
+                "email"       => $email,
+                "fullname"    => $payload['getCreator']->fullname ?? '-',
+                "message"     => $this->mailMessage()['deadlineTaskReminder'],
+                "mailType"    => "reminder",
+            ];
 
-                // dd($mailData);
-                Mail::to($email)->send(new ReminderMail($mailData, $this->modulename, 1));
-            }
+            // Kirim email ke masing-masing recipient
+            Mail::to($email)->send(new ReminderMail($mailData, $this->modulename, 1));
         }
     }
+}
+
 
     public function show($id)
         {

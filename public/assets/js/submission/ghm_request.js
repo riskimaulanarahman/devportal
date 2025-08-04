@@ -9,8 +9,11 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }  
 
+var dates = getStartAndEndDateOfMonth();
+
 var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
+    // dataSource: store(modname,dates.startOfMonth,dates.endOfMonth),
     allowColumnReordering: true,
     allowColumnResizing: true,
     columnHidingEnabled: true,
@@ -35,6 +38,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     },
     scrolling: {
         mode: "virtual"
+    },
+    selection: {
+      mode: 'multiple',
     },
     pager: {
         visible: false,
@@ -152,11 +158,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 ];
                 return arrText[e.value];
             },
-        },  
-        {
-            dataField: "description",
-            caption: "Details",
-            width: 180
         },
         {
             dataField: "Location",            
@@ -168,39 +169,48 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Room",
             width: 120,
         },
-        { 
+        {
             dataField: "startDate",
             caption: "Check in",
-            cellTemplate: function(container, options) {
-                if (!options.value || isNaN(new Date(options.value).getTime())) {
-                    container.text("N/A"); // Tampilkan "N/A" jika tanggal tidak valid
-                } else {
-                    const date = new Date(options.value);
-                    const formattedDate = date.toISOString().split('T')[0];
-                    const formattedTime = date.toTimeString().split(' ')[0];
-                    container.html(`
-                        <div>${formattedDate}</div>
-                        <div>${formattedTime}</div>                    
-                    `);
-                }
-            },
+            dataType: "date",
+            format: "dd-MM-yyyy",
+            // cellTemplate: function(container, options) {
+            //     if (!options.value || isNaN(new Date(options.value).getTime())) {
+            //         container.text("N/A");
+            //     } else {
+            //         const date = new Date(options.value);
+            //         const yyyy = date.getFullYear();
+            //         const mm = String(date.getMonth() + 1).padStart(2, '0');
+            //         const dd = String(date.getDate()).padStart(2, '0');
+            //         const hh = String(date.getHours()).padStart(2, '0');
+            //         const min = String(date.getMinutes()).padStart(2, '0');
+            //         container.text(`${yyyy}-${mm}-${dd} ${hh}:${min}`);
+            //     }
+            // },
         },
-        { 
+        {
             dataField: "endDate",
             caption: "Check out",
-            cellTemplate: function(container, options) {
-                if (!options.value || isNaN(new Date(options.value).getTime())) {
-                    container.text("N/A"); // Tampilkan "N/A" jika tanggal tidak valid
-                } else {
-                    const date = new Date(options.value);
-                    const formattedDate = date.toISOString().split('T')[0];
-                    const formattedTime = date.toTimeString().split(' ')[0];
-                    container.html(`
-                        <div>${formattedDate}</div>
-                        <div>${formattedTime}</div>                    
-                    `);
-                }
-            },
+            dataType: "date",
+            format: "dd-MM-yyyy",
+            // cellTemplate: function(container, options) {
+            //     if (!options.value || isNaN(new Date(options.value).getTime())) {
+            //         container.text("N/A");
+            //     } else {
+            //         const date = new Date(options.value);
+            //         const yyyy = date.getFullYear();
+            //         const mm = String(date.getMonth() + 1).padStart(2, '0');
+            //         const dd = String(date.getDate()).padStart(2, '0');
+            //         const hh = String(date.getHours()).padStart(2, '0');
+            //         const min = String(date.getMinutes()).padStart(2, '0');
+            //         container.text(`${yyyy}-${mm}-${dd} ${hh}:${min}`);
+            //     }
+            // },
+        },
+        {
+            dataField: "description",
+            caption: "Details",
+            width: 180
         },
         { 
             dataField: "guest",
@@ -219,12 +229,19 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         }           
       
     ],
+    columnChooser: {
+      enabled: true,
+    },
     export: {
         enabled: true,
         fileName: modname,
         excelFilterEnabled: true,
         allowExportSelectedData: true
     },
+    onInitialized: function(e) {
+        const grid = e.component;
+    },
+
     onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();
@@ -239,23 +256,113 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
 
-        e.toolbarOptions.items.unshift({						
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function() {
-                    dataGrid.refresh();
+        let endDateBox;
+
+        e.toolbarOptions.items.unshift(
+            {
+                location: "after",
+                widget: "dxTextBox",
+                options: {
+                    value: "Check in :",
+                    readOnly: true,
+                }
+            },
+            {
+                location: "after",
+                widget: "dxDateBox",
+                options: {
+                    hint: "startDate",
+                    displayFormat: "dd/MM/yyyy",
+                    value: dates.startOfMonth,
+                    onValueChanged: function(e) {
+                        startDate = e.value;
+                        // endDate = null; // Reset end date when start date changes
+                        // endDateBox.option("value", endDate); // Clear end date box
+                        // filterData();
+                    }
+                }
+            },
+            {
+                location: "after",
+                widget: "dxTextBox",
+                options: {
+                    value: "Check out :",
+                    readOnly: true,
+                }
+            },
+            {
+                location: "after",
+                widget: "dxDateBox",
+                options: {
+                    hint: "endDate",
+                    displayFormat: "dd/MM/yyyy",
+                    value: dates.endOfMonth,
+                    onValueChanged: function(e) {
+                        endDate = e.value;
+                        filterData();
+                    },
+                    onInitialized: function(e) {
+                        endDateBox = e.component; // Save reference to end date box
+                    }
+                }
+            },
+            {						
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    hint: "Refresh Data",
+                    icon: "refresh",
+                    onClick: function() {
+                        dataGrid.refresh();
+                    }
                 }
             }
-        })
+        )
     },
     onDataErrorOccurred: function(e) {
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
         location.reload();
     }
 }).dxDataGrid("instance");
+
+var startDate;
+var endDate;
+
+function filterData() {
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            DevExpress.ui.dialog.alert("Invalid date format.", "error");
+            return;
+        }
+
+        if (start <= end) {
+            // Refresh data source first
+            dataGrid.getDataSource().reload();
+
+            // Clear previous filter
+            dataGrid.clearFilter();
+
+            // Apply fresh filter
+            dataGrid.filter([
+                ["startDate", "<=", end],
+                "and",
+                ["endDate", ">=", start]
+            ]);
+
+            dataGrid.refresh();
+        } else {
+            DevExpress.ui.dialog.alert("startDate cannot be later than endDate.", "error");
+            return;
+        }
+    }
+}
+
+
+
+
 $('#btnadd').on('click',function(){
     sendRequest(apiurl + "/"+modname, "POST", {requestStatus:0}).then(function(response){
         const reqid = response.data.id;
@@ -669,6 +776,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         onInitialized: function(e) {
                             dataGrid1 = e.component;
+                            
                         },
                         onContentReady: function(e){
                             moveEditColumnToLeft(e.component);
