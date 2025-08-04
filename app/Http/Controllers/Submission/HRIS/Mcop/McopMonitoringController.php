@@ -129,9 +129,14 @@ class McopMonitoringController extends Controller
             'csv_file' => 'required|file|mimes:csv,txt',
         ]);
 
-        $path = $request->file('csv_file')->getRealPath();
+        $file = $request->file('csv_file');
+        if (!$file) {
+            return back()->with('error', 'File upload gagal!');
+        }
+        $csv = Reader::createFromPath($file->getPathname(), 'r');
+        // $path = $request->file('csv_file')->getRealPath();
 
-        $csv = Reader::createFromPath($path, 'r');
+        // $csv = Reader::createFromPath($path, 'r');
         $csv->setDelimiter(';'); // Ganti dengan delimiter yang sesuai
 
         // Ambil header
