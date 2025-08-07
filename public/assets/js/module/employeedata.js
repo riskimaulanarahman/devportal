@@ -93,7 +93,7 @@ checkUserAccess(modname, usersid).then(permissions => {
 
                     var reqid = options.data.id;
                     var isad = options.data.isAD;
-                    if(options.data.LoginName && (isad === 0 || isad === 1 || isad === null)) {
+                    if(options.data.LoginName && (isad === 0 || isad === null)) {
                         $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
                             runpopup(options,2); // 2 delete
