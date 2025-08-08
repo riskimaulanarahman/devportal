@@ -22,6 +22,7 @@ class Employee extends Model
         'isActive' => 'integer',
         'isTerminate' => 'integer',
         'isNotHC' => 'integer',
+        'isPIC' => 'integer',
     ];
 
     public $timestamps = false;
