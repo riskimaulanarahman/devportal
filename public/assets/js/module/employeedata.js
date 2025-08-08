@@ -275,6 +275,17 @@ checkUserAccess(modname, usersid).then(permissions => {
                 validationRules: [{ type: "required" }]
             },  
             {
+                dataField: 'isPIC',
+                dataType: 'boolean',
+                visible: (admin == 1 || permissions.allowAction == 1) ? true : false,
+                formItem: {
+                    visible: (admin == 1 || permissions.allowAction == 1) ? true : false
+                },
+                editorOptions: { 
+                    readOnly: (admin == 1 || permissions.allowAction == 1) ? false : true
+                },
+            },
+            {
                 dataField: 'isActive',
                 dataType: 'boolean',
                 visible: (admin == 1) ? true : false,
