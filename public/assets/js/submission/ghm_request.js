@@ -339,13 +339,10 @@ function filterData() {
         }
 
         if (start <= end) {
-            // Refresh data source first
             dataGrid.getDataSource().reload();
 
-            // Clear previous filter
             dataGrid.clearFilter();
 
-            // Apply fresh filter
             dataGrid.filter([
                 ["startDate", "<=", end],
                 "and",
@@ -359,8 +356,6 @@ function filterData() {
         }
     }
 }
-
-
 
 
 $('#btnadd').on('click',function(){
