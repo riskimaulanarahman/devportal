@@ -182,7 +182,7 @@ class HomeController extends Controller
                                 $url = 'ghm_request';
                                 break;
                             case 'request_memorandum':
-                                $url = 'memorandum_request';
+                                $url = 'memorandum_approver';
                                 break;
                             case 'request_legal':
                                 $url = 'legal_request';
