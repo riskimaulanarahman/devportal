@@ -35,7 +35,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         allowDeleting: true,
     },
     scrolling: {
-        mode: "virtual"
+        mode: "infinite"
     },
     pager: {
         visible: false,
