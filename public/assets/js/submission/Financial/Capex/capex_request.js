@@ -140,15 +140,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
         {
             caption: 'Request Status',
-            calculateCellValue: function(rowData) {
-                var arrText = [
-                    "Draft",
-                    "Waiting Approval",
-                    "Rework",
-                    "Approved",
-                    "Rejected",
-                ];
-                return arrText[rowData.requestStatus];
+            dataField: 'requestStatus',
+            lookup: {
+                dataSource: [
+                    { id: 0, name: 'Draft' },
+                    { id: 1, name: 'Waiting Approval' },
+                    { id: 2, name: 'Rework' },
+                    { id: 3, name: 'Approved' },
+                    { id: 4, name: 'Rejected' },
+                ],
+                valueExpr: 'id',
+                displayExpr: 'name'
             },
             cellTemplate: function(container, options) {
                 var arrText = [
@@ -285,184 +287,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         allowExportSelectedData: true
     },
     // onExporting: function(e) {
-    //     var masterRows = [];
-    //     e.component.beginUpdate();
     //     var workbook = new ExcelJS.Workbook();
     //     var worksheet = workbook.addWorksheet('Capex Request');
 
-    //     DevExpress.excelExporter.exportDataGrid({
-    //         component: e.component,
-    //         worksheet: worksheet,
-    //         autoFilterEnabled: true,
-    //         customizeCell: ({ gridCell, excelCell }) => {
-    //             if (gridCell.rowType === 'data') {
-    //                 if (!gridCell) {
-    //                     return;
-    //                 }
-                    // if (gridCell.column.dataField === 'approveddoc') {
-                    //     if (gridCell.value !== null) {
-                    //         // TODO: Please verify this URL is correct
-                    //         const url = baseurl + gridCell.value;
-                    //         excelCell.value = { text: 'Click to Download', hyperlink: url };
-                    //         excelCell.font = {
-                    //             color: { argb: 'FF0000FF' },
-                    //             underline: true
-                    //         };
-                    //     }
-                    // }
-    //                 if (gridCell.column.caption === 'Request Status') {
-    //                     if (gridCell.data.requestStatus === 0) {
-    //                         excelCell.value = "Draft"
-    //                     } else if (gridCell.data.requestStatus === 1) {
-    //                         excelCell.value = "Waiting Approval"
-    //                     } else if (gridCell.data.requestStatus === 2) {
-    //                         excelCell.value = "Rework"
-    //                     } else if (gridCell.data.requestStatus === 3) {
-    //                         excelCell.value = "Approved"
-    //                     } else if (gridCell.data.requestStatus === 4) {
-    //                         excelCell.value = "Rejected"
-    //                     } else {
-    //                         excelCell.value = ""
-    //                     }
-    //                 }
-    //                 if (gridCell.column.dataField === "code" && gridCell.rowType === "data") {
-    //                     masterRows.push({
-    //                         rowIndex: excelCell.fullAddress.row + 1,
-    //                         data: gridCell.data
-    //                     });
-    //                 }
-    //             }
-    //         }
-    //     }).then((cellRange) => {
-    //         const borderStyle = { style: "thin", color: { argb: "FF7E7E7E" } };
-    //         let offset = 0;
-
-    //         const insertRow = (index, offset, outlineLevel) => {
-    //             const currentIndex = index + offset;
-    //             const row = worksheet.insertRow(currentIndex, [], "n");
-
-    //             for (var j = worksheet.rowCount + 1; j > currentIndex; j--) {
-    //                 worksheet.getRow(j).outlineLevel = worksheet.getRow(j - 1).outlineLevel;
-    //             }
-    //             row.outlineLevel = outlineLevel;
-    //             return row;
-    //         };
-
-    //         var promises = [];
-
-    //         for (var i = 0; i < masterRows.length; i++) {
-    //             let rowIndex = masterRows[i].rowIndex;
-    //             let columnIndex = cellRange.from.column;
-    //             var reqid = masterRows[i].data.id;
-
-    //             // Approver List
-    //             var approverPromise = storewithmodule('approverlistrequest', modelclass, reqid).load().then((data) => {
-    //                 if (data.length > 0) {
-    //                     let row = insertRow(rowIndex + i, offset++, 1);
-    //                     Object.assign(row.getCell(columnIndex), {
-    //                         value: "> Approver List",
-    //                         font: { bold: true }
-    //                     });
-    //                     worksheet.mergeCells(row.number, columnIndex, row.number, columnIndex + 10);
-
-    //                     const columns = ["Fullname", "Approval Type", "Approval Date", "Approval Status", "Remarks"];
-    //                     row = insertRow(rowIndex + i, offset++, 1);
-    //                     columns.forEach((columnName, currentColumnIndex) => {
-    //                         Object.assign(row.getCell(columnIndex + currentColumnIndex), {
-    //                             value: columnName,
-    //                             font: { bold: true },
-    //                             border: { bottom: borderStyle, left: borderStyle, right: borderStyle, top: borderStyle }
-    //                         });
-    //                     });
-
-    //                     var approverList;
-    //                     return new DevExpress.data.DataSource(listOption('/list-approver/' + modelclass, 'id', 'fullname')).load().then(function(list) {
-    //                         approverList = list;
-    //                         data.forEach((detail, index) => {
-    //                             row = insertRow(rowIndex + i, offset++, 1);
-    //                             var approver = approverList.find(a => a.id === detail.approver_id);
-    //                             var formattedDate = '';
-    //                             if (detail.approvalDate) {
-    //                                 var date = new Date(detail.approvalDate);
-    //                                 var year = date.getFullYear();
-    //                                 var month = ('0' + (date.getMonth() + 1)).slice(-2);
-    //                                 var day = ('0' + date.getDate()).slice(-2);
-    //                                 formattedDate = year + '-' + month + '-' + day;
-    //                             }
-    //                             var approverData = [
-    //                                 approver ? approver.fullname : '',
-    //                                 detail.ApprovalType,
-    //                                 formattedDate,
-    //                                 ['Draft', 'Waiting Approval', 'Rework', 'Approved', 'Rejected'][detail.approvalAction],
-    //                                 detail.remarks
-    //                             ];
-    //                             approverData.forEach((value, currentColumnIndex) => {
-    //                                 Object.assign(row.getCell(columnIndex + currentColumnIndex), {
-    //                                     value: value,
-    //                                     border: { bottom: borderStyle, left: borderStyle, right: borderStyle, top: borderStyle }
-    //                                 });
-    //                             });
-    //                         });
-    //                     });
-    //                 }
-    //             });
-    //             promises.push(approverPromise);
-
-
-    //             // Expenditure Items
-    //             var expenditurePromise = storewithmodule('capexdetail', modelclass, reqid).load().then((data) => {
-    //                 if (data.length > 0) {
-    //                     let row = insertRow(rowIndex + i, offset++, 1);
-    //                     Object.assign(row.getCell(columnIndex), {
-    //                         value: "> Expenditure Items",
-    //                         font: { bold: true }
-    //                     });
-    //                     worksheet.mergeCells(row.number, columnIndex, row.number, columnIndex + 10);
-
-    //                     const columns = ["Expenditure Item", "Quantity", "Amount", "Sub Total"];
-    //                     row = insertRow(rowIndex + i, offset++, 1);
-    //                     columns.forEach((columnName, currentColumnIndex) => {
-    //                         Object.assign(row.getCell(columnIndex + currentColumnIndex), {
-    //                             value: columnName,
-    //                             font: { bold: true },
-    //                             border: { bottom: borderStyle, left: borderStyle, right: borderStyle, top: borderStyle }
-    //                         });
-    //                     });
-
-    //                     data.forEach((detail, index) => {
-    //                         row = insertRow(rowIndex + i, offset++, 1);
-    //                         var expenditureData = [
-    //                             detail.expenditure_item,
-    //                             detail.quantity,
-    //                             detail.amount,
-    //                             detail.subtotal
-    //                         ];
-    //                         expenditureData.forEach((value, currentColumnIndex) => {
-    //                             Object.assign(row.getCell(columnIndex + currentColumnIndex), {
-    //                                 value: value,
-    //                                 border: { bottom: borderStyle, left: borderStyle, right: borderStyle, top: borderStyle }
-    //                             });
-    //                         });
-    //                     });
-    //                 }
-    //             });
-    //             promises.push(expenditurePromise);
-    //         }
-
-    //         Promise.all(promises).then(() => {
-    //             e.component.endUpdate();
-    //             workbook.xlsx.writeBuffer().then(function(buffer) {
-    //                 saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'CapexRequest.xlsx');
-    //             });
-    //         });
-
-    //     });
-
-    //     e.cancel = true;
-    // },
-    // onExporting: function(e) {
-    //     var workbook = new ExcelJS.Workbook();
-    //     var worksheet = workbook.addWorksheet('Capex Request');
+    //     var requestStatusMap = [
+    //         "Draft",           // id 0
+    //         "Waiting Approval",// id 1
+    //         "Rework",          // id 2
+    //         "Approved",        // id 3
+    //         "Rejected"         // id 4
+    //     ];
 
     //     // Add header row
     //     var headerRow = [];
@@ -518,15 +352,36 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     //                         if (cell.column.command || cell.column.caption === 'Action') {
     //                             return;
     //                         }
-    //                         if (cell.column.caption === 'Request Status') {
-    //                             masterData.push(cell.value);
+    //                         if (cell.column.dataField === 'approveddoc') {
+    //                             if (cell.value) {
+    //                                 masterData.push({ text: 'Click to Download', hyperlink: baseurl+ '/' + cell.value });
+    //                             } else {
+    //                                 masterData.push('');
+    //                             }
+    //                         } else if (cell.column.caption === 'Request Status') {
+    //                             masterData.push(requestStatusMap[cell.value]);
     //                         } else {
     //                             masterData.push(cell.displayValue);
     //                         }
     //                     });
     //                     masterData.push(lastApprover);
     //                     masterData.push(total);
-    //                     worksheet.addRow(masterData);
+    //                     var addedRow = worksheet.addRow(masterData);
+
+    //                     // Style the hyperlink
+    //                     var approvedDocIndex = -1;
+    //                     e.component.getVisibleColumns().forEach(function(column, index) {
+    //                         if (column.dataField === 'approveddoc') {
+    //                             approvedDocIndex = index;
+    //                         }
+    //                     });
+    //                     if (approvedDocIndex > -1) {
+    //                         addedRow.getCell(approvedDocIndex + 1).font = {
+    //                             color: { argb: 'FF0000FF' },
+    //                             underline: true
+    //                         };
+    //                     }
+
 
     //                     // Add detail rows (approver list)
     //                     if (approverData.length > 0) {
@@ -608,7 +463,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         var workbook = new ExcelJS.Workbook();
         var worksheet = workbook.addWorksheet('Capex Request');
 
-        // Add header row
+        // Map request status id ke nama
+        var requestStatusMap = [
+            "Draft",            // id 0
+            "Waiting Approval", // id 1
+            "Rework",           // id 2
+            "Approved",         // id 3
+            "Rejected"          // id 4
+        ];
+
+        // Header
         var headerRow = [];
         e.component.getVisibleColumns().forEach(function(column) {
             if (column.command || column.caption === 'Action') {
@@ -622,19 +486,20 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         headerRow.push("Total");
         worksheet.addRow(headerRow).font = { bold: true };
 
-        var masterRows = e.component.getVisibleRows();
-        var promise = Promise.resolve();
-
-        masterRows.forEach(function(masterRow) {
-            if (masterRow.rowType === 'data') {
-                promise = promise.then(function() {
-                    var reqid = masterRow.data.id;
+        // Muat seluruh data (bukan hanya yang "visible")
+        e.component.getDataSource().load().then(function(fullData) {
+            // Async export (biar detail tetap bisa pakai promise)
+            var queue = Promise.resolve();
+            fullData.forEach(function(masterData) {
+                queue = queue.then(function() {
+                    var reqid = masterData.id;
 
                     var approverPromise = storewithmodule('approverlistrequest', modelclass, reqid).load();
                     var expenditurePromise = storewithmodule('capexdetail', modelclass, reqid).load();
                     var approverListPromise = new DevExpress.data.DataSource(listOption('/list-approver/' + modelclass, 'id', 'fullname')).load();
 
                     return Promise.all([approverPromise, expenditurePromise, approverListPromise]).then(([approverData, expenditureData, approverList]) => {
+
                         // Find last approver
                         var lastApprover = '';
                         if (approverData.length > 0) {
@@ -656,33 +521,45 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                             });
                         }
 
-                        // Add master row
-                        var masterData = [];
-                        masterRow.cells.forEach(function(cell) {
-                            if (cell.column.command || cell.column.caption === 'Action') {
+                        // Buat kolom per data
+                        var visibleColumns = e.component.getVisibleColumns();
+                        var rowValue = [];
+
+                        visibleColumns.forEach(function(column) {
+                            if (column.command || column.caption === 'Action') {
                                 return;
                             }
-                            if (cell.column.dataField === 'approveddoc') {
-                                if (cell.value) {
-                                    masterData.push({ text: 'Click to Download', hyperlink: baseurl+ '/' + cell.value });
+                            if (column.dataField === "approveddoc") {
+                                if (masterData.approveddoc) {
+                                    rowValue.push({ text: 'Click to Download', hyperlink: baseurl+ '/' + masterData.approveddoc });
                                 } else {
-                                    masterData.push('');
+                                    rowValue.push('');
                                 }
-                            } else if (cell.column.caption === 'Request Status') {
-                                masterData.push(cell.value);
+                            } else if (column.dataField === "requestStatus") {
+                                rowValue.push(requestStatusMap[masterData.requestStatus]);
+                            } else if (column.dataField && column.dataField.indexOf('.') > -1) {
+                                // Nested field (misal: "user.fullname")
+                                var parts = column.dataField.split('.');
+                                var value = masterData;
+                                parts.forEach(function(part) {
+                                    value = value ? value[part] : '';
+                                });
+                                rowValue.push(value);
                             } else {
-                                masterData.push(cell.displayValue);
+                                rowValue.push(masterData[column.dataField]);
                             }
                         });
-                        masterData.push(lastApprover);
-                        masterData.push(total);
-                        var addedRow = worksheet.addRow(masterData);
+                        rowValue.push(lastApprover);
+                        rowValue.push(total);
 
-                        // Style the hyperlink
+                        // Add Master Row
+                        var addedRow = worksheet.addRow(rowValue);
+
+                        // Style hyperlink pada kolom approveddoc
                         var approvedDocIndex = -1;
-                        e.component.getVisibleColumns().forEach(function(column, index) {
+                        visibleColumns.forEach(function(column, idx) {
                             if (column.dataField === 'approveddoc') {
-                                approvedDocIndex = index;
+                                approvedDocIndex = idx;
                             }
                         });
                         if (approvedDocIndex > -1) {
@@ -692,15 +569,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                             };
                         }
 
-
                         // Add detail rows (approver list)
                         if (approverData.length > 0) {
                             worksheet.addRow(['', 'Approver List:']).font = { bold: true };
                             worksheet.lastRow.outlineLevel = 1;
-                            var headerRow = ['', 'Fullname', 'Approval Type', 'Approval Date', 'Approval Status', 'Remarks'];
-                            worksheet.addRow(headerRow).font = { bold: true };
+                            var approverHeader = ['', 'Fullname', 'Approval Type', 'Approval Date', 'Approval Status', 'Remarks'];
+                            worksheet.addRow(approverHeader).font = { bold: true };
                             worksheet.lastRow.outlineLevel = 1;
-
                             approverData.forEach(function(item) {
                                 var approver = approverList.find(a => a.id === item.approver_id);
                                 var formattedDate = '';
@@ -716,7 +591,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                                     approver ? approver.fullname : '',
                                     item.ApprovalType,
                                     formattedDate,
-                                    ['Draft', 'Waiting Approval', 'Rework', 'Approved', 'Rejected'][item.approvalAction],
+                                    requestStatusMap[item.approvalAction],
                                     item.remarks
                                 ];
                                 worksheet.addRow(detailRow);
@@ -728,8 +603,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         if (expenditureData.length > 0) {
                             worksheet.addRow(['', 'Expenditure Items:']).font = { bold: true };
                             worksheet.lastRow.outlineLevel = 1;
-                            var headerRow = ['', 'Expenditure Item', 'Quantity', 'Amount', 'Sub Total'];
-                            worksheet.addRow(headerRow).font = { bold: true };
+                            var expenditureHeader = ['', 'Expenditure Item', 'Quantity', 'Amount', 'Sub Total'];
+                            worksheet.addRow(expenditureHeader).font = { bold: true };
                             worksheet.lastRow.outlineLevel = 1;
                             expenditureData.forEach(function(item) {
                                 var detailRow = [
@@ -758,12 +633,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                         }
                     });
                 });
-            }
-        });
+            });
 
-        promise.then(function() {
-            workbook.xlsx.writeBuffer().then(function(buffer) {
-                saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'CapexRequest.xlsx');
+            // Setelah semua promise selesai, baru ekspor file
+            queue.then(function() {
+                workbook.xlsx.writeBuffer().then(function(buffer) {
+                    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'CapexRequest.xlsx');
+                });
             });
         });
 
