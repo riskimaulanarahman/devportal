@@ -207,7 +207,9 @@
         '/memorandum_report': 'submission/memorandum_report.js',
         '/memorandum_approver': 'submission/memorandum_approver.js',
         //Submission/Legal
-        '/legal_request' : 'submission/legal_request.js'
+        '/legal_request' : 'submission/legal_request.js',
+        //Submission/Legal
+        '/wphc_request' : 'submission/wphc_request.js'
     }
     
     const pathname = window.location.pathname;

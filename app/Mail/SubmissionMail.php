@@ -21,9 +21,10 @@ use App\Models\Submission\MMF\Mmf30;
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
 use App\Models\Submission\Jdi;
-use App\Models\Submission\Legal;
-use App\Models\Submission\Memorandum;
 use App\Models\Submission\MMF\Mmf;
+use App\Models\Submission\Legal;
+use App\Models\Submission\Wphc;
+use App\Models\Submission\Memorandum;
 use App\Http\Controllers\Submission\JdiRequestController;
 use App\Http\Controllers\Submission\LegalRequestController;
 use App\Http\Controllers\Submission\IT\ADRequestController;
@@ -34,6 +35,7 @@ use App\Models\Submission\HRIS\Hris;
 use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
 use App\Http\Controllers\Submission\Financial\Capex\CapexRequestController;
 use App\Http\Controllers\Submission\MemorandumRequestController;
+use App\Http\Controllers\Submission\WphcRequestController;
 use Storage;
 use DB;
 use App\Http\Traits\HasGetModule;
@@ -326,20 +328,20 @@ class SubmissionMail extends Mailable
                 $legalController = new LegalRequestController();
 
                 // if ($final == 1) {
-                    $legal = DB::table('tbl_approverListReq')
-                        ->join('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
-                        ->join('users', 'tbl_approver.user_id', '=', 'users.id')
-                        ->select('tbl_approver.*', 'users.email')
-                        ->where('tbl_approverListReq.req_id', $mailData['submission']->id)
-                        ->where('tbl_approverListReq.module_id', $this->getModuleId($modulename))
-                        ->whereIn('tbl_approver.sequence', [3, 4]) 
-                        ->get();
+                    // $legal = DB::table('tbl_approverListReq')
+                    //     ->join('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                    //     ->join('users', 'tbl_approver.user_id', '=', 'users.id')
+                    //     ->select('tbl_approver.*', 'users.email')
+                    //     ->where('tbl_approverListReq.req_id', $mailData['submission']->id)
+                    //     ->where('tbl_approverListReq.module_id', $this->getModuleId($modulename))
+                    //     // ->whereIn('tbl_approver.sequence', [3, 4]) 
+                    //     ->get();
 
-                    $this->developer = $legal;
+                    // $this->developer = $legal;
 
-                    foreach ($legal as $devemail) {
-                        $this->cc($devemail->email);
-                    }
+                    // foreach ($legal as $devemail) {
+                    //     $this->cc($devemail->email);
+                    // }
                     if ($final == 1) {
                     $pdf = $legalController->genPdfLegal($request, $mailData['submission']->id);
                         $this->attach($url . "devportal/" . $pdf); //Lampiran PDF

@@ -1,5 +1,5 @@
-var modname = 'legalrequest';
-var modelclass = 'Legal';
+var modname = 'wphc_request';
+var modelclass = 'Wphc';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -47,7 +47,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         showInfo: true,
     },
     columns: [{
-            caption: "Reference Number",
+            caption: "Code",
             dataField: 'code',
             // width: 180,
             alignment: "left"
@@ -107,14 +107,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         },
         {
-            caption: "Contractor",
-            dataField: 'countersigningParty',
+            caption: "Name",
+            dataField: 'user.fullname',
             // width: 180,
             alignment: "left"
         },
         {
-            caption: "Title of Document",
-            dataField: 'titleOfDocument',
+            caption: "Work Date",
+            dataField: 'wphc_detail.work_date',
             // width: 180,
             alignment: "left"
         },
@@ -125,8 +125,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             alignment: "left"
         },
         {
-            caption: 'Creator Name',
-            dataField: "user.fullname",
+            caption: 'Sector',
+            dataField: "sector",
             // width: 180,
             alignment: "left",
         },
@@ -147,17 +147,17 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 return arrText[e.value];
             },
         },
-        {
-            caption: 'Next Approver',
-            dataField: "nextApproverName",
-            // width: 180,
-            alignment: "left",
-        },
-        {
-            caption: 'Last Approved',
-            dataField: "lastApprovalDate",
-            alignment: "left",
-        },
+        // {
+        //     caption: 'Next Approver',
+        //     dataField: "nextApproverName",
+        //     // width: 180,
+        //     alignment: "left",
+        // },
+        // {
+        //     caption: 'Last Approved',
+        //     dataField: "lastApprovalDate",
+        //     alignment: "left",
+        // },
         {
             dataField: "approveddoc",
             caption: "Approval Doc",
@@ -255,7 +255,7 @@ const accordionItems = [{
     },
     {
         ID: 2,
-        Title: '<i class="fas fa-file"> Supporting Document (Surat Perjanjian & RFC / etc) </i>',
+        Title: '<i class="fas fa-list-ul"> Detail Work Date Request </i>',
         visible: true
     },
     {
@@ -282,47 +282,47 @@ var dataSektor = [
     // { bu: 'IHM', sector: 'NKL' },
     {
         bu: 'IHM',
-        sektor: 'TRN'
+        sector: 'TRN'
     },
     {
         bu: 'IHM',
-        sektor: 'SPU'
+        sector: 'SPU'
     },
     {
         bu: 'IHM',
-        sektor: 'SNI'
+        sector: 'SNI'
     },
     {
         bu: 'IHM',
-        sektor: 'HO'
+        sector: 'HO'
     },
     {
         bu: 'AHL',
-        sektor: 'SBG'
+        sector: 'SBG'
     },
     {
         bu: 'AHL',
-        sektor: 'SBS'
+        sector: 'SBS'
     },
     {
         bu: 'AHL',
-        sektor: 'SSP'
+        sector: 'SSP'
     },
     {
         bu: 'AHL',
-        sektor: 'NURSERY'
+        sector: 'NURSERY'
     },
     {
         bu: 'AHL',
-        sektor: 'HO'
+        sector: 'HO'
     },
     {
         bu: 'NKL',
-        sektor: 'NKL'
+        sector: 'NKL'
     },
     {
         bu: 'KPSI',
-        sektor: 'KPSI'
+        sector: 'KPSI'
     },
 ];
 
@@ -455,7 +455,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                             scrolling: {
                                 mode: "virtual"
                             },
-                            columns: [{
+                            columns: [
+                                {
                                     caption: 'Code',
                                     dataField: 'code',
                                 },
@@ -466,52 +467,52 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                {
-                                    caption: 'Business Group',
-                                    dataField: 'businessGroup',
-                                    editorOptions: {
-                                        readOnly: true,
-                                    },
-                                },
-                                {
-                                    caption: 'BU',
-                                    dataField: 'bu',
-                                    lookup: {
-                                        dataSource: [{
-                                            bu: 'IHM'
-                                        }, {
-                                            bu: 'AHL'
-                                        }, {
-                                            bu: 'NKL'
-                                        }, {
-                                            bu: 'KPSI'
-                                        }],
-                                        valueExpr: 'bu',
-                                        displayExpr: 'bu',
-                                    },
-                                    setCellValue: function (rowData, value) {
-                                        rowData.bu = value;
-                                        if (value === "IHM") {
-                                            rowData.sektor = "HO";
-                                        } else if (value === "AHL") {
-                                            rowData.sektor = "HO";
-                                        } else if (value === "NKL") {
-                                            rowData.sektor = "NKL";
-                                        } else if (value === "PTSI") {
-                                            rowData.sektor = "PTSI";
-                                        }
-                                    },
-                                    editorOptions: {
-                                        readOnly: (mode == 'approval') ? true : false
-                                        // readOnly: true
-                                    },
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
-                                },
                                 // {
-                                //     caption: 'Sektor',
-                                //     dataField: 'sektor',
+                                //     caption: 'Business Group',
+                                //     dataField: 'businessGroup',
+                                //     editorOptions: {
+                                //         readOnly: true,
+                                //     },
+                                // },
+                                // {
+                                //     caption: 'BU',
+                                //     dataField: 'bu',
+                                //     lookup: {
+                                //         dataSource: [{
+                                //             bu: 'IHM'
+                                //         }, {
+                                //             bu: 'AHL'
+                                //         }, {
+                                //             bu: 'NKL'
+                                //         }, {
+                                //             bu: 'KPSI'
+                                //         }],
+                                //         valueExpr: 'bu',
+                                //         displayExpr: 'bu',
+                                //     },
+                                //     setCellValue: function (rowData, value) {
+                                //         rowData.bu = value;
+                                //         if (value === "IHM") {
+                                //             rowData.sector = "HO";
+                                //         } else if (value === "AHL") {
+                                //             rowData.sector = "HO";
+                                //         } else if (value === "NKL") {
+                                //             rowData.sector = "NKL";
+                                //         } else if (value === "PTSI") {
+                                //             rowData.sector = "PTSI";
+                                //         }
+                                //     },
+                                //     editorOptions: {
+                                //         readOnly: (mode == 'approval') ? true : false
+                                //         // readOnly: true
+                                //     },
+                                //     validationRules: [{
+                                //         type: "required"
+                                //     }]
+                                // },
+                                // {
+                                //     caption: 'sector',
+                                //     dataField: 'sector',
                                 //     lookup: {
                                 //         dataSource: function (options) {
                                 //             return {
@@ -522,97 +523,29 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 //                 filter: options.data ? ["bu", "=", options.data.bu] : null
                                 //             };
                                 //         },
-                                //         valueExpr: 'sektor',
-                                //         displayExpr: 'sektor',
+                                //         valueExpr: 'sector',
+                                //         displayExpr: 'sector',
                                 //     },
-                                //     editorOptions: { 
+                                //     editorOptions: {
                                 //         readOnly: (mode == 'approval') ? true : false
                                 //     },
-                                //     validationRules: [{ type: "required" }]
-                                // },               
-                                {
-                                    caption: 'Form Group',
-                                    dataField: 'formGroup',
-                                    lookup: {
-                                        dataSource: [{
-                                                formGroup: 'Capital Expenditure'
-                                            },
-                                            {
-                                                formGroup: 'CCM Request'
-                                            },
-                                            {
-                                                formGroup: 'Contract Review and Approval'
-                                            },
-                                            {
-                                                formGroup: 'Bank Accounts'
-                                            },
-                                            {
-                                                formGroup: 'Change of Company Particulars'
-                                            },
-                                            {
-                                                formGroup: 'Legal Operational Site'
-                                            },
-                                            {
-                                                formGroup: 'Other'
-                                            },
-                                        ],
-                                        valueExpr: 'formGroup',
-                                        displayExpr: 'formGroup',
-                                    },
-                                    editorOptions: {
-                                        readOnly: false
-                                    },
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
-                                },
-                                {
-                                    caption: 'Form Type',
-                                    dataField: 'formType',
-                                    lookup: {
-                                        dataSource: [{
-                                                formType: 'Standard'
-                                            },
-                                            {
-                                                formType: 'Non-Standard'
-                                            },
-                                            {
-                                                formType: 'Advance'
-                                            }
-                                        ],
-                                        valueExpr: 'formType',
-                                        displayExpr: 'formType',
-                                    },
-                                    editorOptions: {
-                                        readOnly: false
-                                    },
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
-                                },
-                                {
-                                    caption: 'Request Type',
-                                    dataField: 'requestType',
-                                    lookup: {
-                                        dataSource: [{
-                                                requestType: 'Budgeted'
-                                            },
-                                            {
-                                                requestType: 'Unbudgeted - Swap Available'
-                                            },
-                                            {
-                                                requestType: 'Unbudgeted - Swap Unavailable'
-                                            }
-                                        ],
-                                        valueExpr: 'requestType',
-                                        displayExpr: 'requestType',
-                                    },
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
-                                },
+                                //     validationRules: [{
+                                //         type: "required"
+                                //     }]
+                                // },
                                 {
                                     caption: 'Superior',
+                                    dataField: 'Superior',
+                                    lookup: {
+                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                        valueExpr: 'id',
+                                        displayExpr: function (item) {
+                                            return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                        }
+                                    }
+                                },
+                                {
+                                    caption: 'Department Head *',
                                     dataField: 'Superior',
                                     lookup: {
                                         dataSource: listOption('/list-employee', 'id', 'fullname'),
@@ -751,11 +684,14 @@ const popupContentTemplate = function (reqid, mode, options) {
                             }
                         }).appendTo(container)
 
-                        // space antara dua datagrid
-                        $("<div style='height: 20px;'>").appendTo(container);
+                        return container;
 
-                        var secondGrid = $("<div id='secondGrid'>").dxDataGrid({
-                            dataSource: storedetail(modname, reqid),
+                    }
+                    var infoContentcontract = $("<div id='infoContentcontract'>");
+                    if (data.ID == 2) {
+                        let formDataContract = $("<div id='formcontract'>").dxDataGrid({
+                            // dataSource: storedetail(modname, reqid),
+                            dataSource: storewithmodule('wphc_detail',modelclass,reqid),
                             allowColumnReordering: true,
                             allowColumnResizing: true,
                             columnsAutoWidth: true,
@@ -773,140 +709,57 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 visible: false
                             },
                             searchPanel: {
-                                visible: false,
+                                visible: true,
                                 width: 240,
                                 placeholder: 'Search...',
-                            },
-                            sorting: {
-                                mode: "none" // or "multiple" | "none"
                             },
                             editing: {
                                 useIcons: true,
                                 mode: "cell",
-                                allowAdding: false,
-                                allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                                allowDeleting: false,
+                                allowAdding: true,
+                                allowUpdating: true,
+                                allowDeleting: true,
                             },
                             scrolling: {
                                 mode: "virtual"
                             },
-                            columns: [{
-                                    caption: 'Date Of Document',
-                                    dataField: "dateOfDocument",
+                            paging: {
+                                pageSize: 5,
+                            },
+                            pager: {
+                                visible: true,
+                                allowedPageSizes: [5, 15, 'all'],
+                                showPageSizeSelector: true,
+                                showInfo: true,
+                                showNavigationButtons: true,
+                            },
+                            columns: [
+                                {
+                                    caption: 'Work Date',
+                                    dataField: 'work_date',
+                                    width: 200,
                                     dataType: "date",
-                                    editorOptions: {
-                                        readOnly: (mode == 'approval') ? true : false
-                                    },
-                                },
-                                {
-                                    caption: 'Contractor',
-                                    dataField: 'countersigningParty',
-                                    editorType: 'dxTextArea',
-                                    editorOptions: {
-                                        height: 50,
-                                    },
-                                },
-                                {
-                                    caption: 'Business Type',
-                                    dataField: 'businessType',
-                                    editorOptions: {
-                                        readOnly: true
-                                    },
-                                },
-                                {
-                                    caption: 'Title Of Document',
-                                    dataField: 'titleOfDocument',
-                                    editorType: 'dxTextArea',
-                                    editorOptions: {
-                                        height: 50,
-                                        readOnly: false
-                                    },
-                                },
-                                {
-                                    caption: 'RFC Number',
-                                    dataField: 'rfcNumber',
-                                    lookup: {
-                                        dataSource: listOption('/list-rfc', 'id', 'RFCNo'),
-                                        valueExpr: 'id',
-                                        displayExpr: function (item) {
-                                            return item ? item.RFCNo + "(" + item.RateType + ")" + "/" + item.SKNo : "";
-                                        }
-                                    },
-                                },
-                                {
-                                    caption: 'Contract Number',
-                                    dataField: 'contractNumber',
-                                    editorType: 'dxTextArea',
-                                    height: 50,
-                                    format: null
-                                },
-                                {
-                                    dataField: 'sk',
-                                    caption: 'SK / Non SK',
-                                    editorType: 'dxSelectBox',
-                                    lookup: {
-                                        dataSource: [{
-                                            sk: 'SK'
-                                        }, {
-                                            sk: 'Non SK'
-                                        }],
-                                        valueExpr: 'sk',
-                                        displayExpr: 'sk',
-                                    },
-                                    setCellValue: function (rowData, value) {
-                                        rowData.sk = value;
-                                        if (value === "SK") {
-                                            rowData.financialAmount = "0";
-                                            rowData.skNumber = ""; // wajib isi manual
-                                        } else if (value === "Non SK") {
-                                            rowData.skNumber = "-";
-                                            rowData.financialAmount = ""; // wajib isi manual
-                                        }
-                                    },
-                                    editorOptions: {
-                                        readOnly: (mode === 'approval')
-                                    },
-                                    // validationRules: [{ type: "required" }]
-                                },
-                                {
-                                    dataField: 'skNumber',
-                                    caption: 'Nomor SK',
-                                    editorType: 'dxTextBox',
-                                    editorOptions: {
-                                        placeholder: 'Isi jika memilih SK',
-                                        readOnly: (mode === 'approval')
-                                    },
                                     validationRules: [{
-                                        type: 'custom',
-                                        validationCallback: function (e) {
-                                            return e.data.sk !== 'SK' || !!e.value;
-                                        },
-                                        message: 'Nomor SK wajib diisi jika memilih SK.'
+                                        type: "required"
                                     }]
                                 },
                                 {
-                                    dataField: 'financialAmount',
-                                    caption: 'Financial Amount',
-                                    editorType: 'dxNumberBox',
+                                    caption: 'Reason',
+                                    dataField: 'reason',
+                                    // width: 200,
                                     editorOptions: {
-                                        placeholder: 'Isi jika memilih Non SK',
-                                        readOnly: (mode === 'approval')
-                                    },
-                                    showSpinButtons: true,
-                                    format: {
-                                        type: 'currency',
-                                        precision: 0,
-                                        currency: 'IDR'
-                                    },
-                                    validationRules: [{
-                                        type: 'custom',
-                                        validationCallback: function (e) {
-                                            return e.data.sk !== 'Non SK' || !!e.value;
-                                        },
-                                        message: 'Financial Amount wajib diisi jika memilih Non SK.'
-                                    }]
-                                }
-
+                                        readOnly: false,
+                                    }
+                                },
+                                {
+                                    caption: 'Remarks',
+                                    dataField: 'remarks',
+                                    // width: 200,
+                                    editorOptions: {
+                                        readOnly: false,
+                                    }
+                                },
+                                
                             ],
                             export: {
                                 enabled: false,
@@ -915,14 +768,34 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 allowExportSelectedData: true
                             },
                             onInitialized: function (e) {
-                                dataGrid1a = e.component;
+                                dataGriddetail = e.component;
                             },
                             onContentReady: function (e) {
                                 moveEditColumnToLeft(e.component);
                             },
-                            onInitNewRow: function (e) {},
+                            onToolbarPreparing: function (e) {
+                                e.toolbarOptions.items.unshift({
+                                    location: "after",
+                                    widget: "dxButton",
+                                    options: {
+                                        hint: "Refresh Data",
+                                        icon: "refresh",
+                                        onClick: function () {
+                                            dataGriddetail.refresh();
+                                        }
+                                    }
+                                });
+                            },
                             onEditorPreparing: function (e) {
-                                if ((e.dataField == "rfcNumber") && e.parentType == "dataRow") {
+                                if (e.rowType == "data" && (e.column.index >= 0 && e.column.index < 7)) {
+                                    if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
+                                        e.cellElement.css({
+                                            "backgroundColor": "#ffe6e6",
+                                            "border": "0.5px solid #f56e6e"
+                                        })
+                                    }
+                                }
+                                if ((e.dataField == "superior_id") && e.parentType == "dataRow") {
                                     e.editorName = "dxDropDownBox";
                                     e.editorOptions.dropDownOptions = {
                                         height: 500,
@@ -935,7 +808,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                                 width: '100%',
                                                 dataSource: args.component.option("dataSource"),
                                                 keyExpr: "id",
-                                                columns: ["RFCNo", "RateType", "SKNo"],
+                                                columns: ["sapid", "companycode", "fullname", "departmentname", "levels"],
                                                 hoverStateEnabled: true,
                                                 paging: {
                                                     enabled: true,
@@ -960,7 +833,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                                 },
                                                 onSelectionChanged: function (selectedItems) {
                                                     const keys = selectedItems.selectedRowKeys;
-                                                    console.log(keys)
                                                     const hasSelection = keys.length;
                                                     args.component.option('value', hasSelection ? keys[0] : null);
                                                     if (hasSelection !== 0) {
@@ -992,205 +864,16 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     };
                                 }
                             },
-                            onRowUpdating: function (e) {
-
-                            },
-                            onCellPrepared: function (e) {
-                                if (e.rowType == "data" && (e.column.index >= 0 && e.column.index < 7)) {
-                                    if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                                        e.cellElement.css({
-                                            "backgroundColor": "#ffe6e6",
-                                            "border": "0.5px solid #f56e6e"
-                                        })
-                                    }
-                                }
-                            },
-                            onDataErrorOccurred: function (e) {
-                                console.log("Terjadi kesalahan saat memuat data (1.1):", e.error.message);
-                                dataGrid1a.refresh();
-                            }
-                        }).appendTo(container)
-                        $("<div style='height: 20px;'>").appendTo(container);
-
-                        var thirdGrid = $("<div id='thirdGrid'>").dxDataGrid({
-                            dataSource: storedetail(modname, reqid),
-                            allowColumnReordering: true,
-                            allowColumnResizing: true,
-                            columnsAutoWidth: true,
-                            rowAlternationEnabled: true,
-                            wordWrapEnabled: true,
-                            showBorders: true,
-                            showColumnLines: true,
-                            filterRow: {
-                                visible: false
-                            },
-                            filterPanel: {
-                                visible: false
-                            },
-                            headerFilter: {
-                                visible: false
-                            },
-                            searchPanel: {
-                                visible: false,
-                                width: 240,
-                                placeholder: 'Search...',
-                            },
-                            sorting: {
-                                mode: "none" // or "multiple" | "none"
-                            },
-                            editing: {
-                                useIcons: true,
-                                mode: "cell",
-                                allowAdding: false,
-                                allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                                allowDeleting: false,
-                            },
-                            scrolling: {
-                                mode: "virtual"
-                            },
-                            columns: [{
-                                caption: 'Purpose',
-                                dataField: 'purpose',
-                                editorType: 'dxTextArea',
-                                editorOptions: {
-                                    autoResizeEnabled: true,
-                                    minHeight: 90,
-                                    maxHeight: 200,
-                                    placeholder: 'Purpose...'
-                                },
-                                validationRules: [{
-                                    type: "required",
-                                    message: "Harap isi Purpose"
-                                }]
-                            }],
-                            export: {
-                                enabled: false,
-                                fileName: modname,
-                                excelFilterEnabled: true,
-                                allowExportSelectedData: true
-                            },
-                            onInitialized: function (e) {
-                                dataGrid1b = e.component;
-                            },
-                            onContentReady: function (e) {
-                                moveEditColumnToLeft(e.component);
-                            },
-                            onInitNewRow: function (e) {},
-                            onRowUpdating: function (e) {
-
-                            },
-                            onCellPrepared: function (e) {
-                                if (e.rowType == "data" && (e.column.index >= 0 && e.column.index < 3)) {
-                                    if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                                        e.cellElement.css({
-                                            "backgroundColor": "#ffe6e6",
-                                            "border": "0.5px solid #f56e6e"
-                                        })
-                                    }
-                                }
-                            },
                             onDataErrorOccurred: function (e) {
                                 // Menampilkan pesan kesalahan
-                                console.log("Terjadi kesalahan saat memuat data (1.1):", e.error.message);
+                                console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
 
                                 // Memuat ulang DataGrid
-                                dataGrid1b.refresh();
+                                dataGriddetail.refresh();
                             }
-                        }).appendTo(container)
+                        }).appendTo(infoContentcontract)
+                        return infoContentcontract
 
-                        return container;
-                    } else if (data.ID == 2) {
-                        var supporting = $("<div id='formattachment'>").dxDataGrid({
-                            dataSource: storewithmodule('attachmentrequest', modelclass, reqid),
-                            allowColumnReordering: true,
-                            allowColumnResizing: true,
-                            columnsAutoWidth: true,
-                            rowAlternationEnabled: true,
-                            wordWrapEnabled: true,
-                            showBorders: true,
-                            filterRow: {
-                                visible: false
-                            },
-                            filterPanel: {
-                                visible: false
-                            },
-                            headerFilter: {
-                                visible: false
-                            },
-                            searchPanel: {
-                                visible: true,
-                                width: 240,
-                                placeholder: 'Search...',
-                            },
-                            editing: {
-                                useIcons: true,
-                                mode: "popup",
-                                allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                                allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                                allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
-                            },
-                            paging: {
-                                enabled: true,
-                                pageSize: 10
-                            },
-                            columns: [{
-                                    caption: 'Attachment',
-                                    dataField: "path",
-                                    allowFiltering: false,
-                                    allowSorting: false,
-                                    cellTemplate: cellTemplate,
-                                    editCellTemplate: editCellTemplate,
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
-                                },
-                                {
-                                    dataField: "remarks",
-                                    lookup: {
-                                        dataSource: ['Surat Perjanjian', 'RFC', 'Supporting Document'],
-                                        searchEnabled: false
-                                    },
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
-                                },
-                            ],
-                            export: {
-                                enabled: false,
-                                fileName: modname,
-                                excelFilterEnabled: true,
-                                allowExportSelectedData: true
-                            },
-                            onInitialized: function (e) {
-                                dataGridAttachment = e.component;
-                            },
-                            onContentReady: function (e) {
-                                moveEditColumnToLeft(e.component);
-                            },
-                            onInitNewRow: function (e) {},
-                            onToolbarPreparing: function (e) {
-                                e.toolbarOptions.items.unshift({
-                                    location: "after",
-                                    widget: "dxButton",
-                                    options: {
-                                        hint: "Refresh Data",
-                                        icon: "refresh",
-                                        onClick: function () {
-                                            dataGridAttachment.refresh();
-                                        }
-                                    }
-                                })
-                            },
-                            onDataErrorOccurred: function (e) {
-                                // Menampilkan pesan kesalahan
-                                console.log("Terjadi kesalahan saat memuat data (2):", e.error.message);
-
-                                // Memuat ulang DataGrid
-                                dataGridAttachment.refresh();
-                            }
-                        })
-
-                        return supporting;
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),

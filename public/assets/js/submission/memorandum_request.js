@@ -565,7 +565,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             dataGrid1.refresh();
                         }
                     }).appendTo(infoContent2)
-                    return infoContent2
+                    return infoContent2 
                 } 
                 var infoContentcontract = $("<div id='infoContentcontract'>");
                 if(data.ID == 2) {
