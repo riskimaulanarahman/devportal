@@ -35,7 +35,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         allowDeleting: true,
     },
     scrolling: {
-        mode: "virtual"
+        mode: "standart"
+    },
+    paging : {
+        enabled: false
     },
     pager: {
         visible: false,
@@ -139,11 +142,20 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             width: 180
         },
         {
+            caption: 'Request Status',
             dataField: 'requestStatus',
-            encodeHtml: false,
-            allowFiltering: false,
-            allowHeaderFiltering: true,
-            customizeText: function (e) {
+            lookup: {
+                dataSource: [
+                    { id: 0, name: 'Draft' },
+                    { id: 1, name: 'Waiting Approval' },
+                    { id: 2, name: 'Rework' },
+                    { id: 3, name: 'Approved' },
+                    { id: 4, name: 'Rejected' },
+                ],
+                valueExpr: 'id',
+                displayExpr: 'name'
+            },
+            cellTemplate: function(container, options) {
                 var arrText = [
                     "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
                     "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
@@ -151,8 +163,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
                     "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
                 ];
-                return arrText[e.value];
-            },
+                container.html(arrText[options.data.requestStatus]);
+            }
         },
         {
             dataField: "approveddoc",
@@ -175,12 +187,572 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
       
     ],
+    masterDetail: {
+        enabled: true,
+        template: function(container, options) {
+            var currentRequest = options.data;
+            var reqid = currentRequest.id;
+
+            $("<div>").dxTabPanel({
+                items: [
+                    {
+                        title: "Approver List",
+                        template: function() {
+                            return $("<div>").dxDataGrid({
+                                dataSource: storewithmodule('approverlistrequest', modelclass, reqid),
+                                columnAutoWidth: true,
+                                showBorders: true,
+                                columns: [
+                                    {
+                                        caption: "Fullname",
+                                        dataField: "approver_id",
+                                        lookup: {
+                                            dataSource: listOption('/list-approver/' + modelclass, 'id', 'fullname'),
+                                            valueExpr: 'id',
+                                            displayExpr: 'fullname',
+                                        }
+                                    },
+                                    "ApprovalType",
+                                    {
+                                        dataField: "approvalDate",
+                                        dataType: "datetime",
+                                        format: "dd-MM-yyyy hh:mm:ss",
+                                    },
+                                    {
+                                        caption: "Approval Status",
+                                        dataField: "approvalAction",
+                                        encodeHtml: false,
+                                        customizeText: function (e) {
+                                            var arrText = [
+                                                "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
+                                                "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
+                                                "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
+                                                "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
+                                                "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                                            ];
+                                            return arrText[e.value];
+                                        }
+                                    },
+                                    "remarks"
+                                ]
+                            });
+                        }
+                    },
+                    {
+                        title: "Expenditure Items",
+                        template: function() {
+                            return $("<div>").dxDataGrid({
+                                dataSource: storewithmodule('capexdetail', modelclass, reqid),
+                                columnAutoWidth: true,
+                                showBorders: true,
+                                columns: [
+                                    {
+                                        caption: 'Expenditure Item',
+                                        dataField: 'expenditure_item',
+                                    },
+                                    {
+                                        dataField: 'quantity',
+                                        dataType: 'number',
+                                    },
+                                    {
+                                        dataField: 'amount',
+                                        dataType: 'number',
+                                        format: "fixedPoint",
+                                    },
+                                    {
+                                        caption: 'Sub Total',
+                                        dataField: 'subtotal',
+                                        dataType: 'number',
+                                        format: "fixedPoint",
+                                    },
+                                ],
+                                summary: {
+                                    totalItems: [
+                                        {
+                                            column: "subtotal",
+                                            summaryType: "sum",
+                                            displayFormat: "Total: {0}",
+                                            valueFormat: "fixedPoint",
+                                        }
+                                    ]
+                                }
+                            });
+                        }
+                    }
+                ]
+            }).appendTo(container);
+        }
+    },
     export: {
         enabled: true,
         fileName: modname,
         excelFilterEnabled: true,
         allowExportSelectedData: true
     },
+    // onExporting: function(e) {
+    //     var workbook = new ExcelJS.Workbook();
+    //     var worksheet = workbook.addWorksheet('Capex Request');
+
+    //     var requestStatusMap = [
+    //         "Draft",           // id 0
+    //         "Waiting Approval",// id 1
+    //         "Rework",          // id 2
+    //         "Approved",        // id 3
+    //         "Rejected"         // id 4
+    //     ];
+
+    //     // Add header row
+    //     var headerRow = [];
+    //     e.component.getVisibleColumns().forEach(function(column) {
+    //         if (column.command || column.caption === 'Action') {
+    //             return;
+    //         }
+    //         if (column.caption) {
+    //             headerRow.push(column.caption);
+    //         }
+    //     });
+    //     headerRow.push("Last Approver");
+    //     headerRow.push("Total");
+    //     worksheet.addRow(headerRow).font = { bold: true };
+
+    //     var masterRows = e.component.getVisibleRows();
+    //     var promise = Promise.resolve();
+
+    //     masterRows.forEach(function(masterRow) {
+    //         if (masterRow.rowType === 'data') {
+    //             promise = promise.then(function() {
+    //                 var reqid = masterRow.data.id;
+
+    //                 var approverPromise = storewithmodule('approverlistrequest', modelclass, reqid).load();
+    //                 var expenditurePromise = storewithmodule('capexdetail', modelclass, reqid).load();
+    //                 var approverListPromise = new DevExpress.data.DataSource(listOption('/list-approver/' + modelclass, 'id', 'fullname')).load();
+
+    //                 return Promise.all([approverPromise, expenditurePromise, approverListPromise]).then(([approverData, expenditureData, approverList]) => {
+    //                     // Find last approver
+    //                     var lastApprover = '';
+    //                     if (approverData.length > 0) {
+    //                         var waitingApprovers = approverData.filter(a => a.approvalAction === 1);
+    //                         if (waitingApprovers.length > 0) {
+    //                             var approverId = waitingApprovers[0].approver_id;
+    //                             var approver = approverList.find(a => a.id === approverId);
+    //                             if (approver) {
+    //                                 lastApprover = approver.fullname;
+    //                             }
+    //                         }
+    //                     }
+
+    //                     // Calculate total
+    //                     var total = 0;
+    //                     if (expenditureData.length > 0) {
+    //                         expenditureData.forEach((detail) => {
+    //                             total += parseFloat(detail.subtotal) || 0;
+    //                         });
+    //                     }
+
+    //                     // Add master row
+    //                     var masterData = [];
+    //                     masterRow.cells.forEach(function(cell) {
+    //                         if (cell.column.command || cell.column.caption === 'Action') {
+    //                             return;
+    //                         }
+    //                         if (cell.column.dataField === 'approveddoc') {
+    //                             if (cell.value) {
+    //                                 masterData.push({ text: 'Click to Download', hyperlink: baseurl+ '/' + cell.value });
+    //                             } else {
+    //                                 masterData.push('');
+    //                             }
+    //                         } else if (cell.column.caption === 'Request Status') {
+    //                             masterData.push(requestStatusMap[cell.value]);
+    //                         } else {
+    //                             masterData.push(cell.displayValue);
+    //                         }
+    //                     });
+    //                     masterData.push(lastApprover);
+    //                     masterData.push(total);
+    //                     var addedRow = worksheet.addRow(masterData);
+
+    //                     // Style the hyperlink
+    //                     var approvedDocIndex = -1;
+    //                     e.component.getVisibleColumns().forEach(function(column, index) {
+    //                         if (column.dataField === 'approveddoc') {
+    //                             approvedDocIndex = index;
+    //                         }
+    //                     });
+    //                     if (approvedDocIndex > -1) {
+    //                         addedRow.getCell(approvedDocIndex + 1).font = {
+    //                             color: { argb: 'FF0000FF' },
+    //                             underline: true
+    //                         };
+    //                     }
+
+
+    //                     // Add detail rows (approver list)
+    //                     if (approverData.length > 0) {
+    //                         worksheet.addRow(['', 'Approver List:']).font = { bold: true };
+    //                         worksheet.lastRow.outlineLevel = 1;
+    //                         var headerRow = ['', 'Fullname', 'Approval Type', 'Approval Date', 'Approval Status', 'Remarks'];
+    //                         worksheet.addRow(headerRow).font = { bold: true };
+    //                         worksheet.lastRow.outlineLevel = 1;
+
+    //                         approverData.forEach(function(item) {
+    //                             var approver = approverList.find(a => a.id === item.approver_id);
+    //                             var formattedDate = '';
+    //                             if (item.approvalDate) {
+    //                                 var date = new Date(item.approvalDate);
+    //                                 var year = date.getFullYear();
+    //                                 var month = ('0' + (date.getMonth() + 1)).slice(-2);
+    //                                 var day = ('0' + date.getDate()).slice(-2);
+    //                                 formattedDate = year + '-' + month + '-' + day;
+    //                             }
+    //                             var detailRow = [
+    //                                 '',
+    //                                 approver ? approver.fullname : '',
+    //                                 item.ApprovalType,
+    //                                 formattedDate,
+    //                                 ['Draft', 'Waiting Approval', 'Rework', 'Approved', 'Rejected'][item.approvalAction],
+    //                                 item.remarks
+    //                             ];
+    //                             worksheet.addRow(detailRow);
+    //                             worksheet.lastRow.outlineLevel = 1;
+    //                         });
+    //                     }
+
+    //                     // Add detail rows (expenditure items)
+    //                     if (expenditureData.length > 0) {
+    //                         worksheet.addRow(['', 'Expenditure Items:']).font = { bold: true };
+    //                         worksheet.lastRow.outlineLevel = 1;
+    //                         var headerRow = ['', 'Expenditure Item', 'Quantity', 'Amount', 'Sub Total'];
+    //                         worksheet.addRow(headerRow).font = { bold: true };
+    //                         worksheet.lastRow.outlineLevel = 1;
+    //                         expenditureData.forEach(function(item) {
+    //                             var detailRow = [
+    //                                 '',
+    //                                 item.expenditure_item,
+    //                                 item.quantity,
+    //                                 item.amount,
+    //                                 item.subtotal
+    //                             ];
+    //                             worksheet.addRow(detailRow);
+    //                             worksheet.lastRow.outlineLevel = 1;
+    //                         });
+
+    //                         // Add total row for expenditure items (sums the 'subtotal' column)
+    //                         let row = worksheet.addRow([]);
+    //                         Object.assign(row.getCell(4), { // Corresponds to the 'Sub Total' column
+    //                             value: "Total:",
+    //                             font: { bold: true }
+    //                         });
+    //                         Object.assign(row.getCell(5), {
+    //                             value: total,
+    //                             font: { bold: true },
+    //                             numFmt: '#,##0.00'
+    //                         });
+    //                         worksheet.lastRow.outlineLevel = 1;
+    //                     }
+    //                 });
+    //             });
+    //         }
+    //     });
+
+    //     promise.then(function() {
+    //         workbook.xlsx.writeBuffer().then(function(buffer) {
+    //             saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'CapexRequest.xlsx');
+    //         });
+    //     });
+
+    //     e.cancel = true;
+    // },
+    onExporting: function(e) {
+        var workbook = new ExcelJS.Workbook();
+        var worksheet = workbook.addWorksheet('Capex Request');
+
+        // Map request status id ke nama
+        var requestStatusMap = [
+            "Draft",            // id 0
+            "Waiting Approval", // id 1
+            "Rework",           // id 2
+            "Approved",         // id 3
+            "Rejected"          // id 4
+        ];
+
+        // Header
+        var headerRow = [];
+        e.component.getVisibleColumns().forEach(function(column) {
+            if (column.command || column.caption === 'Action') {
+                return;
+            }
+            if (column.caption) {
+                headerRow.push(column.caption);
+            }
+        });
+        headerRow.push("Last Approver");
+        headerRow.push("Total");
+        worksheet.addRow(headerRow).font = { bold: true };
+
+        // Muat seluruh data (bukan hanya yang "visible")
+        e.component.getDataSource().load().then(function(fullData) {
+            // Async export (biar detail tetap bisa pakai promise)
+            var queue = Promise.resolve();
+            fullData.forEach(function(masterData) {
+                queue = queue.then(function() {
+                    var reqid = masterData.id;
+
+                    var approverPromise = storewithmodule('approverlistrequest', modelclass, reqid).load();
+                    var expenditurePromise = storewithmodule('capexdetail', modelclass, reqid).load();
+                    var approverListPromise = new DevExpress.data.DataSource(listOption('/list-approver/' + modelclass, 'id', 'fullname')).load();
+
+                    return Promise.all([approverPromise, expenditurePromise, approverListPromise]).then(([approverData, expenditureData, approverList]) => {
+
+                        // Find last approver
+                        var lastApprover = '';
+                        if (approverData.length > 0) {
+                            var waitingApprovers = approverData.filter(a => a.approvalAction === 1);
+                            if (waitingApprovers.length > 0) {
+                                var approverId = waitingApprovers[0].approver_id;
+                                var approver = approverList.find(a => a.id === approverId);
+                                if (approver) {
+                                    lastApprover = approver.fullname;
+                                }
+                            }
+                        }
+
+                        // Calculate total
+                        var total = 0;
+                        if (expenditureData.length > 0) {
+                            expenditureData.forEach((detail) => {
+                                total += parseFloat(detail.subtotal) || 0;
+                            });
+                        }
+
+                        // Buat kolom per data
+                        var visibleColumns = e.component.getVisibleColumns();
+                        var rowValue = [];
+
+                        visibleColumns.forEach(function(column) {
+                            if (column.command || column.caption === 'Action') {
+                                return;
+                            }
+                            if (column.dataField === "approveddoc") {
+                                if (masterData.approveddoc) {
+                                    rowValue.push({ text: 'Click to Download', hyperlink: baseurl+ '/' + masterData.approveddoc });
+                                } else {
+                                    rowValue.push('');
+                                }
+                            } else if (column.dataField === "requestStatus") {
+                                rowValue.push(requestStatusMap[masterData.requestStatus]);
+                            } else if (column.dataField && column.dataField.indexOf('.') > -1) {
+                                // Nested field (misal: "user.fullname")
+                                var parts = column.dataField.split('.');
+                                var value = masterData;
+                                parts.forEach(function(part) {
+                                    value = value ? value[part] : '';
+                                });
+                                rowValue.push(value);
+                            } else {
+                                rowValue.push(masterData[column.dataField]);
+                            }
+                        });
+                        rowValue.push(lastApprover);
+                        rowValue.push(total);
+
+                        // Add Master Row
+                        var addedRow = worksheet.addRow(rowValue);
+
+                        // Style hyperlink pada kolom approveddoc
+                        var approvedDocIndex = -1;
+                        visibleColumns.forEach(function(column, idx) {
+                            if (column.dataField === 'approveddoc') {
+                                approvedDocIndex = idx;
+                            }
+                        });
+                        if (approvedDocIndex > -1) {
+                            addedRow.getCell(approvedDocIndex + 1).font = {
+                                color: { argb: 'FF0000FF' },
+                                underline: true
+                            };
+                        }
+
+                        // Add detail rows (approver list)
+                        if (approverData.length > 0) {
+                            worksheet.addRow(['', 'Approver List:']).font = { bold: true };
+                            worksheet.lastRow.outlineLevel = 1;
+                            var approverHeader = ['', 'Fullname', 'Approval Type', 'Approval Date', 'Approval Status', 'Remarks'];
+                            worksheet.addRow(approverHeader).font = { bold: true };
+                            worksheet.lastRow.outlineLevel = 1;
+                            approverData.forEach(function(item) {
+                                var approver = approverList.find(a => a.id === item.approver_id);
+                                var formattedDate = '';
+                                if (item.approvalDate) {
+                                    var date = new Date(item.approvalDate);
+                                    var year = date.getFullYear();
+                                    var month = ('0' + (date.getMonth() + 1)).slice(-2);
+                                    var day = ('0' + date.getDate()).slice(-2);
+                                    formattedDate = year + '-' + month + '-' + day;
+                                }
+                                var detailRow = [
+                                    '',
+                                    approver ? approver.fullname : '',
+                                    item.ApprovalType,
+                                    formattedDate,
+                                    requestStatusMap[item.approvalAction],
+                                    item.remarks
+                                ];
+                                worksheet.addRow(detailRow);
+                                worksheet.lastRow.outlineLevel = 1;
+                            });
+                        }
+
+                        // Add detail rows (expenditure items)
+                        if (expenditureData.length > 0) {
+                            worksheet.addRow(['', 'Expenditure Items:']).font = { bold: true };
+                            worksheet.lastRow.outlineLevel = 1;
+                            var expenditureHeader = ['', 'Expenditure Item', 'Quantity', 'Amount', 'Sub Total'];
+                            worksheet.addRow(expenditureHeader).font = { bold: true };
+                            worksheet.lastRow.outlineLevel = 1;
+                            expenditureData.forEach(function(item) {
+                                var detailRow = [
+                                    '',
+                                    item.expenditure_item,
+                                    item.quantity,
+                                    item.amount,
+                                    item.subtotal
+                                ];
+                                worksheet.addRow(detailRow);
+                                worksheet.lastRow.outlineLevel = 1;
+                            });
+
+                            // Add total row for expenditure items (sums the 'subtotal' column)
+                            let row = worksheet.addRow([]);
+                            Object.assign(row.getCell(4), { // Corresponds to the 'Sub Total' column
+                                value: "Total:",
+                                font: { bold: true }
+                            });
+                            Object.assign(row.getCell(5), {
+                                value: total,
+                                font: { bold: true },
+                                numFmt: '#,##0.00'
+                            });
+                            worksheet.lastRow.outlineLevel = 1;
+                        }
+                    });
+                });
+            });
+
+            // Setelah semua promise selesai, baru ekspor file
+            queue.then(function() {
+                workbook.xlsx.writeBuffer().then(function(buffer) {
+                    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'CapexRequest.xlsx');
+                });
+            });
+        });
+
+        e.cancel = true;
+    },
+    // onExporting: function(e) {
+    //     var workbook = new ExcelJS.Workbook();
+    //     var worksheet = workbook.addWorksheet('Capex Request');
+
+    //     var requestStatusMap = [
+    //         "Draft", "Waiting Approval", "Rework", "Approved", "Rejected"
+    //     ];
+
+    //     // Header
+    //     var headerRow = [];
+    //     e.component.getVisibleColumns().forEach(function(column) {
+    //         if (column.command || column.caption === 'Action') return;
+    //         if (column.caption) headerRow.push(column.caption);
+    //     });
+    //     headerRow.push("Last Approver");
+    //     headerRow.push("Total");
+    //     worksheet.addRow(headerRow).font = { bold: true };
+
+    //     e.component.getDataSource().load().then(function(fullData) {
+    //         fullData.forEach(function(masterData) {
+    //             // Find last approver
+    //             var lastApprover = '';
+    //             if (masterData.approverlist && masterData.approverlist.length > 0) {
+    //                 // ambil yang approvalAction = 1, kalau tidak ada ambil paling akhir
+    //                 var waiting = masterData.approverlist.filter(a => a.approvalAction === 1);
+    //                 if (waiting.length > 0) {
+    //                     lastApprover = waiting[0].approver_id;
+    //                 } else {
+    //                     // fallback
+    //                     lastApprover = masterData.approverlist[masterData.approverlist.length - 1].approver_id;
+    //                 }
+    //                 // Jika mau ambil nama, masterData.approverlistX.approver.fullname (request eager loading relasi)!
+    //             }
+
+    //             var total = masterData.total || masterData.additional_budget || 0;
+
+    //             // Row Value
+    //             var visibleColumns = e.component.getVisibleColumns();
+    //             var rowValue = [];
+    //             visibleColumns.forEach(function(column) {
+    //                 if (column.command || column.caption === 'Action') return;
+    //                 if (column.dataField === "approveddoc") {
+    //                     if (masterData.approveddoc) {
+    //                         rowValue.push({ text: 'Click to Download', hyperlink: baseurl + '/' + masterData.approveddoc });
+    //                     } else {
+    //                         rowValue.push('');
+    //                     }
+    //                 } else if (column.dataField === "requestStatus") {
+    //                     rowValue.push(requestStatusMap[masterData.requestStatus]);
+    //                 } else if (column.dataField && column.dataField.indexOf('.') > -1) {
+    //                     var parts = column.dataField.split('.');
+    //                     var value = masterData;
+    //                     parts.forEach(function(part) {
+    //                         value = value ? value[part] : '';
+    //                     });
+    //                     rowValue.push(value);
+    //                 } else {
+    //                     rowValue.push(masterData[column.dataField]);
+    //                 }
+    //             });
+    //             rowValue.push(lastApprover);
+    //             rowValue.push(total);
+
+    //             var addedRow = worksheet.addRow(rowValue);
+
+    //             // Styling hyperlink
+    //             var approvedDocIndex = -1;
+    //             visibleColumns.forEach(function(column, idx) {
+    //                 if (column.dataField === 'approveddoc') {
+    //                     approvedDocIndex = idx;
+    //                 }
+    //             });
+    //             if (approvedDocIndex > -1) {
+    //                 addedRow.getCell(approvedDocIndex + 1).font = {
+    //                     color: { argb: 'FF0000FF' },
+    //                     underline: true
+    //                 };
+    //             }
+
+    //             // Detail: Approver List
+    //             if (masterData.approverlist && masterData.approverlist.length > 0) {
+    //                 worksheet.addRow(['', 'Approver List:']).font = { bold: true };
+    //                 worksheet.lastRow.outlineLevel = 1;
+    //                 worksheet.addRow(['', 'ApproverId', 'Approval Date', 'Approval Status', 'Remarks']).font = { bold: true };
+    //                 worksheet.lastRow.outlineLevel = 1;
+    //                 masterData.approverlist.forEach(function(item) {
+    //                     worksheet.addRow([
+    //                         '',
+    //                         item.approver_id,
+    //                         item.approvalDate ? item.approvalDate.split('T')[0] : '',
+    //                         requestStatusMap[item.approvalAction],
+    //                         item.remarks || ''
+    //                     ]);
+    //                     worksheet.lastRow.outlineLevel = 1;
+    //                 });
+    //             }
+    //         });
+
+    //         workbook.xlsx.writeBuffer().then(function(buffer) {
+    //             saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'CapexRequest.xlsx');
+    //         });
+    //     });
+
+    //     e.cancel = true;
+    // },
     onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();
