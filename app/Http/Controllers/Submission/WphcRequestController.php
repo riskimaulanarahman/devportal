@@ -395,6 +395,7 @@ class WphcRequestController extends Controller
         }
 
     // dd($data, $dataAppr, $dataDetail);
+    
 
         try {
             $excel = new COM("Excel.Application");
