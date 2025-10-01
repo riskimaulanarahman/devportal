@@ -506,6 +506,21 @@ class SubmissionMail extends Mailable
             }
         // Capex MODULE
 
+        // LEGAL MODULE
+            if ($modulename == 'Wphc') {
+                $request = new Request();
+                $wphcController = new WphcRequestController();
+                    if ($final == 1) {
+                    $pdf = $wphcController->genPdfWphc($request, $mailData['submission']->id);
+                        $this->attach($url . "devportal/" . $pdf); 
+                        foreach ($Mailrecipient as $cc) {
+                            $this->cc($cc->email); 
+                        }
+                    }
+            }
+
+        // LEGAL MODULE
+
     }
 
     public function build()
@@ -554,6 +569,9 @@ class SubmissionMail extends Mailable
             case 'Memorandum':
                 $viewblade = 'emails.HRIS.memorandummail';
                 break;
+            // case 'Wphc':
+            //     $viewblade = 'emails.legalrequestmail';
+            //     break;
             default:
                 $viewblade = 'emails.defaultmail';
                 break;

@@ -66,15 +66,17 @@ Route::group(['prefix' => 'api'], function () {
         'assignmentto' => App\Http\Controllers\AssignmenttoController::class,
         'stackholders' => App\Http\Controllers\StackholdersController::class,
         'categorysubmission' => App\Http\Controllers\CategoryController::class,
+        // 'logreportwphc/{id}' => App\Http\Controllers\Submission\WphcRequestController::class,
     ]);
-
     //get detail request
     Route::get('attachmentrequest/{id}/{modulename}',[App\Http\Controllers\AttachmentController::class, 'getList']); //get list attachment by req_id of module
     Route::get('approverlistrequest/{id}/{modulename}',[App\Http\Controllers\ApproverListController::class, 'getList']); //get list approver by req_id of module
     Route::get('approverlisthistory/{id}/{modulename}',[App\Http\Controllers\ApproverHistoryController::class, 'getList']); //get list approver history by req_id of module
     Route::get('assignmentto/{id}/{modulename}',[App\Http\Controllers\AssignmenttoController::class, 'getList']); //get list developer by req_id of module
     Route::get('stackholders/{id}/{modulename}',[App\Http\Controllers\StackholdersController::class, 'getList']); //get list stackholders by req_id of module
-    
+    Route::get('approverlistrequestwphc/{id}/{modulename}',[App\Http\Controllers\ApproverListController::class, 'getListWphc']); //get list approver by req_id of module
+    //
+    Route::get('logreportwphc/{id}',[App\Http\Controllers\Submission\WphcRequestController::class, 'logreportwphc']); //get list missionrequestdetail by req_id of module
     // uav mission
     Route::get('missionrequestdetail/{id}/{modulename}',[App\Http\Controllers\Submission\UavMissionRequestDetailController::class, 'getList']); //get list missionrequestdetail by req_id of module
     // category
@@ -122,7 +124,8 @@ Route::group(['prefix' => 'api'], function () {
     //list
     Route::get('list-getemployee',[App\Http\Controllers\ListController::class, 'listEmployee']); //get list employee
     Route::get('list-employeesamedept',[App\Http\Controllers\ListController::class, 'listEmployeeSameDept']); //get list employee same department
-    
+    Route::get('list-wphc',[App\Http\Controllers\ListController::class, 'listWphc']); //get list employee
+      
     //memorhistorycal
     Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
     Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module     

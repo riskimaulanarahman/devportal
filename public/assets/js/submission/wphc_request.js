@@ -49,7 +49,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     columns: [{
             caption: "Code",
             dataField: 'code',
-            // width: 180,
             alignment: "left"
         },
         {
@@ -109,25 +108,21 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Name",
             dataField: 'user.fullname',
-            // width: 180,
             alignment: "left"
         },
         {
             caption: "Work Date",
             dataField: 'wphc_detail.work_date',
-            // width: 180,
             alignment: "left"
         },
         {
             caption: 'BU',
             dataField: 'bu',
-            // width: 100,
             alignment: "left"
         },
         {
             caption: 'Sector',
             dataField: "sector",
-            // width: 180,
             alignment: "left",
         },
         {
@@ -147,17 +142,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 return arrText[e.value];
             },
         },
-        // {
-        //     caption: 'Next Approver',
-        //     dataField: "nextApproverName",
-        //     // width: 180,
-        //     alignment: "left",
-        // },
-        // {
-        //     caption: 'Last Approved',
-        //     dataField: "lastApprovalDate",
-        //     alignment: "left",
-        // },
         {
             dataField: "approveddoc",
             caption: "Approval Doc",
@@ -398,11 +382,37 @@ const popupContentTemplate = function (reqid, mode, options) {
     } else {
         updateVisibleById(7, false);
     }
+    // Di luar definisi grid, saat page load
+    let employeeCache = [];
 
+    fetch('/devportal/api/list-getemployee')
+        .then(res => res.json())
+        .then(data => {
+            // Pastikan 'data' adalah array objek { id, fullname, sapid, companycode, … }
+            employeeCache = data;
+        })
+        .catch(err => console.error('Gagal preload employee list:', err));
+
+    function resolveEmployeeData(rowData, employee_id) {
+        const emp = employeeCache.find(e => e.id === employee_id);
+        if (!emp) return;
+
+        rowData.bu = emp.companycode;
+
+        const deptHead = employeeCache.find(e =>
+            e.fullname.trim().toLowerCase() === emp.deptheadName.trim().toLowerCase()
+        );
+        rowData.DeptHead = deptHead ? deptHead.id : null;
+
+        rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ? "HO" : emp.companycode;
+        rowData.level = emp.level_id;
+
+        rowData.category_id = ['1', '2', '3'].includes(String(emp.level_id)) ? 30 :
+            String(emp.level_id) === '4' ? 32 : null;
+    }
     scrollView.append("<hr>"),
 
         scrollView.append(
-
 
             $("<div>").dxAccordion({
                 dataSource: accordionItems,
@@ -447,7 +457,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                             },
                             editing: {
                                 useIcons: true,
-                                mode: "cell",
+                                mode: "batch",
                                 allowAdding: false,
                                 allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
                                 allowDeleting: false,
@@ -455,8 +465,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                             scrolling: {
                                 mode: "virtual"
                             },
-                            columns: [
-                                {
+                            columns: [{
                                     caption: 'Code',
                                     dataField: 'code',
                                 },
@@ -467,72 +476,47 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                // {
-                                //     caption: 'Business Group',
-                                //     dataField: 'businessGroup',
-                                //     editorOptions: {
-                                //         readOnly: true,
-                                //     },
-                                // },
-                                // {
-                                //     caption: 'BU',
-                                //     dataField: 'bu',
-                                //     lookup: {
-                                //         dataSource: [{
-                                //             bu: 'IHM'
-                                //         }, {
-                                //             bu: 'AHL'
-                                //         }, {
-                                //             bu: 'NKL'
-                                //         }, {
-                                //             bu: 'KPSI'
-                                //         }],
-                                //         valueExpr: 'bu',
-                                //         displayExpr: 'bu',
-                                //     },
-                                //     setCellValue: function (rowData, value) {
-                                //         rowData.bu = value;
-                                //         if (value === "IHM") {
-                                //             rowData.sector = "HO";
-                                //         } else if (value === "AHL") {
-                                //             rowData.sector = "HO";
-                                //         } else if (value === "NKL") {
-                                //             rowData.sector = "NKL";
-                                //         } else if (value === "PTSI") {
-                                //             rowData.sector = "PTSI";
-                                //         }
-                                //     },
-                                //     editorOptions: {
-                                //         readOnly: (mode == 'approval') ? true : false
-                                //         // readOnly: true
-                                //     },
-                                //     validationRules: [{
-                                //         type: "required"
-                                //     }]
-                                // },
-                                // {
-                                //     caption: 'sector',
-                                //     dataField: 'sector',
-                                //     lookup: {
-                                //         dataSource: function (options) {
-                                //             return {
-                                //                 store: {
-                                //                     type: 'array',
-                                //                     data: dataSektor
-                                //                 },
-                                //                 filter: options.data ? ["bu", "=", options.data.bu] : null
-                                //             };
-                                //         },
-                                //         valueExpr: 'sector',
-                                //         displayExpr: 'sector',
-                                //     },
-                                //     editorOptions: {
-                                //         readOnly: (mode == 'approval') ? true : false
-                                //     },
-                                //     validationRules: [{
-                                //         type: "required"
-                                //     }]
-                                // },
+                                {
+                                    caption: 'Create for other:',
+                                    dataField: 'employee_id',
+                                    lookup: {
+                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                        valueExpr: 'id',
+                                        displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
+                                    },
+                                    setCellValue: function (rowData, value) {
+                                        rowData.employee_id = value;
+                                        const emp = employeeCache.find(e => e.id === value);
+                                        if (emp) {
+                                            rowData.bu = emp.companycode;
+                                            // rowData.DeptHead = emp.deptheadName - > id;
+                                            const deptHead = employeeCache.find(e => e.fullname === emp.deptheadName);
+                                            rowData.DeptHead = deptHead ? deptHead.id : null;
+
+                                            rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ?
+                                                "HO" :
+                                                emp.companycode;
+
+                                            rowData.level = emp.level_id;
+
+                                            // mapping category_id berdasarkan level
+                                            if (['1', '2', '3'].includes(String(emp.level_id))) {
+                                                rowData.category_id = 30;
+                                            } else if (String(emp.level_id) === '4') {
+                                                rowData.category_id = 32;
+                                            } else {
+                                                rowData.category_id = null; // fallback kalau level tidak sesuai
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    caption: 'BU',
+                                    dataField: 'bu',
+                                    editorOptions: {
+                                        disabled: true
+                                    }
+                                },
                                 {
                                     caption: 'Superior',
                                     dataField: 'Superior',
@@ -545,8 +529,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     }
                                 },
                                 {
-                                    caption: 'Department Head *',
-                                    dataField: 'Superior',
+                                    caption: 'Department Head',
+                                    dataField: 'DeptHead',
+                                    editorOptions: {
+                                        disabled: true
+                                    },
                                     lookup: {
                                         dataSource: listOption('/list-employee', 'id', 'fullname'),
                                         valueExpr: 'id',
@@ -568,7 +555,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                             onContentReady: function (e) {
                                 moveEditColumnToLeft(e.component);
                             },
-                            onInitNewRow: function (e) {},
+                            onInitNewRow: function (e) {
+                                if (e.data.employee_id) {
+                                    resolveEmployeeData(e.data, e.data.employee_id);
+                                }
+                            },
                             onToolbarPreparing: function (e) {
                                 e.toolbarOptions.items.unshift({
                                     location: "after",
@@ -578,14 +569,12 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         icon: "refresh",
                                         onClick: function () {
                                             dataGrid1.refresh();
-                                            dataGrid1a.refresh();
-                                            dataGrid1b.refresh();
                                         }
                                     }
                                 });
                             },
                             onEditorPreparing: function (e) {
-                                if ((e.dataField == "depthead_id") && e.parentType == "dataRow") {
+                                if ((e.dataField == "Superior" || e.dataField == "employee_id") && e.parentType == "dataRow") {
                                     e.editorName = "dxDropDownBox";
                                     e.editorOptions.dropDownOptions = {
                                         height: 500,
@@ -655,9 +644,36 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     };
                                 }
                             },
-                            onRowUpdating: function (e) {
+                            onSelectionChanged: function (selectedItems) {
+                                const keys = selectedItems.selectedRowKeys;
+                                const hasSelection = keys.length;
+
+                                if (hasSelection !== 0) {
+                                    const selectedData = selectedItems.selectedRowsData[0]; // ambil data lengkap dari row
+                                    args.component.option('value', selectedData.id); // set employee_id
+                                    console.log("Selected:", selectedItems.selectedRowsData[0]);
+
+                                    // Inject companycode ke request_wphc.bu
+                                    if (e.row && e.row.data) {
+                                        e.row.data.request_wphc = e.row.data.request_wphc || {};
+                                        e.row.data.request_wphc.bu = selectedData.companycode;
+                                    }
+                                    console.log("Injected to:", e.row.data.request_wphc);
+
+                                    args.component.close();
+                                } else {
+                                    args.component.option('value', null);
+                                }
 
                             },
+
+                            onRowInserting: function (e) {
+                                console.log('INSERT payload:', e.data);
+                            },
+                            onRowUpdating: function (e) {
+                                console.log('UPDATE payload:', e.newData);
+                            },
+
                             onCellPrepared: function (e) {
                                 if (e.column.index == 0 && e.rowType == "data") {
                                     if (e.data.code === null) {
@@ -691,7 +707,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                     if (data.ID == 2) {
                         let formDataContract = $("<div id='formcontract'>").dxDataGrid({
                             // dataSource: storedetail(modname, reqid),
-                            dataSource: storewithmodule('wphc_detail',modelclass,reqid),
+                            dataSource: storewithmodule('wphc_detail', modelclass, reqid),
                             allowColumnReordering: true,
                             allowColumnResizing: true,
                             columnsAutoWidth: true,
@@ -739,9 +755,25 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     dataField: 'work_date',
                                     width: 200,
                                     dataType: "date",
-                                    validationRules: [{
-                                        type: "required"
-                                    }]
+                                    editorOptions: {
+                                        min: new Date(new Date().setDate(new Date().getDate() - 7)) // hanya bisa pilih backdate maksimal 7 hari
+                                    },
+                                    validationRules: [
+                                        {
+                                            type: "required",
+                                            message: "Tanggal wajib diisi"
+                                        },
+                                        {
+                                            type: "custom",
+                                            validationCallback: function(e) {
+                                                const today = new Date();
+                                                const selected = new Date(e.value);
+                                                const diff = (today - selected) / (1000 * 60 * 60 * 24); // selisih dalam hari
+                                                return diff >= 0 && diff <= 7;
+                                            },
+                                            message: "Tanggal harus dalam rentang H-7 dari hari ini"
+                                        }
+                                    ]
                                 },
                                 {
                                     caption: 'Reason',
@@ -759,7 +791,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: false,
                                     }
                                 },
-                                
+
                             ],
                             export: {
                                 enabled: false,
@@ -785,85 +817,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         }
                                     }
                                 });
-                            },
-                            onEditorPreparing: function (e) {
-                                if (e.rowType == "data" && (e.column.index >= 0 && e.column.index < 7)) {
-                                    if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
-                                        e.cellElement.css({
-                                            "backgroundColor": "#ffe6e6",
-                                            "border": "0.5px solid #f56e6e"
-                                        })
-                                    }
-                                }
-                                if ((e.dataField == "superior_id") && e.parentType == "dataRow") {
-                                    e.editorName = "dxDropDownBox";
-                                    e.editorOptions.dropDownOptions = {
-                                        height: 500,
-                                        width: 600
-                                    };
-                                    e.editorOptions.contentTemplate = function (args, container) {
-
-                                        var value = args.component.option("value"),
-                                            $dataGrid = $("<div>").dxDataGrid({
-                                                width: '100%',
-                                                dataSource: args.component.option("dataSource"),
-                                                keyExpr: "id",
-                                                columns: ["sapid", "companycode", "fullname", "departmentname", "levels"],
-                                                hoverStateEnabled: true,
-                                                paging: {
-                                                    enabled: true,
-                                                    pageSize: 10
-                                                },
-                                                filterRow: {
-                                                    visible: true
-                                                },
-                                                height: '90%',
-                                                showRowLines: true,
-                                                showBorders: true,
-                                                selection: {
-                                                    mode: "single"
-                                                },
-                                                selectedRowKeys: [value],
-                                                focusedRowEnabled: true,
-                                                focusedRowKey: args.component.option("value"),
-                                                searchPanel: {
-                                                    visible: true,
-                                                    width: 265,
-                                                    placeholder: "Search..."
-                                                },
-                                                onSelectionChanged: function (selectedItems) {
-                                                    const keys = selectedItems.selectedRowKeys;
-                                                    const hasSelection = keys.length;
-                                                    args.component.option('value', hasSelection ? keys[0] : null);
-                                                    if (hasSelection !== 0) {
-                                                        args.component.close();
-                                                    }
-                                                }
-                                            });
-
-                                        var dataGrid = $dataGrid.dxDataGrid("instance");
-
-                                        args.component.on("valueChanged", function (args) {
-                                            var value = args.value;
-
-                                            dataGrid.selectRows(value, false);
-                                        });
-                                        container.append($dataGrid);
-                                        $("<div>").dxButton({
-                                            text: "Close",
-
-                                            onClick: function (ev) {
-                                                args.component.close();
-                                            }
-                                        }).css({
-                                            float: "right",
-                                            marginTop: "10px"
-                                        }).appendTo(container);
-                                        return container;
-
-                                    };
-                                }
-                            },
+                            },                            
                             onDataErrorOccurred: function (e) {
                                 // Menampilkan pesan kesalahan
                                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
@@ -1171,50 +1125,195 @@ const popupContentTemplate = function (reqid, mode, options) {
 
 };
 
-function btnreqsubmit(reqid, mode) {
-    console.log('submit')
-    var btnSubmit = $('#btn-submit');
-    var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
-    var valremarks = $('#remarks').val();
+let id = 1;
+var dataGridhistory = $("#loghistory").dxDataGrid({
+    dataSource: store('logreportwphc/' + id),
+    allowColumnReordering: false,
+    allowColumnResizing: true,
+    columnsAutoWidth: true,
+    columnHidingEnabled: false,
+    rowAlternationEnabled: true,
+    wordWrapEnabled: false,
+    showBorders: true,
+    filterRow: {
+        visible: true
+    },
+    filterPanel: {
+        visible: true
+    },
+    headerFilter: {
+        visible: true
+    },
+    searchPanel: {
+        visible: true,
+        width: 240,
+        placeholder: 'Search...',
+    },
+    columnFixing: {
+        enabled: true,
+    },
+    editing: {
+        useIcons: true,
+        mode: "batch",
+        allowAdding: false,
+        allowUpdating: false,
+        allowDeleting: false,
+    },
+    scrolling: {
+        mode: "virtual"
+    },
+    sorting: {
+        mode: 'multiple',
+    },
+    pager: {
+        visible: true,
+        showInfo: true,
+    },
+    columns: [{
+            dataField: 'work_date',
+            caption: "Work Date",
+        },
+        {
+            dataField: 'remarks',
+            caption: "Remarks",
+        },
+        {
+            dataField: 'reason',
+            caption: "Objectives",
+        },
+        {
+            dataField: 'status_wphc_aktif',
+            caption: "Status",
+        },
+        {
+            dataField: 'aktif_sampai_dengan',
+            caption: "Issue Date",
+        },
+        // {
+        //     dataField: "approveddoc",
+        //     caption: "Approval Doc",
+        //     allowFiltering: false,
+        //     allowSorting: false,
+        //     formItem: {
+        //         visible: false
+        //     },
+        //     cellTemplate: function (container, options) {
+        //         if ((options.value != "") && (options.value)) {
+        //             $("<div />").dxButton({
+        //                 icon: 'download',
+        //                 type: "success",
+        //                 text: "Download",
+        //                 onClick: function (e) {
+        //                     window.open(options.value, '_blank');
+        //                 }
+        //             }).appendTo(container);
+        //         }
+        //     }
+        // },
+    ],
+    export: {
+        enabled: true,
+        fileName: 'log history',
+        excelFilterEnabled: true,
+        allowExportSelectedData: false
+    },
+    onContentReady: function (e) {
+        moveEditColumnToLeft(e.component);
+    },
+    onToolbarPreparing: function (e) {
+        dataGridlog = e.component;
 
-    if (mode == 'approval' && valapprovalAction == 3) {
-        var fieldsToCheckGrid = [
-            // { field: 'objective', name: 'Objective' },
-            // { field: 'ranking', name: 'Category' },
-            // { field: 'status_jdi', name: 'Status JDI' },
-        ]
+        e.toolbarOptions.items.unshift({
+            location: "after",
+            widget: "dxButton",
+            options: {
+                hint: "Refresh Data",
+                icon: "refresh",
+                onClick: function () {
+                    dataGridlog.refresh();
+                }
+            }
+        })
+    },
+}).dxDataGrid("instance");
+
+function btnreqsubmit(reqid, mode) {
+    console.log('reqidbtn', reqid);
+    if (mode == 'add' || mode == 'edit') {
+        var dataGridAssignment = $("#formdata").dxDataGrid("instance");
+        var dataSource = dataGridAssignment.getDataSource();
+        var rowCount = dataSource.items().length;
+
+        if (rowCount === 0) {
+            DevExpress.ui.dialog.alert("The Details does not exist. Please add one.", "Warning");
+            return false;
+        }
     }
 
-    sendRequest(apiurl + "/submissioncheckfields/" + reqid + "/LEGAL", "POST", {
-        fieldsToCheckGrid
-    }).then(function (response) {
-        if (response.status !== 'error') {
+    var btnSubmit = $('#btn-submit');
+    btnSubmit.prop('disabled', true);
 
-            btnSubmit.prop('disabled', true);
+    var actionForm = (mode == 'approval') ? 'approval' : 'submission';
 
-            var actionForm = (mode == 'approval') ? 'approval' : 'submission';
+    if (mode == 'approval') {
+        var valapprovalAction = $('input[name="approvalaction"]:checked').val(); // mengambil nilai dari radio button
+        var valremarks = $('#remarks').val(); // mengambil nilai dari text area
+        if (!valapprovalAction) {
+            DevExpress.ui.dialog.alert("Please select approval action.", "Warning");
+            btnSubmit.prop('disabled', false);
+            return false;
+        } else if (!valremarks) {
+            DevExpress.ui.dialog.alert("Please enter remarks.", "Warning");
+            btnSubmit.prop('disabled', false);
+            return false;
+        }
 
-            if (mode == 'approval') {
+    }
 
-                if (!valapprovalAction) {
-                    DevExpress.ui.dialog.alert("Please select approval action.", "Warning");
+    var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Are you sure you want to send this submission?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#73a3cfff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, send it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoadingScreen();
+            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                requestStatus: 1,
+                action: actionForm,
+                approvalAction: (valapprovalAction == null) ? 1 : parseInt(valapprovalAction),
+                approvalType: valApprovalType,
+                remarks: valremarks
+            }).then(function (response) {
+                if (response.status == 'error') {
                     btnSubmit.prop('disabled', false);
-                    return false;
-                } else if (!valremarks) {
-                    DevExpress.ui.dialog.alert("Please enter remarks.", "Warning");
-                    btnSubmit.prop('disabled', false);
-                    return false;
+                    hideLoadingScreen();
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved',
+                        text: 'The submission has been submited.',
+                    });
+                    popup.hide();
+                    hideLoadingScreen();
                 }
-
-            }
-
-            var valApprovalType = valapprovalAction == 3 ? 'Approved' : valapprovalAction == 2 ? 'Reworked' : valapprovalAction == 4 ? 'Rejected' : '';
-
-            confirmAndSendSubmission(reqid, modelclass, actionForm, valapprovalAction, valApprovalType, valremarks);
-
+            });
+        } else {
+            btnSubmit.prop('disabled', false);
+            Swal.fire({
+                icon: 'error',
+                title: 'Cancelled',
+                text: 'The submission has been cancelled.',
+                confirmButtonColor: '#3085d6'
+            });
+            hideLoadingScreen();
         }
     });
-
 }
 
 function runpopup() {
@@ -1264,72 +1363,4 @@ function runpopup() {
         ]
 
     }).dxPopup('instance');
-}
-
-
-function cellTemplate(container, options) {
-    container.append('<a href="public/upload/' + options.value + '" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
-}
-
-function editCellTemplate(cellElement, cellInfo) {
-    let buttonElement = document.createElement("div");
-    buttonElement.classList.add("retryButton");
-    let retryButton = $(buttonElement).dxButton({
-        text: "Retry",
-        visible: false,
-        onClick: function () {
-            // The retry UI/API is not implemented. Use a private API as shown at T611719.
-            for (var i = 0; i < fileUploader._files.length; i++) {
-                delete fileUploader._files[i].uploadStarted;
-            }
-            fileUploader.upload();
-        }
-    }).dxButton("instance");
-
-    $path = "";
-    $adafile = "";
-    let fileUploaderElement = document.createElement("div");
-    let fileUploader = $(fileUploaderElement).dxFileUploader({
-        multiple: false,
-        accept: ".pptx,.ppt,.docx,.doc,.pdf,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
-        uploadMode: "instantly",
-        name: "myFile",
-        uploadUrl: apiurl + "/upload-berkas/" + modname,
-        onValueChanged: function (e) {
-            let reader = new FileReader();
-            reader.onload = function (args) {
-                imageElement.setAttribute('src', args.target.result);
-            }
-            reader.readAsDataURL(e.value[0]); // convert to base64 string
-        },
-        onUploaded: function (e) {
-
-            let path = e.request.response;
-
-            const unsafeCharacters = /[#"%<>\\^`{|}]/g;
-            let unsafeFound = path.match(unsafeCharacters);
-
-            if (unsafeFound) {
-                let unsafeCharactersString = unsafeFound.join(', ');
-                DevExpress.ui.dialog.alert(
-                    `The file name contains these unsafe characters: ${unsafeCharactersString}. Please rename the file to continue.`,
-                    "error"
-                );
-
-                path = "";
-                retryButton.option("visible", true);
-            } else {
-                cellInfo.setValue(e.request.responseText);
-                retryButton.option("visible", false);
-            }
-
-        },
-        onUploadError: function (e) {
-            $path = "";
-            DevExpress.ui.notify(e.request.response, "error");
-        }
-    }).dxFileUploader("instance");
-    cellElement.append(fileUploaderElement);
-    cellElement.append(buttonElement);
-
 }

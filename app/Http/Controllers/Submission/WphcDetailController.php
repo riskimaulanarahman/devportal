@@ -46,11 +46,6 @@ class WphcDetailController extends Controller
         DB::beginTransaction();
 
         try {
-            // $request->validate([
-            //     'word_date'  => 'required|date',
-            //     'reason'    => 'required|string',
-            //     'remarks'    => 'required|string',
-            // ]);
 
             $requestData = $request->all();
 
@@ -136,14 +131,20 @@ class WphcDetailController extends Controller
             $data = $this->model->findOrFail($id);
             $requestData['user_id'] = $this->getAuth()->id;
 
-            if($request->superior_id) {
+            if ($request->superior_id) {
                 $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $data->req_id);
             }
-            
-            if(empty($data->approveddoc) && ($data->Memorandum->requestStatus !== 1)) {
+
+            // Pastikan relasi Wphc tersedia
+            $requestStatus = optional($data->Wphc)->requestStatus;
+
+            if (empty($data->approveddoc) && in_array($requestStatus, [0, 2])) {
                 $data->update($requestData);
             } else {
-                return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
+                return response()->json([
+                    "status" => "error",
+                    "message" => $this->getMessage()['nothaveaccess']
+                ]);
             }
 
             DB::commit();
@@ -151,7 +152,7 @@ class WphcDetailController extends Controller
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['update'],
-                "data" => $data // Sertakan data yang telah diperbarui
+                "data" => $data
             ]);
 
         } catch (\Exception $e) {
@@ -163,6 +164,7 @@ class WphcDetailController extends Controller
             ]);
         }
     }
+
 
     public function destroy($id)
     {

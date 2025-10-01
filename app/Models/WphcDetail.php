@@ -25,4 +25,9 @@ class WphcDetail extends Model
         return (new static)->getTable();
     }
 
+    public function Wphc()
+    {
+        return $this->belongsTo(Wphc::class, 'req_id');
+    }
+
 }

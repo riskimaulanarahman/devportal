@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Code;
 use App\Models\WphcDetail;
+use App\Models\Employee;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
+use App\Models\CategoryForm;
 
 class Wphc extends Model
 {
@@ -20,23 +22,40 @@ class Wphc extends Model
     protected $guarded = ['id'];
 
     protected $fillable = [
-        'request_status',
+        'requestStatus',
         'user_id',
         'employee_id',
-        'module_id',
-        'approveddoc',
-        'superios_id',
-        'depthead_id',
-        'remarks',
+        'bu',
+        'sector',
+        'Superior',
+        'DeptHead',
+        'employee_id',
+        'category_id',
         'created_at',
         'updated_at'
     ];
 
+    public static function getFillableColumns()
+    {
+        $fillable = (new static)->fillable;
+        $fillable = array_diff($fillable, [
+            'submitDate',
+            'submissionDate',
+            'Superior',
+            'DeptHead',
+        ]);
+        return $fillable;
+    }
     public static function getTableName()
     {
         return (new static)->getTable();
     }
-    
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -60,6 +79,10 @@ class Wphc extends Model
     public function wphc_detail()
     {
         return $this->hasOne(WphcDetail::class, 'req_id', 'id');
+    }
+    public function category()
+    {
+        return $this->belongsTo(CategoryForm::class,'category_id');
     }
 
 }

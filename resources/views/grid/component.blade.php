@@ -4,6 +4,7 @@
     $components = [
         'employeedata' => 'employeedata',
         'mmf_30_request' => 'mmf30',
+        'wphc_request' => 'wphc',
         // Tambahkan mapping lainnya di sini
     ];
 

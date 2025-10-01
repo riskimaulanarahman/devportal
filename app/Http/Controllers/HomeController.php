@@ -105,6 +105,7 @@ class HomeController extends Controller
             'request_capex' => $this->getModuleId('Capex'),
             'request_memorandum' => $this->getModuleId('Memorandum'),
             'request_legal' => $this->getModuleId('Legal'),
+            'request_wphc' => $this->getModuleId('Wphc'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -186,6 +187,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_legal':
                                 $url = 'legal_request';
+                                break;
+                            case 'request_wphc':
+                                $url = 'wphc_request';
                                 break;
                             // case 'request_capex':
                             //     $url = 'request_capex';
@@ -279,6 +283,9 @@ class HomeController extends Controller
                                 break;
                             case 'request_legal':
                                 $url = 'legal_request';
+                                break;
+                            case 'request_wphc':
+                                $url = 'wphc_request';
                                 break;
                             // case 'request_capex':
                             //     $url = 'request_capex';

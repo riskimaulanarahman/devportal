@@ -35,7 +35,7 @@ class SubmissionController extends Controller
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
             'Memorandum' => "App\Models\Submission\Memorandum",
-            // 'Legal' => "App\Models\Submission\Legal",
+            'Wphc' => "App\Models\Submission\Wphc",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -109,6 +109,7 @@ class SubmissionController extends Controller
                 'Capex' => "App\Models\Submission\Financial",
                 'Memorandum' => "App\Models\Submission\Memorandum",
                 'Legal' => "App\Models\Submission\Legal",
+                'Wphc' => "App\Models\Submission\Wphc",
             ];
 
             $baseNamespace = "App\Models\Submission";
@@ -129,7 +130,7 @@ class SubmissionController extends Controller
             $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator  
             // dd($getCreator);          
             // dd($tableName, $id, $getSubmissionData);
-            
+
             $nullColumns = [];
 
             foreach ($columns as $column) {
@@ -144,7 +145,7 @@ class SubmissionController extends Controller
             }
 
             $module_id = $this->getModuleId($modulename);
-
+            // dd($module_id);
             // attachment
             $queryAttachement = DB::table('tbl_attachment')
                                 ->where('req_id',$id)
@@ -170,7 +171,7 @@ class SubmissionController extends Controller
                 ->where('req_id',$id)
                 ->where('module_id',$module_id)
                 ->get();
-
+            
             if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
                 $assignment = DB::table('tbl_assignment')
                 ->where('req_id',$id)
@@ -193,10 +194,73 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Detail not found. Please input the correct information."]);
                 }
             }
+
+            if ($modulename == 'Wphc') {
+                $wphcdetail = DB::table('request_wphc_detail')
+                    ->where('req_id', $id)
+                    ->get();
+
+                if (count($wphcdetail) < 1) {
+                    return response()->json([
+                        "status" => "error",
+                        "module" => $modulename,
+                        "message" => "Error: Detail not found. Please input the correct information."
+                    ]);
+                }
+
+                $employee_id = DB::table('request_wphc')
+                    ->where('id', $id)
+                    ->value('employee_id');
+
+                $workdateRaw = DB::table('request_wphc_detail')
+                    ->where('req_id', $id)
+                    ->value('work_date');
+
+                $workdate = Carbon::parse($workdateRaw)->toDateString();
+
+                // ✅ Cek apakah employee sudah pernah mengajukan WPhc di tanggal yang sama
+                $duplicateDate = DB::table('request_wphc_detail as r_w_d')
+                    ->join('request_wphc as r_w', 'r_w_d.req_id', '=', 'r_w.id')
+                    ->where('r_w.employee_id', $employee_id)
+                    ->whereDate('r_w_d.work_date', $workdate)
+                    ->where('r_w_d.req_id', '!=', $id) // hindari konflik dengan pengajuan saat ini
+                    ->exists();
+
+                if ($duplicateDate) {
+                    return response()->json([
+                        "status" => "error",
+                        "module" => $modulename,
+                        "message" => "WPhc submission denied: duplicate work date detected for this employee."
+                    ]);
+                }
+
+                // ✅ Validasi khusus hari Minggu
+                if (Carbon::parse($workdate)->isSunday()) {
+                    $sundayConflict = DB::table('request_wphc_detail as r_w_d')
+                        ->join('request_wphc as r_w', 'r_w_d.req_id', '=', 'r_w.id')
+                        ->where('r_w.employee_id', $employee_id)
+                        ->whereBetween('r_w_d.work_date', [
+                            Carbon::now()->subDays(13)->toDateString(),
+                            Carbon::now()->toDateString()
+                        ])
+                        ->whereRaw('DATEPART(dw, r_w_d.work_date) = 1')
+                        ->where('r_w_d.req_id', '!=', $id)
+                        ->exists();
+
+                    if ($sundayConflict) {
+                        return response()->json([
+                            "status" => "error",
+                            "module" => $modulename,
+                            "message" => "WPhc submission denied: Sunday work date detected within the last 14 days."
+                        ]);
+                    }
+                }
+            }
+
             if ($modulename == 'Jdi') {
                 $hasBefore = false;
                 $hasAfter = false;
-
+                
                 foreach ($attachement as $attc) {
                     if ($attc->remarks === 'Before') {
                         $hasBefore = true;
@@ -235,6 +299,7 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Surat Perjanjian' is required. Please attach it."]);
                 }
             } else {
+
                 // submission yang tidak perlu menambahkan supporting document
                 $except = [
                     'ActiveDirectory',
@@ -242,8 +307,10 @@ class SubmissionController extends Controller
                     'MaterialReq',
                     'Hris',
                     'Ghm',
-                    'Memorandum'
+                    'Memorandum',
+                    'Wphc'
                 ];
+
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {
                         return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
@@ -266,8 +333,17 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: ApproverList not found. Please ". ($modulename == 'Mom') ? "Select Chairman From Participant" : "add approver."]);
                 }
             }
-            if($modulename == 'Memorandum') {
-                
+            
+            if($modulename == 'Memorandum') { 
+            }
+            if ($modulename == 'Wphc') {
+                $approverlist = DB::table('tbl_approverListReq')
+                    ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                    ->leftJoin('request_wphc', 'tbl_approverListReq.req_id', '=', 'request_wphc.id')
+                    ->leftJoin('tbl_category', 'request_wphc.category_id', '=', 'tbl_category.id')
+                    ->where('tbl_approverListReq.req_id', $id)
+                    ->where('tbl_approverListReq.module_id', $module_id)
+                    ->get();
             }
 
             $final = 0;
@@ -301,7 +377,6 @@ class SubmissionController extends Controller
                     $company = $bu;
                 }
                     $this->createApprover($modulename, $id, $company, $category);
-
             }
 
             $approverlist = ApproverListReq::where('req_id',$id)
