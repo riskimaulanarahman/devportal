@@ -1,5 +1,5 @@
-var modname = 'wphc_request';
-var modelclass = 'Wphc';
+var modname = 'spkl_request';
+var modelclass = 'Spkl';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -106,15 +106,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         },
         {
-            caption: "Name",
-            dataField: 'user.fullname',
-            alignment: "left"
+            caption: "Creation Date",
+            dataField: "created_at",
+            dataType: "date",
+            format: "dd-MM-yyyy",
         },
-        {
-            caption: "Work Date",
-            dataField: 'wphc_detail.work_date',
-            alignment: "left"
-        },
+        // {
+        //     caption: "Work Date",
+        //     dataField: 'work_date',
+        //     alignment: "left"
+        // },
         {
             caption: 'BU',
             dataField: 'bu',
@@ -162,11 +163,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     }).appendTo(container);
                 }
             }
-        },
-        {
-            dataField: "created_at",
-            dataType: "date",
-            format: "dd-MM-yyyy",
         },
 
     ],
@@ -382,13 +378,13 @@ const popupContentTemplate = function (reqid, mode, options) {
     } else {
         updateVisibleById(7, false);
     }
+    
     // Di luar definisi grid, saat page load
     let employeeCache = [];
 
     fetch('/devportal/api/list-getemployee')
         .then(res => res.json())
         .then(data => {
-            // Pastikan 'data' adalah array objek { id, fullname, sapid, companycode, … }
             employeeCache = data;
         })
         .catch(err => console.error('Gagal preload employee list:', err));
@@ -470,6 +466,13 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     dataField: 'code',
                                 },
                                 {
+                                    caption: 'Creation Date',
+                                    dataField: 'created_at',
+                                    editorOptions: {
+                                        readOnly: true
+                                    },
+                                },
+                                {
                                     caption: 'Creator',
                                     dataField: 'user.fullname',
                                     editorOptions: {
@@ -477,52 +480,12 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     },
                                 },
                                 {
-                                    caption: 'Create for other:',
-                                    dataField: 'employee_id',
-                                    lookup: {
-                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
-                                        valueExpr: 'id',
-                                        displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
-                                    },
-                                    setCellValue: function (rowData, value) {
-                                        rowData.employee_id = value;
-                                        const emp = employeeCache.find(e => e.id === value);
-                                        if (emp) {
-                                            rowData.bu = emp.companycode;
-                                            // rowData.DeptHead = emp.deptheadName - > id;
-                                            const deptHead = employeeCache.find(e => e.fullname === emp.deptheadName);
-                                            rowData.DeptHead = deptHead ? deptHead.id : null;
-
-                                            rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ?
-                                                "HO" :
-                                                emp.companycode;
-
-                                            rowData.level = emp.level_id;
-
-                                            // mapping category_id berdasarkan level
-                                            if (['1', '2', '3'].includes(String(emp.level_id))) {
-                                                rowData.category_id = 30;
-                                            } else if (String(emp.level_id) === '4') {
-                                                rowData.category_id = 32;
-                                            } else {
-                                                rowData.category_id = null; // fallback kalau level tidak sesuai
-                                            }
-                                        }
-                                    }
-                                },
-                                {
-                                    caption: 'BU',
-                                    dataField: 'bu',
-                                    editorOptions: {
-                                        disabled: true
-                                    }
-                                },
-                                {
                                     caption: 'Superior',
                                     dataField: 'Superior',
                                     lookup: {
                                         dataSource: listOption('/list-employee', 'id', 'fullname'),
                                         valueExpr: 'id',
+                                        keyExpr: 'id',
                                         displayExpr: function (item) {
                                             return item ? item.fullname + " (" + item.sapid + ")" : "";
                                         }
@@ -531,9 +494,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 {
                                     caption: 'Department Head',
                                     dataField: 'DeptHead',
-                                    editorOptions: {
-                                        disabled: true
-                                    },
                                     lookup: {
                                         dataSource: listOption('/list-employee', 'id', 'fullname'),
                                         valueExpr: 'id',
@@ -541,6 +501,12 @@ const popupContentTemplate = function (reqid, mode, options) {
                                             return item ? item.fullname + " (" + item.sapid + ")" : "";
                                         }
                                     }
+                                },
+                                {
+                                    caption: 'Work Date',
+                                    dataField: 'work_date',
+                                    width: 200,
+                                    dataType: "date",
                                 },
                             ],
                             export: {
@@ -574,13 +540,14 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 });
                             },
                             onEditorPreparing: function (e) {
-                                if ((e.dataField == "Superior" || e.dataField == "employee_id") && e.parentType == "dataRow") {
+                                if ((e.dataField == "DeptHead" || e.dataField == "employee_id" || e.dataField == "Superior") && e.parentType == "dataRow") {
                                     e.editorName = "dxDropDownBox";
                                     e.editorOptions.dropDownOptions = {
                                         height: 500,
                                         width: 600
                                     };
                                     e.editorOptions.contentTemplate = function (args, container) {
+
                                         var value = args.component.option("value"),
                                             $dataGrid = $("<div>").dxDataGrid({
                                                 width: '100%',
@@ -652,12 +619,12 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     args.component.option('value', selectedData.id); // set employee_id
                                     console.log("Selected:", selectedItems.selectedRowsData[0]);
 
-                                    // Inject companycode ke request_wphc.bu
+                                    // Inject companycode ke request_spkl.bu
                                     if (e.row && e.row.data) {
-                                        e.row.data.request_wphc = e.row.data.request_wphc || {};
-                                        e.row.data.request_wphc.bu = selectedData.companycode;
+                                        e.row.data.request_spkl = e.row.data.request_spkl || {};
+                                        e.row.data.request_spkl.bu = selectedData.companycode;
                                     }
-                                    console.log("Injected to:", e.row.data.request_wphc);
+                                    console.log("Injected to:", e.row.data.request_spkl);
 
                                     args.component.close();
                                 } else {
@@ -706,7 +673,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                     if (data.ID == 2) {
                         let formDataContract = $("<div id='formcontract'>").dxDataGrid({
                             // dataSource: storedetail(modname, reqid),
-                            dataSource: storewithmodule('wphc_detail', modelclass, reqid),
+                            dataSource: storewithmodule('spkl_detail', modelclass, reqid),
                             allowColumnReordering: true,
                             allowColumnResizing: true,
                             columnsAutoWidth: true,
@@ -730,7 +697,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                             },
                             editing: {
                                 useIcons: true,
-                                mode: "cell",
+                                mode: "batch",
                                 allowAdding: true,
                                 allowUpdating: true,
                                 allowDeleting: true,
@@ -748,51 +715,51 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 showInfo: true,
                                 showNavigationButtons: true,
                             },
-                            columns: [
+                            columns: [   
                                 {
-                                    caption: 'Work Date',
-                                    dataField: 'work_date',
-                                    width: 200,
-                                    dataType: "date",
-                                    editorOptions: {
-                                        min: new Date(new Date().setDate(new Date().getDate() - 7)) // hanya bisa pilih backdate maksimal 7 hari
+                                    caption: 'Create for other:',
+                                    dataField: 'employee_id',
+                                    lookup: {
+                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                        valueExpr: 'id',
+                                        displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
                                     },
-                                    validationRules: [
-                                        {
-                                            type: "required",
-                                            message: "Tanggal wajib diisi"
-                                        },
-                                        {
-                                            type: "custom",
-                                            validationCallback: function(e) {
-                                                const today = new Date();
-                                                const selected = new Date(e.value);
-                                                const diff = (today - selected) / (1000 * 60 * 60 * 24); // selisih dalam hari
-                                                return diff >= 0 && diff <= 7;
-                                            },
-                                            message: "Tanggal harus dalam rentang H-7 dari hari ini"
+                                    setCellValue: function (rowData, value) {
+                                        rowData.employee_id = value;
+                                        const emp = employeeCache.find(e => e.id === value);
+                                        if (emp) {
+                                            rowData.bu = emp.companycode;
+                                            rowData.sapid = emp.sapid; // langsung ambil dari emp
+                                            rowData.position = emp.designationName; // pastikan designationName sudah tersedia di employeeCache
+
+                                            rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ? "HO" : emp.companycode;
+                                            rowData.level = emp.level_id;
+
+                                            rowData.category_id = ['1', '2', '3'].includes(String(emp.level_id)) ? 30 :
+                                                String(emp.level_id) === '4' ? 32 : null;
+
+                                            const deptHead = employeeCache.find(e =>
+                                                e.fullname.trim().toLowerCase() === emp.deptheadName?.trim().toLowerCase()
+                                            );
+                                            rowData.DeptHead = deptHead ? deptHead.id : null;
                                         }
-                                    ]
-                                },
-                                {
-                                    caption: 'Reason',
-                                    dataField: 'reason',
-                                    // width: 200,
-                                    editorOptions: {
-                                        readOnly: false,
                                     }
                                 },
                                 {
-                                    caption: 'Remarks',
-                                    dataField: 'remarks',
-                                    // width: 200,
-                                    editorOptions: {
-                                        readOnly: false,
-                                    }
+                                    caption: 'Normal Hours Estimate (hrs)',
+                                    dataField: 'normal_hours_estimate'
+                                },
+                                {
+                                    caption: 'Overtime Hours Estimate (hrs)',
+                                    dataField: 'overtime_hours_estimate'
+                                },
+                                {
+                                    caption: 'Target Work',
+                                    dataField: 'target_work'
                                 },
 
                             ],
-                            export: {
+                            export: { 
                                 enabled: false,
                                 fileName: modname,
                                 excelFilterEnabled: true,
@@ -1126,7 +1093,7 @@ const popupContentTemplate = function (reqid, mode, options) {
 
 let id = 1;
 var dataGridhistory = $("#loghistory").dxDataGrid({
-    dataSource: store('logreportwphc/' + id),
+    dataSource: store('logreportspkl/' + id),
     allowColumnReordering: false,
     allowColumnResizing: true,
     columnsAutoWidth: true,
@@ -1181,34 +1148,34 @@ var dataGridhistory = $("#loghistory").dxDataGrid({
             caption: "Objectives",
         },
         {
-            dataField: 'status_wphc_aktif',
+            dataField: 'status_spkl_aktif',
             caption: "Status",
         },
         {
             dataField: 'aktif_sampai_dengan',
             caption: "Issue Date",
         },
-        // {
-        //     dataField: "approveddoc",
-        //     caption: "Approval Doc",
-        //     allowFiltering: false,
-        //     allowSorting: false,
-        //     formItem: {
-        //         visible: false
-        //     },
-        //     cellTemplate: function (container, options) {
-        //         if ((options.value != "") && (options.value)) {
-        //             $("<div />").dxButton({
-        //                 icon: 'download',
-        //                 type: "success",
-        //                 text: "Download",
-        //                 onClick: function (e) {
-        //                     window.open(options.value, '_blank');
-        //                 }
-        //             }).appendTo(container);
-        //         }
-        //     }
-        // },
+        {
+            dataField: "approveddoc",
+            caption: "Approval Doc",
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: {
+                visible: false
+            },
+            cellTemplate: function (container, options) {
+                if ((options.value != "") && (options.value)) {
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        type: "success",
+                        text: "Download",
+                        onClick: function (e) {
+                            window.open(options.value, '_blank');
+                        }
+                    }).appendTo(container);
+                }
+            }
+        },
     ],
     export: {
         enabled: true,

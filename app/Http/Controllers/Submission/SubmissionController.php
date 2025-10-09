@@ -218,7 +218,6 @@ class SubmissionController extends Controller
 
                 $workdate = Carbon::parse($workdateRaw)->toDateString();
 
-                // ✅ Cek apakah employee sudah pernah mengajukan WPhc di tanggal yang sama
                 $duplicateDate = DB::table('request_wphc_detail as r_w_d')
                     ->join('request_wphc as r_w', 'r_w_d.req_id', '=', 'r_w.id')
                     ->where('r_w.employee_id', $employee_id)
@@ -234,7 +233,6 @@ class SubmissionController extends Controller
                     ]);
                 }
 
-                // ✅ Validasi khusus hari Minggu
                 if (Carbon::parse($workdate)->isSunday()) {
                     $sundayConflict = DB::table('request_wphc_detail as r_w_d')
                         ->join('request_wphc as r_w', 'r_w_d.req_id', '=', 'r_w.id')
@@ -308,7 +306,8 @@ class SubmissionController extends Controller
                     'Hris',
                     'Ghm',
                     'Memorandum',
-                    'Wphc'
+                    'Wphc',
+                    'Spkl'
                 ];
 
                 if (!in_array($modulename, $except)) {

@@ -133,6 +133,7 @@ trait ApproverTrait {
             'Legal',
             'Memorandum',
             'Wphc',
+            'Spkl'
         ];
 
         if (in_array($moduleName, $exceptdel)) {
@@ -170,6 +171,8 @@ trait ApproverTrait {
             'ActiveDirectory',
             'Mmf',
             'MaterialReq',
+            'Wphc',
+            'Spkl'
         ];
         
         if (!in_array($moduleName, $except)) {

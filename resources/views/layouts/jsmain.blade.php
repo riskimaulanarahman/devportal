@@ -208,8 +208,11 @@
         '/memorandum_approver': 'submission/memorandum_approver.js',
         //Submission/Legal
         '/legal_request' : 'submission/legal_request.js',
-        //Submission/Legal
-        '/wphc_request' : 'submission/wphc_request.js'
+        //Submission/wphc
+        '/wphc_request' : 'submission/wphc_request.js',
+        //Submission/spkl
+        '/spkl_request' : 'submission/spkl_request.js',
+        '/spkl_timesheet' : 'submission/spkl_timesheet.js'
     }
     
     const pathname = window.location.pathname;

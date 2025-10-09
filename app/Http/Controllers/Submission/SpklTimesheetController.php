@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Submission\Wphc;
+use App\Models\Submission\Spkl;
 
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
@@ -14,11 +14,8 @@ use App\Models\Module;
 use App\Models\User;
 
 use App\Mail\SubmissionMail;
-use Carbon\Carbon;
-use COM;
-use Log;
 
-class WphcRequestController extends Controller
+class SpklTimesheetController extends Controller
 {
     public $model;
     public $modulename;
@@ -27,144 +24,82 @@ class WphcRequestController extends Controller
 
     public function __construct()
     {
-        $this->model = new Wphc();
-        $this->modulename = 'Wphc';
+        $this->model = new Spkl();
+        $this->modulename = 'Spkl';
         $this->module = new Module();
         $this->user = new User();
     }
-
-    public function scopeWithEmployeeInfo($query)
-    {
-        return $query->leftJoin('employee.tbl_employee as emp', 'request_wphc.employee_id', '=', 'emp.id')
-                    ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id');
-    }
-
-    public function logreportwphc()
-    {
-        try {
-            // Ambil user yang sedang login
-            $user = Auth::user();
-
-            if (!$user) {
-                return response()->json([
-                    "status" => "error",
-                    "message" => "User belum login"
-                ], 401);
-            }
-
-            // Join ke tabel employee untuk ambil employee_id
-            $employee = DB::table('employee.tbl_employee')
-                ->where('LoginName', $user->username)
-                ->select('id')
-                ->first();
-
-            if (!$employee) {
-                return response()->json([
-                    "status" => "error",
-                    "message" => "Data employee tidak ditemukan untuk user: {$user->username}"
-                ], 404);
-            }
-
-            $employee_id = $employee->id;
-
-            // Ambil semua request_wphc milik employee
-            $data = DB::table('request_wphc as rw')
-                ->join('request_wphc_detail as rdw', 'rw.id', '=', 'rdw.req_id')
-                ->where('rw.employee_id', $employee_id)
-                ->orderByDesc('rw.created_at')
-                ->select(
-                    'rw.*',
-                    'rdw.*',
-                    DB::raw("CASE WHEN rw.requestStatus = 3 THEN 'aktif' ELSE 'tidak aktif' END as status_wphc_aktif"),
-                    DB::raw("CASE WHEN rw.requestStatus = 3 THEN FORMAT(DATEADD(MONTH, 3, rdw.work_date), 'dd-MM-yyyy') ELSE NULL END as aktif_sampai_dengan")
-                )
-                ->get();
-
-            return response()->json([
-                "status" => "show",
-                "message" => "Data WPHC milik user login berhasil ditampilkan",
-                "data" => $data
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                "status" => "error",
-                "message" => $e->getMessage()
-            ]);
-        }
-    }
-
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index(Request $request)
     {
         try {
-            
-            $id = $request->id;
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
 
             $dataquery = $this->model->query();
-            $subquery = "(select TOP 1 
-                CASE WHEN a.user_id='".$user_id."' 
-                then 1 else 0 end
-                from tbl_approverListReq l
-                left join tbl_approver a on l.approver_id=a.id
-                left join tbl_approvaltype r on a.approvaltype_id = r.id
-                where l.ApprovalAction='1'
-                and l.req_id = request_wphc.id and l.module_id = '".$module_id."' 
-                and request_wphc.requestStatus='1'
-                order by a.sequence)";
-            
-                // Subquery untuk lastApprovalDate
-            $lastApprovalDate = "(SELECT TOP 1 l.approvalDate
+
+            // Subquery: apakah pending di user ini
+            $subqueryPending = "(SELECT TOP 1 
+                CASE WHEN a.user_id = '$user_id' THEN 1 ELSE 0 END
                 FROM tbl_approverListReq l
-                WHERE l.req_id = request_wphc.id 
-                AND l.module_id = '".$module_id."' 
+                LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id
+                WHERE l.ApprovalAction = '1'
+                AND l.req_id = request_spkl.id
+                AND l.module_id = '$module_id'
+                AND request_spkl.requestStatus = '1'
+                ORDER BY a.sequence)";
+
+            // Subquery: last approval date
+            $subqueryLastApproval = "(SELECT TOP 1 l.approvalDate
+                FROM tbl_approverListReq l
+                WHERE l.req_id = request_spkl.id 
+                AND l.module_id = '$module_id' 
                 AND l.approvalDate IS NOT NULL 
                 AND l.ApprovalAction != '1'
                 ORDER BY l.approvalDate DESC)";
 
-            // Subquery untuk nextApproverName
-            $nextApproverName = "(SELECT TOP 1 e.FullName
+            // Subquery: next approver name
+            $subqueryNextApprover = "(SELECT TOP 1 e.FullName
                 FROM tbl_approverListReq l
                 JOIN tbl_approver a ON l.approver_id = a.id
                 JOIN employee.tbl_employee e ON a.employee_id = e.id
-                WHERE l.req_id = request_wphc.id 
-                AND l.module_id = '".$module_id."' 
+                WHERE l.req_id = request_spkl.id 
+                AND l.module_id = '$module_id' 
                 AND l.ApprovalAction = '1'
                 ORDER BY a.sequence ASC)";
-            
+
             $data = $dataquery
-    ->selectRaw("
-        request_wphc.*,
-        codes.code,
-        emp.FullName,
-        emp.SAPID,
-        designation.DesignationName,
-        CASE WHEN request_wphc.user_id = '$user_id' THEN 1 ELSE 0 END AS isMine,
-        $subquery AS isPendingOnMe,
-        $lastApprovalDate AS lastApprovalDate,
-        $nextApproverName AS nextApproverName
-    ")
-    ->leftJoin('codes', 'request_wphc.code_id', '=', 'codes.id')
-    ->leftJoin('employee.tbl_employee as emp', 'request_wphc.employee_id', '=', 'emp.id')
-    ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
-    ->with(['user', 'approverlist', 'wphc_detail'])
-    ->where(function ($query) use ($subquery, $user_id) {
-        $query->whereRaw("$subquery = 1")
-            ->orWhere(function ($query) use ($user_id) {
-                $query->where('request_wphc.user_id', '!=', $user_id)
-                      ->whereIn('request_wphc.requestStatus', [1, 2, 3, 4]);
-            })
-            ->orWhere('request_wphc.user_id', $user_id);
-    })
-    ->orderBy(DB::raw($subquery), 'DESC')
-    ->get();
+                ->selectRaw("
+                    request_spkl.*,
+                    codes.code,
+                    emp.FullName,
+                    emp.SAPID,
+                    designation.DesignationName,
+                    CASE WHEN request_spkl.user_id = '$user_id' THEN 1 ELSE 0 END AS isMine,
+                    $subqueryPending AS isPendingOnMe,
+                    $subqueryLastApproval AS lastApprovalDate,
+                    $subqueryNextApprover AS nextApproverName
+                ")
+                ->leftJoin('codes', 'request_spkl.code_id', '=', 'codes.id')
+                ->leftJoin('employee.tbl_employee as emp', 'request_spkl.employee_id', '=', 'emp.id')
+                ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
+                ->with(['user', 'approverlist', 'spkl_detail'])
+                ->where(function ($query) use ($subqueryPending, $user_id) {
+                    $query->whereRaw("$subqueryPending = 1")
+                        ->orWhere(function ($query) use ($user_id) {
+                            $query->where('request_spkl.user_id', '!=', $user_id)
+                                ->whereIn('request_spkl.requestStatus', [1, 2, 3, 4]);
+                        })
+                        ->orWhere('request_spkl.user_id', $user_id);
+                })
+                ->orderByDesc('request_spkl.created_at')
+                ->get();
 
-                
-                $data = $data->map(function ($item) {
-
-                return $item;
-            });
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
@@ -172,11 +107,10 @@ class WphcRequestController extends Controller
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
-
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-    
+
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -185,35 +119,36 @@ class WphcRequestController extends Controller
             $requestData = $request->all();
 
             // Ambil employee berdasarkan LoginName
-            $employee = DB::table('employee.tbl_employee as emp')
-                ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
-                ->where('usr.id', $user->id)
-                ->select('emp.*')
-                ->first();
+            // $employee = DB::table('employee.tbl_employee as emp')
+            //     ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
+            //     ->where('usr.id', $user->id)
+            //     ->select('emp.*')
+            //     ->first();
 
-            if ($employee) {
-                $requestData['employee_id'] = $employee->id;
-                $requestData['bu'] = $employee->companycode;
-                $requestData['level'] = $employee->level_id;
+            // if ($employee) {
+            //     $requestData['employee_id'] = $employee->id;
+            //     $requestData['bu'] = $employee->companycode;
+            //     $requestData['level'] = $employee->level_id;
 
-                // Tentukan DeptHead ID
-                $deptHead = DB::table('employee.tbl_employee')
-                    ->whereRaw('LOWER(fullname) = ?', [strtolower($employee->deptheadName)])
-                    ->select('id')
-                    ->first();
+            //     // Tentukan DeptHead ID
+            //     $deptHead = DB::table('employee.tbl_employee')
+            //         ->whereRaw('LOWER(fullname) = ?', [strtolower($employee->deptheadName)])
+            //         ->select('id')
+            //         ->first();
 
-                $requestData['DeptHead'] = $deptHead ? $deptHead->id : null;
+            //     $requestData['DeptHead'] = $deptHead ? $deptHead->id : null;
 
-                // Tentukan sector
-                $requestData['sector'] = in_array($employee->companycode, ['IHM', 'AHL', 'KPSI', 'NKL']) ? 'HO' : $employee->companycode;
+            //     // Tentukan sector
+            //     $requestData['sector'] = in_array($employee->companycode, ['IHM', 'AHL', 'KPSI', 'NKL']) ? 'HO' : $employee->companycode;
 
-                // Tentukan category_id
-                $level = (string) $employee->level_id;
-                $requestData['category_id'] = in_array($level, ['1', '2', '3']) ? 30 :
-                                            ($level === '4' ? 32 : null);
-            }
+            //     // Tentukan category_id
+            //     $level = (string) $employee->level_id;
+            //     $requestData['category_id'] = in_array($level, ['1', '2', '3']) ? 30 :
+            //                                 ($level === '4' ? 32 : null);
+            // }
 
-            $requestData['user_id'] = $user->id;
+            $user_id = $this->getAuth()->id;
+            $requestData['user_id'] = $user_id;
 
             $newData = $this->model->create($requestData);
             DB::commit();
@@ -233,9 +168,9 @@ class WphcRequestController extends Controller
     {
         try {
 
-            $data = $this->model->select('request_wphc.*','codes.code')
-            ->leftJoin('codes','request_wphc.code_id','codes.id')
-            ->where('request_wphc.id',$id)
+            $data = $this->model->select('request_spkl.*','codes.code')
+            ->leftJoin('codes','request_spkl.code_id','codes.id')
+            ->where('request_spkl.id',$id)
             ->with(['user'])
             ->first();
 
@@ -251,24 +186,21 @@ class WphcRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
     public function update(Request $request, $id)
     {
         try {
 
-            $module_id = $this->getModuleId($this->modulename);
+            // $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
 
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
 
-            if($request->Superior) {
-                $this->createApprSuperior($request->Superior, $this->modulename, $id);
-            }
             if($request->DeptHead) {
                 $this->createApprDeptHead($request->DeptHead, $this->modulename, $id);
             }
-            
             $data->update($requestData);
             //end save history perubahan
 
@@ -338,44 +270,44 @@ class WphcRequestController extends Controller
         }
     }
 
-    public function genPdfWphc(Request $request, $id) 
+    public function genPdfSpkl(Request $request, $id) 
     {
-        $dataAppr = DB::table('wphcApprover')->select('*')->where('id', $id)->get(); // Data approver
-        // $requestWphcDetail = DB::table('request_wphc_detail')->select('work_date', 'remarks', 'reason')->where('req_id', $id)->get();
-        $dataDetail = DB::table('request_wphc_detail')->where('req_id', $id)->get();
+        $dataAppr = DB::table('spklApprover')->select('*')->where('id', $id)->get(); // Data approver
+        // $requestspklDetail = DB::table('request_spkl_detail')->select('work_date', 'remarks', 'reason')->where('req_id', $id)->get();
+        $dataDetail = DB::table('request_spkl_detail')->where('req_id', $id)->get();
 
 
         $data = $this->model->select(
-            'request_wphc.*',
+            'request_spkl.*',
             'codes.code',
             'users.fullname',
             'emp.SAPID',
-            'emp.loginName',
-            'emp.FullName',
+            // 'emp.loginName',
+            // 'emp.FullName',
             'designation.DesignationName',
-            'rwd.work_date',
-            'rwd.remarks',
-            'rwd.reason',
-            'loc.Location',
-            'usr.email',
+            // 'rwd.work_date',
+            // 'rwd.remarks',
+            // 'rwd.reason',
+            // 'loc.Location',
+            // 'usr.email',
             'sup.FullName as superior_name',
-            'sup_usr.email as superior_email',
-            'emp_usr.email as employee_email',
-            'emp_usr.fullname as employee_name',
+            // 'sup_usr.email as superior_email',
+            // 'emp_usr.email as employee_email',
+            // 'emp_usr.fullname as employee_name',
             'level.id as level',
             'alh_sub.fullname as submitter_name',
             'alh_sub.approvalDate as submit_date'
         )
-        ->leftJoin('codes', 'request_wphc.code_id', '=', 'codes.id')
-        ->leftJoin('users', 'request_wphc.user_id', '=', 'users.id')
-        ->leftJoin('employee.tbl_employee as emp', 'request_wphc.employee_id', '=', 'emp.id')
-        ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
-        ->leftJoin('request_wphc_detail as rwd', 'request_wphc.id', '=', 'rwd.req_id')
+        ->leftJoin('codes', 'request_spkl.code_id', '=', 'codes.id')
+        ->leftJoin('users', 'request_spkl.user_id', '=', 'users.id')
+        ->leftJoin('employee.tbl_employee as emp', 'request_spkl.employee_id', '=', 'emp.id')
+        // ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
+        ->leftJoin('request_spkl_detail as rwd', 'request_spkl.id', '=', 'rwd.req_id')
         ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
         ->leftJoin('employee.tbl_location as loc', 'emp.location_id', '=', 'loc.id')
-        ->leftJoin('employee.tbl_employee as sup', 'request_wphc.Superior', '=', 'sup.id')
-        ->leftJoin('users as emp_usr', 'emp.LoginName', '=', 'emp_usr.username')
-        ->leftJoin('users as sup_usr', 'sup.LoginName', '=', 'sup_usr.username')
+        ->leftJoin('employee.tbl_employee as sup', 'request_spkl.Superior', '=', 'sup.id')
+        // ->leftJoin('users as emp_usr', 'emp.LoginName', '=', 'emp_usr.username')
+        // ->leftJoin('users as sup_usr', 'sup.LoginName', '=', 'sup_usr.username')
         ->leftJoin('employee.tbl_level as level', 'emp.level_id', '=', 'level.id')
         ->leftJoin(DB::raw("(
             SELECT req_id, fullname, approvalType, approvalDate
@@ -386,8 +318,8 @@ class WphcRequestController extends Controller
                 WHERE approvalType = 'Submitted'
             ) AS filtered
             WHERE rn = 1
-        ) as alh_sub"), 'alh_sub.req_id', '=', 'request_wphc.id')
-        ->where('request_wphc.id', $id)
+        ) as alh_sub"), 'alh_sub.req_id', '=', 'request_spkl.id')
+        ->where('request_spkl.id', $id)
         ->first();
 
         if (!$data || !$dataAppr) {
@@ -401,7 +333,7 @@ class WphcRequestController extends Controller
             $excel = new COM("Excel.Application");
             $excel->Visible = false;
 
-            $file = public_path("template/wphc/wphc.xlsx");
+            $file = public_path("template/spkl/spkl.xlsx");
 
             if (!file_exists($file)) {
                 throw new \Exception("File tidak ditemukan: " . $file);
@@ -487,6 +419,9 @@ class WphcRequestController extends Controller
                     $row += 3;
                 }
 
+                
+
+                
                 addPictureToWorksheet($Worksheet, $picPath, 55, 2, 36, $excel);
                     
 
@@ -510,7 +445,7 @@ class WphcRequestController extends Controller
             $code_sanitized = str_replace('/', '_', $data->code);
 			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
-            $filePath = public_path('template/wphc/pdf/' . $fileName);
+            $filePath = public_path('template/spkl/pdf/' . $fileName);
 			if (file_exists($filePath)) {
 				unlink($filePath);
 			}
@@ -524,8 +459,8 @@ class WphcRequestController extends Controller
 			$excel->Quit();
 			unset($excel);
 			
-            $pathfilename = 'public/template/wphc/pdf/' . $fileName;
-            DB::table('request_wphc')
+            $pathfilename = 'public/template/spkl/pdf/' . $fileName;
+            DB::table('request_spkl')
             ->where('id', $id) // Sesuaikan dengan primary key di tabel
             ->update(['approveddoc' => $pathfilename]);
             $this->processcopy($pathfilename);
@@ -533,7 +468,7 @@ class WphcRequestController extends Controller
 			return $pathfilename;
         } catch (\Exception $e) {
             // Logging error
-            $this->logerror($request->ip(), $request->url(), 'gen-pdf-wphc', $e->getMessage());
+            $this->logerror($request->ip(), $request->url(), 'gen-pdf-spkl', $e->getMessage());
             return response()->json([
                 "status" => "error",
                 "message" => "Error di " . $e->getFile() . " baris " . $e->getLine() . ": " . $e->getMessage()

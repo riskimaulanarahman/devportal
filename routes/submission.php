@@ -60,6 +60,10 @@ Route::group(['prefix' => 'api'], function () {
         //wphc
         'wphc_request' => App\Http\Controllers\Submission\WphcRequestController::class,
         'wphc_detail' => App\Http\Controllers\Submission\WphcDetailController::class,
+        //spkl
+        'spkl_request' => App\Http\Controllers\Submission\SpklRequestController::class,
+        'spkl_timesheet' => App\Http\Controllers\Submission\SpklTimesheetController::class,
+        'spkl_detail' => App\Http\Controllers\Submission\SpklDetailController::class,
 
         'attachmentrequest' => App\Http\Controllers\AttachmentController::class,
         'approverlistrequest' => App\Http\Controllers\ApproverListController::class,
@@ -130,4 +134,5 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('list-contract',[App\Http\Controllers\ListController::class, 'ListContract']); //get list employee same department
     Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module     
     Route::get('wphc_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\WphcDetailController::class, 'getList']); //get list contract history by req_id of module     
+    Route::get('spkl_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\SpklDetailController::class, 'getList']); //get list contract history by req_id of module     
 });

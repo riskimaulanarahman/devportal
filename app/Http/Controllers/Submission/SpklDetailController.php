@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
 use App\Models\Useraccess;
-use App\Models\WphcDetail;
+use App\Models\SpklDetail;
 use Illuminate\Http\Request;
 use DB;
 use Carbon\Carbon;
 
-class WphcDetailController extends Controller
+class SpklDetailController extends Controller
 {
     
     public $model;
@@ -22,16 +22,16 @@ class WphcDetailController extends Controller
 
     public function __construct()
     {
-        $this->model = new WphcDetail();
-        $this->modulename = 'Wphc';
-        $this->codename = 'Wphc';
+        $this->model = new SpklDetail();
+        $this->modulename = 'Spkl';
+        $this->codename = 'Spkl';
         $this->module = new Module();
         $this->user = new User();
     }
 
     public function index(Request $request)
     {
-        $data = WphcDetail::get();
+        $data = SpklDetail::get();
 
         return response()->json([
             'status' => "show",
@@ -77,8 +77,8 @@ class WphcDetailController extends Controller
     {
         try {
             $data = $this->model
-                ->select('request_wphc_detail.*')                
-                ->where('request_wphc_detail.req_id', $req_id)
+                ->select('request_spkl_detail.*')                
+                ->where('request_spkl_detail.req_id', $req_id)
                 ->first();
             if (!$data) {
                 return response()->json([
@@ -108,9 +108,17 @@ class WphcDetailController extends Controller
     public function getList($id, $modulename)
     {
         try {
-           $data = WphcDetail::select('*')
-            ->where('req_id', $id)
+           $data = SpklDetail::select(
+                'request_spkl_detail.*',
+                'emp.SAPID',
+                'emp.designation_id',
+                'desig.designationName'
+            )
+            ->leftJoin('employee.tbl_employee as emp', 'request_spkl_detail.employee_id', '=', 'emp.id')
+            ->leftJoin('employee.tbl_designation as desig', 'emp.designation_id', '=', 'desig.id')
+            ->where('request_spkl_detail.req_id', $id)
             ->get();
+
             
             return response()->json([
                 "status" => "show", 
@@ -135,8 +143,8 @@ class WphcDetailController extends Controller
             //     $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $data->req_id);
             // }
 
-            // Pastikan relasi Wphc tersedia
-            $requestStatus = optional($data->Wphc)->requestStatus;
+            // Pastikan relasi spkl tersedia
+            $requestStatus = optional($data->Spkl)->requestStatus;
 
             if (empty($data->approveddoc) && in_array($requestStatus, [0, 2])) {
                 $data->update($requestData);
@@ -172,7 +180,7 @@ class WphcDetailController extends Controller
 
             $data = $this->model->findOrFail($id);
 
-            // if(isset($data->approveddoc) || in_array($data->Wphc->requestStatus, [1])) {
+            // if(isset($data->approveddoc) || in_array($data->spkl->requestStatus, [1])) {
             //     return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
             // }
 
