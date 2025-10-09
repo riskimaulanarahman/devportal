@@ -231,6 +231,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 dataSource: ['TS Account','Non-TS Account'],  
             },
         },
+         {
+            dataField: 'remarks',
+        },
         {
             dataField: 'requestStatus',
             encodeHtml: false,
@@ -510,6 +513,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     valueExpr: 'id',
                                     displayExpr: 'fullname',
                                 },
+                            },
+                            {
+                                dataField: 'remarks',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                         ],
                         export: {
