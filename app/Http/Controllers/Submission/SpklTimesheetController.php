@@ -12,6 +12,7 @@ use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Models\Module;
 use App\Models\User;
+use Carbon\Carbon;
 
 use App\Mail\SubmissionMail;
 
@@ -73,6 +74,7 @@ class SpklTimesheetController extends Controller
                 AND l.ApprovalAction = '1'
                 ORDER BY a.sequence ASC)";
 
+            // Ambil data yang siap masuk ke timesheet (status 3 dan belum ditandai)
             $data = $dataquery
                 ->selectRaw("
                     request_spkl.*,
@@ -89,17 +91,18 @@ class SpklTimesheetController extends Controller
                 ->leftJoin('employee.tbl_employee as emp', 'request_spkl.employee_id', '=', 'emp.id')
                 ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
                 ->with(['user', 'approverlist', 'spkl_detail'])
-                ->where(function ($query) use ($subqueryPending, $user_id) {
-                    $query->whereRaw("$subqueryPending = 1")
-                        ->orWhere(function ($query) use ($user_id) {
-                            $query->where('request_spkl.user_id', '!=', $user_id)
-                                ->whereIn('request_spkl.requestStatus', [1, 2, 3, 4]);
-                        })
-                        ->orWhere('request_spkl.user_id', $user_id);
-                })
+                // ->where('request_spkl.requestStatus', 3)
+                ->where('request_spkl.tms', 1)
                 ->orderByDesc('request_spkl.created_at')
                 ->get();
 
+            // Tandai data sebagai sudah masuk ke timesheet
+            foreach ($data as $item) {
+                $item->requestStatus = 0;
+                $item->tms = 1;
+                $item->save();
+            }
+            // dd($data);
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
@@ -107,7 +110,10 @@ class SpklTimesheetController extends Controller
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
         } catch (\Exception $e) {
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+            return response()->json([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
     }
 
@@ -190,44 +196,89 @@ class SpklTimesheetController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $validated = $request->validate([
+                'ActualStartWork' => 'nullable|date',
+                'ActualEndWork' => 'nullable|date',
+                'ActualNormalHours' => 'nullable|numeric',
+                'ActualTotalHours' => 'nullable|numeric',
+                'ActualOvertimeHours' => 'nullable|numeric',
+            ]);
 
-            // $module_id = $this->getModuleId($this->modulename);
-            $requestData = $request->all();
-
-            $this->addOneDayToDate($requestData);
+            $this->addOneDayToDate($validated);
 
             $data = $this->model->findOrFail($id);
+            $totalHours = 0;
+            if (!empty($validated['ActualStartWork']) && !empty($validated['ActualEndWork'])) {
+                try {
+                    $start = Carbon::parse($validated['ActualStartWork']);
+                    $end = Carbon::parse($validated['ActualEndWork']);
 
-            if($request->DeptHead) {
+                    if ($end->greaterThan($start)) {
+                        $totalHours = floor($end->floatDiffInRealHours($start)); // tanpa koma
+                    }
+                } catch (\Exception $e) {
+                    $totalHours = 0;
+                }
+            } elseif (isset($validated['ActualTotalHours'])) {
+                $totalHours = intval($validated['ActualTotalHours']);
+            }
+
+            $validated['ActualTotalHours'] = $totalHours;
+            if (!isset($validated['ActualNormalHours']) || $validated['ActualNormalHours'] === null) {
+                $dateSource = $validated['ActualStartWork'] ?? $validated['ActualEndWork'] ?? null;
+
+                if ($dateSource) {
+                    try {
+                        $day = Carbon::parse($dateSource)->dayOfWeek; // 0 = Minggu, 8 = Weekday, ..., 4 = Sabtu
+
+                        switch ($day) {
+                            case Carbon::SUNDAY:
+                                $validated['ActualNormalHours'] = 0;
+                                break;
+                            case Carbon::SATURDAY:
+                                $validated['ActualNormalHours'] = 4;
+                                break;
+                            default:
+                                $validated['ActualNormalHours'] = 8;
+                                break;
+                        }
+                    } catch (\Exception $e) {
+                        $validated['ActualNormalHours'] = 8;
+                    }
+                } else {
+                    $validated['ActualNormalHours'] = 8; 
+                }
+            }
+
+            $normal = is_numeric($validated['ActualNormalHours']) ? floatval($validated['ActualNormalHours']) : 0;
+            $validated['ActualOvertimeHours'] = max(0, $totalHours - $normal);
+            if ($request->DeptHead) {
                 $this->createApprDeptHead($request->DeptHead, $this->modulename, $id);
             }
-            $data->update($requestData);
-            //end save history perubahan
-
-            if(isset($request->ticketStatus) && $data->requestStatus == 3) {
+            $data->update($validated);
+            if (isset($request->ticketStatus) && $data->requestStatus == 3) {
                 $getSubmissionData = $data;
-
                 $mailData = [
-                    "id" => 30, // final approved
-                    "action_id" => 5, // update id
+                    "id" => 30,
+                    "action_id" => 5,
                     "submission" => $getSubmissionData,
-                    "email" => $this->getUserByid($getSubmissionData->user_id)->email, // kirim kepada creator
+                    "email" => $this->getUserByid($getSubmissionData->user_id)->email,
                     "fullname" => $this->getUserByid($getSubmissionData->user_id)->fullname,
                     "message" => $this->mailMessage()['newActivity'],
                     "remarks" => $request->ticketStatus
                 ];
-                Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
+                Mail::to($mailData['email'])->send(new SubmissionMail($mailData, $this->modulename, 1));
             }
 
-            // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([
                 'status' => "success",
                 'message' => $this->getMessage()['update']
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json(["status" => "error", "message" => $ve->errors()], 422);
         } catch (\Exception $e) {
-
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+            return response()->json(["status" => "error", "message" => $e->getMessage()], 500);
         }
     }
 

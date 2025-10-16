@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Mail\SubmissionMail;
 use Carbon\Carbon;
 use COM;
+use Log;
 
 class SpklRequestController extends Controller
 {
@@ -113,7 +114,7 @@ class SpklRequestController extends Controller
         }
     }
 
-    public function store(Request $request, $id)
+    public function store(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -141,6 +142,7 @@ class SpklRequestController extends Controller
                 throw new \Exception("Data DeptHead tidak ditemukan.");
             }
 
+            // Persiapan data untuk disimpan
             $requestData['user_id'] = $user->id;
             $requestData['employee_id'] = $employee->id;
             $requestData['bu'] = $employee->companycode;
@@ -148,10 +150,17 @@ class SpklRequestController extends Controller
             $requestData['tms'] = 0;
             $requestData['morethantwohours'] = 0;
 
-            
+            // Simpan data
             $newData = $this->model->create($requestData);
+            $id = $newData->id;
+
             DB::commit();
-            
+
+            // Inject approval DeptHead jika tersedia
+            if ($requestData['DeptHead']) {
+                $this->createApprDeptHead($requestData['DeptHead'], $this->modulename, $id);
+            }
+
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['store'],
@@ -159,9 +168,13 @@ class SpklRequestController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+            return response()->json([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
         }
     }
+
 
     public function show($id)
     {
@@ -290,6 +303,7 @@ class SpklRequestController extends Controller
             'codes.code',
             'users.fullname',
             'emp.SAPID',
+            'emp.companycode as bu',
             'designation.DesignationName',
             'sup.FullName as superior_name',
             'level.id as level',
@@ -321,7 +335,7 @@ class SpklRequestController extends Controller
             return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
 
-        // dd($data, $dataAppr, $dataDetail);
+        // dd($dataDetail);
     
         try {
             $excel = new COM("Excel.Application");
@@ -337,27 +351,61 @@ class SpklRequestController extends Controller
             $Worksheet = $Workbook->Worksheets(1);
             $Worksheet->Activate();
 
+            // SPKL (baris 15)
             $row = 15;
             $counter = 1;
-
             foreach ($dataDetail as $detail) {
-                // Nomor urut di kolom C
                 $Worksheet->Range("C{$row}")->Value = $counter;
-
-                // Data lainnya
                 $Worksheet->Range("E{$row}")->Value = (string) $detail->FullName;
                 $Worksheet->Range("G{$row}")->Value = (string) $detail->SAPID;
                 $Worksheet->Range("H{$row}")->Value = (string) $detail->DesignationName;
-
+                $Worksheet->Range("I{$row}")->Value = (string) $detail->EstimateNormalHours;
+                $Worksheet->Range("J{$row}")->Value = (string) $detail->EstimateOvertimeHours;
+                $Worksheet->Range("L{$row}")->Value = (string) $detail->Target;
                 $row++;
                 $counter++;
             }
 
-            // Isi Form Data
-            $Worksheet->Range("G8")->Value = $data->bu;
-            $Worksheet->Range("N9")->Value = $data->work_date;
-            $picpath = public_path("assets/images/approved.png");
+            if ($data->tms != 0) {
+                // DAFTAR HADIR (baris 46)
+                $row = 46;
+                $counter = 1;
+                foreach ($dataDetail as $detail) {
+                    $Worksheet->Range("C{$row}")->Value = $counter;
+                    $Worksheet->Range("E{$row}")->Value = (string) $detail->FullName;
+                    $Worksheet->Range("G{$row}")->Value = (string) $detail->SAPID;
+                    $Worksheet->Range("H{$row}")->Value = (string) $detail->DesignationName;
 
+                    $start = \Carbon\Carbon::parse($detail->ActualStartWork);
+                    $end = \Carbon\Carbon::parse($detail->ActualEndWork);
+
+                    $Worksheet->Range("I{$row}")->Value = $start->hour / 24 + $start->minute / 1440;
+                    $Worksheet->Range("J{$row}")->Value = $end->hour / 24 + $end->minute / 1440;
+                    $Worksheet->Range("I{$row}")->NumberFormat = "hh:mm";
+                    $Worksheet->Range("J{$row}")->NumberFormat = "hh:mm";
+
+                    $Worksheet->Range("K{$row}")->Value = $detail->ActualTotalHours;
+                    $Worksheet->Range("L{$row}")->Value = $detail->ActualNormalHours;
+                    $Worksheet->Range("M{$row}")->Value = (string) $detail->ActualOvertimeHours;
+                    $Worksheet->Range("N{$row}")->Value = (string) $detail->Remarks;
+                    $row++;
+                    $counter++;
+                }
+            }
+
+
+
+            Carbon::setLocale('id'); 
+            $namaHari = Carbon::parse($data->work_date)->translatedFormat('l'); 
+            $Worksheet->Range("G8")->Value = $data->bu;
+            $Worksheet->Range("G10")->Value = $data->fullname;
+            $Worksheet->Range("G41")->Value = $namaHari;
+            $Worksheet->Range("N8")->Value = $namaHari;
+            $Worksheet->Range("N9")->Value = $data->work_date;
+            $Worksheet->Range("G42")->Value = $data->work_date;
+            $Worksheet->Range("D35")->Value = $data->fullname;
+            $picpath = public_path("assets/images/approved.png");
+            
             if (file_exists($picpath)) {
 
                 function addPictureRespectTemplate($Worksheet, $picPath, $labelCellAddress, $stampRow, $height, $excel, $nudgeX = 0, $nudgeY = 0) {
@@ -405,27 +453,47 @@ class SpklRequestController extends Controller
                     return ['Left'=>$pic->Left,'Top'=>$pic->Top,'W'=>$pic->Width,'H'=>$pic->Height];
                 }
 
+                $Worksheet->Range("D35")->Value = $data->fullname;
+                $Worksheet->Range("D36")->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
+                addPictureRespectTemplate($Worksheet, $picpath, "D35", 33, 36, $excel, 0, 0);
+
+                if ($data->tms == '1') {
+                    $Worksheet->Range("E65")->Value = $data->fullname;
+                    $Worksheet->Range("E66")->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
+                    addPictureRespectTemplate($Worksheet, $picpath, "E63", 63, 36, $excel, 0, 0);
+                }
                 foreach ($dataAppr as $appr) {
                     if ($appr->approvalAction == 3) {
-                        if ($appr->sequence == 2) {
-                            $Worksheet->Range("D35")->Value = $appr->apprname;
-                            $Worksheet->Range("D36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "D35", 32, 36, $excel, 0, 0);
-                        }
                         if ($appr->sequence == 3) {
                             $Worksheet->Range("G35")->Value = $appr->apprname;
                             $Worksheet->Range("G36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "G35", 32, 36, $excel, 0, 0);
+                            addPictureRespectTemplate($Worksheet, $picpath, "G35", 33, 36, $excel, 0, 0);
+                        }
+                        // DAFTAR HADIR KERJA LEMBUR KARYAWAN by tms =1
+                        if ($data->tms == '1') {
+                            if ($appr->sequence == 3) {
+                                $Worksheet->Range("H65")->Value = $appr->apprname;
+                                $Worksheet->Range("H66")->Value = $appr->approvalDate;
+                                addPictureRespectTemplate($Worksheet, $picpath, "H63", 63, 36, $excel, 0, 0);
+                            }
                         }
                         if ($appr->sequence == 4) {
                             $Worksheet->Range("J35")->Value = $appr->apprname;
                             $Worksheet->Range("J36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "J35", 32, 36, $excel, 0, 0);
+                            addPictureRespectTemplate($Worksheet, $picpath, "J35", 33, 36, $excel, 0, 0);
+                        }
+                        // DAFTAR HADIR KERJA LEMBUR KARYAWAN by tms =1
+                        if ($data->tms == '1') {
+                            if ($appr->sequence == 4) {
+                                $Worksheet->Range("L65")->Value = $appr->apprname;
+                                $Worksheet->Range("L66")->Value = $appr->approvalDate;
+                                addPictureRespectTemplate($Worksheet, $picpath, "L63", 63, 36, $excel, 0, 0);
+                            }
                         }
                         if ($appr->sequence == 5) {
                             $Worksheet->Range("N35")->Value = $appr->apprname;
                             $Worksheet->Range("N36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "N35", 32, 36, $excel, 0, 0);
+                            addPictureRespectTemplate($Worksheet, $picpath, "N35", 33, 36, $excel, 0, 0);
                         }
                     }
                 }
@@ -437,12 +505,16 @@ class SpklRequestController extends Controller
             $code_sanitized = str_replace('/', '_', $data->code);
 			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
-            $filePath = public_path('template/spkl/pdf/' . $fileName);
+            // $filePath = public_path('template/spkl/requesto/pdf/' . $fileName);
+            if ($data->tms == '0') {
+                $filePath = public_path('template/spkl/requesto/pdf/' . $fileName);
+            } else {
+                $filePath = public_path('template/spkl/timesheet/pdf/' . $fileName);
+            }
 			if (file_exists($filePath)) {
 				unlink($filePath);
 			}
 			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);
-			
 			$excel->CutCopyMode = false;
             $Workbook->Close(false);
 			unset($Worksheet);
@@ -450,14 +522,20 @@ class SpklRequestController extends Controller
 			$excel->Workbooks->Close();
 			$excel->Quit();
 			unset($excel);
-			
-            $pathfilename = 'public/template/spkl/pdf/' . $fileName;
-            DB::table('request_wphc')
-            ->where('id', $id) 
-            ->update(['approveddoc' => $pathfilename]);
-            $this->processcopy($pathfilename);
+            if ($data->tms == '0') {
+                $pathfilename = 'public/template/spkl/requesto/pdf/' . $fileName;
+            } else {
+                $pathfilename = 'public/template/spkl/timesheet/pdf/' . $fileName;
+            }
+            $column = $data->tms == '0' ? 'approveddoc' : 'timesheetdoc';
 
+            DB::table('request_spkl')
+                ->where('id', $id)
+                ->update([$column => $pathfilename]);
+
+            $this->processcopy($pathfilename);
 			return $pathfilename;
+
         } catch (\Exception $e) {
             $this->logerror($request->ip(), $request->url(), 'gen-pdf-spkl', $e->getMessage());
             return response()->json([

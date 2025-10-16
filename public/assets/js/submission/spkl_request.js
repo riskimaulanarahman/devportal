@@ -508,6 +508,10 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     width: 200,
                                     dataType: "date",
                                 },
+                                {
+                                    caption: 'Outstanding Tasks',
+                                    dataField: 'remarks',
+                                },
                             ],
                             export: {
                                 enabled: false,
@@ -747,17 +751,16 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 },
                                 {
                                     caption: 'Normal Hours Estimate (hrs)',
-                                    dataField: 'normal_hours_estimate'
+                                    dataField: 'EstimateNormalHours'
                                 },
                                 {
                                     caption: 'Overtime Hours Estimate (hrs)',
-                                    dataField: 'overtime_hours_estimate'
+                                    dataField: 'EstimateOvertimeHours'
                                 },
                                 {
                                     caption: 'Target Work',
-                                    dataField: 'target_work'
+                                    dataField: 'Target'
                                 },
-
                             ],
                             export: { 
                                 enabled: false,

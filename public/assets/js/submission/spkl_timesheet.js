@@ -480,47 +480,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                // {
-                                //     caption: 'Create for other:',
-                                //     dataField: 'employee_id',
-                                //     lookup: {
-                                //         dataSource: listOption('/list-employee', 'id', 'fullname'),
-                                //         valueExpr: 'id',
-                                //         displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
-                                //     },
-                                //     setCellValue: function (rowData, value) {
-                                //         rowData.employee_id = value;
-                                //         const emp = employeeCache.find(e => e.id === value);
-                                //         if (emp) {
-                                //             rowData.bu = emp.companycode;
-                                //             // rowData.DeptHead = emp.deptheadName - > id;
-                                //             const deptHead = employeeCache.find(e => e.fullname === emp.deptheadName);
-                                //             rowData.DeptHead = deptHead ? deptHead.id : null;
-
-                                //             rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ?
-                                //                 "HO" :
-                                //                 emp.companycode;
-
-                                //             rowData.level = emp.level_id;
-
-                                //             // mapping category_id berdasarkan level
-                                //             if (['1', '2', '3'].includes(String(emp.level_id))) {
-                                //                 rowData.category_id = 30;
-                                //             } else if (String(emp.level_id) === '4') {
-                                //                 rowData.category_id = 32;
-                                //             } else {
-                                //                 rowData.category_id = null; // fallback kalau level tidak sesuai
-                                //             }
-                                //         }
-                                //     }
-                                // },
-                                // {
-                                //     caption: 'BU',
-                                //     dataField: 'bu',
-                                //     editorOptions: {
-                                //         disabled: true
-                                //     }
-                                // },
                                 {
                                     caption: 'Superior',
                                     dataField: 'Superior',
@@ -567,6 +526,10 @@ const popupContentTemplate = function (reqid, mode, options) {
                                             message: "Tanggal harus dalam rentang H-7 dari hari ini"
                                         }
                                     ]
+                                },
+                                {
+                                    caption: 'Outstanding Tasks',
+                                    dataField: 'remarks',
                                 },
                             ],
                             export: {
@@ -806,24 +769,94 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     }
                                 },
                                 {
-                                    caption: 'Normal Hours Estimate (hrs)',
-                                    dataField: 'normal_hours_estimate'
+                                    caption: 'Plan Normal',
+                                    dataField: 'EstimateNormalHours',
                                 },
                                 {
-                                    caption: 'Overtime Hours Estimate (hrs)',
-                                    dataField: 'overtime_hours_estimate'
+                                    caption: 'Plan Overtime',
+                                    dataField: 'EstimateOvertimeHours'
+                                },                                
+                                {
+                                    caption: 'Start Work',
+                                    dataField: 'ActualStartWork',
+                                    dataType: 'datetime',
+                                    editorType: 'dxDateBox',
+                                    editorOptions: {
+                                        type: 'datetime',
+                                        displayFormat: 'yyyy-MM-dd HH:mm'
+                                    }
+                                },
+                                {
+                                    caption: 'End Work',
+                                    dataField: 'ActualEndWork',
+                                    dataType: 'datetime',
+                                    editorType: 'dxDateBox',
+                                    editorOptions: {
+                                        type: 'datetime',
+                                        displayFormat: 'yyyy-MM-dd HH:mm'
+                                    }
+                                },
+                                {
+                                    caption: 'Act Total',
+                                    dataField: 'ActualTotalHours',
+                                    dataType: 'number',
+                                    allowEditing: false
+                                },
+                                {
+                                    caption: 'Act Normal',
+                                    dataField: 'ActualNormalHours',
+                                    dataType: 'number'
+                                },
+                                {
+                                    caption: 'Act Overtime',
+                                    dataField: 'ActualOvertimeHours',
+                                    dataType: 'number',
+                                    allowEditing: false
                                 },
                                 {
                                     caption: 'Target Work',
-                                    dataField: 'target_work'
-                                },
-
+                                    dataField: 'Target'
+                                }
                             ],
                             export: { 
                                 enabled: false,
                                 fileName: modname,
                                 excelFilterEnabled: true,
                                 allowExportSelectedData: true
+                            },
+                            // Kolom tetap sama
+
+                            onRowUpdating: function(e) {
+                                const startRaw = e.newData.ActualStartWork ?? e.oldData.ActualStartWork;
+                                const endRaw = e.newData.ActualEndWork ?? e.oldData.ActualEndWork;
+                                let normalRaw = e.newData.ActualNormalHours ?? e.oldData.ActualNormalHours;
+
+                                if (startRaw && endRaw) {
+                                    const start = new Date(startRaw);
+                                    const end = new Date(endRaw);
+
+                                    if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+                                        const totalHours = parseFloat((end - start) / (1000 * 60 * 60)).toFixed(2);
+                                        e.newData.ActualTotalHours = Number(totalHours);
+
+                                        // Tetapkan default normal jika belum diisi
+                                        if (normalRaw === undefined || normalRaw === null || normalRaw === '') {
+                                            const day = start.getDay(); // 0 = Minggu, 6 = Sabtu
+                                            switch (day) {
+                                                case 0: normalRaw = 0; break;
+                                                case 6: normalRaw = 4; break;
+                                                default: normalRaw = 8; break;
+                                            }
+                                            e.newData.ActualNormalHours = normalRaw;
+                                        }
+
+                                        const normal = Number(normalRaw);
+                                        e.newData.ActualOvertimeHours = Math.max(0, Math.floor(totalHours - normal));
+                                    } else {
+                                        e.newData.ActualTotalHours = 0;
+                                        e.newData.ActualOvertimeHours = 0;
+                                    }
+                                }
                             },
                             onInitialized: function (e) {
                                 dataGriddetail = e.component;

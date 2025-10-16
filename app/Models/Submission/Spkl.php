@@ -21,16 +21,16 @@ class Spkl extends Model
     protected $guarded = ['id'];
 
     protected $fillable = [
-        'requestStatus',
-        'code_id',
-        'DeptHead',
-        'Superior',
-        'work_date',
         'employee_id',
+        'work_date',
+        'requestStatus',
+        'DeptHead',
+        'tms',
+        'Superior',
+        'morethantwohours',
+        'remarks',
         'user_id',
         'bu',
-        'tms',
-        'morethantwohours',
         'created_at',
         'updated_at'
     ];
@@ -80,8 +80,4 @@ class Spkl extends Model
     {
         return $this->hasOne(SpklDetail::class, 'req_id', 'id');
     }
-    // public function category()
-    // {
-    //     return $this->belongsTo(CategoryForm::class,'category_id');
-    // }
 }

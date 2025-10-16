@@ -394,7 +394,7 @@ class WphcRequestController extends Controller
             return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
 
-        dd($data, $dataAppr, $dataDetail);
+        // dd($data, $dataAppr, $dataDetail);
     
 
         try {
@@ -523,13 +523,11 @@ class WphcRequestController extends Controller
 			$excel->Workbooks->Close();
 			$excel->Quit();
 			unset($excel);
-			
             $pathfilename = 'public/template/wphc/pdf/' . $fileName;
             DB::table('request_wphc')
-            ->where('id', $id) // Sesuaikan dengan primary key di tabel
+            ->where('id', $id)
             ->update(['approveddoc' => $pathfilename]);
             $this->processcopy($pathfilename);
-
 			return $pathfilename;
         } catch (\Exception $e) {
             // Logging error
