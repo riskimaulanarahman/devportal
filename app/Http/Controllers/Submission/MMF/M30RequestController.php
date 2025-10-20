@@ -71,7 +71,8 @@ class M30RequestController extends Controller
             where l.req_id = request_mmf.id and l.module_id = '".$module_id."' and r.ApprovalType='Buyer' and r.isactive='1'
             order by a.sequence)";
 
-            $data = $dataquery
+            $allData = collect();
+            $dataquery
                 ->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
                     request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason,
                     CASE WHEN request_mmf.employee_id='".$employee_id."' then 1 else 0 end as isMine,
@@ -82,13 +83,13 @@ class M30RequestController extends Controller
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
                 ->leftJoin('employee.tbl_employee','request_mmf.employee_id','employee.tbl_employee.id')
                 ->leftJoin('request_mmf_30', 'request_mmf.id', 'request_mmf_30.req_id')
-                ->with(['user','approverlist','detail30'])
+                // ->with(['user','approverlist','detail30'])
                 ->where('category','MMF30')
                 ->where(function ($query) use ($subquery, $user_id, $isAdmin, $employee_id) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id, $isAdmin, $employee_id) {
                             if ($isAdmin) {
-                                $query->whereIn("request_mmf.requestStatus", [0,1,3,4])
+                                $query->whereIn("request_mmf.requestStatus", [1,3,4])
                                     ->where("request_mmf.user_id", "!=", $user_id);
                             } 
                         })
@@ -96,7 +97,12 @@ class M30RequestController extends Controller
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("CASE WHEN request_mmf.employee_id = '".$employee_id."' THEN 0 ELSE 1 END, request_mmf.created_at desc")
-                ->get();
+                ->chunk(2000, function ($chunk) use (&$allData) {
+                    $chunk->load(['user', 'approverlist', 'detail30']);
+                    $allData = $allData->merge($chunk);
+                });
+
+            $data = $allData;
 
             return response()->json([
                 'status' => "show",
@@ -118,8 +124,10 @@ class M30RequestController extends Controller
             $user_id = $this->getAuth()->id;
             $employee_id = $this->getEmployeeID()->id;
             $module_id = $this->getModuleId($this->modulename);
-
-            $data = $this->model->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
+            
+            $allData = collect();
+            $this->model
+                ->selectRaw("request_mmf.*,codes.code,employee.tbl_employee.FullName as employee_name,
                     request_mmf_30.PRType,request_mmf_30.RequisitionType,request_mmf_30.Reason
                 ")
                 ->leftJoin('codes','request_mmf.code_id','codes.id')
@@ -131,8 +139,14 @@ class M30RequestController extends Controller
                 ->where('request_mmf.requestStatus', 3)
                 ->where('tbl_approverListReq.module_id', $module_id)
                 ->where('tbl_approver.employee_id', $employee_id)
-                ->with(['user'])
-            ->get();
+            //     ->with(['user'])
+            // ->get();
+                ->chunk(2000, function ($chunk) use (&$allData) {
+                    $chunk->load(['user']);
+                    $allData = $allData->merge($chunk);
+                });
+
+            $data = $allData;
 
             return response()->json([
                 'status' => "show",

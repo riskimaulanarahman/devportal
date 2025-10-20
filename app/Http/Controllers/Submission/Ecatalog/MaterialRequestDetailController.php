@@ -9,6 +9,7 @@ use App\Models\Module;
 use App\Models\Submission\Ecatalog\Materialdetail;
 use App\Models\Ecatalog;
 use DB;
+use Carbon\Carbon;
 
 class MaterialRequestDetailController extends Controller
 {
@@ -48,6 +49,21 @@ class MaterialRequestDetailController extends Controller
             
             $listCatalog = $this->listCatalog->find($request->catalog_id);
 
+            if($listCatalog->historicalPrice == 0) {
+                return response()->json(["status" => "error", "message" => "The historical price cannot be zero. Please choose a valid price or reach out to procurement staff for assistance."]);
+            }
+
+            // Check lastUpdated within last 3 months
+            $lastUpdated = Carbon::parse($listCatalog->lastUpdated);
+            $threeMonthsAgo = Carbon::now()->subMonths(3);
+
+            if ($lastUpdated->lt($threeMonthsAgo)) {
+                return response()->json([
+                    "status" => "error",
+                    "message" => "Catalog data is outdated (updated before 3 months ago). Please contact procurement staff."
+                ]);
+            }
+
             $requestData = $request->all();
             $requestData['materialCode'] = $listCatalog->materialCode;
             $requestData['description'] = $listCatalog->description;
@@ -56,10 +72,6 @@ class MaterialRequestDetailController extends Controller
             $requestData['uom'] = $listCatalog->uom;
             $requestData['unit_price'] = $listCatalog->historicalPrice;
             $requestData['amount'] = $listCatalog->historicalPrice*$request->order;
-
-            if($listCatalog->historicalPrice == 0) {
-                return response()->json(["status" => "error", "message" => "The historical price cannot be zero. Please choose a valid price or reach out to procurement staff for assistance."]);
-            }
 
             // $this->addOneDayToDate($requestData);
 
