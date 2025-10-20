@@ -124,35 +124,6 @@ class SpklTimesheetController extends Controller
             $user = $this->getAuth();
             $requestData = $request->all();
 
-            // Ambil employee berdasarkan LoginName
-            // $employee = DB::table('employee.tbl_employee as emp')
-            //     ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
-            //     ->where('usr.id', $user->id)
-            //     ->select('emp.*')
-            //     ->first();
-
-            // if ($employee) {
-            //     $requestData['employee_id'] = $employee->id;
-            //     $requestData['bu'] = $employee->companycode;
-            //     $requestData['level'] = $employee->level_id;
-
-            //     // Tentukan DeptHead ID
-            //     $deptHead = DB::table('employee.tbl_employee')
-            //         ->whereRaw('LOWER(fullname) = ?', [strtolower($employee->deptheadName)])
-            //         ->select('id')
-            //         ->first();
-
-            //     $requestData['DeptHead'] = $deptHead ? $deptHead->id : null;
-
-            //     // Tentukan sector
-            //     $requestData['sector'] = in_array($employee->companycode, ['IHM', 'AHL', 'KPSI', 'NKL']) ? 'HO' : $employee->companycode;
-
-            //     // Tentukan category_id
-            //     $level = (string) $employee->level_id;
-            //     $requestData['category_id'] = in_array($level, ['1', '2', '3']) ? 30 :
-            //                                 ($level === '4' ? 32 : null);
-            // }
-
             $user_id = $this->getAuth()->id;
             $requestData['user_id'] = $user_id;
 

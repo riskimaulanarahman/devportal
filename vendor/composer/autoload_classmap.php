@@ -91,6 +91,8 @@ return array(
     'App\\Http\\Controllers\\Submission\\UavMissionRequestDetailController' => $baseDir . '/app/Http/Controllers/Submission/UavMissionRequestDetailController.php',
     'App\\Http\\Controllers\\Submission\\LegalRequestController' => $baseDir . '/app/Http/Controllers/Submission/LegalRequestController.php',
     'App\\Http\\Controllers\\Submission\\WphcRequestController' => $baseDir . '/app/Http/Controllers/Submission/WphcRequestController.php',
+    'App\\Http\\Controllers\\Submission\\SpklRequestController' => $baseDir . '/app/Http/Controllers/Submission/SpklRequestController.php',
+    'App\\Http\\Controllers\\Submission\\SpklTimesheetController' => $baseDir . '/app/Http/Controllers/Submission/SpklTimesheetController.php',
     'App\\Http\\Controllers\\Submission\\MemorandumDetailController' => $baseDir . '/app/Http/Controllers/Submission/MemorandumDetailController.php',
     'App\\Http\\Kernel' => $baseDir . '/app/Http/Kernel.php',
     'App\\Http\\Middleware\\Authenticate' => $baseDir . '/app/Http/Middleware/Authenticate.php',

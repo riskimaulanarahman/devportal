@@ -36,6 +36,7 @@ use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
 use App\Http\Controllers\Submission\Financial\Capex\CapexRequestController;
 use App\Http\Controllers\Submission\MemorandumRequestController;
 use App\Http\Controllers\Submission\WphcRequestController;
+use App\Http\Controllers\Submission\SpklRequestController;
 use Storage;
 use DB;
 use App\Http\Traits\HasGetModule;
@@ -512,6 +513,20 @@ class SubmissionMail extends Mailable
                 $wphcController = new WphcRequestController();
                     if ($final == 1) {
                     $pdf = $wphcController->genPdfWphc($request, $mailData['submission']->id);
+                        $this->attach($url . "devportal/" . $pdf); 
+                        foreach ($Mailrecipient as $cc) {
+                            $this->cc($cc->email); 
+                        }
+                    }
+            }
+
+        // LEGAL MODULE
+        // LEGAL MODULE
+            if ($modulename == 'Spkl') {
+                $request = new Request();
+                $spklController = new SpklRequestController();
+                    if ($final == 1) {
+                    $pdf = $spklController->genPdfSpkl($request, $mailData['submission']->id);
                         $this->attach($url . "devportal/" . $pdf); 
                         foreach ($Mailrecipient as $cc) {
                             $this->cc($cc->email); 

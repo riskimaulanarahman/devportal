@@ -36,6 +36,7 @@ class SubmissionController extends Controller
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
             'Memorandum' => "App\Models\Submission\Memorandum",
             'Wphc' => "App\Models\Submission\Wphc",
+            'Spkl' => "App\Models\Submission\Spkl",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -192,6 +193,17 @@ class SubmissionController extends Controller
 
                 if (count($uavmissiondetail) < 1) {
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Detail not found. Please input the correct information."]);
+                }
+            }
+
+            if($modulename == 'Spkl') {
+                $Spkldetail = DB::table('request_spkl_detail')
+                ->where('req_id',$id)
+                // ->where('module_id',$module_id)
+                ->get();
+
+                if (count($Spkldetail) < 1) {
+                    return response()->json(["status" => "error",  "message" => "Error: Detail not found. Please input the correct information."]);
                 }
             }
 
@@ -468,7 +480,6 @@ class SubmissionController extends Controller
                 }
             }
 
-
             if($final == 1) {
                 if($modulename == 'Ticket' || $modulename == 'Hrsc') {
                     if (count($assignment) < 1) {
@@ -575,7 +586,6 @@ class SubmissionController extends Controller
                         // dd($mailData);
                         break;
                     }
-
                 }
                 if($request->approvalAction == 4 && $getappr->approvalAction == 4) { // rejected pengajuan
                     $mailData = [

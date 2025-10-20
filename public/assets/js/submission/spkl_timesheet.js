@@ -139,6 +139,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
                     "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
                     "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                    "<span class='btn btn-dark btn-xs btn-status'>Done</span>",
                 ];
                 return arrText[e.value];
             },
@@ -466,13 +467,13 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     caption: 'Code',
                                     dataField: 'code',
                                 },
-                                {
-                                    caption: 'Creation Date',
-                                    dataField: 'created_at',
-                                    editorOptions: {
-                                        readOnly: true
-                                    },
-                                },
+                                // {
+                                //     caption: 'Creation Date',
+                                //     dataField: 'created_at',
+                                //     editorOptions: {
+                                //         readOnly: true
+                                //     },
+                                // },
                                 {
                                     caption: 'Creator',
                                     dataField: 'user.fullname',
@@ -480,17 +481,17 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                {
-                                    caption: 'Superior',
-                                    dataField: 'Superior',
-                                    lookup: {
-                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
-                                        valueExpr: 'id',
-                                        displayExpr: function (item) {
-                                            return item ? item.fullname + " (" + item.sapid + ")" : "";
-                                        }
-                                    }
-                                },
+                                // {
+                                //     caption: 'Superior',
+                                //     dataField: 'Superior',
+                                //     lookup: {
+                                //         dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                //         valueExpr: 'id',
+                                //         displayExpr: function (item) {
+                                //             return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                //         }
+                                //     }
+                                // },
                                 {
                                     caption: 'Department Head',
                                     dataField: 'DeptHead',
@@ -771,10 +772,16 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 {
                                     caption: 'Plan Normal',
                                     dataField: 'EstimateNormalHours',
+                                    editorOptions: {
+                                        readOnly: true
+                                    },
                                 },
                                 {
                                     caption: 'Plan Overtime',
-                                    dataField: 'EstimateOvertimeHours'
+                                    dataField: 'EstimateOvertimeHours',
+                                    editorOptions: {
+                                        readOnly: true
+                                    },
                                 },                                
                                 {
                                     caption: 'Start Work',
@@ -805,7 +812,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 {
                                     caption: 'Act Normal',
                                     dataField: 'ActualNormalHours',
-                                    dataType: 'number'
+                                    dataType: 'number',
+                                    allowEditing: false
                                 },
                                 {
                                     caption: 'Act Overtime',
@@ -956,6 +964,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                             "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
                                             "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
                                             "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
+                                            "<span class='btn btn-dark btn-xs btn-status'>Done</span>",
                                         ];
                                         return arrText[e.value];
                                     }
@@ -1122,11 +1131,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     customizeText: function (e) {
                                         var arrText = [
                                             "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
-                                            "<span class='btn btn-primary btn-xs btn-status'>Submitted</span>",
+                                            "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
                                             "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
                                             "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
                                             "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
-                                            "<span class='btn btn-secondary btn-xs btn-status'>Cancelled</span>",
+                                            "<span class='btn btn-dark btn-xs btn-status'>Done</span>",
                                         ];
                                         return arrText[e.value];
                                     }

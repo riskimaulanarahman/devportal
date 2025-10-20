@@ -465,13 +465,13 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     caption: 'Code',
                                     dataField: 'code',
                                 },
-                                {
-                                    caption: 'Creation Date',
-                                    dataField: 'created_at',
-                                    editorOptions: {
-                                        readOnly: true
-                                    },
-                                },
+                                // {
+                                //     caption: 'Creation Date',
+                                //     dataField: 'created_at',
+                                //     editorOptions: {
+                                //         readOnly: true
+                                //     },
+                                // },
                                 {
                                     caption: 'Creator',
                                     dataField: 'user.fullname',
@@ -479,18 +479,18 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                {
-                                    caption: 'Superior',
-                                    dataField: 'Superior',
-                                    lookup: {
-                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
-                                        valueExpr: 'id',
-                                        keyExpr: 'id',
-                                        displayExpr: function (item) {
-                                            return item ? item.fullname + " (" + item.sapid + ")" : "";
-                                        }
-                                    }
-                                },
+                                // {
+                                //     caption: 'Superior',
+                                //     dataField: 'Superior',
+                                //     lookup: {
+                                //         dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                //         valueExpr: 'id',
+                                //         keyExpr: 'id',
+                                //         displayExpr: function (item) {
+                                //             return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                //         }
+                                //     }
+                                // },
                                 {
                                     caption: 'Department Head',
                                     dataField: 'DeptHead',

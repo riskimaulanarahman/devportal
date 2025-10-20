@@ -95,8 +95,8 @@ class SpklRequestController extends Controller
                 ->where(function ($query) use ($subqueryPending, $user_id) {
                     $query->whereRaw("$subqueryPending = 1")
                         ->orWhere(function ($query) use ($user_id) {
-                            $query->where('request_spkl.user_id', '!=', $user_id)
-                                ->whereIn('request_spkl.requestStatus', [1, 2, 3, 4]);
+                            $query->where('request_spkl.user_id', '!=', $user_id);
+                                // ->whereIn('request_spkl.requestStatus', [1, 2, 3, 4]);
                         })
                         ->orWhere('request_spkl.user_id', $user_id);
                 })
@@ -285,6 +285,7 @@ class SpklRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
 
     public function genPdfSpkl(Request $request, $id) 
     {

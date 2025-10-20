@@ -22,7 +22,7 @@ class ApprovaluserController extends Controller
         $this->user = new User();
         $this->employee = new Employee();
     }
-
+    
     public function index()
     {
         try {
