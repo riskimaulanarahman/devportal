@@ -446,35 +446,19 @@ public function genPdfSpkl(Request $request, $id)
             $Worksheet->Range("G10")->Value = $data->fullname;
             $Worksheet->Range("N8")->Value = $namaHari;
             $Worksheet->Range("N9")->Value = $data->work_date;
-            // dd($dataDetail);
-            
-
-            // if ($data->tms == 33) {
             $endRowSpkl = $startRowSpkl + $jumlahBaris - 1;
             if (collect($dataDetail)->contains('moreThanTwoHours', 1)) {
-                $approvalLabelRow = $endRowSpkl + 7;
-                $approvalNameRow  = $endRowSpkl + 8;
-                        // dd([
-                        //     'jumlahData' => count($dataDetail),
-                        //     'tipeCollection' => get_class($dataDetail),
-                        //     'nilaiMTTH' => $dataDetail->pluck('moreThanTwoHours'),
-                        //     'pemicuMTTH' => $dataDetail->where('moreThanTwoHours', 1)->pluck('FullName'),
-                        //     'adaYangMTTH' => $dataDetail->contains(fn($item) => $item->moreThanTwoHours == 1),
-                        // ]);
-                // $Worksheet->Range("N{$approvalLabelRow}")->Value = "Diperiksa Oleh";
-                // $Worksheet->Range("N{$approvalNameRow}")->Value = "HR BU";
-                $Worksheet->Range("N{$approvalLabelRow}")->Value = "Diperiksa Oleh";
-                $Worksheet->Range("N{$approvalLabelRow}")->HorizontalAlignment = -4108; // xlCenter
-                $Worksheet->Range("N{$approvalLabelRow}")->VerticalAlignment = -4108;   // xlCenter
+                $approvalLabelRow = $endRowSpkl + 8;
+                $approvalNameRow  = $endRowSpkl + 9;
+                $Worksheet->Range("N{$approvalLabelRow}")->Value = "Disetujui Oleh";
+                $Worksheet->Range("N{$approvalLabelRow}")->HorizontalAlignment = -4108;
+                $Worksheet->Range("N{$approvalLabelRow}")->VerticalAlignment = -4108;
 
-                $Worksheet->Range("N{$approvalNameRow}")->Value = "HR BU";
-                $Worksheet->Range("N{$approvalNameRow}")->HorizontalAlignment = -4108; // xlCenter
-                $Worksheet->Range("N{$approvalNameRow}")->VerticalAlignment = -4108;   // xlCenter
+                $Worksheet->Range("N{$approvalNameRow}")->Value = "BU Head";
+                $Worksheet->Range("N{$approvalNameRow}")->HorizontalAlignment = -4108;
+                $Worksheet->Range("N{$approvalNameRow}")->VerticalAlignment = -4108;
 
             }
-            // }
-
-
 
             $picpath = public_path("assets/images/approved.png");
 
@@ -527,11 +511,17 @@ public function genPdfSpkl(Request $request, $id)
                     $Worksheet->Range("G" . ($startRowTms - 5))->Value = $namaHari;
                     $Worksheet->Range("G" . ($startRowTms - 4))->Value = $data->work_date;
 
-                    // dd($dataDetail);
-
-                    if ($dataDetail->contains('isExceedPlan', 1)) {
-                        $Worksheet->Range("J" . ($startRowTms + 14))->Value = "Diperiksa Oleh";
-                        $Worksheet->Range("J" . ($startRowTms + 15))->Value = "HR BU";
+                    if (collect($dataDetail)->contains('isExceedPlan', 1)) {
+                        $labelRow = $endRowTms + 7;
+                        $nameRow  = $endRowTms + 8;
+    
+                        $Worksheet->Range("J{$labelRow}")->Value = "Diperiksa Oleh";
+                        $Worksheet->Range("J{$labelRow}")->HorizontalAlignment = -4108; // xlCenter
+                        $Worksheet->Range("J{$labelRow}")->VerticalAlignment = -4108;   // xlCenter
+    
+                        $Worksheet->Range("J{$nameRow}")->Value = "HR BU";
+                        $Worksheet->Range("J{$nameRow}")->HorizontalAlignment = -4108; // xlCenter
+                        $Worksheet->Range("J{$nameRow}")->VerticalAlignment = -4108;   // xlCenter
                     }
                 }
 
