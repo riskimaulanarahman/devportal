@@ -55,54 +55,79 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: 'Action',
             width: 140,
             cellTemplate: function (container, options) {
+                const data = options.data;
+                const isMine = data.isMine;
+                const isPendingOnMe = data.isPendingOnMe;
+                const reqid = data.id;
+                const reqstatus = data.requestStatus;
+                const tms = data.tms;
 
-                var isMine = options.data.isMine;
-                var isPendingOnMe = options.data.isPendingOnMe;
-                var reqid = options.data.id;
-                var reqstatus = options.data.requestStatus;
-                var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view');
-                var arrColor = [
-                    "btn-secondary",
-                    (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
-                    "btn-warning",
-                    "btn-success",
-                    "btn-danger",
-                ];
+                // Mode default: view
+                let mode = 'view';
 
-                var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
-
-                $('<button class="btn ' + arrColor[reqstatus] + '" id="btnreqid' + reqid + '"><i class="fa ' + viewIcon + '"></i></button>').on('dxclick', function (evt) {
-                    evt.stopPropagation();
-
-                    popup.option({
-                        contentTemplate: () => popupContentTemplate(reqid, mode, options),
-                    });
-                    popup.show();
-
-                }).appendTo(container);
-                if ((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
-                    $('<button class="btn btn-danger" id="btnreqid' + reqid + '" style="margin-left: 3px;">Cancel</button>').on('dxclick', function (evt) {
-                        evt.stopPropagation();
-
-                        var result = confirm('Are you sure you want to cancel this submission ?');
-
-                        if (result) {
-                            sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
-                                requestStatus: 0,
-                                action: 'submission',
-                                approvalAction: 0
-                            }).then(function (response) {
-                                if (response.status != 'error') {
-                                    dataGrid.refresh();
-                                }
-                            });
-                        } else {
-                            alert('Cancelled.');
-                        }
-
-                    }).appendTo(container);
+                // Jika masih di fase 1 (tms == 0), gunakan logika requestStatus
+                if (tms === 33) {
+                    if ((reqstatus === 0 || reqstatus === 2) && isMine === 1) {
+                        mode = 'edit';
+                    } else if (reqstatus === 1 && isPendingOnMe === 1) {
+                        mode = 'approval';
+                    }
                 }
 
+                // Warna tombol berdasarkan mode dan status
+                let buttonColor = "btn-primary";
+                let buttonIcon = "fa-search";
+
+                if (tms === 34) {
+                    // Fase 2 → SPKL sudah full approve → tombol tetap hijau dan view
+                    buttonColor = "btn-success";
+                    buttonIcon = "fa-search";
+                } else {
+                    // Fase 1 → warna berdasarkan status
+                    const arrColor = [
+                        "btn-secondary", // Draft
+                        (mode === 'approval' && reqstatus === 1) ? "btn-danger" : "btn-primary", // Waiting
+                        "btn-warning", // Rework
+                        "btn-success", // Approved
+                        "btn-danger", // Rejected
+                    ];
+                    buttonColor = arrColor[reqstatus];
+                    buttonIcon = (mode === 'approval' && reqstatus === 1) ? "fa-check" : "fa-search";
+                }
+
+                // Tombol utama (selalu ada)
+                $('<button class="btn ' + buttonColor + '" id="btnreqid' + reqid + '"><i class="fa ' + buttonIcon + '"></i></button>')
+                    .on('dxclick', function (evt) {
+                        evt.stopPropagation();
+                        popup.option({
+                            contentTemplate: () => popupContentTemplate(reqid, mode, options),
+                        });
+                        popup.show();
+                    })
+                    .appendTo(container);
+
+                // Tombol Cancel hanya muncul di fase 1 (tms == 0) dan status 1 atau 2, milik sendiri, dan bukan pending
+                if (tms === 33 && (reqstatus === 1 || reqstatus === 2) && isMine === 1 && (!isPendingOnMe || isPendingOnMe === 0)) {
+                    $('<button class="btn btn-danger" id="btnreqid' + reqid + '" style="margin-left: 3px;">Cancel</button>')
+                        .on('dxclick', function (evt) {
+                            evt.stopPropagation();
+                            const result = confirm('Are you sure you want to cancel this submission ?');
+                            if (result) {
+                                sendRequest(apiurl + "/submissionrequest/" + reqid + "/" + modelclass, "POST", {
+                                    requestStatus: 0,
+                                    action: 'submission',
+                                    approvalAction: 0
+                                }).then(function (response) {
+                                    if (response.status !== 'error') {
+                                        dataGrid.refresh();
+                                    }
+                                });
+                            } else {
+                                alert('Cancelled.');
+                            }
+                        })
+                        .appendTo(container);
+                }
             }
         },
         {
@@ -111,20 +136,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "date",
             format: "dd-MM-yyyy",
         },
-        // {
-        //     caption: "Work Date",
-        //     dataField: 'work_date',
-        //     alignment: "left"
-        // },
         {
             caption: 'BU',
             dataField: 'bu',
             alignment: "left"
-        },
-        {
-            caption: 'Sector',
-            dataField: "sector",
-            alignment: "left",
         },
         {
             dataField: 'requestStatus',
@@ -132,16 +147,25 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             allowFiltering: false,
             allowHeaderFiltering: true,
             alignment: "left",
-            customizeText: function (e) {
-                var arrText = [
+            cellTemplate: function (container, options) {
+                const status = options.value;
+                const tms = options.data.tms;
+
+                if (tms === 34) {
+                    container.html("<span class='btn btn-success btn-xs btn-status'>Approved</span>");
+                    return;
+                }
+
+                const arrText = [
                     "<span class='btn btn-secondary btn-xs btn-status'>Draft</span>",
                     "<span class='btn btn-primary btn-xs btn-status'>Waiting Approval</span>",
                     "<span class='btn btn-warning btn-xs btn-status'>Rework</span>",
                     "<span class='btn btn-success btn-xs btn-status'>Approved</span>",
                     "<span class='btn btn-danger btn-xs btn-status'>Rejected</span>",
                 ];
-                return arrText[e.value];
-            },
+
+                container.html(arrText[status]);
+            }
         },
         {
             dataField: "approveddoc",
@@ -378,7 +402,7 @@ const popupContentTemplate = function (reqid, mode, options) {
     } else {
         updateVisibleById(7, false);
     }
-    
+
     // Di luar definisi grid, saat page load
     let employeeCache = [];
 
@@ -425,6 +449,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                         if (mode == 'add' || mode == 'edit') {
                             $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i class="far fa-newspaper tips"> Form Data </i></b> dan lampirkan <i class="fas fa-file tips"> Supporting Document </i> sebelum klik tombol <span class="tips"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
                         }
+                        // console.log(storedetail);
                         var formData = $("<div id='formdata'>").dxDataGrid({
                             dataSource: storedetail(modname, reqid),
                             allowColumnReordering: true,
@@ -455,6 +480,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 useIcons: true,
                                 mode: "cell",
                                 allowAdding: false,
+                                allowUpdating: false,
                                 allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add') ? true : (admin == 1 ? true : false),
                                 allowDeleting: false,
                             },
@@ -465,13 +491,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     caption: 'Code',
                                     dataField: 'code',
                                 },
-                                // {
-                                //     caption: 'Creation Date',
-                                //     dataField: 'created_at',
-                                //     editorOptions: {
-                                //         readOnly: true
-                                //     },
-                                // },
                                 {
                                     caption: 'Creator',
                                     dataField: 'user.fullname',
@@ -479,18 +498,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                // {
-                                //     caption: 'Superior',
-                                //     dataField: 'Superior',
-                                //     lookup: {
-                                //         dataSource: listOption('/list-employee', 'id', 'fullname'),
-                                //         valueExpr: 'id',
-                                //         keyExpr: 'id',
-                                //         displayExpr: function (item) {
-                                //             return item ? item.fullname + " (" + item.sapid + ")" : "";
-                                //         }
-                                //     }
-                                // },
                                 {
                                     caption: 'Department Head',
                                     dataField: 'DeptHead',
@@ -507,6 +514,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     dataField: 'work_date',
                                     width: 200,
                                     dataType: "date",
+                                    editorOptions: {
+                                        min: new Date(new Date().setDate(new Date().getDate() + 1)) // besok
+                                    }
                                 },
                                 {
                                     caption: 'Outstanding Tasks',
@@ -719,12 +729,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 showInfo: true,
                                 showNavigationButtons: true,
                             },
-                            columns: [   
-                                {
+                            columns: [{
                                     caption: 'Create for other:',
                                     dataField: 'employee_id',
                                     lookup: {
-                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                        dataSource: listOption('/list-spkl', 'id', 'fullname'),
                                         valueExpr: 'id',
                                         displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
                                     },
@@ -743,7 +752,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                                 String(emp.level_id) === '4' ? 32 : null;
 
                                             const deptHead = employeeCache.find(e =>
-                                                e.fullname.trim().toLowerCase() === emp.deptheadName?.trim().toLowerCase()
+                                                e.fullname.trim().toLowerCase() === emp.deptheadName ?.trim().toLowerCase()
                                             );
                                             rowData.DeptHead = deptHead ? deptHead.id : null;
                                         }
@@ -751,23 +760,59 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 },
                                 {
                                     caption: 'Normal Hours Estimate (hrs)',
-                                    dataField: 'EstimateNormalHours'
+                                    dataField: 'EstimateNormalHours',
+                                    dataType: 'number',
                                 },
                                 {
                                     caption: 'Overtime Hours Estimate (hrs)',
-                                    dataField: 'EstimateOvertimeHours'
+                                    dataField: 'EstimateOvertimeHours',
+                                    dataType: 'number',
                                 },
+                                // {
+                                //     caption: '> 2 Hours?',
+                                //     dataField: 'moreThanTwoHours',
+                                //     dataType: 'boolean',
+                                //     width: 100,
+                                //     allowEditing: false,
+                                //     calculateDisplayValue: function (rowData) {
+                                //         return rowData.moreThanTwoHours ? 'Yes' : 'No';
+                                //     },
+                                //     cellTemplate: function (container, options) {
+                                //         const value = options.value ? 'Yes' : 'No';
+                                //         container.text(value);
+                                //     }
+                                // },
                                 {
                                     caption: 'Target Work',
                                     dataField: 'Target'
                                 },
                             ],
-                            export: { 
+                            export: {
                                 enabled: false,
                                 fileName: modname,
                                 excelFilterEnabled: true,
                                 allowExportSelectedData: true
                             },
+                            // onRowUpdating: function(e) {
+                            //     const raw = e.newData.EstimateOvertimeHours;
+
+                            //     if (raw === undefined) return;
+
+                            //     const overtime = parseFloat(String(raw).trim());
+                            //     console.log('Parsed Overtime:', overtime);
+
+                            //     if (!isFinite(overtime)) return;
+
+                            //     e.newData.moreThanTwoHours = overtime > 2 ? 1 : 0;
+                            // },
+                            // onRowInserting: function(e) {
+                            //     const raw = e.data.EstimateOvertimeHours;
+                            //     const overtime = parseFloat(String(raw).trim());
+
+                            //     if (!isFinite(overtime)) return;
+
+                            //     e.data.moreThanTwoHours = overtime > 2 ? 1 : 0;
+                            // },
                             onInitialized: function (e) {
                                 dataGriddetail = e.component;
                             },
@@ -786,7 +831,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         }
                                     }
                                 });
-                            },                            
+                            },
                             onDataErrorOccurred: function (e) {
                                 // Menampilkan pesan kesalahan
                                 console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
@@ -1093,118 +1138,6 @@ const popupContentTemplate = function (reqid, mode, options) {
     return scrollView;
 
 };
-
-let id = 1;
-var dataGridhistory = $("#loghistory").dxDataGrid({
-    dataSource: store('logreportspkl/' + id),
-    allowColumnReordering: false,
-    allowColumnResizing: true,
-    columnsAutoWidth: true,
-    columnHidingEnabled: false,
-    rowAlternationEnabled: true,
-    wordWrapEnabled: false,
-    showBorders: true,
-    filterRow: {
-        visible: true
-    },
-    filterPanel: {
-        visible: true
-    },
-    headerFilter: {
-        visible: true
-    },
-    searchPanel: {
-        visible: true,
-        width: 240,
-        placeholder: 'Search...',
-    },
-    columnFixing: {
-        enabled: true,
-    },
-    editing: {
-        useIcons: true,
-        mode: "batch",
-        allowAdding: false,
-        allowUpdating: false,
-        allowDeleting: false,
-    },
-    scrolling: {
-        mode: "virtual"
-    },
-    sorting: {
-        mode: 'multiple',
-    },
-    pager: {
-        visible: true,
-        showInfo: true,
-    },
-    columns: [{
-            dataField: 'work_date',
-            caption: "Work Date",
-        },
-        {
-            dataField: 'remarks',
-            caption: "Remarks",
-        },
-        {
-            dataField: 'reason',
-            caption: "Objectives",
-        },
-        {
-            dataField: 'status_spkl_aktif',
-            caption: "Status",
-        },
-        {
-            dataField: 'aktif_sampai_dengan',
-            caption: "Issue Date",
-        },
-        {
-            dataField: "approveddoc",
-            caption: "Approval Doc",
-            allowFiltering: false,
-            allowSorting: false,
-            formItem: {
-                visible: false
-            },
-            cellTemplate: function (container, options) {
-                if ((options.value != "") && (options.value)) {
-                    $("<div />").dxButton({
-                        icon: 'download',
-                        type: "success",
-                        text: "Download",
-                        onClick: function (e) {
-                            window.open(options.value, '_blank');
-                        }
-                    }).appendTo(container);
-                }
-            }
-        },
-    ],
-    export: {
-        enabled: true,
-        fileName: 'log history',
-        excelFilterEnabled: true,
-        allowExportSelectedData: false
-    },
-    onContentReady: function (e) {
-        moveEditColumnToLeft(e.component);
-    },
-    onToolbarPreparing: function (e) {
-        dataGridlog = e.component;
-
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function () {
-                    dataGridlog.refresh();
-                }
-            }
-        })
-    },
-}).dxDataGrid("instance");
 
 function btnreqsubmit(reqid, mode) {
     console.log('reqidbtn', reqid);

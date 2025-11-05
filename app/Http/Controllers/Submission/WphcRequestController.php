@@ -52,7 +52,7 @@ class WphcRequestController extends Controller
                 ], 401);
             }
 
-            // Join ke tabel employee untuk ambil employee_id
+            // Ambil employee_id berdasarkan LoginName
             $employee = DB::table('employee.tbl_employee')
                 ->where('LoginName', $user->username)
                 ->select('id')
@@ -67,14 +67,16 @@ class WphcRequestController extends Controller
 
             $employee_id = $employee->id;
 
-            // Ambil semua request_wphc milik employee
-            $data = DB::table('request_wphc as rw')
-                ->join('request_wphc_detail as rdw', 'rw.id', '=', 'rdw.req_id')
+            // Ambil semua detail WPHC milik employee login
+            $data = DB::table('request_wphc_detail as rdw')
+                ->join('request_wphc as rw', 'rdw.req_id', '=', 'rw.id')
                 ->where('rw.employee_id', $employee_id)
-                ->orderByDesc('rw.created_at')
+                ->orderByDesc('rdw.work_date')
                 ->select(
-                    'rw.*',
                     'rdw.*',
+                    'rw.requestStatus',
+                    'rw.employee_id',
+                    'rw.created_at as request_created_at',
                     DB::raw("CASE WHEN rw.requestStatus = 3 THEN 'aktif' ELSE 'tidak aktif' END as status_wphc_aktif"),
                     DB::raw("CASE WHEN rw.requestStatus = 3 THEN FORMAT(DATEADD(MONTH, 3, rdw.work_date), 'dd-MM-yyyy') ELSE NULL END as aktif_sampai_dengan")
                 )

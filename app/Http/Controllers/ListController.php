@@ -66,6 +66,29 @@ class ListController extends Controller
                 ->where('employee.tbl_employee.isActive',1)
                 ->get();
     }
+    public function listspkl() { // not have account/loginName
+        return Employee::select(
+                'employee.tbl_employee.id',
+                'sapid',
+                'fullname',
+                'companycode',
+                'level_id',
+                'deptheadName',
+                'employee.tbl_department.departmentname',
+                'employee.tbl_department.departmentgroup',
+            )
+            ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+            ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
+            // ->where(function($query) {
+                // $query->whereNull('LoginName')
+                    // ->orWhere('LoginName', '')
+                    // ->orWhereColumn('fullname', '=', 'deptheadName'); // pengecualian: tetap ambil DeptHead
+            // })
+            ->whereIn('employee.tbl_employee.level_id', [1, 7]) // ubah ke level 1 dan 7
+            ->where('employee.tbl_employee.isActive', 1)
+            ->get();
+    }
+
     public function listEmployee() { // not have account/loginName
         return Employee::select('employee.tbl_employee.id', 'sapid', 'fullname', 'companycode', 'level_id', 'deptheadName', 'employee.tbl_department.departmentname', 'employee.tbl_department.departmentgroup')
                 ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')

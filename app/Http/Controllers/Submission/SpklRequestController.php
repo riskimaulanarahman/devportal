@@ -92,16 +92,18 @@ class SpklRequestController extends Controller
                 ->leftJoin('employee.tbl_employee as emp', 'request_spkl.employee_id', '=', 'emp.id')
                 ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
                 ->with(['user', 'approverlist', 'spkl_detail'])
+                // ->where('request_spkl.tms', 0)
                 ->where(function ($query) use ($subqueryPending, $user_id) {
                     $query->whereRaw("$subqueryPending = 1")
                         ->orWhere(function ($query) use ($user_id) {
                             $query->where('request_spkl.user_id', '!=', $user_id);
-                                // ->whereIn('request_spkl.requestStatus', [1, 2, 3, 4]);
                         })
                         ->orWhere('request_spkl.user_id', $user_id);
                 })
                 ->orderByDesc('request_spkl.created_at')
                 ->get();
+
+            // dd($data);
 
             return response()->json([
                 'status' => "show",
@@ -147,8 +149,10 @@ class SpklRequestController extends Controller
             $requestData['employee_id'] = $employee->id;
             $requestData['bu'] = $employee->companycode;
             $requestData['DeptHead'] = $deptHead->id;
-            $requestData['tms'] = 0;
-            $requestData['morethantwohours'] = 0;
+            $requestData['tms'] = 33;
+            $requestData['category_id'] = 0;
+            $requestData['module_id'] = $this->getModuleId($this->modulename);
+            // $requestData['moreThanTwoHours'] = 0;
 
             // Simpan data
             $newData = $this->model->create($requestData);
@@ -285,9 +289,7 @@ class SpklRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-
-
-    public function genPdfSpkl(Request $request, $id) 
+public function genPdfSpkl(Request $request, $id) 
     {
         $dataAppr = DB::table('spklApprover')->select('*')->where('id', $id)->get(); // Data approver
         // $requestspklDetail = DB::table('request_spkl_detail')->select('work_date', 'remarks', 'reason')->where('req_id', $id)->get();
@@ -336,13 +338,14 @@ class SpklRequestController extends Controller
             return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
 
-        // dd($dataDetail);
-    
+        // dd($dataAppr);
+
         try {
             $excel = new COM("Excel.Application");
             $excel->Visible = false;
 
-            $file = public_path("template/spkl/spkl.xlsx");
+            // $file = public_path("template/spkl/spkl.xlsx");
+            $file = public_path("template/Bookse.xlsx");
 
             if (!file_exists($file)) {
                 throw new \Exception("File tidak ditemukan: " . $file);
@@ -352,8 +355,17 @@ class SpklRequestController extends Controller
             $Worksheet = $Workbook->Worksheets(1);
             $Worksheet->Activate();
 
-            // SPKL (baris 15)
-            $row = 15;
+            $jumlahBaris = count($dataDetail);
+
+            // 🟦 Inject SPKL
+            $startRowSpkl = 15;
+            $endRowSpkl   = $startRowSpkl + $jumlahBaris - 1;
+
+            if ($jumlahBaris > 1) {
+                $Worksheet->Rows(($startRowSpkl + 1) . ":" . $endRowSpkl)->Insert();
+            }
+
+            $row = $startRowSpkl;
             $counter = 1;
             foreach ($dataDetail as $detail) {
                 $Worksheet->Range("C{$row}")->Value = $counter;
@@ -363,13 +375,37 @@ class SpklRequestController extends Controller
                 $Worksheet->Range("I{$row}")->Value = (string) $detail->EstimateNormalHours;
                 $Worksheet->Range("J{$row}")->Value = (string) $detail->EstimateOvertimeHours;
                 $Worksheet->Range("L{$row}")->Value = (string) $detail->Target;
+                // Merge horizontal: C+D → C, E+F → E, J+K → J
+                $Worksheet->Range("C{$row}:D{$row}")->Merge();
+                $Worksheet->Range("E{$row}:F{$row}")->Merge();
+                $Worksheet->Range("J{$row}:K{$row}")->Merge();
+                $Worksheet->Range("L{$row}:M{$row}:N{$row}")->Merge();
+
+                // Alignment dan border
+                foreach (['C','J'] as $col) {
+                    $Worksheet->Range("{$col}{$row}")->HorizontalAlignment = -4108; // xlCenter
+                    $Worksheet->Range("{$col}{$row}")->VerticalAlignment = -4108;   // xlCenter
+                }
+
+                foreach (['C','D','E','F','G','H','I','J','K','L','M','N'] as $col) {
+                    $Worksheet->Range("{$col}{$row}")->Borders->LineStyle = 1;
+                }
+
                 $row++;
                 $counter++;
             }
 
-            if ($data->tms != 0) {
-                // DAFTAR HADIR (baris 46)
-                $row = 46;
+            // 🟨 Inject TMS (jika aktif)
+            if ($data->tms == 34) {
+                $jarakKeTms   = 23;
+                $startRowTms  = $startRowSpkl + $jumlahBaris + $jarakKeTms;
+                $endRowTms    = $startRowTms + $jumlahBaris - 1;
+
+                if ($jumlahBaris > 1) {
+                    $Worksheet->Rows(($startRowTms + 1) . ":" . $endRowTms)->Insert();
+                }
+
+                $row = $startRowTms;
                 $counter = 1;
                 foreach ($dataDetail as $detail) {
                     $Worksheet->Range("C{$row}")->Value = $counter;
@@ -378,7 +414,7 @@ class SpklRequestController extends Controller
                     $Worksheet->Range("H{$row}")->Value = (string) $detail->DesignationName;
 
                     $start = \Carbon\Carbon::parse($detail->ActualStartWork);
-                    $end = \Carbon\Carbon::parse($detail->ActualEndWork);
+                    $end   = \Carbon\Carbon::parse($detail->ActualEndWork);
 
                     $Worksheet->Range("I{$row}")->Value = $start->hour / 24 + $start->minute / 1440;
                     $Worksheet->Range("J{$row}")->Value = $end->hour / 24 + $end->minute / 1440;
@@ -389,26 +425,60 @@ class SpklRequestController extends Controller
                     $Worksheet->Range("L{$row}")->Value = $detail->ActualNormalHours;
                     $Worksheet->Range("M{$row}")->Value = (string) $detail->ActualOvertimeHours;
                     $Worksheet->Range("N{$row}")->Value = (string) $detail->Remarks;
+
+                    // Merge horizontal: C+D → C, E+F → E, J+K → J
+                    $Worksheet->Range("C{$row}:D{$row}")->Merge();
+                    $Worksheet->Range("E{$row}:F{$row}")->Merge();
+
+                    foreach (['C','D','E','F','G','H','I','J','K','L','M','N'] as $col) {
+                        $Worksheet->Range("{$col}{$row}")->Borders->LineStyle = 1;
+                    }
+
                     $row++;
                     $counter++;
                 }
             }
 
+            Carbon::setLocale('id');
+            $namaHari = Carbon::parse($data->work_date)->translatedFormat('l');
 
-
-            Carbon::setLocale('id'); 
-            $namaHari = Carbon::parse($data->work_date)->translatedFormat('l'); 
             $Worksheet->Range("G8")->Value = $data->bu;
             $Worksheet->Range("G10")->Value = $data->fullname;
-            $Worksheet->Range("G41")->Value = $namaHari;
             $Worksheet->Range("N8")->Value = $namaHari;
             $Worksheet->Range("N9")->Value = $data->work_date;
-            $Worksheet->Range("G42")->Value = $data->work_date;
-            $Worksheet->Range("D35")->Value = $data->fullname;
-            $picpath = public_path("assets/images/approved.png");
+            // dd($dataDetail);
             
-            if (file_exists($picpath)) {
 
+            // if ($data->tms == 33) {
+            $endRowSpkl = $startRowSpkl + $jumlahBaris - 1;
+            if (collect($dataDetail)->contains('moreThanTwoHours', 1)) {
+                $approvalLabelRow = $endRowSpkl + 7;
+                $approvalNameRow  = $endRowSpkl + 8;
+                        // dd([
+                        //     'jumlahData' => count($dataDetail),
+                        //     'tipeCollection' => get_class($dataDetail),
+                        //     'nilaiMTTH' => $dataDetail->pluck('moreThanTwoHours'),
+                        //     'pemicuMTTH' => $dataDetail->where('moreThanTwoHours', 1)->pluck('FullName'),
+                        //     'adaYangMTTH' => $dataDetail->contains(fn($item) => $item->moreThanTwoHours == 1),
+                        // ]);
+                // $Worksheet->Range("N{$approvalLabelRow}")->Value = "Diperiksa Oleh";
+                // $Worksheet->Range("N{$approvalNameRow}")->Value = "HR BU";
+                $Worksheet->Range("N{$approvalLabelRow}")->Value = "Diperiksa Oleh";
+                $Worksheet->Range("N{$approvalLabelRow}")->HorizontalAlignment = -4108; // xlCenter
+                $Worksheet->Range("N{$approvalLabelRow}")->VerticalAlignment = -4108;   // xlCenter
+
+                $Worksheet->Range("N{$approvalNameRow}")->Value = "HR BU";
+                $Worksheet->Range("N{$approvalNameRow}")->HorizontalAlignment = -4108; // xlCenter
+                $Worksheet->Range("N{$approvalNameRow}")->VerticalAlignment = -4108;   // xlCenter
+
+            }
+            // }
+
+
+
+            $picpath = public_path("assets/images/approved.png");
+
+            if (file_exists($picpath)) {
                 function addPictureRespectTemplate($Worksheet, $picPath, $labelCellAddress, $stampRow, $height, $excel, $nudgeX = 0, $nudgeY = 0) {
                     $labelRange = $Worksheet->Range($labelCellAddress);
                     $labelRow = $labelRange->Row;
@@ -416,24 +486,19 @@ class SpklRequestController extends Controller
                     $cell = $excel->Cells($labelRow, $labelCol);
 
                     $isMerged = false;
-                    try { $isMerged = (bool)$cell->MergeCells; } catch (Exception $e) { $isMerged = false; }
+                    try { $isMerged = (bool)$cell->MergeCells; } catch (Exception $e) {}
 
-                    if ($isMerged) {
-                        $mergeArea = $cell->MergeArea;
-                        $startCell = $mergeArea->Cells(1,1);
-                        $lastCell = $mergeArea->Cells($mergeArea->Rows->Count, $mergeArea->Columns->Count);
-                        $areaLeft = $startCell->Left;
-                        $areaWidth = ($lastCell->Left + $lastCell->Width) - $areaLeft;
-                    } else {
-                        $areaLeft = $cell->Left;
-                        $areaWidth = $cell->Width;
-                    }
+                    $areaLeft = $isMerged ? $cell->MergeArea->Cells(1,1)->Left : $cell->Left;
+                    $areaWidth = $isMerged
+                        ? ($cell->MergeArea->Cells($cell->MergeArea->Rows->Count, $cell->MergeArea->Columns->Count)->Left + $cell->MergeArea->Cells($cell->MergeArea->Rows->Count, $cell->MergeArea->Columns->Count)->Width) - $areaLeft
+                        : $cell->Width;
 
                     $stampCell = $excel->Cells($stampRow, $labelCol);
                     $areaTop = $stampCell->Top;
                     $areaHeight = $stampCell->Height;
 
                     $pic = $Worksheet->Shapes->AddPicture($picPath, False, True, 0, 0, -1, -1);
+                    
                     $pic->LockAspectRatio = True;
                     $pic->Height = $height;
 
@@ -443,60 +508,82 @@ class SpklRequestController extends Controller
                         $tries++;
                     }
 
-                    $targetLeft = $areaLeft + (($areaWidth - $pic->Width) / 2) + $nudgeX;
-                    $targetTop  = $areaTop  + (($areaHeight - $pic->Height) / 2) + $nudgeY;
-
-                    $pic->Left = $targetLeft;
-                    $pic->Top  = $targetTop;
+                    $pic->Left = $areaLeft + (($areaWidth - $pic->Width) / 2) + $nudgeX;
+                    $pic->Top  = $areaTop  + (($areaHeight - $pic->Height) / 2) + $nudgeY;
 
                     try { $pic->Placement = 2; } catch (Exception $e) {}
-
-                    return ['Left'=>$pic->Left,'Top'=>$pic->Top,'W'=>$pic->Width,'H'=>$pic->Height];
                 }
 
-                $Worksheet->Range("D35")->Value = $data->fullname;
-                $Worksheet->Range("D36")->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
-                addPictureRespectTemplate($Worksheet, $picpath, "D35", 33, 36, $excel, 0, 0);
+                // Geser posisi approver SPKL
+                $offsetSpkl = $jumlahBaris - 1;
+                $approverSpklRow = 28 + $offsetSpkl;
 
-                if ($data->tms == '1') {
-                    $Worksheet->Range("E65")->Value = $data->fullname;
-                    $Worksheet->Range("E66")->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
-                    addPictureRespectTemplate($Worksheet, $picpath, "E63", 63, 36, $excel, 0, 0);
+                // Geser posisi approver TMS
+                if ($data->tms == 34) {
+                    $jarakKeTms = 12;
+                    $endRowTms = $startRowTms + $jumlahBaris - 1;
+                    $approverTmsRow = $endRowTms + $jarakKeTms;
+
+                    $Worksheet->Range("G" . ($startRowTms - 5))->Value = $namaHari;
+                    $Worksheet->Range("G" . ($startRowTms - 4))->Value = $data->work_date;
+
+                    // dd($dataDetail);
+
+                    if ($dataDetail->contains('isExceedPlan', 1)) {
+                        $Worksheet->Range("J" . ($startRowTms + 14))->Value = "Diperiksa Oleh";
+                        $Worksheet->Range("J" . ($startRowTms + 15))->Value = "HR BU";
+                    }
                 }
+
+                // SPKL - Pemohon
+                $Worksheet->Range("D{$approverSpklRow}")->Value = $data->fullname;
+                $Worksheet->Range("D" . ($approverSpklRow + 1))->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
+                addPictureRespectTemplate($Worksheet, $picpath, "D{$approverSpklRow}", $approverSpklRow - 2, 36, $excel);
+
+                // TMS - Pemohon
+                if ($data->tms == 34) {
+                    $Worksheet->Range("E{$approverTmsRow}")->Value = $data->fullname;
+                    $Worksheet->Range("E" . ($approverTmsRow + 1))->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
+                    addPictureRespectTemplate($Worksheet, $picpath, "E" . ($approverTmsRow - 2), $approverTmsRow - 2, 36, $excel);
+                }
+
                 foreach ($dataAppr as $appr) {
-                    if ($appr->approvalAction == 3) {
-                        if ($appr->sequence == 3) {
-                            $Worksheet->Range("G35")->Value = $appr->apprname;
-                            $Worksheet->Range("G36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "G35", 33, 36, $excel, 0, 0);
-                        }
-                        // DAFTAR HADIR KERJA LEMBUR KARYAWAN by tms =1
-                        if ($data->tms == '1') {
-                            if ($appr->sequence == 3) {
-                                $Worksheet->Range("H65")->Value = $appr->apprname;
-                                $Worksheet->Range("H66")->Value = $appr->approvalDate;
-                                addPictureRespectTemplate($Worksheet, $picpath, "H63", 63, 36, $excel, 0, 0);
-                            }
-                        }
-                        if ($appr->sequence == 4) {
-                            $Worksheet->Range("J35")->Value = $appr->apprname;
-                            $Worksheet->Range("J36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "J35", 33, 36, $excel, 0, 0);
-                        }
-                        // DAFTAR HADIR KERJA LEMBUR KARYAWAN by tms =1
-                        if ($data->tms == '1') {
-                            if ($appr->sequence == 4) {
-                                $Worksheet->Range("L65")->Value = $appr->apprname;
-                                $Worksheet->Range("L66")->Value = $appr->approvalDate;
-                                addPictureRespectTemplate($Worksheet, $picpath, "L63", 63, 36, $excel, 0, 0);
-                            }
-                        }
-                        if ($appr->sequence == 5) {
-                            $Worksheet->Range("N35")->Value = $appr->apprname;
-                            $Worksheet->Range("N36")->Value = $appr->approvalDate;
-                            addPictureRespectTemplate($Worksheet, $picpath, "N35", 33, 36, $excel, 0, 0);
+                if ($appr->approvalAction != 3) continue;
+
+                // SPKL - BU Head
+                if ($appr->sequence == 3) {
+                    $Worksheet->Range("G{$approverSpklRow}")->Value = $appr->apprname;
+                    $Worksheet->Range("G" . ($approverSpklRow + 1))->Value = $appr->approvalDate;
+                    addPictureRespectTemplate($Worksheet, $picpath, "G{$approverSpklRow}", $approverSpklRow - 2, 36, $excel);
+
+                    if ($data->tms == 34) {
+                        $Worksheet->Range("H{$approverTmsRow}")->Value = $appr->apprname;
+                        $Worksheet->Range("H" . ($approverTmsRow + 1))->Value = $appr->approvalDate;
+                        addPictureRespectTemplate($Worksheet, $picpath, "H{$approverTmsRow}", $approverTmsRow - 2, 36, $excel);
+                    }
+                }
+
+                // SPKL - HR Head
+                if ($appr->sequence == 4) {
+                    $Worksheet->Range("J{$approverSpklRow}")->Value = $appr->apprname;
+                    $Worksheet->Range("J" . ($approverSpklRow + 1))->Value = $appr->approvalDate;
+                    addPictureRespectTemplate($Worksheet, $picpath, "J{$approverSpklRow}", $approverSpklRow - 2, 36, $excel);
+
+                    if ($data->tms == 34) {
+                        $trigger = collect($dataDetail)->contains('isExceedPlan', 1);
+                        if ($trigger) {
+                            $Worksheet->Range("J{$approverTmsRow}")->Value = $appr->apprname;
+                            $Worksheet->Range("J" . ($approverTmsRow + 1))->Value = $appr->approvalDate;
+                            addPictureRespectTemplate($Worksheet, $picpath, "K" . ($approverTmsRow - 2), $approverTmsRow - 2, 36, $excel);
                         }
                     }
+                }
+
+                // SPKL - Final Approver
+                if ($appr->sequence == 5) {
+                    $Worksheet->Range("N{$approverSpklRow}")->Value = $appr->apprname;
+                    $Worksheet->Range("N" . ($approverSpklRow + 1))->Value = $appr->approvalDate;
+                    addPictureRespectTemplate($Worksheet, $picpath, "N{$approverSpklRow}", $approverSpklRow - 2, 36, $excel);
                 }
             }
 
@@ -507,7 +594,7 @@ class SpklRequestController extends Controller
 			$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
 			$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
             // $filePath = public_path('template/spkl/requesto/pdf/' . $fileName);
-            if ($data->tms == '0') {
+            if ($data->tms == '33') {
                 $filePath = public_path('template/spkl/requesto/pdf/' . $fileName);
             } else {
                 $filePath = public_path('template/spkl/timesheet/pdf/' . $fileName);
@@ -523,17 +610,33 @@ class SpklRequestController extends Controller
 			$excel->Workbooks->Close();
 			$excel->Quit();
 			unset($excel);
-            if ($data->tms == '0') {
+            if ($data->tms == '33') {
+                // Update approveddoc
                 $pathfilename = 'public/template/spkl/requesto/pdf/' . $fileName;
+                $column = 'approveddoc';
+
+                DB::table('request_spkl')
+                    ->where('id', $id)
+                    ->update([$column => $pathfilename]);
+
+                // Jika approveddoc berhasil dibuat, ubah tms ke 1
+                DB::table('request_spkl')
+                    ->where('id', $id)
+                    ->update([
+                        'tms' => 34,
+                        // 'category_id' => ,
+                        'requestStatus' => 0
+                    ]);
             } else {
+                // Update timesheetdoc
                 $pathfilename = 'public/template/spkl/timesheet/pdf/' . $fileName;
+                $column = 'timesheetdoc';
+
+                DB::table('request_spkl')
+                    ->where('id', $id)
+                    ->update([$column => $pathfilename]);
             }
-            $column = $data->tms == '0' ? 'approveddoc' : 'timesheetdoc';
-
-            DB::table('request_spkl')
-                ->where('id', $id)
-                ->update([$column => $pathfilename]);
-
+        }
             $this->processcopy($pathfilename);
 			return $pathfilename;
 

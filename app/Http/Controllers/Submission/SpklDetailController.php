@@ -48,14 +48,26 @@ class SpklDetailController extends Controller
         try {
 
             $requestData = $request->all();
-
             $requestData['user_id']   = $this->getAuth()->id;
+                // Hitung flag moreThanTwoHours
+            // $EstimateOvertimeHours = 0;
+            $EstimateOvertimeHours = $request->EstimateOvertimeHours ?? 0;
+            if ($EstimateOvertimeHours > 2) {
+                $requestData['moreThanTwoHours'] = 1;
+            } else {
+                $requestData['moreThanTwoHours'] = 0;
+            }
 
             if ($request->superior_id) {
                 $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $request->req_id);
             }
 
             $this->model->create($requestData);
+            if ($requestData['moreThanTwoHours'] == 1) {
+                DB::table('request_spkl')
+                    ->where('id', $request->req_id)
+                    ->update(['category_id' => 36]); // 36 = moreThanTwoHours
+            }
 
             DB::commit();
 
@@ -139,28 +151,57 @@ class SpklDetailController extends Controller
             $data = $this->model->findOrFail($id);
             $requestData['user_id'] = $this->getAuth()->id;
 
-            // if ($request->superior_id) {e
-            //     $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $data->req_id);
-            // }
+            // Ambil nilai dari request jika ada
+            $EstimateOvertimeHours = isset($requestData['EstimateOvertimeHours'])
+                ? floatval(trim((string) $requestData['EstimateOvertimeHours']))
+                : floatval($data->EstimateOvertimeHours ?? 0);
 
-            // Pastikan relasi spkl tersedia
+            // Hitung flag moreThanTwoHours
+            $requestData['moreThanTwoHours'] = ($EstimateOvertimeHours > 2) ? 1 : 0;
+
+            // Validasi status SPKL
             $requestStatus = optional($data->Spkl)->requestStatus;
-
-            if (empty($data->approveddoc) && in_array($requestStatus, [0, 2])) {
-                $data->update($requestData);
-            } else {
+            if (!empty($data->approveddoc) || !in_array($requestStatus, [0, 2])) {
                 return response()->json([
                     "status" => "error",
                     "message" => $this->getMessage()['nothaveaccess']
                 ]);
             }
 
+            // Update detail
+            $data->update($requestData);
+
+            // Ambil ulang data setelah update
+            $updated = $this->model->findOrFail($id);
+            $EOHs = floatval($updated->EstimateOvertimeHours ?? 0);
+            $AOHs = floatval($updated->ActualOvertimeHours ?? 0);
+            $isExceedPlan = ($AOHs != $EOHs) ? 1 : 0;
+
+            DB::table('request_spkl_detail')
+                ->where('id', $updated->id)
+                ->update(['isExceedPlan' => $isExceedPlan]);
+
+            $category_id = null;
+            if ($updated->tms == 33) {
+                $category_id = ($updated->EstimateOvertimeHours > 2) ? 36 : 35;
+            } 
+            if ($isExceedPlan == 1) {
+                $category_id = 35;
+            } else {
+                $category_id = 0;
+            }
+
+            DB::table('request_spkl')
+                ->where('id', $updated->req_id)
+                ->update(['category_id' => $category_id]);
+
+
             DB::commit();
 
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['update'],
-                "data" => $data
+                "data" => $updated
             ]);
 
         } catch (\Exception $e) {
@@ -172,6 +213,95 @@ class SpklDetailController extends Controller
             ]);
         }
     }
+
+    // public function update(Request $request, $id)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $requestData = $request->all();
+    //         $data = $this->model->findOrFail($id);
+    //         $requestData['user_id'] = $this->getAuth()->id;
+
+    //         $EstimateOvertimeHours = $request->EstimateOvertimeHours ?? 0;
+    //         // $EOHs = floatval($data->EstimateOvertimeHours ?? 0);
+    //         // $AOHs = floatval($data->ActualOvertimeHours ?? 0);
+    //         // $tms = intval($data->tms ?? 0); // 33 = SPKL, 34 = TMS
+
+    //         // $isExceedPlan = ($AOHs > $EOHs) ? 1 : 0;
+    //         // DB::table('request_spkl_detail')
+    //         //     ->where('id', $data->id)
+    //         //     ->update(['isExceedPlan' => $isExceedPlan]);
+
+    //         if (isset($requestData['EstimateOvertimeHours'])) {
+    //             $raw = trim((string) $requestData['EstimateOvertimeHours']);
+    //             if (is_numeric($raw)) {
+    //                 $EstimateOvertimeHours = floatval($raw);
+    //             }
+    //         }
+
+    //         // Hitung flag moreThanTwoHours
+    //         if ($EstimateOvertimeHours > 2) {
+    //             $requestData['moreThanTwoHours'] = 1;
+    //         } else {
+    //             $requestData['moreThanTwoHours'] = 0;
+    //         }
+    //             $requestStatus = optional($data->Spkl)->requestStatus;
+
+    //             if (empty($data->approveddoc) && in_array($requestStatus, [0, 2])) {
+    //                 $data->update($requestData);
+    //             } else {
+    //                 return response()->json([
+    //                     "status" => "error",
+    //                     "message" => $this->getMessage()['nothaveaccess']
+    //                 ]);
+    //             }
+    //         $EOHs = floatval($data->EstimateOvertimeHours ?? 0);
+    //         $AOHs = floatval($data->ActualOvertimeHours ?? 0);
+    //         $tms = intval($data->tms ?? 0); // 33 = SPKL, 34 = TMS
+
+    //         $isExceedPlan = ($AOHs > $EOHs) ? 1 : 0;
+    //         DB::table('request_spkl_detail')
+    //             ->where('id', $data->id)
+    //             ->update(['isExceedPlan' => $isExceedPlan]);
+
+    //         // DB::table('request_spkl')
+    //         //     ->where('id', $data->req_id)
+    //         //     ->update([
+    //         //         'category_id' => ($requestData['moreThanTwoHours'] == 1) ? 36 : 35
+    //         //     ]);
+
+    //         $category_id = null;
+
+    //         if ($tms === 33) { // SPKL
+    //             $category_id = ($requestData['moreThanTwoHours'] == 1) ? 36 : 35;
+    //         } elseif ($tms === 34 && $isExceedPlan == 1) { // TMS
+    //             $category_id = 35;
+    //         } else {
+    //             $category_id = 0;
+    //         }
+
+    //         DB::table('request_spkl')
+    //             ->where('id', $data->req_id)
+    //             ->update(['category_id' => $category_id]);
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             "status" => "success",
+    //             "message" => $this->getMessage()['update'],
+    //             "data" => $data
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             "status" => "error",
+    //             "message" => $e->getMessage()
+    //         ]);
+    //     }
+    // }
 
 
     public function destroy($id)

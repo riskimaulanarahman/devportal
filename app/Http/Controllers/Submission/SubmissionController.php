@@ -111,6 +111,7 @@ class SubmissionController extends Controller
                 'Memorandum' => "App\Models\Submission\Memorandum",
                 'Legal' => "App\Models\Submission\Legal",
                 'Wphc' => "App\Models\Submission\Wphc",
+                'Spkl' => "App\Models\Submission\Spkl",
             ];
 
             $baseNamespace = "App\Models\Submission";
@@ -197,9 +198,10 @@ class SubmissionController extends Controller
             }
 
             if($modulename == 'Spkl') {
-                $Spkldetail = DB::table('request_spkl_detail')
-                ->where('req_id',$id)
-                // ->where('module_id',$module_id)
+                $Spkldetail = DB::table('request_spkl_detail as d')
+                ->join('request_spkl as r', 'r.id', '=', 'd.req_id')
+                ->where('d.req_id', $id)
+                ->where('r.module_id', $module_id)
                 ->get();
 
                 if (count($Spkldetail) < 1) {
@@ -345,8 +347,6 @@ class SubmissionController extends Controller
                 }
             }
             
-            if($modulename == 'Memorandum') { 
-            }
             if ($modulename == 'Wphc') {
                 $approverlist = DB::table('tbl_approverListReq')
                     ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
@@ -356,6 +356,67 @@ class SubmissionController extends Controller
                     ->where('tbl_approverListReq.module_id', $module_id)
                     ->get();
             }
+            
+            if ($modulename == 'Spkl') {
+            function resolveApproverList($req_id, $module_id) {
+                $categoryMap = DB::table('tbl_categoryform')
+                    ->where('module_id', $module_id)
+                    ->pluck('id', 'nameCategory')
+                    ->toArray();
+
+                $spkl = DB::table('request_spkl')
+                    ->leftJoin('request_spkl_detail', 'request_spkl.id', '=', 'request_spkl_detail.req_id')
+                    ->where('request_spkl.id', $req_id)
+                    ->select(
+                        'request_spkl.tms',        
+                        'request_spkl.category_id', 
+                        DB::raw('MAX(request_spkl_detail.EstimateOvertimeHours) as maxOvertime'),
+                        DB::raw('MAX(request_spkl_detail.isExceedPlan) as isExceedPlan')
+                    )
+                    ->groupBy('request_spkl.tms', 'request_spkl.category_id')
+                    ->first();
+
+                $activeCategories = [];
+
+                if (!empty($spkl->tms)) {
+                    $activeCategories[] = $spkl->tms;
+                }
+
+                if (!empty($spkl->category_id) &&
+                    in_array($spkl->category_id, [$categoryMap['moreThanTwoHours'] ?? -1, $categoryMap['isExceedplan'] ?? -1])) {
+                    $activeCategories[] = $spkl->category_id;
+                }
+
+                $activeCategories = array_unique($activeCategories);
+
+                $finalSequence = null;
+                if ($spkl->tms == ($categoryMap['spkl'] ?? -1)) {
+                    $finalSequence = ($spkl->maxOvertime < 2) ? 4 : 5;
+                } elseif ($spkl->tms == ($categoryMap['timesheet'] ?? -1)) {
+                    $finalSequence = ($spkl->isExceedPlan == 0) ? 3 : 5;
+                }
+
+                $approverList = DB::table('tbl_approver')
+                    ->where('module', 'Spkl')
+                    ->where('isActive', 1)
+                    ->where(function ($query) use ($activeCategories) {
+                        foreach ($activeCategories as $catId) {
+                            $query->orWhereRaw("EXISTS (
+                                SELECT value FROM STRING_SPLIT(category_id, ',')
+                                WHERE TRY_CAST(value AS INT) = ?
+                            )", [$catId]);
+                        }
+                    })
+                    ->orderBy('sequence')
+                    ->get()
+                    ->map(function ($approver) use ($finalSequence) {
+                        $approver->isFinal = ($approver->sequence == $finalSequence) ? 1 : 0;
+                        return $approver;
+                    });
+
+                return $approverList;
+            }
+        }
 
             $final = 0;
             $mailData = [];
@@ -486,6 +547,10 @@ class SubmissionController extends Controller
                         return response()->json(["status" => "error", "message" => $this->getMessage()['assignmentnotfound']]);
                     }
                 }
+
+                // if($modulename == 'Spkl' || $tms == 0) {
+                //     $requeststatus = 5;
+                // }
             }
 
             foreach($approverlist as $appr) {
@@ -502,20 +567,23 @@ class SubmissionController extends Controller
                 "requestStatus" => $requeststatus
             ];
 
+            // if ($modulename == 'Spkl') {
+            //     $dataToUpdate['tms'] = 1;
+            // }
+
             // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate
             if ($modulename == 'Jdi' && $request->action == 'submission') {
-                $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+                $dataToUpdate["submitDate"] = Carbon::now(); 
             }
             // Cek jika modulename adalah 'Legal' dan tambahkan submitDate
             if ($modulename == 'Legal' && $request->action == 'submission') {
-                $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
-                // $dataToUpdate["submissionDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+                $dataToUpdate["submitDate"] = Carbon::now(); 
             }
 
             DB::table($tableName)
                 ->where('id', $id)
                 ->update($dataToUpdate);
-
+            // dd($approverlist);
             foreach($approverlist as $getappr) {
                 if($request->approvalAction == 0 && $getappr->approvalAction == 0) { // cancel pengajuan
                     $mailData = [

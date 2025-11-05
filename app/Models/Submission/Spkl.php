@@ -11,6 +11,7 @@ use App\Models\SpklDetail;
 use App\Models\Employee;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
+use App\Models\CategoryForm;
 
 class Spkl extends Model
 {
@@ -22,14 +23,15 @@ class Spkl extends Model
 
     protected $fillable = [
         'employee_id',
-        'work_date',
+        'work_date',        
         'requestStatus',
         'DeptHead',
         'tms',
+        'category_id',
         'Superior',
-        'morethantwohours',
         'remarks',
         'user_id',
+        'module_id',
         'bu',
         'created_at',
         'updated_at'
@@ -79,5 +81,9 @@ class Spkl extends Model
     public function spkl_detail()
     {
         return $this->hasOne(SpklDetail::class, 'req_id', 'id');
+    }
+    public function category()
+    {
+        return $this->belongsTo(CategoryForm::class,'category_id');
     }
 }

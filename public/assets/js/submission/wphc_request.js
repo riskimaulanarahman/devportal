@@ -1168,7 +1168,15 @@ var dataGridhistory = $("#loghistory").dxDataGrid({
         visible: true,
         showInfo: true,
     },
-    columns: [{
+    columns: [
+        {
+            caption: "#",
+            width: 60,
+            cellTemplate: function (container, options) {
+                container.text(options.rowIndex + 1);
+            }
+        },
+        {
             dataField: 'work_date',
             caption: "Work Date",
         },
@@ -1188,27 +1196,6 @@ var dataGridhistory = $("#loghistory").dxDataGrid({
             dataField: 'aktif_sampai_dengan',
             caption: "Issue Date",
         },
-        // {
-        //     dataField: "approveddoc",
-        //     caption: "Approval Doc",
-        //     allowFiltering: false,
-        //     allowSorting: false,
-        //     formItem: {
-        //         visible: false
-        //     },
-        //     cellTemplate: function (container, options) {
-        //         if ((options.value != "") && (options.value)) {
-        //             $("<div />").dxButton({
-        //                 icon: 'download',
-        //                 type: "success",
-        //                 text: "Download",
-        //                 onClick: function (e) {
-        //                     window.open(options.value, '_blank');
-        //                 }
-        //             }).appendTo(container);
-        //         }
-        //     }
-        // },
     ],
     export: {
         enabled: true,

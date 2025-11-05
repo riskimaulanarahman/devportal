@@ -537,7 +537,7 @@ class MemorandumRequestController extends Controller
                         $Worksheet->Range("A53")->Value = $appr->apprname;
                         $Worksheet->Range("A54")->Value = $appr->apprtype;
                         addPictureToWorksheet($Worksheet, $picpath, 52, 1, 40, $excel, 25);
-                    }                    
+                    }   
                 }
                 if ($appr->sequence == 3) {
                     if ($appr->approvalAction == 3) {
@@ -557,7 +557,7 @@ class MemorandumRequestController extends Controller
                     if ($appr->approvalAction == 3 && $appr->bu != 'GMS' && $appr->bu != 'KPS') {
                         $Worksheet->Range("H53")->Value = $appr->apprname;
                         $Worksheet->Range("H54")->Value = $appr->apprtype;
-                        addPictureToWorksheet($Worksheet, $picpath, 52, 7, 40, $excel, 25);
+                        addPictureToWorksheet($Worksheet, $picpath, 52, 8, 40, $excel, 25);
                     }
                 }
             }

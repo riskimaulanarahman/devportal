@@ -111,20 +111,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataType: "date",
             format: "dd-MM-yyyy",
         },
-        // {
-        //     caption: "Work Date",
-        //     dataField: 'work_date',
-        //     alignment: "left"
-        // },
         {
             caption: 'BU',
             dataField: 'bu',
             alignment: "left"
-        },
-        {
-            caption: 'Sector',
-            dataField: "sector",
-            alignment: "left",
         },
         {
             dataField: 'requestStatus',
@@ -147,6 +137,27 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             dataField: "approveddoc",
             caption: "Approval Doc",
+            allowFiltering: false,
+            allowSorting: false,
+            formItem: {
+                visible: false
+            },
+            cellTemplate: function (container, options) {
+                if ((options.value != "") && (options.value)) {
+                    $("<div />").dxButton({
+                        icon: 'download',
+                        type: "success",
+                        text: "Download",
+                        onClick: function (e) {
+                            window.open(options.value, '_blank');
+                        }
+                    }).appendTo(container);
+                }
+            }
+        },
+        {
+            dataField: "timesheetdoc",
+            caption: "Timesheet Doc",
             allowFiltering: false,
             allowSorting: false,
             formItem: {
@@ -466,14 +477,10 @@ const popupContentTemplate = function (reqid, mode, options) {
                             columns: [{
                                     caption: 'Code',
                                     dataField: 'code',
+                                    editorOptions: {
+                                        readOnly: true
+                                    }
                                 },
-                                // {
-                                //     caption: 'Creation Date',
-                                //     dataField: 'created_at',
-                                //     editorOptions: {
-                                //         readOnly: true
-                                //     },
-                                // },
                                 {
                                     caption: 'Creator',
                                     dataField: 'user.fullname',
@@ -481,17 +488,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         readOnly: true
                                     },
                                 },
-                                // {
-                                //     caption: 'Superior',
-                                //     dataField: 'Superior',
-                                //     lookup: {
-                                //         dataSource: listOption('/list-employee', 'id', 'fullname'),
-                                //         valueExpr: 'id',
-                                //         displayExpr: function (item) {
-                                //             return item ? item.fullname + " (" + item.sapid + ")" : "";
-                                //         }
-                                //     }
-                                // },
                                 {
                                     caption: 'Department Head',
                                     dataField: 'DeptHead',
@@ -501,6 +497,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         displayExpr: function (item) {
                                             return item ? item.fullname + " (" + item.sapid + ")" : "";
                                         }
+                                    },
+                                    editorOptions: {
+                                        readOnly: true
                                     }
                                 },
                                 {
@@ -509,28 +508,15 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     width: 200,
                                     dataType: "date",
                                     editorOptions: {
-                                        min: new Date(new Date().setDate(new Date().getDate() - 7)) // hanya bisa pilih backdate maksimal 7 hari
-                                    },
-                                    validationRules: [
-                                        {
-                                            type: "required",
-                                            message: "Tanggal wajib diisi"
-                                        },
-                                        {
-                                            type: "custom",
-                                            validationCallback: function(e) {
-                                                const today = new Date();
-                                                const selected = new Date(e.value);
-                                                const diff = (today - selected) / (1000 * 60 * 60 * 24); // selisih dalam hari
-                                                return diff >= 0 && diff <= 7;
-                                            },
-                                            message: "Tanggal harus dalam rentang H-7 dari hari ini"
-                                        }
-                                    ]
+                                        readOnly: true
+                                    }
                                 },
                                 {
                                     caption: 'Outstanding Tasks',
                                     dataField: 'remarks',
+                                    editorOptions: {
+                                        readOnly: true
+                                    }
                                 },
                             ],
                             export: {
@@ -821,6 +807,22 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     dataType: 'number',
                                     allowEditing: false
                                 },
+                                // {
+                                //     caption: 'Exceed Plan?',
+                                //     dataField: 'isExceedPlan',
+                                //     dataType: 'boolean',
+                                //     width: 100,
+                                //     calculateDisplayValue: function (rowData) {
+                                //         return rowData.isExceedPlan ? 'Yes' : 'No';
+                                //     },
+                                //     cellTemplate: function (container, options) {
+                                //         const value = options.value ? 'Yes' : 'No';
+                                //         container.text(value);
+                                //     },
+                                //     editorOptions: {
+                                //         readOnly: true
+                                //     }
+                                // },
                                 {
                                     caption: 'Target Work',
                                     dataField: 'Target'
@@ -835,6 +837,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                             // Kolom tetap sama
 
                             onRowUpdating: function(e) {
+                                // const planover = e.newData.EstimateOvertimeHours ?? e.oldData.EstimateOvertimeHours;
+                                // const planact = e.newData.ActualOvertimeHours ?? e.oldData.ActualOvertimeHours;
                                 const startRaw = e.newData.ActualStartWork ?? e.oldData.ActualStartWork;
                                 const endRaw = e.newData.ActualEndWork ?? e.oldData.ActualEndWork;
                                 let normalRaw = e.newData.ActualNormalHours ?? e.oldData.ActualNormalHours;
@@ -865,6 +869,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                                         e.newData.ActualOvertimeHours = 0;
                                     }
                                 }
+                                // if (!isNaN(planover) && !isNaN(planact)) {
+                                //     e.newData.isExceedPlan = planact !== planover ? 35 : 0;
+                                // }
                             },
                             onInitialized: function (e) {
                                 dataGriddetail = e.component;
@@ -1192,118 +1199,6 @@ const popupContentTemplate = function (reqid, mode, options) {
     return scrollView;
 
 };
-
-let id = 1;
-var dataGridhistory = $("#loghistory").dxDataGrid({
-    dataSource: store('logreportspkl/' + id),
-    allowColumnReordering: false,
-    allowColumnResizing: true,
-    columnsAutoWidth: true,
-    columnHidingEnabled: false,
-    rowAlternationEnabled: true,
-    wordWrapEnabled: false,
-    showBorders: true,
-    filterRow: {
-        visible: true
-    },
-    filterPanel: {
-        visible: true
-    },
-    headerFilter: {
-        visible: true
-    },
-    searchPanel: {
-        visible: true,
-        width: 240,
-        placeholder: 'Search...',
-    },
-    columnFixing: {
-        enabled: true,
-    },
-    editing: {
-        useIcons: true,
-        mode: "batch",
-        allowAdding: false,
-        allowUpdating: false,
-        allowDeleting: false,
-    },
-    scrolling: {
-        mode: "virtual"
-    },
-    sorting: {
-        mode: 'multiple',
-    },
-    pager: {
-        visible: true,
-        showInfo: true,
-    },
-    columns: [{
-            dataField: 'work_date',
-            caption: "Work Date",
-        },
-        {
-            dataField: 'remarks',
-            caption: "Remarks",
-        },
-        {
-            dataField: 'reason',
-            caption: "Objectives",
-        },
-        {
-            dataField: 'status_spkl_aktif',
-            caption: "Status",
-        },
-        {
-            dataField: 'aktif_sampai_dengan',
-            caption: "Issue Date",
-        },
-        // {
-        //     dataField: "approveddoc",
-        //     caption: "Approval Doc",
-        //     allowFiltering: false,
-        //     allowSorting: false,
-        //     formItem: {
-        //         visible: false
-        //     },
-        //     cellTemplate: function (container, options) {
-        //         if ((options.value != "") && (options.value)) {
-        //             $("<div />").dxButton({
-        //                 icon: 'download',
-        //                 type: "success",
-        //                 text: "Download",
-        //                 onClick: function (e) {
-        //                     window.open(options.value, '_blank');
-        //                 }
-        //             }).appendTo(container);
-        //         }
-        //     }
-        // },
-    ],
-    export: {
-        enabled: true,
-        fileName: 'log history',
-        excelFilterEnabled: true,
-        allowExportSelectedData: false
-    },
-    onContentReady: function (e) {
-        moveEditColumnToLeft(e.component);
-    },
-    onToolbarPreparing: function (e) {
-        dataGridlog = e.component;
-
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function () {
-                    dataGridlog.refresh();
-                }
-            }
-        })
-    },
-}).dxDataGrid("instance");
 
 function btnreqsubmit(reqid, mode) {
     console.log('reqidbtn', reqid);
