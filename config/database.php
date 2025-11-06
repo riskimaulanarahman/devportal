@@ -92,6 +92,20 @@ return [
             // 'prefix_indexes' => true,
         ],
 
+        'sqlsrvjp' => [
+            'driver' => 'sqlsrv',
+            // 'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST', '172.18.83.18\SQLSERVER'),
+            // 'port' => env('DB_PORT', '1433'),
+            'database' => 'extjobportal',
+            'username' => 'erp_user',
+            'password' => 'Sy$D3v3RP2025',
+            'strict' => false,
+            // 'charset' => 'utf8',
+            // 'prefix' => '',
+            // 'prefix_indexes' => true,
+        ],
+
     ],
 
     /*
