@@ -406,7 +406,7 @@ const popupContentTemplate = function (reqid,mode,options) {
             { bu: 'IHM', sector: 'SPU' },
             { bu: 'IHM', sector: 'SNI' },
             { bu: 'IHM', sector: 'HO' },
-            { bu: 'AHL', sector: 'SNI' },
+            { bu: 'AHL', sector: 'SBG' },
             { bu: 'AHL', sector: 'SBS' },
             { bu: 'AHL', sector: 'SSP' },
             { bu: 'AHL', sector: 'HO' },
