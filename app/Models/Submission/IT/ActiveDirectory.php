@@ -33,6 +33,7 @@ class ActiveDirectory extends Model
         'approveddoc',
         'bu',
         'pic_empid',
+        'remarks',
         'username_temp',
         'password_temp'
     ];

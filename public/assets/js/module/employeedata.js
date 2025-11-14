@@ -66,7 +66,7 @@ checkUserAccess(modname, usersid).then(permissions => {
 
                     var reqid = options.data.id;
                     var isad = options.data.isAD;
-                    if((options.data.LoginName == null || options.data.LoginName == '') && isad !== 1) {
+                    if((options.data.LoginName == null || options.data.LoginName == '')) {
                         $('<button class="btn btn-xs btn-success" id="btnreqid'+reqid+'"><i class="fa fa-upload"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
                             runpopup(options,1); // 1 create
@@ -93,7 +93,7 @@ checkUserAccess(modname, usersid).then(permissions => {
 
                     var reqid = options.data.id;
                     var isad = options.data.isAD;
-                    if(options.data.LoginName && (isad === 0 || isad === null)) {
+                    if(options.data.LoginName) {
                         $('<button class="btn btn-xs btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-times"></i></button>').on('dxclick', function(evt) {
                             evt.stopPropagation();
                             runpopup(options,2); // 2 delete
@@ -782,60 +782,118 @@ checkUserAccess(modname, usersid).then(permissions => {
                 dataGrid.refresh();
             },
             toolbarItems: [
-                {
-                    widget: 'dxButton',
-                    toolbar: 'bottom',
-                    location: 'after',
-                    options: {
-                        text: 'Submit',
-                        onClick: function () {
-                            const selectedValue = $('#dropdown').dxDropDownBox("option", "value");
-                            if(selectedValue == null) {
-                                DevExpress.ui.dialog.alert("Please Select an Employee", "error");
-                                return false;
-                            }
+                // {
+                //     widget: 'dxButton',
+                //     toolbar: 'bottom',
+                //     location: 'after',
+                //     options: {
+                //         text: 'Submit',
+                //         onClick: function () {
+                //             const selectedValue = $('#dropdown').dxDropDownBox("option", "value");
+                //             if(selectedValue == null) {
+                //                 DevExpress.ui.dialog.alert("Please Select an Employee", "error");
+                //                 return false;
+                //             }
 
-                            var result = confirm('Are you sure you want to '+mode+' Active Directory "'+options.data.FullName+'" and send this submission ?');
+                //             var result = confirm('Are you sure you want to '+mode+' Active Directory "'+options.data.FullName+'" and send this submission ?');
 
-                                if (result) {
-                                    showLoadingScreen();
-                                    // First request with a delay
-                                    delay(1000).then(function() {
-                                        return sendRequest(apiurl + "/adrequest", "POST", {
-                                            employee_id: options.data.id,
-                                            pic_empid: selectedValue,
-                                            requestType: mode+' Account'
-                                        });
-                                    }).then(function(response) {
-                                        const dataid = response.data.id;
-                                        // Second request with a delay
-                                        return delay(2000).then(function() {
-                                            return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
-                                                requestStatus: 1,
-                                                action: 'submission',
-                                                approvalAction: 1,
-                                                approvalType: null,
-                                                remarks: null
-                                            });
-                                        });
-                                    }).then(function(response) {
-                                        if (response.status != 'error') {
-                                            dataGrid.refresh();
-                                        }
-                                        hideLoadingScreen();
-                                    }).fail(function(error) {
-                                        console.error("An error occurred:", error);
-                                        hideLoadingScreen();
+                //                 if (result) {
+                //                     showLoadingScreen();
+                //                     // First request with a delay
+                //                     delay(1000).then(function() {
+                //                         return sendRequest(apiurl + "/adrequest", "POST", {
+                //                             employee_id: options.data.id,
+                //                             pic_empid: selectedValue,
+                //                             requestType: mode+' Account'
+                //                         });
+                //                     }).then(function(response) {
+                //                         const dataid = response.data.id;
+                //                         // Second request with a delay
+                //                         return delay(2000).then(function() {
+                //                             return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
+                //                                 requestStatus: 1,
+                //                                 action: 'submission',
+                //                                 approvalAction: 1,
+                //                                 approvalType: null,
+                //                                 remarks: null
+                //                             });
+                //                         });
+                //                     }).then(function(response) {
+                //                         if (response.status != 'error') {
+                //                             dataGrid.refresh();
+                //                         }
+                //                         hideLoadingScreen();
+                //                     }).fail(function(error) {
+                //                         console.error("An error occurred:", error);
+                //                         hideLoadingScreen();
+                //                     });
+                //                 } else {
+                //                     alert('Cancelled.');
+                //                 }
+
+                //             popup.hide();
+
+                //         },
+                //     },
+                // },
+            {
+                widget: 'dxButton',
+                toolbar: 'bottom',
+                location: 'after',
+                options: {
+                    text: 'Submit',
+                    onClick: function () {
+                        const selectedValue = $('#dropdown').dxDropDownBox("option", "value");
+                        // Ambil nilai remarks dari dxTextBox/dxTextArea
+                        const remarksValue = $("#remarks-input").dxTextBox("option", "value"); // Ganti ke dxTextArea jika pakai text area
+
+                        // return alert(remarksValue);
+
+                        if(selectedValue == null) {
+                            DevExpress.ui.dialog.alert("Please Select an Employee", "error");
+                            return false;
+                        }
+
+                        var result = confirm('Are you sure you want to '+mode+' Active Directory "'+options.data.FullName+'" and send this submission ?');
+
+                        if (result) {
+                            showLoadingScreen();
+                            // First request with a delay
+                            delay(1000).then(function() {
+                                return sendRequest(apiurl + "/adrequest", "POST", {
+                                    employee_id: options.data.id,
+                                    pic_empid: selectedValue,
+                                    requestType: mode+' Account',
+                                    remarks: remarksValue
+                                });
+                            }).then(function(response) {
+                                const dataid = response.data.id;
+                                // Second request with a delay
+                                return delay(2000).then(function() {
+                                    return sendRequest(apiurl + "/submissionrequest/" + dataid + "/" + modelclass, "POST", {
+                                        requestStatus: 1,
+                                        action: 'submission',
+                                        approvalAction: 1,
+                                        approvalType: null,
                                     });
-                                } else {
-                                    alert('Cancelled.');
+                                });
+                            }).then(function(response) {
+                                if (response.status != 'error') {
+                                    dataGrid.refresh();
                                 }
+                                hideLoadingScreen();
+                            }).fail(function(error) {
+                                console.error("An error occurred:", error);
+                                hideLoadingScreen();
+                            });
+                        } else {
+                            alert('Cancelled.');
+                        }
 
-                            popup.hide();
-
-                        },
+                        popup.hide();
                     },
                 },
+            },
             {
                 widget: 'dxButton',
                 toolbar: 'bottom',
@@ -851,84 +909,170 @@ checkUserAccess(modname, usersid).then(permissions => {
         }).dxPopup('instance');
     }
     
-    const popupContentTemplate = function (reqid,options) {
+    // const popupContentTemplate = function (reqid,options) {
     
+    //     const scrollView = $('<div />');
+    
+    //     scrollView.append("<hr>");
+
+    //      // Menambahkan dropdown
+    //      const dropdown = $('<div id="dropdown"></div>').appendTo(scrollView);
+
+    //      // Mengambil data dari fungsi listOption
+    //     const employeeOptions = listOption("/list-employeead", "id", "fullname");
+
+    //      // Inisialisasi dropdown
+    //      dropdown.dxDropDownBox({
+    //          value: null,
+    //          dataSource: employeeOptions.store,
+    //          displayExpr(item) {
+    //             return item && `${item.fullname}`;
+    //         },
+    //          contentTemplate: function (args, container) {
+    //              const $dataGrid = $("<div>").dxDataGrid({
+    //                  width: '100%',
+    //                  dataSource: args.component.option("dataSource"),
+    //                  keyExpr: "id",
+    //                  columns: ["sapid", "fullname", "companycode", "departmentname"],
+    //                  hoverStateEnabled: true,
+    //                  paging: { enabled: true, pageSize: 10 },
+    //                  filterRow: { visible: true },
+    //                  height: '90%',
+    //                  showRowLines: true,
+    //                  showBorders: true,
+    //                  selection: { mode: "single" },
+    //                  searchPanel: {
+    //                      visible: true,
+    //                      width: 265,
+    //                      placeholder: "Search..."
+    //                  },
+    //                  onSelectionChanged: function (selectedItems) {
+    //                      const keys = selectedItems.selectedRowKeys;
+    //                      const hasSelection = keys.length;
+    //                      args.component.option('value', hasSelection ? keys[0] : null);
+    //                      if (hasSelection) {
+    //                         args.component.close();
+    //                      }
+    //                  }
+    //              });
+ 
+    //              const dataGrid = $dataGrid.dxDataGrid("instance");
+ 
+    //              args.component.on("valueChanged", function (args) {
+    //                  const value = args.value;
+    //                  dataGrid.selectRows(value, false);
+    //              });
+ 
+    //              container.append($dataGrid);
+    //              $("<div>").dxButton({
+    //                  text: "Close",
+    //                  onClick: function () {
+    //                      args.component.close();
+    //                  }
+    //              }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+ 
+    //              return container;
+    //          },
+    //          dropDownOptions: {
+    //              height: 550,
+    //              width: 900
+    //          }
+    //      });
+
+    //     scrollView.dxScrollView({
+    //         width: '100%',
+    //         height: '100%',
+    //     })
+    
+    //     return scrollView;
+    
+    // };
+    const popupContentTemplate = function (reqid, options) {
         const scrollView = $('<div />');
-    
+
         scrollView.append("<hr>");
 
-         // Menambahkan dropdown
-         const dropdown = $('<div id="dropdown"></div>').appendTo(scrollView);
+        // Menambahkan dropdown
+        const dropdown = $('<div id="dropdown"></div>').appendTo(scrollView);
 
-         // Mengambil data dari fungsi listOption
+        // Mengambil data dari fungsi listOption
         const employeeOptions = listOption("/list-employeead", "id", "fullname");
 
-         // Inisialisasi dropdown
-         dropdown.dxDropDownBox({
-             value: null,
-             dataSource: employeeOptions.store,
-             displayExpr(item) {
+        // Inisialisasi dropdown
+        dropdown.dxDropDownBox({
+            value: null,
+            dataSource: employeeOptions.store,
+            displayExpr(item) {
                 return item && `${item.fullname}`;
             },
-             contentTemplate: function (args, container) {
-                 const $dataGrid = $("<div>").dxDataGrid({
-                     width: '100%',
-                     dataSource: args.component.option("dataSource"),
-                     keyExpr: "id",
-                     columns: ["sapid", "fullname", "companycode", "departmentname"],
-                     hoverStateEnabled: true,
-                     paging: { enabled: true, pageSize: 10 },
-                     filterRow: { visible: true },
-                     height: '90%',
-                     showRowLines: true,
-                     showBorders: true,
-                     selection: { mode: "single" },
-                     searchPanel: {
-                         visible: true,
-                         width: 265,
-                         placeholder: "Search..."
-                     },
-                     onSelectionChanged: function (selectedItems) {
-                         const keys = selectedItems.selectedRowKeys;
-                         const hasSelection = keys.length;
-                         args.component.option('value', hasSelection ? keys[0] : null);
-                         if (hasSelection) {
+            contentTemplate: function (args, container) {
+                const $dataGrid = $("<div>").dxDataGrid({
+                    width: '100%',
+                    dataSource: args.component.option("dataSource"),
+                    keyExpr: "id",
+                    columns: ["sapid", "fullname", "companycode", "departmentname"],
+                    hoverStateEnabled: true,
+                    paging: { enabled: true, pageSize: 10 },
+                    filterRow: { visible: true },
+                    height: '90%',
+                    showRowLines: true,
+                    showBorders: true,
+                    selection: { mode: "single" },
+                    searchPanel: {
+                        visible: true,
+                        width: 265,
+                        placeholder: "Search..."
+                    },
+                    onSelectionChanged: function (selectedItems) {
+                        const keys = selectedItems.selectedRowKeys;
+                        const hasSelection = keys.length;
+                        args.component.option('value', hasSelection ? keys[0] : null);
+                        if (hasSelection) {
                             args.component.close();
-                         }
-                     }
-                 });
- 
-                 const dataGrid = $dataGrid.dxDataGrid("instance");
- 
-                 args.component.on("valueChanged", function (args) {
-                     const value = args.value;
-                     dataGrid.selectRows(value, false);
-                 });
- 
-                 container.append($dataGrid);
-                 $("<div>").dxButton({
-                     text: "Close",
-                     onClick: function () {
-                         args.component.close();
-                     }
-                 }).css({ float: "right", marginTop: "10px" }).appendTo(container);
- 
-                 return container;
-             },
-             dropDownOptions: {
-                 height: 550,
-                 width: 900
-             }
-         });
+                        }
+                    }
+                });
+
+                const dataGrid = $dataGrid.dxDataGrid("instance");
+
+                args.component.on("valueChanged", function (args) {
+                    const value = args.value;
+                    dataGrid.selectRows(value, false);
+                });
+
+                container.append($dataGrid);
+                $("<div>").dxButton({
+                    text: "Close",
+                    onClick: function () {
+                        args.component.close();
+                    }
+                }).css({ float: "right", marginTop: "10px" }).appendTo(container);
+
+                return container;
+            },
+            dropDownOptions: {
+                height: 550,
+                width: 900
+            }
+        });
+
+        // Menambahkan text input untuk remarks
+        const remarksContainer = $('<div style="margin-top:15px;"></div>').appendTo(scrollView);
+        $('<label for="remarks-input"><b>Remarks:</b></label>').appendTo(remarksContainer);
+        // Menggunakan DevExtreme TextBox
+        $('<div id="remarks-input"></div>').dxTextBox({
+            placeholder: "Masukkan remarks...",
+            width: "100%"
+        }).appendTo(remarksContainer);
 
         scrollView.dxScrollView({
             width: '100%',
             height: '100%',
         })
-    
+
         return scrollView;
-    
     };
+
 });
 var dataGridhistory = $("#loghistory").dxDataGrid({    
     dataSource: store('logsuccess'),

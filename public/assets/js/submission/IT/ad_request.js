@@ -95,7 +95,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     }).appendTo(container); 
                 }
 
-                if((reqstatus == 3) && (options.data.LoginName == "" || options.data.LoginName == null) && (admin == 1 || isIT == 1)) {
+                if((reqstatus == 3) && (admin == 1 || isIT == 1)) {
                     $('<button class="btn btn-info" id="btnreqid'+reqid+'" style="margin-left: 3px;"><i class="fa fa-user"></i></button>').on('dxclick', function(evt) {
                         evt.stopPropagation();
 
@@ -188,6 +188,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'code',
             width: 180,
         },
+        {
+            caption: "Username/loginName",
+            dataField: 'username_temp',
+            width: 180,
+        },
         { 
 			dataField: "user.fullname",
             caption: 'Creator Name',
@@ -225,6 +230,9 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             lookup: {
                 dataSource: ['TS Account','Non-TS Account'],  
             },
+        },
+         {
+            dataField: 'remarks',
         },
         {
             dataField: 'requestStatus',
@@ -505,6 +513,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     valueExpr: 'id',
                                     displayExpr: 'fullname',
                                 },
+                            },
+                            {
+                                dataField: 'remarks',
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                         ],
                         export: {
