@@ -401,7 +401,7 @@ const popupContentTemplate = function (reqid,mode,options) {
         }
 
         var dataSector = [
-            { bu: 'IHM', sector: 'NKL' },
+            { bu: 'NKL', sector: 'HO' },
             { bu: 'IHM', sector: 'TRN' },
             { bu: 'IHM', sector: 'SPU' },
             { bu: 'IHM', sector: 'SNI' },
