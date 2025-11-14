@@ -12,6 +12,7 @@ use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Models\Module;
 use App\Models\User;
+use App\Models\Holiday;
 
 use App\Mail\SubmissionMail;
 use Carbon\Carbon;
@@ -39,7 +40,19 @@ class WphcRequestController extends Controller
                     ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id');
     }
 
-    public function logreportwphc()
+    public function holiday()
+
+    {
+    $data = DB::table('tbl_holiday')
+            ->get();
+
+    return response()->json([
+            "status" => "show",
+            "message" => "Data WPHC milik user login berhasil ditampilkan",
+            "data" => $data
+        ]);
+   }
+   public function logreportwphc()
     {
         try {
             // Ambil user yang sedang login
@@ -68,19 +81,40 @@ class WphcRequestController extends Controller
             $employee_id = $employee->id;
 
             // Ambil semua detail WPHC milik employee login
-            $data = DB::table('request_wphc_detail as rdw')
+            $rawData = DB::table('request_wphc_detail as rdw')
                 ->join('request_wphc as rw', 'rdw.req_id', '=', 'rw.id')
                 ->where('rw.employee_id', $employee_id)
                 ->orderByDesc('rdw.work_date')
                 ->select(
-                    'rdw.*',
+                    'rdw.id',
+                    'rdw.req_id',
+                    'rdw.work_date',
+                    'rdw.remarks',
+                    'rdw.text',
+                    'rdw.created_at',
+                    'rdw.updated_at',
                     'rw.requestStatus',
                     'rw.employee_id',
-                    'rw.created_at as request_created_at',
-                    DB::raw("CASE WHEN rw.requestStatus = 3 THEN 'aktif' ELSE 'tidak aktif' END as status_wphc_aktif"),
-                    DB::raw("CASE WHEN rw.requestStatus = 3 THEN FORMAT(DATEADD(MONTH, 3, rdw.work_date), 'dd-MM-yyyy') ELSE NULL END as aktif_sampai_dengan")
+                    'rw.created_at as request_created_at'
                 )
                 ->get();
+
+            $now = Carbon::now();
+
+            // Hitung status aktif berdasarkan work_date + 3 bulan >= hari ini
+            $data = $rawData->map(function ($item) use ($now) {
+                $workDate = Carbon::parse($item->work_date);
+                $aktifUntil = $workDate->copy()->addMonths(3);
+                $isAktif = $aktifUntil->greaterThanOrEqualTo($now);
+
+                $itemArray = collect($item)->toArray();
+
+                return array_merge($itemArray, [
+                    'status_wphc_aktif' => $isAktif ? 'aktif' : 'non-aktif',
+                    'aktif_sampai_dengan' => $aktifUntil->format('d-m-Y'), // selalu tampil
+                ]);
+            });
+
 
             return response()->json([
                 "status" => "show",
@@ -91,11 +125,10 @@ class WphcRequestController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 "status" => "error",
-                "message" => $e->getMessage()
-            ]);
+                "message" => "Terjadi kesalahan: " . $e->getMessage()
+            ], 500);
         }
     }
-
     public function index(Request $request)
     {
         try {
@@ -260,7 +293,7 @@ class WphcRequestController extends Controller
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
 
-            $this->addOneDayToDate($requestData);
+            // $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
 
@@ -343,7 +376,7 @@ class WphcRequestController extends Controller
     public function genPdfWphc(Request $request, $id) 
     {
         $dataAppr = DB::table('wphcApprover')->select('*')->where('id', $id)->get(); // Data approver
-        // $requestWphcDetail = DB::table('request_wphc_detail')->select('work_date', 'remarks', 'reason')->where('req_id', $id)->get();
+        // $requestWphcDetail = DB::table('request_wphc_detail')->select('work_date', 'remarks', 'text')->where('req_id', $id)->get();
         $dataDetail = DB::table('request_wphc_detail')->where('req_id', $id)->get();
 
 
@@ -357,7 +390,7 @@ class WphcRequestController extends Controller
             'designation.DesignationName',
             'rwd.work_date',
             'rwd.remarks',
-            'rwd.reason',
+            'rwd.text',
             'loc.Location',
             'usr.email',
             'sup.FullName as superior_name',
@@ -417,7 +450,7 @@ class WphcRequestController extends Controller
             foreach ($dataDetail as $detail) {
                 $Worksheet->Range("B{$row}")->Value = (string) $detail->work_date;
                 $Worksheet->Range("D{$row}")->Value = (string) $detail->remarks;
-                $Worksheet->Range("K{$row}")->Value = (string) $detail->reason;
+                $Worksheet->Range("K{$row}")->Value = (string) $detail->text;
                 $row += 3;
             }
 
@@ -467,7 +500,7 @@ class WphcRequestController extends Controller
                 foreach ($dataDetail as $detail) {
                     $Worksheet->Range("B{$row}")->Value = (string) $detail->work_date;
                     $Worksheet->Range("D{$row}")->Value = (string) $detail->remarks;
-                    $Worksheet->Range("K{$row}")->Value = (string) $detail->reason;
+                    $Worksheet->Range("K{$row}")->Value = (string) $detail->text;
 
                     if (isset($approverMap[3])) {
                         $Worksheet->Range("O" . ($row + 1))->Value = $approverMap[3]->apprname;

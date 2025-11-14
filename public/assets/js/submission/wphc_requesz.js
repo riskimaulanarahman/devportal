@@ -611,7 +611,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                                 },
                                                 onSelectionChanged: function (selectedItems) {
                                                     const keys = selectedItems.selectedRowKeys;
-                                                    console.log(keys)
                                                     const hasSelection = keys.length;
                                                     args.component.option('value', hasSelection ? keys[0] : null);
                                                     if (hasSelection !== 0) {
@@ -702,120 +701,353 @@ const popupContentTemplate = function (reqid, mode, options) {
                         return container;
 
                     }
+const isSunday = (date) => date && date.getDay() === 0;
+
+const notifyDisableDate = () => {
+    DevExpress.ui.notify('Tidak bisa membuat WPHC di hari kerja.', 'warning', 2000);
+};
+
+function getWeekKey(d) {
+    const year = d.getFullYear();
+    // ISO week calculation is not strictly necessary here; we just need consistent week grouping by year+week number
+    const week = Math.ceil(((d - new Date(year, 0, 1)) / 86400000 + new Date(year, 0, 1).getDay() + 1) / 7);
+    return `${year}-W${week}`;
+}
+
 const infoContentcontract = $("<div id='infoContentcontract'>");
 
 if (data.ID === 2) {
-  const detailsStore = storewithmodule('wphc_detail', modelclass, reqid);
+    console.log("🔄 Memulai load data WPHC untuk scheduler (reqid):", reqid);
 
-  detailsStore.load().done(() => {
-    const schedulerElement = $("<div id='formcontract'>");
-    infoContentcontract.append(schedulerElement);
+    // Load existing detail records to analyze filled weeks and as the data source.
+    // storewithmodule(...) expected to return a DevExpress store (CustomStore).
+    const detailsStore = storewithmodule('wphc_detail', modelclass, reqid);
 
-    schedulerElement.dxScheduler({
-      dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
-      keyExpr: "id",
-      views: ["month"],
-      currentView: "month",
-      currentDate: new Date(),
-      startDayHour: 7,
-      endDayHour: 18,
-      height: 600,
-      startDateExpr: "startDate",
-      endDateExpr: "endDate",
-      textExpr: "text",
-      editing: {
-        allowAdding: true,
-        allowUpdating: true,
-        allowDeleting: true
-      },
-      showAllDayPanel: false,
-      showCurrentTimeIndicator: true,
-      shadeUntilCurrentTime: true,
-      maxAppointmentsPerCell: "unlimited",
+    // Load the current detail data for analysis of filled weeks
+    detailsStore.load().done(existingData => {
+        console.log("✅ Data WPHC berhasil dimuat untuk analisis:", existingData);
 
-      dataCellTemplate(cellData, cellIndex, cellElement) {
-        const cellDate = new Date(cellData.startDate);
-        cellDate.setHours(0, 0, 0, 0);
-
-        // Tampilkan angka tanggal di cell
-        const dateLabel = $("<div>")
-          .addClass("dx-scheduler-date-table-cell-text")
-          .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
-          .text(cellDate.getDate());
-        cellElement.append(dateLabel);
-
-        // Disable tanggal 16-11-2025
-        const key = cellDate.getFullYear() + "-" +
-                    String(cellDate.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(cellDate.getDate()).padStart(2, "0");
-
-        if (key === "2025-11-16") {
-          cellElement.css({
-            backgroundImage: "repeating-linear-gradient(45deg, #f9f9f9, #f9f9f9 6px, #efefef 6px, #efefef 12px)",
-            color: "#999",
-            pointerEvents: "none",
-            opacity: 0.5
-          });
-          cellElement.attr("title", "Tanggal ini dinonaktifkan");
-        }
-      },
-      onAppointmentAdding(e) {
-      if (!isValidAppointment(e.component, e.appointmentData)) {
-        e.cancel = true;
-        notifyDisableDate();
-      }
-    },
-
-      onAppointmentAdding(e) {
-        const start = new Date(e.appointmentData.startDate);
-        start.setHours(0, 0, 0, 0);
-        const key = start.getFullYear() + "-" +
-                    String(start.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(start.getDate()).padStart(2, "0");
-
-        if (key === "2025-11-14") {
-            e.cancel = true;
-
-            setTimeout(() => {
-            if (DevExpress?.ui?.notify) {
-                DevExpress.ui.notify({
-                message: "Tanggal 14 November 2025 tidak dapat dipilih.",
-                type: "error",
-                displayTime: 3000,
-                position: { my: "top center", at: "top center" }
-                });
-            } else {
-                alert("Tanggal 14 November 2025 tidak dapat dipilih."); // fallback
+        const filledWeeks = new Set();
+        existingData.forEach(item => {
+            try {
+                const start = new Date(item.startDate);
+                const wk = getWeekKey(start);
+                filledWeeks.add(wk);
+                console.log(`📌 Found WPHC entry: startDate=${item.startDate} => weekKey=${wk}`);
+            } catch (err) {
+                console.warn("⚠️ Skip invalid item when building filledWeeks", item, err);
             }
-            }, 0);
-        }
-        },
+        });
 
-      onAppointmentUpdating(e) {
-        const start = new Date(e.newData.startDate);
-        start.setHours(0, 0, 0, 0);
-        const key = start.getFullYear() + "-" +
-                    String(start.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(start.getDate()).padStart(2, "0");
+        // Add scheduler container to DOM first (to avoid render issues)
+        const schedulerElement = $("<div id='formcontract'>");
+        infoContentcontract.append(schedulerElement);
 
-        if (key === "2025-11-16") {
-          e.cancel = true;
-          setTimeout(() => {
-            DevExpress.ui.notify({
-              message: "Tanggal 16 November 2025 tidak dapat dipilih.",
-              type: "error",
-              displayTime: 3000,
-              position: { my: "top center", at: "top center" }
+        // Render scheduler in next tick to ensure DOM attachment
+        setTimeout(() => {
+            console.log("🛠️ Rendering scheduler now (after DOM ready).");
+
+            // Use a DevExtreme DataSource backed by the detailsStore so scheduler can CRUD via the store
+            const detailsDataSource = new DevExpress.data.DataSource({ store: detailsStore });
+
+            // define window range for next 2 weeks (from today)
+            const today = new Date();
+            const twoWeeksFromToday = new Date(today);
+            twoWeeksFromToday.setDate(today.getDate() + 14);
+
+            schedulerElement.dxScheduler({
+                dataSource: detailsDataSource,
+                keyExpr: "id",
+                views: ["month"],
+                currentView: "month",
+                currentDate: new Date(),
+                startDayHour: 7,
+                endDayHour: 18,
+                height: 600,
+                startDateExpr: "startDate",
+                endDateExpr: "endDate",
+                textExpr: "text",
+                editing: {
+                    allowAdding: true,
+                    allowUpdating: true,
+                    allowDeleting: true,
+                },
+                showAllDayPanel: false,
+                showCurrentTimeIndicator: true,
+                shadeUntilCurrentTime: true,
+                maxAppointmentsPerCell: "unlimited",
+
+                // Visual shading and clickability logic
+                dataCellTemplate(itemData, itemIndex, itemElement) {
+                    // itemData.startDate may be present depending on view; try both
+                    const date = itemData.startDate || itemData.date;
+                    if (!date) return;
+
+                    const cellDate = new Date(date);
+                    const isSundayCell = isSunday(cellDate);
+                    const isDisabled = !isSundayCell;
+
+                    // always show the date in each cell (prepend so appointments don't overwrite)
+                    const dateLabel = $("<div>")
+                        .addClass("dx-scheduler-date-table-cell-text")
+                        .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
+                        .text(cellDate.getDate());
+                    itemElement.prepend(dateLabel);
+
+                    if (isDisabled) {
+                        // Shade weekdays so users know they can't pick these
+                        itemElement.css({
+                            backgroundImage: "repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 6px, #e9e9e9 6px, #e9e9e9 12px)",
+                            backgroundSize: "12px 12px",
+                            color: "#999"
+                        });
+                    } else {
+                        // For Sundays, check "previous week filled" rule but only if current Sunday is within next 2 weeks
+                        // Calculate previous week key
+                        const prevWeekDate = new Date(cellDate);
+                        prevWeekDate.setDate(cellDate.getDate() - 7);
+                        const prevWeekKey = getWeekKey(prevWeekDate);
+
+                        // only consider disabling if this sunday is within [today, today + 14 days]
+                        if (cellDate >= today && cellDate <= twoWeeksFromToday && filledWeeks.has(prevWeekKey)) {
+                            console.log(`⛔ Disabling Sunday ${cellDate.toDateString()} because previous week ${prevWeekKey} is filled and within 2-week window.`);
+                            itemElement.css({
+                                backgroundColor: "#ffe0e0",
+                                pointerEvents: "none",
+                                cursor: "not-allowed",
+                                opacity: 0.6
+                            });
+                            itemElement.attr("title", "Tidak bisa ambil WPHC dua minggu berturut-turut dalam rentang 2 minggu ke depan");
+                        }
+                    }
+                },
+
+                // Month view date cell (the non-appointment cell)
+                dateCellTemplate(itemData, itemIndex, itemElement) {
+                    const date = itemData.date;
+                    if (!date) return;
+                    const cellDate = new Date(date);
+                    const isDisabled = !isSunday(cellDate);
+
+                    const element = $(`<div>${cellDate.getDate()}</div>`).css({ padding: "2px", fontSize: "11px", fontWeight: 600 });
+
+                    if (isDisabled) {
+                        element.css({
+                            backgroundImage: "repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 6px, #e9e9e9 6px, #e9e9e9 12px)",
+                            color: "#999",
+                            opacity: 0.8
+                        });
+                    } else {
+                        // For Sunday cells, check previous-week rule only when within 2-week window
+                        const prevWeek = new Date(cellDate);
+                        prevWeek.setDate(cellDate.getDate() - 7);
+                        const prevWeekKey = getWeekKey(prevWeek);
+                        if (cellDate >= today && cellDate <= twoWeeksFromToday && filledWeeks.has(prevWeekKey)) {
+                            console.log(`⛔ dateCell: Disable Sunday ${cellDate.toDateString()} because prev week ${prevWeekKey} filled.`);
+                            element.css({
+                                backgroundColor: "#ffe0e0",
+                                pointerEvents: "none",
+                                cursor: "not-allowed",
+                                opacity: 0.6
+                            });
+                            element.attr("title", "Tidak bisa ambil WPHC dua minggu berturut-turut dalam rentang 2 minggu ke depan");
+                        }
+                    }
+
+                    itemElement.append(element);
+                },
+
+                // When form opens, ensure only Sundays allowed and set proper form fields
+                onAppointmentFormOpening(e) {
+                    const appt = e.appointmentData || {};
+                    const start = new Date(appt.startDate || appt.start);
+                    console.debug("onAppointmentFormOpening appointmentData:", appt);
+
+                    if (!isSunday(start)) {
+                        console.warn("Attempt to open appointment form for non-Sunday:", start);
+                        e.cancel = true;
+                        notifyDisableDate();
+                        return;
+                    }
+
+                    // If the Sunday is within 2-week window and prev week is filled, disallow editing via form too
+                    const prevWeekDate = new Date(start);
+                    prevWeekDate.setDate(start.getDate() - 7);
+                    const prevWeekKey = getWeekKey(prevWeekDate);
+                    if (start >= today && start <= twoWeeksFromToday && filledWeeks.has(prevWeekKey)) {
+                        console.warn("Appointment form blocked because previous week is filled:", prevWeekKey);
+                        e.cancel = true;
+                        DevExpress.ui.notify('Tidak bisa ambil WPHC dua minggu berturut-turut dalam rentang 2 minggu ke depan', 'warning', 3000);
+                        return;
+                    }
+
+                    // Configure form fields
+                    e.form.option("items", [
+                        {
+                            label: { text: "Start Date" },
+                            dataField: "startDate",
+                            editorType: "dxDateBox",
+                            editorOptions: { type: "datetime" }
+                        },
+                        {
+                            label: { text: "End Date" },
+                            dataField: "endDate",
+                            editorType: "dxDateBox",
+                            editorOptions: { type: "datetime" }
+                        },
+                        {
+                            label: { text: "Reason" },
+                            dataField: "text",
+                            editorType: "dxTextBox"
+                        }
+                    ]);
+                },
+
+                // Validate before adding
+                onAppointmentAdding(e) {
+                    const start = new Date(e.appointmentData.startDate || e.startDate || e.appointmentData.start);
+                    console.debug("onAppointmentAdding payload:", e.appointmentData);
+                    if (!isSunday(start)) {
+                        console.warn("Blocked adding on non-Sunday:", start);
+                        e.cancel = true;
+                        notifyDisableDate();
+                        return;
+                    }
+
+                    // previous week rule only for appointments in next 2 weeks
+                    const prevWeek = new Date(start);
+                    prevWeek.setDate(start.getDate() - 7);
+                    const prevWeekKey = getWeekKey(prevWeek);
+
+                    if (start >= today && start <= twoWeeksFromToday && filledWeeks.has(prevWeekKey)) {
+                        console.warn("Blocked adding because previous week filled:", prevWeekKey);
+                        e.cancel = true;
+                        DevExpress.ui.notify('Tidak bisa ambil WPHC dua minggu berturut-turut dalam rentang 2 minggu ke depan', 'warning', 3000);
+                        return;
+                    }
+                },
+
+                // After adding on UI, persist to store/back-end
+                onAppointmentAdded(e) {
+                    console.debug("onAppointmentAdded (UI) appointmentData:", e.appointmentData);
+                    const payload = Object.assign({}, e.appointmentData || {});
+                    // ensure we link to parent wphc header
+                    payload.wphc_id = reqid;
+
+                    // Insert using the store so backend API is used consistently
+                    console.log("📤 Inserting new WPHC detail to store:", payload);
+                    detailsStore.insert(payload).done(result => {
+                        console.log("✅ Insert success:", result);
+                        // Refresh datasource to reflect new id and keep filledWeeks accurate
+                        detailsDataSource.load().done(newData => {
+                            // update filledWeeks set with newly inserted entry (if any)
+                            try {
+                                if (result && result.startDate) {
+                                    const wk = getWeekKey(new Date(result.startDate));
+                                    filledWeeks.add(wk);
+                                    console.log("📌 filledWeeks updated with:", wk);
+                                }
+                            } catch (err) {
+                                console.warn("⚠️ Failed to update filledWeeks from insert result", err);
+                            }
+                        });
+                    }).fail(err => {
+                        console.error("❌ Insert failed:", err);
+                        DevExpress.ui.notify('Gagal menyimpan WPHC ke server.', 'error', 3000);
+                        // Force reload UI datasource to avoid stale UI state
+                        detailsDataSource.load();
+                    });
+                },
+
+                // Persist updates
+                onAppointmentUpdating(e) {
+                    console.debug("onAppointmentUpdating event:", e);
+                    const id = e.appointmentData && (e.appointmentData.id || e.appointmentData.ID || e.appointmentData.key) || e.key;
+                    const newData = e.newData || {};
+                    if (!id) {
+                        console.warn("Cannot update appointment - no id found", e);
+                        return;
+                    }
+
+                    // Validate date change (only Sundays allowed)
+                    if (newData.startDate) {
+                        const newStart = new Date(newData.startDate);
+                        if (!isSunday(newStart)) {
+                            e.cancel = true;
+                            DevExpress.ui.notify('Hanya hari Minggu yang dapat dipilih untuk WPHC.', 'warning', 3000);
+                            return;
+                        }
+                        // check prev-week rule for new date when within 2-week window
+                        const prevWeekDate = new Date(newStart);
+                        prevWeekDate.setDate(newStart.getDate() - 7);
+                        const prevWeekKey = getWeekKey(prevWeekDate);
+                        if (newStart >= today && newStart <= twoWeeksFromToday && filledWeeks.has(prevWeekKey)) {
+                            e.cancel = true;
+                            DevExpress.ui.notify('Tidak bisa ambil WPHC dua minggu berturut-turut dalam rentang 2 minggu ke depan', 'warning', 3000);
+                            return;
+                        }
+                    }
+
+                    console.log("🔁 Updating store id:", id, "with", newData);
+                    detailsStore.update(id, newData).done(res => {
+                        console.log("✅ Update success:", res);
+                        detailsDataSource.load();
+                    }).fail(err => {
+                        console.error("❌ Update failed:", err);
+                        DevExpress.ui.notify('Gagal memperbarui WPHC.', 'error', 3000);
+                        detailsDataSource.load();
+                    });
+                },
+
+                // Persist deletes
+                onAppointmentDeleting(e) {
+                    console.debug("onAppointmentDeleting:", e);
+                    const id = e.appointmentData && (e.appointmentData.id || e.appointmentData.ID || e.appointmentData.key) || e.key;
+                    if (!id) {
+                        console.warn("Cannot delete appointment - no id found", e);
+                        return;
+                    }
+                    console.log("🗑️ Removing id:", id);
+                    detailsStore.remove(id).done(res => {
+                        console.log("✅ Remove success:", res);
+                        // remove any week record if present and refresh datasource
+                        detailsDataSource.load().done(newData => {
+                            try {
+                                const removedStart = e.appointmentData.startDate;
+                                if (removedStart) {
+                                    const wk = getWeekKey(new Date(removedStart));
+                                    if (filledWeeks.has(wk)) {
+                                        filledWeeks.delete(wk);
+                                        console.log("📌 removed week from filledWeeks:", wk);
+                                    }
+                                }
+                            } catch (err) {
+                                console.warn("⚠️ Failed to update filledWeeks after remove", err);
+                            }
+                        });
+                    }).fail(err => {
+                        console.error("❌ Remove failed:", err);
+                        DevExpress.ui.notify('Gagal menghapus WPHC.', 'error', 3000);
+                        detailsDataSource.load();
+                    });
+                },
+
+                appointmentTemplate(modelData, itemIndex, container) {
+                    container.append(
+                        $("<div>").addClass("dx-scheduler-appointment-content").text(modelData.text)
+                    );
+                }
             });
-          }, 0);
-        }
-      }
+
+            console.log("✅ Scheduler rendered and initialized.");
+        }, 0); // Delay render 1 tick
+    }).fail(err => {
+        console.error("❌ Gagal load detailsStore untuk reqid", reqid, err);
+        // still append empty scheduler but disabled
+        infoContentcontract.append($("<div>").text("Gagal memuat data WPHC. Silakan coba lagi."));
     });
-  });
 
-
-return infoContentcontract;
-
+    return infoContentcontract;
 
 
                     } else if (data.ID == 3) {
@@ -1496,3 +1728,127 @@ var dataGridhistory = $("#loghistory").dxDataGrid({
         })
     },
 }).dxDataGrid("instance");
+// var infoContentcontract = $("<div id='infoContentcontract'>");
+                    // if (data.ID == 2) {
+                    //     let formDataContract = $("<div id='formcontract'>").dxDataGrid({
+                    //         // dataSource: storedetail(modname, reqid),
+                    //         dataSource: storewithmodule('wphc_detail', modelclass, reqid),
+                    //         allowColumnReordering: true,
+                    //         allowColumnResizing: true,
+                    //         columnsAutoWidth: true,
+                    //         rowAlternationEnabled: true,
+                    //         wordWrapEnabled: true,
+                    //         showBorders: true,
+                    //         showColumnLines: true,
+                    //         filterRow: {
+                    //             visible: false
+                    //         },
+                    //         filterPanel: {
+                    //             visible: false
+                    //         },
+                    //         headerFilter: {
+                    //             visible: false
+                    //         },
+                    //         searchPanel: {
+                    //             visible: true,
+                    //             width: 240,
+                    //             placeholder: 'Search...',
+                    //         },
+                    //         editing: {
+                    //             useIcons: true,
+                    //             mode: "cell",
+                    //             allowAdding: true,
+                    //             allowUpdating: true,
+                    //             allowDeleting: true,
+                    //         },
+                    //         scrolling: {
+                    //             mode: "virtual"
+                    //         },
+                    //         paging: {
+                    //             pageSize: 5,
+                    //         },
+                    //         pager: {
+                    //             visible: true,
+                    //             allowedPageSizes: [5, 15, 'all'],
+                    //             showPageSizeSelector: true,
+                    //             showInfo: true,
+                    //             showNavigationButtons: true,
+                    //         },
+                    //         columns: [
+                    //             {
+                    //                 caption: 'Work Date',
+                    //                 dataField: 'work_date',
+                    //                 width: 200,
+                    //                 dataType: "date",
+                    //                 // editorOptions: {
+                    //                 //     min: new Date(new Date().setDate(new Date().getDate() - 7)) // hanya bisa pilih backdate maksimal 7 hari
+                    //                 // },
+                    //                 // validationRules: [
+                    //                 //     {
+                    //                 //         type: "required",
+                    //                 //                 message: "Tanggal wajib diisi"
+                    //                 //     },
+                    //                 //     {
+                    //                 //         type: "custom",
+                    //                 //         validationCallback: function(e) {
+                    //                 //             const today = new Date();
+                    //                 //             const selected = new Date(e.value);
+                    //                 //             const diff = (today - selected) / (1000 * 60 * 60 * 24); // selisih dalam hari
+                    //                 //             return diff >= 0 && diff <= 7;
+                    //                 //         },
+                    //                 //         message: "Tanggal harus dalam rentang H-7 dari hari ini"
+                    //                 //     }
+                    //                 // ]
+                    //             },
+                    //             {
+                    //                 caption: 'Reason',
+                    //                 dataField: 'text',
+                    //                 // width: 200,
+                    //                 editorOptions: {
+                    //                     readOnly: false,
+                    //                 }
+                    //             },
+                    //             {
+                    //                 caption: 'Remarks',
+                    //                 dataField: 'remarks',
+                    //                 // width: 200,
+                    //                 editorOptions: {
+                    //                     readOnly: false,
+                    //                 }
+                    //             },
+
+                    //         ],
+                    //         export: {
+                    //             enabled: false,
+                    //             fileName: modname,
+                    //             excelFilterEnabled: true,
+                    //             allowExportSelectedData: true
+                    //         },
+                    //         onInitialized: function (e) {
+                    //             dataGriddetail = e.component;
+                    //         },
+                    //         onContentReady: function (e) {
+                    //             moveEditColumnToLeft(e.component);
+                    //         },
+                    //         onToolbarPreparing: function (e) {
+                    //             e.toolbarOptions.items.unshift({
+                    //                 location: "after",
+                    //                 widget: "dxButton",
+                    //                 options: {
+                    //                     hint: "Refresh Data",
+                    //                     icon: "refresh",
+                    //                     onClick: function () {
+                    //                         dataGriddetail.refresh();
+                    //                     }
+                    //                 }
+                    //             });
+                    //         },                            
+                    //         onDataErrorOccurred: function (e) {
+                    //             // Menampilkan pesan kesalahan
+                    //             console.log("Terjadi kesalahan saat memuat data (6):", e.error.message);
+
+                    //             // Memuat ulang DataGrid
+                    //             dataGriddetail.refresh();
+                    //         }
+                    //     }).appendTo(infoContentcontract)
+                    //     return infoContentcontract

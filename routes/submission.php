@@ -80,7 +80,8 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('stackholders/{id}/{modulename}',[App\Http\Controllers\StackholdersController::class, 'getList']); //get list stackholders by req_id of module
     Route::get('approverlistrequestwphc/{id}/{modulename}',[App\Http\Controllers\ApproverListController::class, 'getListWphc']); //get list approver by req_id of module
     //
-    Route::get('logreportwphc/{id}',[App\Http\Controllers\Submission\WphcRequestController::class, 'logreportwphc']); //get list missionrequestdetail by req_id of module
+    Route::get('logreportwphc',[App\Http\Controllers\Submission\WphcRequestController::class, 'logreportwphc']); //get list missionrequestdetail by req_id of module
+    Route::get('holiday',[App\Http\Controllers\Submission\WphcRequestController::class, 'holiday']); //get list missionrequestdetail by req_id of module
     // uav mission
     Route::get('missionrequestdetail/{id}/{modulename}',[App\Http\Controllers\Submission\UavMissionRequestDetailController::class, 'getList']); //get list missionrequestdetail by req_id of module
     // category

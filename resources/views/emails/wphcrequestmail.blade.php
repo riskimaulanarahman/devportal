@@ -73,10 +73,10 @@
                     <th>Code No</th>
                     <td>{{ $code }}</td>
                 </tr>                
-                <tr>
+                {{-- <tr>
                     <th>Submit Date</th>
                     <td>{{ \Carbon\Carbon::parse($mailData['submission']->created_at)->format('j/F/Y') }}</td>
-                </tr>
+                </tr> --}}
                 <tr>
                     <th>BU</th>
                     <td>{{ $mailData['submission']->bu }}</td>

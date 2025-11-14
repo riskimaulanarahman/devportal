@@ -505,7 +505,7 @@ class SubmissionMail extends Mailable
                         'request_wphc.*',
                         'request_wphc_detail.work_date',
                         'request_wphc_detail.remarks',
-                        'request_wphc_detail.reason',
+                        'request_wphc_detail.text',
                         'employee.tbl_employee.FullName as emp_name',
                         'employee.tbl_department.DepartmentName as department_name'
                     )
@@ -519,7 +519,7 @@ class SubmissionMail extends Mailable
 
                 // Inject data ke objek submission
                 $submission->emp_name      = $wphc->emp_name ?? '-';
-                $submission->reason      = $wphc->reason ?? '-';
+                $submission->text      = $wphc->text ?? '-';
                 $submission->work_date = $wphc->work_date ?? '-';
                 $submission->department_name   = $wphc->department_name ?? '-';
                 $submission->remarks       = $wphc->remarks ?? '-';
@@ -566,7 +566,7 @@ class SubmissionMail extends Mailable
 
                 // Inject data ke objek submission
                 $submission->emp_name           = $spkl->emp_name ?? '-';
-                $submission->reason             = $spkl->reason ?? '-';
+                $submission->text             = $spkl->text ?? '-';
                 $submission->work_date          = $spkl->work_date ?? '-';
                 $submission->department_name    = $spkl->department_name ?? '-';
                 $submission->remarks            = $spkl->remarks ?? '-';

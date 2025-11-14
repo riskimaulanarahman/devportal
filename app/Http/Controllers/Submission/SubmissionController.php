@@ -368,7 +368,7 @@ class SubmissionController extends Controller
                     ->leftJoin('request_spkl_detail', 'request_spkl.id', '=', 'request_spkl_detail.req_id')
                     ->where('request_spkl.id', $req_id)
                     ->select(
-                        'request_spkl.tms',        
+                        'request_spkl.tms',
                         'request_spkl.category_id', 
                         DB::raw('MAX(request_spkl_detail.EstimateOvertimeHours) as maxOvertime'),
                         DB::raw('MAX(request_spkl_detail.isExceedPlan) as isExceedPlan')
