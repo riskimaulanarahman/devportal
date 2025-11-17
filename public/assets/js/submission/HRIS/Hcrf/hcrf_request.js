@@ -714,44 +714,44 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 },
                                 // validationRules: [{ type: "required" }]
                             },
-                            { 
-                                caption: "Training Plan",
-                                dataField: "detail_hcrf.trainingPlan",
-                                encodeHtml: false, // To ensure HTML is rendered (if needed)
-                                cellTemplate: function(container, options) {
-                                    // Custom cell rendering to show HTML content
-                                    $("<div>").html(options.value).appendTo(container);
-                                },
-                                editCellTemplate: function(cellElement, cellInfo) {
-                                    $("<div>").appendTo(cellElement).dxHtmlEditor({
-                                        value: cellInfo.value,
-                                        onValueChanged: function(e){
-                                            cellInfo.setValue(e.value);
-                                        },
-                                        height: 200, // Set a height for the editor
-                                    });
-                                },
-                                // validationRules: [{ type: "required" }]
-                            },
-                            { 
-                                caption: "Career Development Plan",
-                                dataField: "detail_hcrf.careerDevPlan",
-                                encodeHtml: false, // To ensure HTML is rendered (if needed)
-                                cellTemplate: function(container, options) {
-                                    // Custom cell rendering to show HTML content
-                                    $("<div>").html(options.value).appendTo(container);
-                                },
-                                editCellTemplate: function(cellElement, cellInfo) {
-                                    $("<div>").appendTo(cellElement).dxHtmlEditor({
-                                        value: cellInfo.value,
-                                        onValueChanged: function(e){
-                                            cellInfo.setValue(e.value);
-                                        },
-                                        height: 200, // Set a height for the editor
-                                    });
-                                },
-                                // validationRules: [{ type: "required" }]
-                            },
+                            // { 
+                            //     caption: "Training Plan",
+                            //     dataField: "detail_hcrf.trainingPlan",
+                            //     encodeHtml: false, // To ensure HTML is rendered (if needed)
+                            //     cellTemplate: function(container, options) {
+                            //         // Custom cell rendering to show HTML content
+                            //         $("<div>").html(options.value).appendTo(container);
+                            //     },
+                            //     editCellTemplate: function(cellElement, cellInfo) {
+                            //         $("<div>").appendTo(cellElement).dxHtmlEditor({
+                            //             value: cellInfo.value,
+                            //             onValueChanged: function(e){
+                            //                 cellInfo.setValue(e.value);
+                            //             },
+                            //             height: 200, // Set a height for the editor
+                            //         });
+                            //     },
+                            //     // validationRules: [{ type: "required" }]
+                            // },
+                            // { 
+                            //     caption: "Career Development Plan",
+                            //     dataField: "detail_hcrf.careerDevPlan",
+                            //     encodeHtml: false, // To ensure HTML is rendered (if needed)
+                            //     cellTemplate: function(container, options) {
+                            //         // Custom cell rendering to show HTML content
+                            //         $("<div>").html(options.value).appendTo(container);
+                            //     },
+                            //     editCellTemplate: function(cellElement, cellInfo) {
+                            //         $("<div>").appendTo(cellElement).dxHtmlEditor({
+                            //             value: cellInfo.value,
+                            //             onValueChanged: function(e){
+                            //                 cellInfo.setValue(e.value);
+                            //             },
+                            //             height: 200, // Set a height for the editor
+                            //         });
+                            //     },
+                            //     // validationRules: [{ type: "required" }]
+                            // },
                         ],
                         export: {
                             enabled: false,
@@ -1194,8 +1194,8 @@ function btnreqsubmit(reqid,mode) {
         // { field: 'isCriticalPosition', name: 'Critical Position' },
         { field: 'location', name: 'Location' },
         { field: 'jobDesc', name: 'Job Description' },
-        { field: 'trainingPlan', name: 'Training Plan' },
-        { field: 'careerDevPlan', name: 'Career Development Plan' },
+        // { field: 'trainingPlan', name: 'Training Plan' },
+        // { field: 'careerDevPlan', name: 'Career Development Plan' },
         { field: 'education', name: 'Education' },
         { field: 'experienceLength', name: 'Experience (type/length)' },
         { field: 'language', name: 'Language' },

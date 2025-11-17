@@ -362,7 +362,7 @@ class HcrfRequestController extends Controller
             $file = public_path("template/hris/hcrf/hcrf.xlsx");
 
 			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
-			$Worksheet = $Workbook->Worksheets(1);
+			$Worksheet = $Workbook->Worksheets(2);
 			$Worksheet->Activate;
 
 
@@ -396,8 +396,8 @@ class HcrfRequestController extends Controller
                 $Worksheet->Range("A14")->Value = $jobDescCleaned;
 
                 $Worksheet->Range("D20")->Value = $data->detailHcrf->location;
-                $Worksheet->Range("A24")->Value = $trainingPlanCleaned;
-                $Worksheet->Range("A28")->Value = $careerDevPlanCleaned;
+                // $Worksheet->Range("A24")->Value = $trainingPlanCleaned;
+                // $Worksheet->Range("A28")->Value = $careerDevPlanCleaned;
 
                 $Worksheet->Range("B33")->Value = $data->detailHcrf->education;
                 $Worksheet->Range("H33")->Value = $data->detailHcrf->experienceLength;
