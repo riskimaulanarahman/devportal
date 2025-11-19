@@ -245,14 +245,19 @@ class WphcRequestController extends Controller
                 // Tentukan category_id
                 $level = (string) $employee->level_id;
                 $requestData['category_id'] = in_array($level, ['1', '2', '3']) ? 30 :
-                                            ($level === '4' ? 32 : null);
+                ($level === '4' ? 32 : null);
             }
 
             $requestData['user_id'] = $user->id;
 
             $newData = $this->model->create($requestData);
+            // dd($newData);
+            $id = $newData->id;
             DB::commit();
-
+            // Inject approval DeptHead jika tersedia
+            if (in_array($employee->level_id, [2, 5]) && $requestData['DeptHead']) {
+                $this->createApprDeptHead($requestData['DeptHead'], $this->modulename, $id);
+            }
             return response()->json([
                 "status" => "success",
                 "message" => $this->getMessage()['store'],
@@ -262,7 +267,7 @@ class WphcRequestController extends Controller
             DB::rollBack();
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
-}
+    }
 
     public function show($id)
     {

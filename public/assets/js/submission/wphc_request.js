@@ -704,120 +704,239 @@ const popupContentTemplate = function (reqid, mode, options) {
                     }
 const infoContentcontract = $("<div id='infoContentcontract'>");
 
-if (data.ID === 2) {
-  const detailsStore = storewithmodule('wphc_detail', modelclass, reqid);
+  if (data.ID === 2) {
+    const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
 
-  detailsStore.load().done(() => {
-    const schedulerElement = $("<div id='formcontract'>");
-    infoContentcontract.append(schedulerElement);
+    // ========= Helper umum =========
+    const normalizeDate = (date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    };
 
-    schedulerElement.dxScheduler({
-      dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
-      keyExpr: "id",
-      views: ["month"],
-      currentView: "month",
-      currentDate: new Date(),
-      startDayHour: 7,
-      endDayHour: 18,
-      height: 600,
-      startDateExpr: "startDate",
-      endDateExpr: "endDate",
-      textExpr: "text",
-      editing: {
-        allowAdding: true,
-        allowUpdating: true,
-        allowDeleting: true
-      },
-      showAllDayPanel: false,
-      showCurrentTimeIndicator: true,
-      shadeUntilCurrentTime: true,
-      maxAppointmentsPerCell: "unlimited",
+    const formatDateKey = (date) => {
+      const d = normalizeDate(date);
+      return (
+        d.getFullYear() +
+        "-" +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(d.getDate()).padStart(2, "0")
+      );
+    };
 
-      dataCellTemplate(cellData, cellIndex, cellElement) {
-        const cellDate = new Date(cellData.startDate);
-        cellDate.setHours(0, 0, 0, 0);
+    const isSunday = (date) => normalizeDate(date).getDay() === 0;
+    const isWeekday = (date) => {
+      const day = normalizeDate(date).getDay();
+      return day >= 1 && day <= 6;
+    };
 
-        // Tampilkan angka tanggal di cell
-        const dateLabel = $("<div>")
-          .addClass("dx-scheduler-date-table-cell-text")
-          .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
-          .text(cellDate.getDate());
-        cellElement.append(dateLabel);
+    const showError = (message) => {
+      DevExpress.ui.notify({
+        message,
+        type: "error",
+        displayTime: 3000,
+        position: { my: "top center", at: "top center" }
+      });
+    };
 
-        // Disable tanggal 16-11-2025
-        const key = cellDate.getFullYear() + "-" +
-                    String(cellDate.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(cellDate.getDate()).padStart(2, "0");
+    // Ambil semua Sunday dalam bulan yang sama dengan date
+    const getMonthSundays = (date) => {
+      const d = normalizeDate(date);
+      const month = d.getMonth();
+      const year = d.getFullYear();
+      const sundays = [];
 
-        if (key === "2025-11-16") {
-          cellElement.css({
-            backgroundImage: "repeating-linear-gradient(45deg, #f9f9f9, #f9f9f9 6px, #efefef 6px, #efefef 12px)",
-            color: "#999",
-            pointerEvents: "none",
-            opacity: 0.5
-          });
-          cellElement.attr("title", "Tanggal ini dinonaktifkan");
+      const cursor = new Date(year, month, 1);
+      cursor.setHours(0, 0, 0, 0);
+
+      while (cursor.getMonth() === month) {
+        if (cursor.getDay() === 0) {
+          sundays.push(new Date(cursor.getTime()));
         }
-      },
-      onAppointmentAdding(e) {
-      if (!isValidAppointment(e.component, e.appointmentData)) {
-        e.cancel = true;
-        notifyDisableDate();
+        cursor.setDate(cursor.getDate() + 1);
       }
-    },
+      return sundays;
+    };
 
-      onAppointmentAdding(e) {
-        const start = new Date(e.appointmentData.startDate);
-        start.setHours(0, 0, 0, 0);
-        const key = start.getFullYear() + "-" +
-                    String(start.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(start.getDate()).padStart(2, "0");
+    // ========= Ambil holiday dari API =========
+    $.getJSON("api/holiday", (response) => {
+      const holidaysRaw = response?.data || [];
+      const holidayDates = holidaysRaw.map(h => h.HolidayDate);
 
-        if (key === "2025-11-14") {
-            e.cancel = true;
+      detailsStore.load().done((items) => {
+        let appointmentsNorm = Array.isArray(items)
+          ? items.map(a => ({
+              ...a,
+              startDate: normalizeDate(a.startDate),
+              endDate: a.endDate ? normalizeDate(a.endDate) : undefined
+            }))
+          : [];
 
-            setTimeout(() => {
-            if (DevExpress?.ui?.notify) {
-                DevExpress.ui.notify({
-                message: "Tanggal 14 November 2025 tidak dapat dipilih.",
-                type: "error",
-                displayTime: 3000,
-                position: { my: "top center", at: "top center" }
-                });
+        // Aturan enabled
+        const isEnabledDate = (date) => {
+          const d = normalizeDate(date);
+          const key = formatDateKey(d);
+          const isHoliday = holidayDates.includes(key);
+
+          if (isHoliday) return true; // holiday selalu aktif
+          if (isWeekday(d)) return false; // weekday non-holiday disable
+
+          if (isSunday(d)) {
+            const monthSundays = getMonthSundays(d);
+            const idx = monthSundays.findIndex(s => s.getTime() === d.getTime());
+            if (idx === -1) return false;
+            if (idx === 0) return true; // Sunday pertama bulan → aktif
+
+            const prevSunday = monthSundays[idx - 1];
+            const prevKey = formatDateKey(prevSunday);
+
+            const hasDataPrevSunday = appointmentsNorm.some(
+              a => formatDateKey(a.startDate) === prevKey
+            );
+            return !hasDataPrevSunday; 
+          }
+          return false;
+        };
+
+        const isDisabledDate = (date) => !isEnabledDate(date);
+
+        const schedulerElement = $("<div id='formcontract'>");
+        infoContentcontract.append(schedulerElement);
+
+        schedulerElement.dxScheduler({
+          dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
+          keyExpr: "id",
+          views: ["month"],
+          currentView: "month",
+          currentDate: new Date(), 
+          startDayHour: 7,
+          endDayHour: 18,
+          height: 600,
+          startDateExpr: "startDate",
+          endDateExpr: "endDate",
+          textExpr: "text",
+          editing: {
+            allowAdding: true,
+            allowUpdating: true,
+            allowDeleting: true,
+          },
+          showAllDayPanel: false,
+          showCurrentTimeIndicator: true,
+          shadeUntilCurrentTime: true,
+          maxAppointmentsPerCell: "unlimited",
+
+          // === Template cell kalender (visual) ===
+          dataCellTemplate(cellData, cellIndex, cellElement) {
+            const cellDate = normalizeDate(cellData.startDate);
+            const enabled = isEnabledDate(cellDate);
+
+            const element = $("<div>")
+              .addClass("dx-scheduler-date-table-cell-text")
+              .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
+              .text(cellDate.getDate());
+
+            if (!enabled) {
+              element.css({
+                backgroundColor: "#f0f0f0",
+                color: "#999",
+                opacity: 0.6,
+                border: "1px solid #ddd",
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 6px, #e0e0e0 6px, #e0e0e0 12px)"
+              });
             } else {
-                alert("Tanggal 14 November 2025 tidak dapat dipilih."); // fallback
+              element.css({
+                backgroundColor: "#e6ffe6",
+                color: "#060",
+                fontWeight: "bold"
+              });
             }
-            }, 0);
-        }
-        },
 
-      onAppointmentUpdating(e) {
-        const start = new Date(e.newData.startDate);
-        start.setHours(0, 0, 0, 0);
-        const key = start.getFullYear() + "-" +
-                    String(start.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(start.getDate()).padStart(2, "0");
+            return cellElement.append(element);
+          },
 
-        if (key === "2025-11-16") {
-          e.cancel = true;
-          setTimeout(() => {
-            DevExpress.ui.notify({
-              message: "Tanggal 16 November 2025 tidak dapat dipilih.",
-              type: "error",
-              displayTime: 3000,
-              position: { my: "top center", at: "top center" }
+          // === Validasi ===
+          onAppointmentFormOpening(e) {
+            const date = normalizeDate(e.appointmentData.startDate);
+            if (isDisabledDate(date)) {
+              e.cancel = true;
+              showError("Tanggal ini tidak dapat dipilih (aturan holiday & Sunday berturut-turut).");
+            }
+            const form = e.form;
+            e.popup.option("title", "Form Pengajuan Jadwal");
+            form.option("items", [
+                {
+                dataField: "text",
+                label: { text: "Judul" },
+                editorType: "dxTextBox",
+                editorOptions: { placeholder: "Masukkan judul kegiatan" }
+                },
+                {
+                dataField: "startDate",
+                label: { text: "Tanggal Mulai" },
+                editorType: "dxDateBox",
+                editorOptions: { type: "datetime" }
+                },
+                {
+                dataField: "endDate",
+                label: { text: "Tanggal Selesai" },
+                editorType: "dxDateBox",
+                editorOptions: { type: "datetime" }
+                },
+                {
+                dataField: "remarks",
+                label: { text: "Remarks" },
+                editorType: "dxTextArea",
+                editorOptions: {
+                    placeholder: "Tambahkan catatan atau remarks",
+                    height: 80
+                }
+                }
+            ]);
+          },
+          onAppointmentAdding(e) {
+            const date = normalizeDate(e.appointmentData.startDate);
+            if (isDisabledDate(date)) {
+              e.cancel = true;
+              showError("Tanggal ini tidak dapat dipilih (aturan holiday & Sunday berturut-turut).");
+            }
+          },
+          onAppointmentAdded(e) {
+            detailsStore.load().done((items) => {
+                appointmentsNorm = Array.isArray(items)
+                ? items.map(a => ({
+                    ...a,
+                    startDate: normalizeDate(a.startDate),
+                    endDate: a.endDate ? normalizeDate(a.endDate) : undefined
+                    }))
+                : [];
+
+                console.log("[AppointmentAdded] Reloaded appointmentsNorm:", appointmentsNorm.map(a => formatDateKey(a.startDate)));
+
+                // Trigger repaint supaya cell template dievaluasi ulang
+                schedulerElement.dxScheduler("instance").repaint();
             });
-          }, 0);
-        }
-      }
+            },
+          onAppointmentUpdating(e) {
+            const date = normalizeDate(e.newData.startDate);
+            if (isDisabledDate(date)) {
+              e.cancel = true;
+              showError("Tanggal ini tidak dapat dipilih (aturan holiday & Sunday berturut-turut).");
+            }
+          },
+
+          onAppointmentDeleted(e) {
+            const key = formatDateKey(normalizeDate(e.appointmentData.startDate));
+            appointmentsNorm = appointmentsNorm.filter(
+              a => formatDateKey(a.startDate) !== key
+            );
+            schedulerElement.dxScheduler("instance").repaint();
+          }
+        });
+      });
     });
-  });
-
-
-return infoContentcontract;
-
-
-
+  return infoContentcontract;
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),
