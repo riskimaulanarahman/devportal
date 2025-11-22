@@ -102,7 +102,7 @@ class SpklRequestController extends Controller
                 })
                 ->orderByDesc('request_spkl.created_at')
                 ->get();
-
+ 
             // dd($data);
 
             return response()->json([
@@ -178,7 +178,6 @@ class SpklRequestController extends Controller
             ]);
         }
     }
-
 
     public function show($id)
     {

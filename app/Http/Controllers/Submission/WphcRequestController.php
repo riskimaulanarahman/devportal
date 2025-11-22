@@ -16,7 +16,7 @@ use App\Models\Holiday;
 
 use App\Mail\SubmissionMail;
 use Carbon\Carbon;
-use COM;
+use COM; 
 use Log;
 
 class WphcRequestController extends Controller

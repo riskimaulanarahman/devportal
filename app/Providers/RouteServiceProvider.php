@@ -12,6 +12,8 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+                
 
 use Illuminate\Pagination\Paginator;
 use View;
@@ -83,6 +85,17 @@ class RouteServiceProvider extends ServiceProvider
                         $query->orWhere('is_admin',0);
                     } else {
                         $query->where('is_admin',0);
+                        // Cek apakah PIC
+                        $employee = DB::table('employee.tbl_employee')
+                                    ->where('LoginName',$getuser->name ?? $getuser->username ?? null)
+                                    ->first();
+                        $isPIC = $employee ? intval($employee->isPIC ?? 0) : 0;
+
+                        // Jika bukan PIC, sembunyikan menu SPKL
+                        if ($isPIC !== 1) {
+                            $query->whereNotIn('route',['#spkl'])
+                                ->where('route','not like','spkl_%');
+                        }
                         $checkaccess = Useraccess::join('reference.side_menus','authorization.tbl_useraccess.module_id','reference.side_menus.modules')
                         ->where('employee_id',$getuser->id)
                         ->where('allowView',true)

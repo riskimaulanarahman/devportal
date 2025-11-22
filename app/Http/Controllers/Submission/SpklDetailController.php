@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Submission;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\User;
-use App\Models\Useraccess;
 use App\Models\SpklDetail;
 use Illuminate\Http\Request;
 use DB;
