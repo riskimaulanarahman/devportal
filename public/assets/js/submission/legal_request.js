@@ -324,6 +324,10 @@ var dataSektor = [
         bu: 'KPSI',
         sektor: 'KPSI'
     },
+    {
+        bu: 'MHS',
+        sektor: 'JLA'
+    },
 ];
 
 const popupContentTemplate = function (reqid, mode, options) {
