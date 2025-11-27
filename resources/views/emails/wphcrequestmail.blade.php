@@ -87,7 +87,14 @@
                 </tr>
                 <tr>
                     <th>workdate</th>
-                    <td>{{ $mailData['submission']->work_date }}</td>
+                    <td>
+                        {{ \Carbon\Carbon::parse($mailData['submission']->startDate)->format('d M Y, H:i') }}
+                        –
+                        {{ \Carbon\Carbon::parse($mailData['submission']->endDate)->format('d M Y, H:i') }}
+                        ({{ \Carbon\Carbon::parse($mailData['submission']->startDate)->diffInDays(\Carbon\Carbon::parse($mailData['submission']->endDate)) + 1 }} hari)
+                    </td>
+
+                    {{-- <td>{{ $mailData['submission']->startDate }} - {{ $mailData['submission']->endDate }}</td> --}}
                 </tr>
                 <tr>
                     <th>Deparment</th>

@@ -713,7 +713,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 useIcons: true,
                                 mode: "batch",
                                 allowAdding: true,
-                                allowUpdating: true,
+                                allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || developer ? true : false),
+                                // allowUpdating: true,
                                 allowDeleting: true,
                             },
                             scrolling: {

@@ -682,7 +682,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                     var infoContentcontract = $("<div id='infoContentcontract'>");
                     if (data.ID == 2) {
                         let formDataContract = $("<div id='formcontract'>").dxDataGrid({
-                            // dataSource: storedetail(modname, reqid),
                             dataSource: storewithmodule('spkl_detail', modelclass, reqid),
                             allowColumnReordering: true,
                             allowColumnResizing: true,
@@ -799,7 +798,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     caption: 'Act Normal',
                                     dataField: 'ActualNormalHours',
                                     dataType: 'number',
-                                    allowEditing: false
                                 },
                                 {
                                     caption: 'Act Overtime',
@@ -807,22 +805,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     dataType: 'number',
                                     allowEditing: false
                                 },
-                                // {
-                                //     caption: 'Exceed Plan?',
-                                //     dataField: 'isExceedPlan',
-                                //     dataType: 'boolean',
-                                //     width: 100,
-                                //     calculateDisplayValue: function (rowData) {
-                                //         return rowData.isExceedPlan ? 'Yes' : 'No';
-                                //     },
-                                //     cellTemplate: function (container, options) {
-                                //         const value = options.value ? 'Yes' : 'No';
-                                //         container.text(value);
-                                //     },
-                                //     editorOptions: {
-                                //         readOnly: true
-                                //     }
-                                // },
                                 {
                                     caption: 'Target Work',
                                     dataField: 'Target'
@@ -834,44 +816,35 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 excelFilterEnabled: true,
                                 allowExportSelectedData: true
                             },
-                            // Kolom tetap sama
 
                             onRowUpdating: function(e) {
-                                // const planover = e.newData.EstimateOvertimeHours ?? e.oldData.EstimateOvertimeHours;
-                                // const planact = e.newData.ActualOvertimeHours ?? e.oldData.ActualOvertimeHours;
                                 const startRaw = e.newData.ActualStartWork ?? e.oldData.ActualStartWork;
-                                const endRaw = e.newData.ActualEndWork ?? e.oldData.ActualEndWork;
-                                let normalRaw = e.newData.ActualNormalHours ?? e.oldData.ActualNormalHours;
+                                const endRaw   = e.newData.ActualEndWork   ?? e.oldData.ActualEndWork;
+                                const normalRaw = e.newData.ActualNormalHours ?? e.oldData.ActualNormalHours;
 
                                 if (startRaw && endRaw) {
                                     const start = new Date(startRaw);
-                                    const end = new Date(endRaw);
+                                    const end   = new Date(endRaw);
 
                                     if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
                                         const totalHours = parseFloat((end - start) / (1000 * 60 * 60)).toFixed(2);
                                         e.newData.ActualTotalHours = Number(totalHours);
 
-                                        // Tetapkan default normal jika belum diisi
-                                        if (normalRaw === undefined || normalRaw === null || normalRaw === '') {
-                                            const day = start.getDay(); // 0 = Minggu, 6 = Sabtu
-                                            switch (day) {
-                                                case 0: normalRaw = 0; break;
-                                                case 6: normalRaw = 4; break;
-                                                default: normalRaw = 8; break;
-                                            }
-                                            e.newData.ActualNormalHours = normalRaw;
+                                        // Tidak ada perhitungan otomatis, gunakan nilai manual dari user
+                                        if (normalRaw !== undefined && normalRaw !== null && normalRaw !== '') {
+                                            const normal = Number(normalRaw);
+                                            e.newData.ActualNormalHours = normal;
+                                            e.newData.ActualOvertimeHours = Math.max(0, Math.floor(totalHours - normal));
+                                        } else {
+                                            // Kalau user tidak isi, biarkan kosong
+                                            e.newData.ActualNormalHours = null;
+                                            e.newData.ActualOvertimeHours = 0;
                                         }
-
-                                        const normal = Number(normalRaw);
-                                        e.newData.ActualOvertimeHours = Math.max(0, Math.floor(totalHours - normal));
                                     } else {
                                         e.newData.ActualTotalHours = 0;
                                         e.newData.ActualOvertimeHours = 0;
                                     }
                                 }
-                                // if (!isNaN(planover) && !isNaN(planact)) {
-                                //     e.newData.isExceedPlan = planact !== planover ? 35 : 0;
-                                // }
                             },
                             onInitialized: function (e) {
                                 dataGriddetail = e.component;

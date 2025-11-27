@@ -86,16 +86,16 @@ class RouteServiceProvider extends ServiceProvider
                     } else {
                         $query->where('is_admin',0);
                         // Cek apakah PIC
-                        $employee = DB::table('employee.tbl_employee')
-                                    ->where('LoginName',$getuser->name ?? $getuser->username ?? null)
-                                    ->first();
-                        $isPIC = $employee ? intval($employee->isPIC ?? 0) : 0;
+                        // $employee = DB::table('employee.tbl_employee')
+                        //             ->where('LoginName',$getuser->name ?? $getuser->username ?? null)
+                        //             ->first();
+                        // $isPIC = $employee ? intval($employee->isPIC ?? 0) : 0;
 
                         // Jika bukan PIC, sembunyikan menu SPKL
-                        if ($isPIC !== 1) {
-                            $query->whereNotIn('route',['#spkl'])
-                                ->where('route','not like','spkl_%');
-                        }
+                        // if ($isPIC !== 1) {
+                        //     $query->whereNotIn('route',['#spkl'])
+                        //         ->where('route','not like','spkl_%');
+                        // }
                         $checkaccess = Useraccess::join('reference.side_menus','authorization.tbl_useraccess.module_id','reference.side_menus.modules')
                         ->where('employee_id',$getuser->id)
                         ->where('allowView',true)

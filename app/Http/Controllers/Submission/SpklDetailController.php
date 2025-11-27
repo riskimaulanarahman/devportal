@@ -67,6 +67,11 @@ class SpklDetailController extends Controller
                     ->where('id', $request->req_id)
                     ->update(['category_id' => 36]); // 36 = moreThanTwoHours
             }
+            if ($requestData['moreThanTwoHours'] == 0) {
+                DB::table('request_spkl')
+                    ->where('id', $request->req_id)
+                    ->update(['category_id' => 35]); // 36 = moreThanTwoHours
+            }
 
             DB::commit();
 

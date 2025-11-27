@@ -104,7 +104,7 @@ class WphcRequestController extends Controller
             // Hitung status aktif berdasarkan work_date + 3 bulan >= hari ini
             $data = $rawData->map(function ($item) use ($now) {
                 $workDate = Carbon::parse($item->work_date);
-                $aktifUntil = $workDate->copy()->addMonths(3);
+                $aktifUntil = $workDate->copy()->addMonths(4);
                 $isAktif = $aktifUntil->greaterThanOrEqualTo($now);
 
                 $itemArray = collect($item)->toArray();

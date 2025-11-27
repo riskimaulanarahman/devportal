@@ -117,67 +117,76 @@ class SpklRequestController extends Controller
     }
 
     public function store(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            $user = $this->getAuth();
-            $requestData = $request->all();
+{
+    DB::beginTransaction();
+    try {
+        $user = $this->getAuth();
+        $requestData = $request->all();
 
-            // Ambil employee berdasarkan LoginName
-            $employee = DB::table('employee.tbl_employee as emp')
-                ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
-                ->where('usr.id', $user->id)
-                ->select('emp.*')
-                ->first();
+        // Ambil employee berdasarkan LoginName
+        $employee = DB::table('employee.tbl_employee as emp')
+            ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
+            ->where('usr.id', $user->id)
+            ->select('emp.*', 'usr.isAdmin') // ambil is_admin dari users
+            ->first();
 
-            if (!$employee || !isset($employee->companycode)) {
-                throw new \Exception("Data employee atau kolom 'bu' tidak ditemukan.");
-            }
-
-            // Ambil DeptHead berdasarkan sys_id_depthead
-            $deptHead = DB::table('employee.tbl_employee')
-                ->where('sys_id', $employee->sys_id_depthead)
-                ->select('id')
-                ->first();
-
-            if (!$deptHead) {
-                throw new \Exception("Data DeptHead tidak ditemukan.");
-            }
-
-            // Persiapan data untuk disimpan
-            $requestData['user_id'] = $user->id;
-            $requestData['employee_id'] = $employee->id;
-            $requestData['bu'] = $employee->companycode;
-            $requestData['DeptHead'] = $deptHead->id;
-            $requestData['tms'] = 33;
-            $requestData['category_id'] = 0;
-            $requestData['module_id'] = $this->getModuleId($this->modulename);
-            // $requestData['moreThanTwoHours'] = 0;
-
-            // Simpan data
-            $newData = $this->model->create($requestData);
-            $id = $newData->id;
-
-            DB::commit();
-
-            // Inject approval DeptHead jika tersedia
-            if ($requestData['DeptHead']) {
-                $this->createApprDeptHead($requestData['DeptHead'], $this->modulename, $id);
-            }
-
-            return response()->json([
-                "status" => "success",
-                "message" => $this->getMessage()['store'],
-                "data" => $newData
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                "status" => "error",
-                "message" => $e->getMessage()
-            ]);
+        if (!$employee || !isset($employee->companycode)) {
+            throw new \Exception("Data employee atau kolom 'bu' tidak ditemukan.");
         }
+
+        // // Normalisasi nilai akses
+        $isPIC   = (int)($employee->isPIC ?? 0) === 1;
+        $level = in_array((int)($employee->level_id ?? 0), [3, 4], true);
+        $isAdmin = (bool)($users->isAdmin ?? 0); // gunakan is_admin yang konsisten
+
+        // Diizinkan jika salah satu benar (PIC atau Level 3/4 atau Admin)
+        $canStore = $isPIC || $level || $isAdmin;
+        if (!$canStore) {
+            throw new \Exception("Error: Unauthorized Access - You do not have the necessary permissions to perform this action.");
+        }
+        // Ambil DeptHead berdasarkan sys_id_depthead
+        $deptHead = DB::table('employee.tbl_employee')
+            ->where('sys_id', $employee->sys_id_depthead)
+            ->select('id')
+            ->first();
+
+        if (!$deptHead) {
+            throw new \Exception("Data DeptHead tidak ditemukan.");
+        }
+
+        // Persiapan data untuk disimpan
+        $requestData['user_id']     = $user->id;
+        $requestData['employee_id'] = $employee->id;
+        $requestData['bu']          = $employee->companycode;
+        $requestData['DeptHead']    = $deptHead->id;
+        $requestData['tms']         = 33;
+        $requestData['category_id'] = 0;
+        $requestData['module_id']   = $this->getModuleId($this->modulename);
+
+        // Simpan data
+        $newData = $this->model->create($requestData);
+        $id = $newData->id;
+
+        DB::commit();
+
+        // Inject approval DeptHead jika tersedia
+        if (!empty($requestData['DeptHead'])) {
+            $this->createApprDeptHead($requestData['DeptHead'], $this->modulename, $id);
+        }
+
+        return response()->json([
+            "status"  => "success",
+            "message" => $this->getMessage()['store'],
+            "data"    => $newData
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            "status"  => "error",
+            "message" => $e->getMessage()
+        ]);
     }
+}
 
     public function show($id)
     {

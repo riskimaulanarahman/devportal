@@ -78,23 +78,23 @@ class GeneratemenuController extends Controller
 
         if ($menu != null) {
             if (isset($this->getAuth()->isAdmin)) {
-                $user = $this->getAuth();
-                $employee = DB::table('employee.tbl_employee')
-                              ->where('LoginName',$user->name ?? $user->username ?? null)
-                              ->first();
-                $isAdmin = intval($user->isAdmin ?? 0);
-                $isPIC   = $employee ? intval($employee->isPIC ?? 0) : 0;
+                // $user = $this->getAuth();
+                // $employee = DB::table('employee.tbl_employee')
+                //               ->where('LoginName',$user->name ?? $user->username ?? null)
+                //               ->first();
+                // $isAdmin = intval($user->isAdmin ?? 0);
+                // $isPIC   = $employee ? intval($employee->isPIC ?? 0) : 0;
 
-                // === Override khusus SPKL ===
-                if ($sidemenu->route === '#spkl' || str_starts_with($sidemenu->route,'spkl_')) {
-                    if ($isAdmin === 1) {
-                        return $viewGrid;
-                    } elseif ($isAdmin === 0 && $isPIC === 1) {
-                        return $viewGrid;
-                    } else {
-                        return view('errors.401');
-                    }
-                }
+                // // === Override khusus SPKL ===
+                // if ($sidemenu->route === '#spkl' || str_starts_with($sidemenu->route,'spkl_')) {
+                //     if ($isAdmin === 1) {
+                //         return $viewGrid;
+                //     } elseif ($isAdmin === 0 && $isPIC === 1) {
+                //         return $viewGrid;
+                //     } else {
+                //         return view('errors.401');
+                //     }
+                // }
 
                 if ($this->getAuth()->isAdmin == 1) {
                     return $viewGrid;

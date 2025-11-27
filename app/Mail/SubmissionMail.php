@@ -504,6 +504,8 @@ class SubmissionMail extends Mailable
                     ->select(
                         'request_wphc.*',
                         'request_wphc_detail.work_date',
+                        'request_wphc_detail.startDate',
+                        'request_wphc_detail.endDate',
                         'request_wphc_detail.remarks',
                         'request_wphc_detail.text',
                         'employee.tbl_employee.FullName as emp_name',
@@ -521,6 +523,8 @@ class SubmissionMail extends Mailable
                 $submission->emp_name      = $wphc->emp_name ?? '-';
                 $submission->text      = $wphc->text ?? '-';
                 $submission->work_date = $wphc->work_date ?? '-';
+                $submission->startDate = $wphc->startDate ?? '-';
+                $submission->endDate = $wphc->endDate ?? '-';
                 $submission->department_name   = $wphc->department_name ?? '-';
                 $submission->remarks       = $wphc->remarks ?? '-';
 
