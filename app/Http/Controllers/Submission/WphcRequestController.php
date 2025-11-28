@@ -84,11 +84,11 @@ class WphcRequestController extends Controller
             $rawData = DB::table('request_wphc_detail as rdw')
                 ->join('request_wphc as rw', 'rdw.req_id', '=', 'rw.id')
                 ->where('rw.employee_id', $employee_id)
-                ->orderByDesc('rdw.work_date')
+                ->orderByDesc('rdw.startDate')
                 ->select(
                     'rdw.id',
                     'rdw.req_id',
-                    'rdw.work_date',
+                    'rdw.startDate as work_date',
                     'rdw.remarks',
                     'rdw.text',
                     'rdw.created_at',
@@ -103,8 +103,8 @@ class WphcRequestController extends Controller
 
             // Hitung status aktif berdasarkan work_date + 3 bulan >= hari ini
             $data = $rawData->map(function ($item) use ($now) {
-                $workDate = Carbon::parse($item->work_date);
-                $aktifUntil = $workDate->copy()->addMonths(4);
+                $work_date = Carbon::parse($item->work_date);
+                $aktifUntil = $work_date->copy()->addMonths(4);
                 $isAktif = $aktifUntil->greaterThanOrEqualTo($now);
 
                 $itemArray = collect($item)->toArray();
@@ -381,7 +381,6 @@ class WphcRequestController extends Controller
     public function genPdfWphc(Request $request, $id) 
     {
         $dataAppr = DB::table('wphcApprover')->select('*')->where('id', $id)->get(); // Data approver
-        // $requestWphcDetail = DB::table('request_wphc_detail')->select('work_date', 'remarks', 'text')->where('req_id', $id)->get();
         $dataDetail = DB::table('request_wphc_detail')->where('req_id', $id)->get();
 
 
@@ -393,7 +392,7 @@ class WphcRequestController extends Controller
             'emp.loginName',
             'emp.FullName',
             'designation.DesignationName',
-            'rwd.work_date',
+            'rwd.startDate',
             'rwd.remarks',
             'rwd.text',
             'loc.Location',
@@ -453,7 +452,7 @@ class WphcRequestController extends Controller
 
             $row = 37;
             foreach ($dataDetail as $detail) {
-                $Worksheet->Range("B{$row}")->Value = (string) $detail->work_date;
+                $Worksheet->Range("B{$row}")->Value = date('Y-m-d', strtotime($detail->startDate));
                 $Worksheet->Range("D{$row}")->Value = (string) $detail->remarks;
                 $Worksheet->Range("K{$row}")->Value = (string) $detail->text;
                 $row += 3;
@@ -503,7 +502,7 @@ class WphcRequestController extends Controller
 
                 $row = 37;
                 foreach ($dataDetail as $detail) {
-                    $Worksheet->Range("B{$row}")->Value = (string) $detail->work_date;
+                    $Worksheet->Range("B{$row}")->Value = date('Y-m-d', strtotime($detail->startDate));
                     $Worksheet->Range("D{$row}")->Value = (string) $detail->remarks;
                     $Worksheet->Range("K{$row}")->Value = (string) $detail->text;
 

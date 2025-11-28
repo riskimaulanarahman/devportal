@@ -1443,7 +1443,10 @@ function renderLogIssueAccordion(filter) {
         <div id="${collapseId}" class="accordion-collapse collapse" aria-labelledby="${headingId}" data-bs-parent="#wphcDetailsAccordion">
           <div class="accordion-body">
             <ul class="list-group list-group-flush">
-              <li class="list-group-item"><strong>Tanggal Kerja:</strong> ${item.work_date}</li>
+              <li class="list-group-item">
+                    <strong>Tanggal Kerja:</strong> ${new Date(item.work_date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+              </li>
+
               <li class="list-group-item"><strong>Status Aktif:</strong> <span class="badge ${badgeClass}">${item.status_wphc_aktif}</span></li>
               <li class="list-group-item"><strong>Aktif Sampai:</strong> ${item.aktif_sampai_dengan || '-'}</li>
               <li class="list-group-item"><strong>Alasan:</strong> ${item.text || '-'}</li>
@@ -1493,7 +1496,9 @@ function renderLogIssueAccordion(filter) {
         <div id="${collapseId}" class="accordion-collapse collapse" aria-labelledby="${headingId}" data-bs-parent="#wphcDetailsAccordion">
           <div class="accordion-body">
             <ul class="list-group list-group-flush">
-              <li class="list-group-item"><strong>Tanggal Kerja:</strong> ${item.work_date}</li>
+                <li class="list-group-item">
+                    <strong>Tanggal Kerja:</strong> ${new Date(item.work_date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+                </li>
               <li class="list-group-item"><strong>Status Aktif:</strong> <span class="badge ${badgeClass}">${item.status_wphc_aktif}</span></li>
               <li class="list-group-item"><strong>Aktif Sampai:</strong> ${item.aktif_sampai_dengan || '-'}</li>
               <li class="list-group-item"><strong>Alasan:</strong> ${item.text || '-'}</li>
