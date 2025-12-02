@@ -356,67 +356,15 @@ class SubmissionController extends Controller
                     ->where('tbl_approverListReq.module_id', $module_id)
                     ->get();
             }
-            
             if ($modulename == 'Spkl') {
-            function resolveApproverList($req_id, $module_id) {
-                $categoryMap = DB::table('tbl_categoryform')
-                    ->where('module_id', $module_id)
-                    ->pluck('id', 'nameCategory')
-                    ->toArray();
-
-                $spkl = DB::table('request_spkl')
-                    ->leftJoin('request_spkl_detail', 'request_spkl.id', '=', 'request_spkl_detail.req_id')
-                    ->where('request_spkl.id', $req_id)
-                    ->select(
-                        'request_spkl.tms',
-                        'request_spkl.category_id', 
-                        DB::raw('MAX(request_spkl_detail.EstimateOvertimeHours) as maxOvertime'),
-                        DB::raw('MAX(request_spkl_detail.isExceedPlan) as isExceedPlan')
-                    )
-                    ->groupBy('request_spkl.tms', 'request_spkl.category_id')
-                    ->first();
-
-                $activeCategories = [];
-
-                if (!empty($spkl->tms)) {
-                    $activeCategories[] = $spkl->tms;
-                }
-
-                if (!empty($spkl->category_id) &&
-                    in_array($spkl->category_id, [$categoryMap['moreThanTwoHours'] ?? -1, $categoryMap['isExceedplan'] ?? -1])) {
-                    $activeCategories[] = $spkl->category_id;
-                }
-
-                $activeCategories = array_unique($activeCategories);
-
-                $finalSequence = null;
-                if ($spkl->tms == ($categoryMap['spkl'] ?? -1)) {
-                    $finalSequence = ($spkl->maxOvertime < 2) ? 4 : 5;
-                } elseif ($spkl->tms == ($categoryMap['timesheet'] ?? -1)) {
-                    $finalSequence = ($spkl->isExceedPlan == 0) ? 3 : 5;
-                }
-
-                $approverList = DB::table('tbl_approver')
-                    ->where('module', 'Spkl')
-                    ->where('isActive', 1)
-                    ->where(function ($query) use ($activeCategories) {
-                        foreach ($activeCategories as $catId) {
-                            $query->orWhereRaw("EXISTS (
-                                SELECT value FROM STRING_SPLIT(category_id, ',')
-                                WHERE TRY_CAST(value AS INT) = ?
-                            )", [$catId]);
-                        }
-                    })
-                    ->orderBy('sequence')
-                    ->get()
-                    ->map(function ($approver) use ($finalSequence) {
-                        $approver->isFinal = ($approver->sequence == $finalSequence) ? 1 : 0;
-                        return $approver;
-                    });
-
-                return $approverList;
+                $approverlist = DB::table('tbl_approverListReq')
+                    ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                    ->leftJoin('request_wphc', 'tbl_approverListReq.req_id', '=', 'request_wphc.id')
+                    ->leftJoin('tbl_category', 'request_wphc.category_id', '=', 'tbl_category.id')
+                    ->where('tbl_approverListReq.req_id', $id)
+                    ->where('tbl_approverListReq.module_id', $module_id)
+                    ->get();
             }
-        }
 
             $final = 0;
             $mailData = [];
@@ -517,7 +465,6 @@ class SubmissionController extends Controller
                     } else if($request->approvalAction == 3) {
 
                         foreach($approverlist as $data) {
-                            
                             if($data->isFinal == 0) {
                                 if ($getapproverlist == 1 || $dataapproversamecount == 1) {
                                     $final = 1;
@@ -532,7 +479,6 @@ class SubmissionController extends Controller
                                 $statusappr = 3;
                                 $requeststatus = 3;
                             }
-                            
                         }
 
                     }
@@ -566,10 +512,6 @@ class SubmissionController extends Controller
             $dataToUpdate = [
                 "requestStatus" => $requeststatus
             ];
-
-            // if ($modulename == 'Spkl') {
-            //     $dataToUpdate['tms'] = 1;
-            // }
 
             // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate
             if ($modulename == 'Jdi' && $request->action == 'submission') {

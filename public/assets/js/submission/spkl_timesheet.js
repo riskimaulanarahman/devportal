@@ -625,11 +625,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 const hasSelection = keys.length;
 
                                 if (hasSelection !== 0) {
-                                    const selectedData = selectedItems.selectedRowsData[0]; // ambil data lengkap dari row
-                                    args.component.option('value', selectedData.id); // set employee_id
+                                    const selectedData = selectedItems.selectedRowsData[0];
+                                    args.component.option('value', selectedData.id); 
                                     console.log("Selected:", selectedItems.selectedRowsData[0]);
-
-                                    // Inject companycode ke request_spkl.bu
                                     if (e.row && e.row.data) {
                                         e.row.data.request_spkl = e.row.data.request_spkl || {};
                                         e.row.data.request_spkl.bu = selectedData.companycode;
@@ -640,7 +638,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 } else {
                                     args.component.option('value', null);
                                 }
-
                             },
 
                             onRowInserting: function (e) {
@@ -668,10 +665,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 }
                             },
                             onDataErrorOccurred: function (e) {
-                                // Menampilkan pesan kesalahan
                                 console.log("Terjadi kesalahan saat memuat data (1):", e.error.message);
-
-                                // Memuat ulang DataGrid
                                 dataGrid1.refresh();
                             }
                         }).appendTo(container)
@@ -724,24 +718,24 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 showInfo: true,
                                 showNavigationButtons: true,
                             },
-                            columns: [   
-                                {
-                                    caption: 'Create for other:',
+                            columns: [{   
+                                caption: 'Create for other:',
                                     dataField: 'employee_id',
                                     lookup: {
-                                        dataSource: listOption('/list-employee', 'id', 'fullname'),
+                                        dataSource: listOption('/list-spkl', 'id', 'fullname'),
                                         valueExpr: 'id',
-                                        displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
+                                        displayExpr: item => item ? `${item.fullname} (${item.sapid || ''})` 
+                                        : ''
                                     },
                                     setCellValue: function (rowData, value) {
                                         rowData.employee_id = value;
                                         const emp = employeeCache.find(e => e.id === value);
                                         if (emp) {
                                             rowData.bu = emp.companycode;
-                                            rowData.sapid = emp.sapid; // langsung ambil dari emp
-                                            rowData.position = emp.designationName; // pastikan designationName sudah tersedia di employeeCache
+                                            rowData.sapid = emp.sapid; 
+                                            rowData.position = emp.designationName;
 
-                                            rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ? "HO" : emp.companycode;
+                                            rowData.sector = ["IHM", "AHL", "KPSI", "NKL", "MHS"].includes(emp.companycode) ? "HO" : emp.companycode;
                                             rowData.level = emp.level_id;
 
                                             rowData.category_id = ['1', '2', '3'].includes(String(emp.level_id)) ? 30 :
@@ -772,11 +766,23 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     caption: 'Start Work',
                                     dataField: 'ActualStartWork',
                                     dataType: 'datetime',
-                                    editorType: 'dxDateBox',
                                     editorOptions: {
                                         type: 'datetime',
-                                        displayFormat: 'yyyy-MM-dd HH:mm'
-                                    }
+                                        displayFormat: 'yyyy-MM-dd HH:mm', 
+                                        value: (function() {
+                                            let date = new Date();   
+                                            date.setHours(0, 0, 0, 0); 
+                                            return date;
+                                        })(),
+                                        setCellValue: function(rowData, value) {
+                                        if (value) {
+                                            let date = new Date(value);
+                                            date.setMinutes(0, 0, 0);
+                                            rowData.ActualEndWork = date; 
+                                        }
+                                    },
+                                    validationRules: [{ type: "required" }]
+                                    },
                                 },
                                 {
                                     caption: 'End Work',
@@ -785,19 +791,36 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     editorType: 'dxDateBox',
                                     editorOptions: {
                                         type: 'datetime',
-                                        displayFormat: 'yyyy-MM-dd HH:mm'
-                                    }
+                                        displayFormat: 'yyyy-MM-dd HH:mm', 
+                                        value: (function() {
+                                            let date = new Date();   
+                                            date.setHours(0, 0, 0, 0); 
+                                            return date;
+                                        })(),
+                                        setCellValue: function(rowData, value) {
+                                            if (value) {
+                                                let date = new Date(value);
+                                                date.setMinutes(0, 0, 0);
+                                                rowData.ActualEndWork = date;   
+                                            }
+                                        },
+                                    },
+                                    validationRules: [{ type: "required" }]
                                 },
                                 {
                                     caption: 'Act Total',
                                     dataField: 'ActualTotalHours',
                                     dataType: 'number',
                                     allowEditing: false
+
                                 },
                                 {
                                     caption: 'Act Normal',
                                     dataField: 'ActualNormalHours',
                                     dataType: 'number',
+                                    validationRules: [{
+                                        type: "required"
+                                    }]
                                 },
                                 {
                                     caption: 'Act Overtime',
@@ -807,7 +830,10 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 },
                                 {
                                     caption: 'Target Work',
-                                    dataField: 'Target'
+                                    dataField: 'Target',
+                                    validationRules: [{
+                                        type: "required"
+                                    }]
                                 }
                             ],
                             export: { 

@@ -704,239 +704,270 @@ const popupContentTemplate = function (reqid, mode, options) {
                     }
 const infoContentcontract = $("<div id='infoContentcontract'>");
 
-  if (data.ID === 2) {
-    const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
+// Helper umum
+const normalizeDate = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
-    // ========= Helper umum =========
-    const normalizeDate = (date) => {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    };
+const formatDateKey = (date) => {
+  const d = normalizeDate(date);
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+};
 
-    const formatDateKey = (date) => {
-      const d = normalizeDate(date);
-      return (
-        d.getFullYear() +
-        "-" +
-        String(d.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(d.getDate()).padStart(2, "0")
-      );
-    };
+const isSunday = (date) => normalizeDate(date).getDay() === 0;
+const isWeekday = (date) => {
+  const day = normalizeDate(date).getDay();
+  return day >= 1 && day <= 6;
+};
 
-    const isSunday = (date) => normalizeDate(date).getDay() === 0;
-    const isWeekday = (date) => {
-      const day = normalizeDate(date).getDay();
-      return day >= 1 && day <= 6;
-    };
+const showError = (message) => {
+  DevExpress.ui.notify({
+    message,
+    type: "error",
+    displayTime: 3000,
+    position: { my: "top center", at: "top center" }
+  });
+};
 
-    const showError = (message) => {
-      DevExpress.ui.notify({
-        message,
-        type: "error",
-        displayTime: 3000,
-        position: { my: "top center", at: "top center" }
-      });
-    };
+if (data.ID === 2) {
+  const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
 
-    // Ambil semua Sunday dalam bulan yang sama dengan date
-    const getMonthSundays = (date) => {
-      const d = normalizeDate(date);
-      const month = d.getMonth();
-      const year = d.getFullYear();
-      const sundays = [];
+  // Ambil holiday dari API
+  $.getJSON("api/holiday", (response) => {
+    const holidaysRaw = response?.data || [];
+    const holidayDates = holidaysRaw.map(h => h.HolidayDate);
 
-      const cursor = new Date(year, month, 1);
-      cursor.setHours(0, 0, 0, 0);
+    detailsStore.load().done((items) => {
+      // Normalisasi data appointment
+      let appointmentsNorm = Array.isArray(items)
+        ? items.map(a => ({
+            ...a,
+            startDate: new Date(a.startDate),
+            endDate: a.endDate ? new Date(a.endDate) : undefined,
+            text: a.text
+          }))
+        : [];
 
-      while (cursor.getMonth() === month) {
-        if (cursor.getDay() === 0) {
-          sundays.push(new Date(cursor.getTime()));
-        }
-        cursor.setDate(cursor.getDate() + 1);
-      }
-      return sundays;
-    };
-
-    // ========= Ambil holiday dari API =========
-    $.getJSON("api/holiday", (response) => {
-      const holidaysRaw = response?.data || [];
-      const holidayDates = holidaysRaw.map(h => h.HolidayDate);
-
-      detailsStore.load().done((items) => {
-        let appointmentsNorm = Array.isArray(items)
-          ? items.map(a => ({
-              ...a,
-              startDate: normalizeDate(a.startDate),
-              endDate: a.endDate ? normalizeDate(a.endDate) : undefined
-            }))
-          : [];
-
-        // Aturan enabled
+      // === Aturan enabled (lintas bulan/tahun) ===
         const isEnabledDate = (date) => {
-          const d = normalizeDate(date);
-          const key = formatDateKey(d);
-          const isHoliday = holidayDates.includes(key);
+        const d = normalizeDate(date);
+        const key = formatDateKey(d);
+        const isHoliday = holidayDates.includes(key);
 
-          if (isHoliday) return true; // holiday selalu aktif
-          if (isWeekday(d)) return false; // weekday non-holiday disable
+        const today = normalizeDate(new Date());
 
-          if (isSunday(d)) {
-            const monthSundays = getMonthSundays(d);
-            const idx = monthSundays.findIndex(s => s.getTime() === d.getTime());
-            if (idx === -1) return false;
-            if (idx === 0) return true; // Sunday pertama bulan → aktif
+        // 1) Backdate: hanya disable 7 hari ke belakang
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        if (d < sevenDaysAgo) return false;
 
-            const prevSunday = monthSundays[idx - 1];
+        // 2) Holiday aktif
+        if (isHoliday) return true;
+
+        // 3) Weekday non-holiday disable
+        if (isWeekday(d)) return false;
+
+        // 4) Cooldown ±7 hari dari setiap appointment
+        const inCooldown = appointmentsNorm.some(a => {
+            const start = normalizeDate(a.startDate);
+
+            // kalau persis sama dengan tanggal appointment → tetap aktif
+            if (d.getTime() === start.getTime()) return true;
+
+            const cooldownStart = new Date(start);
+            cooldownStart.setDate(cooldownStart.getDate() - 7);
+            const cooldownEnd = new Date(start);
+            cooldownEnd.setDate(cooldownEnd.getDate() + 7);
+
+            return d >= cooldownStart && d <= cooldownEnd;
+        });
+
+        if (inCooldown) return false;
+
+        // 5) Sunday berturut-turut
+        if (isSunday(d)) {
+            const prevSunday = new Date(d);
+            prevSunday.setDate(prevSunday.getDate() - 7);
             const prevKey = formatDateKey(prevSunday);
 
             const hasDataPrevSunday = appointmentsNorm.some(
-              a => formatDateKey(a.startDate) === prevKey
+            a => formatDateKey(a.startDate) === prevKey
             );
-            return !hasDataPrevSunday; 
-          }
-          return false;
+            if (hasDataPrevSunday) return false;
+            return true;
+        }
+
+        return false;
         };
 
-        const isDisabledDate = (date) => !isEnabledDate(date);
 
-        const schedulerElement = $("<div id='formcontract'>");
-        infoContentcontract.append(schedulerElement);
+      const schedulerElement = $("<div id='formcontract'>");
+      infoContentcontract.append(schedulerElement);
 
-        schedulerElement.dxScheduler({
-          dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
-          keyExpr: "id",
-          views: ["month"],
-          currentView: "month",
-          currentDate: new Date(), 
-          startDayHour: 7,
-          endDayHour: 18,
-          height: 600,
-          startDateExpr: "startDate",
-          endDateExpr: "endDate",
-          textExpr: "text",
-          editing: {
-            allowAdding: true,
-            allowUpdating: true,
-            allowDeleting: true,
-          },
-          showAllDayPanel: false,
-          showCurrentTimeIndicator: true,
-          shadeUntilCurrentTime: true,
-          maxAppointmentsPerCell: "unlimited",
+      schedulerElement.dxScheduler({
+        dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
+        timeZone: "Asia/Makassar",
+        keyExpr: "id",
+        views: ["month"],
+        currentView: "month",
+        currentDate: new Date(),
+        startDayHour: 7,
+        endDayHour: 18,
+        height: 600,
+        startDateExpr: "startDate",
+        endDateExpr: "endDate",
+        textExpr: "text",
+        editing: {
+          allowAdding: true,
+          allowUpdating: true,
+          allowDeleting: true,
+        },
+        showAllDayPanel: false,
+        showCurrentTimeIndicator: true,
+        shadeUntilCurrentTime: true,
+        maxAppointmentsPerCell: "unlimited",
 
-          // === Template cell kalender (visual) ===
-          dataCellTemplate(cellData, cellIndex, cellElement) {
-            const cellDate = normalizeDate(cellData.startDate);
-            const enabled = isEnabledDate(cellDate);
+        // === Template cell kalender (visual) ===
+        dataCellTemplate(cellData, cellIndex, cellElement) {
+          const cellDate = normalizeDate(cellData.startDate);
+          const enabled = isEnabledDate(cellDate);
 
-            const element = $("<div>")
-              .addClass("dx-scheduler-date-table-cell-text")
-              .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
-              .text(cellDate.getDate());
+          const element = $("<div>")
+            .addClass("dx-scheduler-date-table-cell-text")
+            .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
+            .text(cellDate.getDate());
 
-            if (!enabled) {
-              element.css({
-                backgroundColor: "#f0f0f0",
-                color: "#999",
-                opacity: 0.6,
-                border: "1px solid #ddd",
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 6px, #e0e0e0 6px, #e0e0e0 12px)"
-              });
-            } else {
-              element.css({
-                backgroundColor: "#e6ffe6",
-                color: "#060",
-                fontWeight: "bold"
-              });
+          if (!enabled) {
+            element.css({
+              backgroundColor: "#f0f0f0",
+              color: "#999",
+              opacity: 0.6,
+              border: "1px solid #ddd",
+              backgroundImage:
+                "repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 6px, #e0e0e0 6px, #e0e0e0 12px)"
+            });
+          } else {
+            element.css({
+              backgroundColor: "#e6ffe6",
+              color: "#060",
+              fontWeight: "bold"
+            });
+          }
+
+          return cellElement.append(element);
+        },
+        onCellClick: function(e) {
+            const cellDate = normalizeDate(e.cellData.startDate);
+            if (!isEnabledDate(cellDate)) {
+                e.cancel = true;
+                showError("Tanggal ini tidak tersedia.");
             }
+            },
 
-            return cellElement.append(element);
-          },
-
-          // === Validasi ===
-          onAppointmentFormOpening(e) {
-            const date = normalizeDate(e.appointmentData.startDate);
-            if (isDisabledDate(date)) {
-              e.cancel = true;
-              showError("Tanggal ini tidak dapat dipilih (aturan holiday & Sunday berturut-turut).");
+        // === Form input sederhana ===
+        onAppointmentFormOpening(e) {
+          const form = e.form;
+          e.popup.option("title", "Form Pengajuan Jadwal");
+          form.option("items", [
+            {
+              dataField: "text",
+              label: { text: "Judul" },
+              editorType: "dxTextBox",
+              editorOptions: { placeholder: "Masukkan judul kegiatan" }
+            },
+            {
+              dataField: "startDate",
+              label: { text: "Tanggal" },
+              editorType: "dxDateBox",
+              editorOptions: { 
+                type: "date",
+                    disabledDates: function(data) {
+                    const d = normalizeDate(data.date);
+                    return !isEnabledDate(d); 
+                    }
+                } 
+            },
+            {
+              dataField: "remarks",
+              label: { text: "Remarks" },
+              editorType: "dxTextArea",
+              editorOptions: {
+                placeholder: "Tambahkan catatan atau remarks",
+                height: 80
+              }
             }
-            const form = e.form;
-            e.popup.option("title", "Form Pengajuan Jadwal");
-            form.option("items", [
-                {
-                dataField: "text",
-                label: { text: "Judul" },
-                editorType: "dxTextBox",
-                editorOptions: { placeholder: "Masukkan judul kegiatan" }
-                },
-                {
-                dataField: "startDate",
-                label: { text: "Tanggal Mulai" },
-                editorType: "dxDateBox",
-                editorOptions: { type: "datetime" }
-                },
-                {
-                dataField: "endDate",
-                label: { text: "Tanggal Selesai" },
-                editorType: "dxDateBox",
-                editorOptions: { type: "datetime" }
-                },
-                {
-                dataField: "remarks",
-                label: { text: "Remarks" },
-                editorType: "dxTextArea",
-                editorOptions: {
-                    placeholder: "Tambahkan catatan atau remarks",
-                    height: 80
+          ]);
+        },
+
+        // === Tangani error dari backend ===
+        onAppointmentAdding(e) {
+          $.ajax({
+            url: "api/wphc_detail",
+            method: "POST",
+            data: e.appointmentData,
+            success: function(res) {
+                if (res.status === "error") {
+                    e.cancel = true;
+                    showError(res.message);
+                } else {
+                    // reload store & repaint scheduler
+                    detailsStore.load().done((items) => {
+                    appointmentsNorm = items.map(a => ({
+                        ...a,
+                        startDate: new Date(a.startDate),
+                        endDate: a.endDate ? new Date(a.endDate) : undefined,
+                        text: a.text
+                    }));
+                    $("#formcontract").dxScheduler("instance").repaint();
+                    });
                 }
-                }
-            ]);
-          },
-          onAppointmentAdding(e) {
-            const date = normalizeDate(e.appointmentData.startDate);
-            if (isDisabledDate(date)) {
+                },
+            error: function(xhr) {
               e.cancel = true;
-              showError("Tanggal ini tidak dapat dipilih (aturan holiday & Sunday berturut-turut).");
+              showError(xhr.responseJSON?.message || "Terjadi kesalahan.");
             }
-          },
-          onAppointmentAdded(e) {
+          });
+        },
+        onAppointmentAdded: function(e) {
+            // reload store untuk update appointmentsNorm
             detailsStore.load().done((items) => {
-                appointmentsNorm = Array.isArray(items)
-                ? items.map(a => ({
-                    ...a,
-                    startDate: normalizeDate(a.startDate),
-                    endDate: a.endDate ? normalizeDate(a.endDate) : undefined
-                    }))
-                : [];
-
-                console.log("[AppointmentAdded] Reloaded appointmentsNorm:", appointmentsNorm.map(a => formatDateKey(a.startDate)));
-
-                // Trigger repaint supaya cell template dievaluasi ulang
-                schedulerElement.dxScheduler("instance").repaint();
+                appointmentsNorm = items.map(a => ({
+                ...a,
+                startDate: new Date(a.startDate),
+                endDate: a.endDate ? new Date(a.endDate) : undefined,
+                text: a.text
+                }));
+                $("#formcontract").dxScheduler("instance").repaint();
             });
             },
-          onAppointmentUpdating(e) {
-            const date = normalizeDate(e.newData.startDate);
-            if (isDisabledDate(date)) {
-              e.cancel = true;
-              showError("Tanggal ini tidak dapat dipilih (aturan holiday & Sunday berturut-turut).");
+        onAppointmentDeleted: function(e) {
+            // reload store untuk update appointmentsNorm
+            detailsStore.load().done((items) => {
+                appointmentsNorm = items.map(a => ({
+                ...a,
+                startDate: new Date(a.startDate),
+                endDate: a.endDate ? new Date(a.endDate) : undefined,
+                text: a.text
+                }));
+                $("#formcontract").dxScheduler("instance").repaint();
+            });
             }
-          },
 
-          onAppointmentDeleted(e) {
-            const key = formatDateKey(normalizeDate(e.appointmentData.startDate));
-            appointmentsNorm = appointmentsNorm.filter(
-              a => formatDateKey(a.startDate) !== key
-            );
-            schedulerElement.dxScheduler("instance").repaint();
-          }
-        });
       });
     });
-  return infoContentcontract;
+  });
+// }
+
+return infoContentcontract;
+
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),
@@ -1444,9 +1475,8 @@ function renderLogIssueAccordion(filter) {
           <div class="accordion-body">
             <ul class="list-group list-group-flush">
               <li class="list-group-item">
-                    <strong>Tanggal Kerja:</strong> ${new Date(item.work_date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
-              </li>
-
+                <strong>Tanggal Kerja:</strong> ${new Date(item.work_date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+                </li>
               <li class="list-group-item"><strong>Status Aktif:</strong> <span class="badge ${badgeClass}">${item.status_wphc_aktif}</span></li>
               <li class="list-group-item"><strong>Aktif Sampai:</strong> ${item.aktif_sampai_dengan || '-'}</li>
               <li class="list-group-item"><strong>Alasan:</strong> ${item.text || '-'}</li>
@@ -1496,8 +1526,8 @@ function renderLogIssueAccordion(filter) {
         <div id="${collapseId}" class="accordion-collapse collapse" aria-labelledby="${headingId}" data-bs-parent="#wphcDetailsAccordion">
           <div class="accordion-body">
             <ul class="list-group list-group-flush">
-                <li class="list-group-item">
-                    <strong>Tanggal Kerja:</strong> ${new Date(item.work_date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+              <li class="list-group-item">
+                <strong>Tanggal Kerja:</strong> ${new Date(item.work_date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
                 </li>
               <li class="list-group-item"><strong>Status Aktif:</strong> <span class="badge ${badgeClass}">${item.status_wphc_aktif}</span></li>
               <li class="list-group-item"><strong>Aktif Sampai:</strong> ${item.aktif_sampai_dengan || '-'}</li>

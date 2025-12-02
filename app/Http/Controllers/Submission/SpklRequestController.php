@@ -221,16 +221,11 @@ class SpklRequestController extends Controller
             $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
-
-            if($request->Superior) {
-                $this->createApprSuperior($request->Superior, $this->modulename, $id);
-            }
             if($request->DeptHead) {
                 $this->createApprDeptHead($request->DeptHead, $this->modulename, $id);
             }
             
             $data->update($requestData);
-            //end save history perubahan
 
             if(isset($request->ticketStatus) && $data->requestStatus == 3) {
                 $getSubmissionData = $data;
@@ -576,14 +571,16 @@ public function genPdfSpkl(Request $request, $id)
                         }
                     }
                 }
-
                 // SPKL - Final Approver
-                if ($appr->sequence == 5) {
-                    $Worksheet->Range("N{$approverSpklRow}")->Value = $appr->apprname;
-                    $Worksheet->Range("N" . ($approverSpklRow + 1))->Value = $appr->approvalDate;
-                    addPictureRespectTemplate($Worksheet, $picpath, "N{$approverSpklRow}", $approverSpklRow - 2, 36, $excel);
-                }
+                    if ($appr->sequence == 5) {
+                        $Worksheet->Range("N{$approverSpklRow}")->Value = $appr->apprname;
+                        $Worksheet->Range("N" . ($approverSpklRow + 1))->Value = $appr->approvalDate;
+                        addPictureRespectTemplate($Worksheet, $picpath, "N{$approverSpklRow}", $approverSpklRow - 2, 36, $excel);
+                    }
+
+                
             }
+
 
             // Ekspor ke PDF
             $xlTypePDF = 0;

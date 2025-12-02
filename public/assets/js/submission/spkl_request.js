@@ -736,15 +736,16 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     lookup: {
                                         dataSource: listOption('/list-spkl', 'id', 'fullname'),
                                         valueExpr: 'id',
-                                        displayExpr: item => item ? `${item.fullname} (${item.sapid})` : ''
+                                        displayExpr: item => item ? `${item.fullname} (${item.sapid || ''})` 
+                                        : ''
                                     },
                                     setCellValue: function (rowData, value) {
                                         rowData.employee_id = value;
                                         const emp = employeeCache.find(e => e.id === value);
                                         if (emp) {
                                             rowData.bu = emp.companycode;
-                                            rowData.sapid = emp.sapid; // langsung ambil dari emp
-                                            rowData.position = emp.designationName; // pastikan designationName sudah tersedia di employeeCache
+                                            rowData.sapid = emp.sapid; 
+                                            rowData.position = emp.designationName; 
 
                                             rowData.sector = ["IHM", "AHL", "KPSI", "NKL"].includes(emp.companycode) ? "HO" : emp.companycode;
                                             rowData.level = emp.level_id;
@@ -757,35 +758,33 @@ const popupContentTemplate = function (reqid, mode, options) {
                                             );
                                             rowData.DeptHead = deptHead ? deptHead.id : null;
                                         }
-                                    }
+                                    },
+                                    validationRules: [{
+                                        type: "required"
+                                    }]
                                 },
                                 {
                                     caption: 'Normal Hours Estimate (hrs)',
                                     dataField: 'EstimateNormalHours',
                                     dataType: 'number',
+                                    validationRules: [{
+                                        type: "required"
+                                    }]
                                 },
                                 {
                                     caption: 'Overtime Hours Estimate (hrs)',
                                     dataField: 'EstimateOvertimeHours',
                                     dataType: 'number',
+                                    validationRules: [{
+                                        type: "required"
+                                    }]
                                 },
-                                // {
-                                //     caption: '> 2 Hours?',
-                                //     dataField: 'moreThanTwoHours',
-                                //     dataType: 'boolean',
-                                //     width: 100,
-                                //     allowEditing: false,
-                                //     calculateDisplayValue: function (rowData) {
-                                //         return rowData.moreThanTwoHours ? 'Yes' : 'No';
-                                //     },
-                                //     cellTemplate: function (container, options) {
-                                //         const value = options.value ? 'Yes' : 'No';
-                                //         container.text(value);
-                                //     }
-                                // },
                                 {
                                     caption: 'Target Work',
-                                    dataField: 'Target'
+                                    dataField: 'Target',
+                                    validationRules: [{
+                                        type: "required"
+                                    }]
                                 },
                             ],
                             export: {
