@@ -324,6 +324,10 @@ var dataSektor = [
         bu: 'KPSI',
         sektor: 'KPSI'
     },
+    {
+        bu: 'MHS',
+        sektor: 'JLA'
+    },
 ];
 
 const popupContentTemplate = function (reqid, mode, options) {
@@ -485,6 +489,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                                             bu: 'NKL'
                                         }, {
                                             bu: 'KPSI'
+                                        }, {
+                                            bu: 'MHS'
                                         }],
                                         valueExpr: 'bu',
                                         displayExpr: 'bu',
@@ -499,6 +505,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                                             rowData.sektor = "NKL";
                                         } else if (value === "PTSI") {
                                             rowData.sektor = "PTSI";
+                                        } else if (value === "MHS") {
+                                            rowData.sektor = "JLA";
                                         }
                                     },
                                     editorOptions: {

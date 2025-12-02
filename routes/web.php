@@ -11,6 +11,9 @@ Route::get('/check-session',[App\Http\Controllers\SessionCheckController::class,
 
 // dashboard
 Route::get('dashboardproject',[App\Http\Controllers\Submission\ProjectRequestController::class, 'dashboard'])->name('dashboardproject'); //Dashboard project
+Route::get('data-candidate',[App\Http\Controllers\Module\DataCandidateController::class, 'index'])->name('data-candidate.index');
+Route::get('data-candidate/download',[App\Http\Controllers\Module\DataCandidateController::class, 'download'])->name('data-candidate.download');
+Route::get('data-candidate/{id}/detail',[App\Http\Controllers\Module\DataCandidateController::class, 'show'])->whereNumber('id')->name('data-candidate.detail');
 
 Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 

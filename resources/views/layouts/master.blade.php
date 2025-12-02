@@ -47,6 +47,7 @@
     @include('layouts.vendor-scripts')
     @include('layouts.jsmain')
     @include('layouts.service')
+    @yield('fungsi')
 </body>
 
 </html>

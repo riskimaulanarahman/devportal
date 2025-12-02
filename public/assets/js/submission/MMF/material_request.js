@@ -400,6 +400,18 @@ const popupContentTemplate = function (reqid,mode,options) {
             updateVisibleById(7, false);
         }
 
+        var dataSector = [
+            { bu: 'IHM', sector: 'NKL' },
+            { bu: 'IHM', sector: 'TRN' },
+            { bu: 'IHM', sector: 'SPU' },
+            { bu: 'IHM', sector: 'SNI' },
+            { bu: 'IHM', sector: 'HO' },
+            { bu: 'AHL', sector: 'SBG' },
+            { bu: 'AHL', sector: 'SBS' },
+            { bu: 'AHL', sector: 'SSP' },
+            { bu: 'AHL', sector: 'HO' },
+        ];
+
         scrollView.append("<hr>"),
 
         scrollView.append(
@@ -471,6 +483,27 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     editorOptions: { 
                                         readOnly: true
                                     },
+                                },
+                                {
+                                    caption: 'Sector',
+                                    dataField: 'sector',
+                                    lookup: {
+                                        dataSource: function (options) {
+                                            return {
+                                                store: {
+                                                    type: 'array',
+                                                    data: dataSector
+                                                },
+                                                filter: options.data ? ["bu", "=", options.data.bu] : null
+                                            };
+                                        },
+                                        valueExpr: 'sector',
+                                        displayExpr: 'sector',
+                                    },
+                                    validationRules: [{ type: "required" }],
+                                    // editorOptions: { 
+                                    //     readOnly: (isMine == 0 && isPIC == 0 && isMineCompleted == 0 || (mode == 'add' || mode == 'edit')) ? false : (isMine == 1 && isPIC == 0 && isMineCompleted == 1 || (mode == 'add' || mode == 'edit')) ? false : true,
+                                    // },
                                 },
                                 {
                                     caption: 'PR Status',

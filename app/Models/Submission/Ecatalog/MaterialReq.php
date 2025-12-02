@@ -23,6 +23,7 @@ class MaterialReq extends Model
         'requestStatus',
         'prStatus',
         'bu',
+        'sector',
         'special_requirements',
         'special_requirements_others',
         'approveddoc',
