@@ -48,16 +48,13 @@ class WphcDetailController extends Controller
         try {
             $requestData = $request->all();
 
-            // Normalize to WITA (Asia/Makassar)
             $date = Carbon::parse($requestData['startDate'])->timezone('Asia/Makassar');
 
-            // Jam kerja: 08:00–17:00 WITA
             $startDate = $date->copy()->setTime(8, 0, 0);
             $endDate   = $date->copy()->setTime(17, 0, 0);
 
             $key = $startDate->format('Y-m-d');
 
-            // 0) Cegah duplikasi tanggal untuk req_id yang sama
             $existsSameDay = WphcDetail::where('req_id', $requestData['req_id'])
                 ->whereDate('startDate', $key)
                 ->exists();
@@ -67,7 +64,6 @@ class WphcDetailController extends Controller
                     "message" => "Tanggal tersebut sudah diajukan."
                 ], 422);
             }
-            // Tambahan: Cooldown ±7 hari
             $existsCooldown = WphcDetail::where('req_id', $requestData['req_id'])
                 ->whereBetween('startDate', [
                     $startDate->copy()->subDays(7)->startOfDay(),
@@ -82,7 +78,6 @@ class WphcDetailController extends Controller
                 ], 422);
             }
 
-            // 1) Backdate tidak boleh
             if ($startDate->lt(Carbon::now('Asia/Makassar')->startOfDay())) {
                 return response()->json([
                     "status"  => "error",
@@ -90,7 +85,6 @@ class WphcDetailController extends Controller
                 ], 422);
             }
 
-            // 2) Holiday aktif
             $holidayDates = Holiday::pluck('HolidayDate')
                 ->map(fn($h) => Carbon::parse($h)->format('Y-m-d'))
                 ->toArray();
@@ -98,8 +92,6 @@ class WphcDetailController extends Controller
             $isHoliday = in_array($key, $holidayDates);
 
             if (!$isHoliday) {
-                // 3) Weekday non-holiday disable
-                // Catatan: Carbon::isWeekday() = Mon–Fri.
                 if ($startDate->isWeekday()) {
                     return response()->json([
                         "status"  => "error",
@@ -107,7 +99,6 @@ class WphcDetailController extends Controller
                     ], 422);
                 }
 
-                // 4) Sunday berturut-turut tidak boleh (lintas bulan/tahun)
                 if ($startDate->isSunday()) {
                     $prevSunday = $startDate->copy()->subWeek();
                     $prevKey    = $prevSunday->format('Y-m-d');
@@ -158,7 +149,6 @@ public function getList($id, $modulename)
                 ->where('req_id', $id)
                 ->get();
 
-            // Opsional: pastikan format ISO agar DevExtreme konsisten timezone
             $data = $data->map(function ($row) {
                 $row->startDate = Carbon::parse($row->startDate)->toIso8601String();
                 $row->endDate   = Carbon::parse($row->endDate)->toIso8601String();
@@ -175,7 +165,6 @@ public function getList($id, $modulename)
         }
     }
 
-
     public function show($req_id)
     {
         try {
@@ -190,7 +179,6 @@ public function getList($id, $modulename)
                 ]);
             }
             if ($data->code_id == null) {
-            // Buat kode manual tanpa generateCode()
             $data->save();
             }
 
@@ -224,7 +212,6 @@ public function getList($id, $modulename)
                     $startDate = $date->copy()->setTime(8, 0, 0);
                     $endDate   = $date->copy()->setTime(17, 0, 0);
 
-                    // Format ke datetime SQL Server
                     $requestData['startDate'] = $startDate->format('Y-m-d H:i:s');
                     $requestData['endDate']   = $endDate->format('Y-m-d H:i:s');
                 }
@@ -254,19 +241,12 @@ public function getList($id, $modulename)
         }
     }
 
-
     public function destroy($id)
     {
         try {
 
             $data = $this->model->findOrFail($id);
-
-            // if(isset($data->approveddoc) || in_array($data->Wphc->requestStatus, [1])) {
-            //     return response()->json(["status" => "error", "message" => $this->getMessage()['nothaveaccess']]);
-            // }
-
             $data->delete();
-
             return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
 
         } catch (\Exception $e) {
