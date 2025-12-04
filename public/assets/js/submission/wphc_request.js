@@ -110,10 +110,28 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: 'user.fullname',
             alignment: "left"
         },
+        // {
+        //     caption: "Work Date",
+        //     dataField: 'wphc_detail.startDate',
+        //     alignment: "left",
+        //     format: "dd-MM-yyyy",
+        // },
         {
             caption: "Work Date",
-            dataField: 'wphc_detail.work_date',
-            alignment: "left"
+            dataField: "wphc_detail.startDate",
+            alignment: "left",
+            dataType: "date",
+            format: "dd-MM-yyyy",   // format tanggal d-m-y
+            customizeText: function(cellInfo) {
+                if (cellInfo.value) {
+                    const date = new Date(cellInfo.value);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}-${month}-${year}`;
+                }
+                return "";
+            }
         },
         {
             caption: 'BU',
@@ -122,7 +140,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
         {
             caption: 'Sector',
-            dataField: "sector",
+            dataField: "wphc_detail.text",
             alignment: "left",
         },
         {
@@ -870,7 +888,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     e.cancel = true;
                                     showError("Tanggal ini tidak tersedia.");
                                 }
-                                },
+                            },
 
                             // === Form input sederhana ===
                             onAppointmentFormOpening(e) {
@@ -931,11 +949,39 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     }
                                     },
                                 error: function(xhr) {
-                                e.cancel = true;
-                                showError(xhr.responseJSON?.message || "Terjadi kesalahan.");
+                                    e.cancel = true;
+                                    console.log("XHR error:", xhr);
+                                    const msg = xhr.responseJSON?.message || xhr.responseText || "Terjadi kesalahan.";
+                                    DevExpress.ui.notify({
+                                        message: msg,
+                                        type: "error",
+                                        displayTime: 4000,
+                                        position: { my: "top center", at: "top center" }
+                                    });
                                 }
                             });
                             },
+                            onAppointmentDeleting: function(e) {
+                            $.ajax({
+                                url: "api/wphc_detail/" + e.appointmentData.id,
+                                method: "GET",
+                                success: function(res) {
+                                    if (res.status === "error") {
+                                        e.cancel = true;
+                                    } else {
+                                        detailsStore.load().done((items) => {
+                                            appointmentsNorm = items.map(a => ({
+                                                ...a,
+                                                startDate: new Date(a.startDate),
+                                                endDate: a.endDate ? new Date(a.endDate) : undefined,
+                                                text: a.text
+                                            }));
+                                            $("#formcontract").dxScheduler("instance").repaint();
+                                        });
+                                    }
+                                },
+                            });
+                        },
                             onAppointmentAdded: function(e) {
                                 // reload store untuk update appointmentsNorm
                                 detailsStore.load().done((items) => {
@@ -959,12 +1005,10 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     }));
                                     $("#formcontract").dxScheduler("instance").repaint();
                                 });
-                                }
-
-                        });
+                            }
                         });
                     });
-                // }
+                });
 
                 return infoContentcontract;
 

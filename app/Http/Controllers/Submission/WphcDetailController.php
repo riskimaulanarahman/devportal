@@ -7,6 +7,8 @@ use App\Models\Module;
 use App\Models\User;
 use App\Models\Useraccess;
 use App\Models\WphcDetail;
+use App\Models\Submission\Wphc;
+
 use App\Models\Holiday;
 use Illuminate\Http\Request;
 use DB;
@@ -41,6 +43,49 @@ class WphcDetailController extends Controller
         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
     }
 
+    public function checkworkdateemployee($employeeId)
+    {
+        try {
+            if (!$employeeId) {
+                return response()->json([
+                    "status"  => "error",
+                    "message" => "Parameter employee_id wajib diisi."
+                ], 422);
+            }
+
+            // Ambil semua workdate milik employee + id detail + status request
+            $workdates = DB::table('request_wphc_detail as d')
+                ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                ->where('m.employee_id', $employeeId)
+                ->select(
+                    'd.id',
+                    DB::raw("CAST(d.startDate AS DATE) as workdate"),
+                    'm.requestStatus'
+                )
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'id'            => $row->id,
+                        'workdate'      => Carbon::parse($row->workdate)->format('Y-m-d'),
+                        'requestStatus' => $row->requestStatus
+                    ];
+                });
+
+            return response()->json([
+                "status"    => "success",
+                "employee"  => $employeeId,
+                "workdates" => $workdates
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                "status"  => "error",
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -49,12 +94,21 @@ class WphcDetailController extends Controller
             $requestData = $request->all();
 
             $date = Carbon::parse($requestData['startDate'])->timezone('Asia/Makassar');
-
             $startDate = $date->copy()->setTime(8, 0, 0);
             $endDate   = $date->copy()->setTime(17, 0, 0);
-
             $key = $startDate->format('Y-m-d');
 
+             // Ambil requestStatus dari relasi wphc_request
+            $wphcRequest = Wphc::findOrFail($requestData['req_id']);
+            $requestStatus = $wphcRequest->requestStatus;
+            // Validasi: hanya boleh create kalau status 0 atau 2
+            if (!in_array($requestStatus, [0, 2])) {
+                return response()->json([
+                    "status" => "error",
+                    "message" => $this->getMessage()['nothaveaccess']
+                ]);
+            }
+            
             $existsSameDay = WphcDetail::where('req_id', $requestData['req_id'])
                 ->whereDate('startDate', $key)
                 ->exists();
@@ -119,7 +173,6 @@ class WphcDetailController extends Controller
             $requestData['user_id']   = $this->getAuth()->id;
             $requestData['startDate'] = $startDate;
             $requestData['endDate']   = $endDate;
-
             $this->model->create($requestData);
 
             DB::commit();
@@ -246,6 +299,17 @@ public function getList($id, $modulename)
         try {
 
             $data = $this->model->findOrFail($id);
+            // Ambil requestStatus dari relasi wphc_request
+            $wphcRequest = Wphc::findOrFail($data->req_id);
+            $requestStatus = $wphcRequest->requestStatus;
+
+            // Validasi: hanya boleh delete kalau status 0 atau 2
+            if (!in_array($requestStatus, [0, 2])) {
+                return response()->json([
+                    "status" => "error",
+                    "message" => $this->getMessage()['nothaveaccess']
+                ]);
+            }
             $data->delete();
             return response()->json(["status" => "success", "message" => $this->getMessage()['destroy']]);
 

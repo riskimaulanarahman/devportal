@@ -221,52 +221,6 @@ class SubmissionController extends Controller
                         "message" => "Error: Detail not found. Please input the correct information."
                     ]);
                 }
-
-                $employee_id = DB::table('request_wphc')
-                    ->where('id', $id)
-                    ->value('employee_id');
-
-                $workdateRaw = DB::table('request_wphc_detail')
-                    ->where('req_id', $id)
-                    ->value('work_date');
-
-                $workdate = Carbon::parse($workdateRaw)->toDateString();
-
-                $duplicateDate = DB::table('request_wphc_detail as r_w_d')
-                    ->join('request_wphc as r_w', 'r_w_d.req_id', '=', 'r_w.id')
-                    ->where('r_w.employee_id', $employee_id)
-                    ->whereDate('r_w_d.work_date', $workdate)
-                    ->where('r_w_d.req_id', '!=', $id) // hindari konflik dengan pengajuan saat ini
-                    ->exists();
-
-                if ($duplicateDate) {
-                    return response()->json([
-                        "status" => "error",
-                        "module" => $modulename,
-                        "message" => "WPhc submission denied: duplicate work date detected for this employee."
-                    ]);
-                }
-
-                if (Carbon::parse($workdate)->isSunday()) {
-                    $sundayConflict = DB::table('request_wphc_detail as r_w_d')
-                        ->join('request_wphc as r_w', 'r_w_d.req_id', '=', 'r_w.id')
-                        ->where('r_w.employee_id', $employee_id)
-                        ->whereBetween('r_w_d.work_date', [
-                            Carbon::now()->subDays(13)->toDateString(),
-                            Carbon::now()->toDateString()
-                        ])
-                        ->whereRaw('DATEPART(dw, r_w_d.work_date) = 1')
-                        ->where('r_w_d.req_id', '!=', $id)
-                        ->exists();
-
-                    if ($sundayConflict) {
-                        return response()->json([
-                            "status" => "error",
-                            "module" => $modulename,
-                            "message" => "WPhc submission denied: Sunday work date detected within the last 14 days."
-                        ]);
-                    }
-                }
             }
 
             if ($modulename == 'Jdi') {

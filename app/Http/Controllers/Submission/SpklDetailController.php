@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Submission;
 
 use App\Http\Controllers\Controller;
+use App\Models\CategoryForm;
 use App\Models\Module;
 use App\Models\User;
 use App\Models\SpklDetail;
@@ -57,20 +58,23 @@ class SpklDetailController extends Controller
                 $requestData['moreThanTwoHours'] = 0;
             }
 
+            $catappr = CategoryForm::get();
+
             if ($request->superior_id) {
                 $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $request->req_id);
             }
 
             $this->model->create($requestData);
+            // Cari category sesuai nameCategory
             if ($requestData['moreThanTwoHours'] == 1) {
-                DB::table('request_spkl')
-                    ->where('id', $request->req_id)
-                    ->update(['category_id' => 36]); // 36 = moreThanTwoHours
+                $categoryId = $catappr->firstWhere('nameCategory', 'moreThanTwoHours')->id ?? null;
+            } else {
+                $categoryId = $catappr->firstWhere('nameCategory', 'lessThanTwoHours')->id ?? null;
             }
-            if ($requestData['moreThanTwoHours'] == 0) {
+            if ($categoryId) {
                 DB::table('request_spkl')
                     ->where('id', $request->req_id)
-                    ->update(['category_id' => 35]); // 36 = moreThanTwoHours
+                    ->update(['category_id' => $categoryId]);
             }
 
             DB::commit();
@@ -172,19 +176,15 @@ class SpklDetailController extends Controller
                 ]);
             }
 
-            // Update detail
             $data->update($requestData);
 
-            // Ambil ulang data setelah update
             $updated = $this->model->findOrFail($id);
 
-            // Hitung flag dari detail
             $EOHs = floatval($updated->EstimateOvertimeHours ?? 0);
             $AOHs = floatval($updated->ActualOvertimeHours ?? 0);
             $isExceedPlan = ($AOHs != $EOHs) ? 1 : 0;
             $moreThanTwoHours = ($EOHs > 2) ? 1 : 0;
 
-            // Update detail dengan flag
             DB::table('request_spkl_detail')
                 ->where('id', $updated->id)
                 ->update([
@@ -192,24 +192,28 @@ class SpklDetailController extends Controller
                     'moreThanTwoHours' => $moreThanTwoHours,
                 ]);
 
-            // Ambil master untuk baca tms
             $master = DB::table('request_spkl')
                 ->where('id', $updated->req_id)
                 ->first();
 
+            $categories = CategoryForm::get()->keyBy('nameCategory');
+
             $category_id = null;
 
-            // Tentukan category_id berdasarkan tms (dari master) dan flag (dari detail)
             if ((int)$master->tms === 33) {
-                $category_id = ($moreThanTwoHours === 1) ? 36 : 35;
+            $category_id = ($moreThanTwoHours === 1)
+                ? $categories['moreThanTwoHours']->id
+                : $categories['lessThanTwoHours']->id;
             } elseif ((int)$master->tms === 34) {
-                $category_id = ($isExceedPlan === 1) ? 33 : 34;
+                $category_id = ($isExceedPlan === 1)
+                    ? $categories['isExceedYes']->id
+                    : $categories['isExceedNo']->id;
             }
-
-            // Update master dengan category_id
-            DB::table('request_spkl')
-                ->where('id', $updated->req_id)
-                ->update(['category_id' => $category_id]);
+             if ($category_id) {
+                DB::table('request_spkl')
+                    ->where('id', $updated->req_id)
+                    ->update(['category_id' => $category_id]);
+            }
 
 
 

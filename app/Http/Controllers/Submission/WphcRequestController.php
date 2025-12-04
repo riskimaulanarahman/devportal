@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Submission\Wphc;
 
+
+use App\Models\CategoryForm;
 use App\Models\ApproverListReq;
 use App\Models\ApproverListHistory;
 use App\Models\Module;
@@ -101,7 +103,7 @@ class WphcRequestController extends Controller
 
             $now = Carbon::now();
 
-            // Hitung status aktif berdasarkan work_date + 3 bulan >= hari ini
+            // Hitung status aktif berdasarkan work_date + 4 bulan >= hari ini
             $data = $rawData->map(function ($item) use ($now) {
                 $work_date = Carbon::parse($item->work_date);
                 $aktifUntil = $work_date->copy()->addMonths(4);
@@ -132,7 +134,6 @@ class WphcRequestController extends Controller
     public function index(Request $request)
     {
         try {
-            
             $id = $request->id;
             $user_id = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
@@ -242,10 +243,18 @@ class WphcRequestController extends Controller
                 // Tentukan sector
                 $requestData['sector'] = in_array($employee->companycode, ['IHM', 'AHL', 'KPSI', 'NKL']) ? 'HO' : $employee->companycode;
 
-                // Tentukan category_id
+                // Ambil semua kategori WPHC (module_id = 92)
+                $categories = CategoryForm::where('module_id', 92)->get()->keyBy('nameCategory');
+
+                // Tentukan category_id berdasarkan level
                 $level = (string) $employee->level_id;
-                $requestData['category_id'] = in_array($level, ['1', '2', '3']) ? 30 :
-                ($level === '4' ? 32 : null);
+                if (in_array($level, ['1', '2', '3'])) {
+                    $requestData['category_id'] = $categories['Asst - Askep']->id ?? null;
+                } elseif ($level === '4') {
+                    $requestData['category_id'] = $categories['Manager - Up']->id ?? null;
+                } else {
+                    $requestData['category_id'] = null;
+                }
             }
 
             $requestData['user_id'] = $user->id;
