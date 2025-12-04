@@ -12,6 +12,7 @@ use App\Models\Submission\Wphc;
 use App\Models\Holiday;
 use Illuminate\Http\Request;
 use DB;
+use Auth;
 use Carbon\Carbon;
 
 class WphcDetailController extends Controller
@@ -43,37 +44,42 @@ class WphcDetailController extends Controller
         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
     }
 
-    public function checkworkdateemployee($employeeId)
+    public function checkworkdateemployee()
     {
         try {
-            if (!$employeeId) {
+            // Ambil user_id dari user login
+            $userId = Auth::id();
+
+            if (!$userId) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Parameter employee_id wajib diisi."
-                ], 422);
+                    "message" => "User belum login."
+                ], 401);
             }
 
-            // Ambil semua workdate milik employee + id detail + status request
+            // Ambil semua workdate milik user login
             $workdates = DB::table('request_wphc_detail as d')
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
-                ->where('m.employee_id', $employeeId)
+                ->where('m.user_id', $userId)
                 ->select(
                     'd.id',
                     DB::raw("CAST(d.startDate AS DATE) as workdate"),
-                    'm.requestStatus'
+                    'm.requestStatus',
+                    'd.text'
                 )
                 ->get()
                 ->map(function ($row) {
                     return [
                         'id'            => $row->id,
                         'workdate'      => Carbon::parse($row->workdate)->format('Y-m-d'),
-                        'requestStatus' => $row->requestStatus
+                        'requestStatus' => $row->requestStatus,
+                        'text'          => $row->text
                     ];
                 });
 
             return response()->json([
                 "status"    => "success",
-                "employee"  => $employeeId,
+                "user"      => $userId,
                 "workdates" => $workdates
             ]);
 
