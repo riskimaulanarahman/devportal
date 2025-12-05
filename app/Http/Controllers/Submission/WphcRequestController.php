@@ -244,13 +244,13 @@ class WphcRequestController extends Controller
                 $requestData['sector'] = in_array($employee->companycode, ['IHM', 'AHL', 'KPSI', 'NKL']) ? 'HO' : $employee->companycode;
 
                 // Ambil semua kategori WPHC (module_id = 92)
-                $categories = CategoryForm::where('module_id', 92)->get()->keyBy('nameCategory');
+                $categories = CategoryForm::all()->keyBy('nameCategory');
 
                 // Tentukan category_id berdasarkan level
-                $level = (string) $employee->level_id;
-                if (in_array($level, ['1', '2', '3'])) {
+                $level = (int) $employee->level_id;
+                if (in_array($level, [1, 2, 3], true)) {
                     $requestData['category_id'] = $categories['Asst - Askep']->id ?? null;
-                } elseif ($level === '4') {
+                } elseif ($level === 4) {
                     $requestData['category_id'] = $categories['Manager - Up']->id ?? null;
                 } else {
                     $requestData['category_id'] = null;
