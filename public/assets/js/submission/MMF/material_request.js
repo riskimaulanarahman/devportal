@@ -401,7 +401,6 @@ const popupContentTemplate = function (reqid,mode,options) {
         }
 
         var dataSector = [
-            { bu: 'IHM', sector: 'NKL' },
             { bu: 'IHM', sector: 'TRN' },
             { bu: 'IHM', sector: 'SPU' },
             { bu: 'IHM', sector: 'SNI' },
@@ -410,6 +409,7 @@ const popupContentTemplate = function (reqid,mode,options) {
             { bu: 'AHL', sector: 'SBS' },
             { bu: 'AHL', sector: 'SSP' },
             { bu: 'AHL', sector: 'HO' },
+            { bu: 'NKL', sector: 'NKL' },
         ];
 
         scrollView.append("<hr>"),
