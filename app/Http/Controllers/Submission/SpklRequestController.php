@@ -348,7 +348,7 @@ public function genPdfSpkl(Request $request, $id)
             $excel->Visible = false;
 
             // $file = public_path("template/spkl/spkl.xlsx");
-            $file = public_path("template/spkl.xlsx");
+            $file = public_path("template/spkl/spkl.xlsx");
 
             if (!file_exists($file)) {
                 throw new \Exception("File tidak ditemukan: " . $file);
