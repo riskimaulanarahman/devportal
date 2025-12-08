@@ -106,16 +106,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         },
         {
-            caption: "Name",
+            caption: "Creator",
             dataField: 'user.fullname',
             alignment: "left"
         },
-        // {
-        //     caption: "Work Date",
-        //     dataField: 'wphc_detail.startDate',
-        //     alignment: "left",
-        //     format: "dd-MM-yyyy",
-        // },
         {
             caption: "Work Date",
             dataField: "wphc_detail.startDate",
@@ -139,7 +133,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             alignment: "left"
         },
         {
-            caption: 'Sector',
+            caption: 'Description',
             dataField: "wphc_detail.text",
             alignment: "left",
         },
@@ -897,9 +891,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                             form.option("items", [
                                 {
                                 dataField: "text",
-                                label: { text: "Judul" },
+                                label: { text: "Description" },
                                 editorType: "dxTextBox",
-                                editorOptions: { placeholder: "Masukkan judul kegiatan" }
+                                editorOptions: { placeholder: "input Description work" }
                                 },
                                 {
                                 dataField: "startDate",

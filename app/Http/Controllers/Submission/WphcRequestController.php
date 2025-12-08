@@ -86,6 +86,7 @@ class WphcRequestController extends Controller
             $rawData = DB::table('request_wphc_detail as rdw')
                 ->join('request_wphc as rw', 'rdw.req_id', '=', 'rw.id')
                 ->where('rw.employee_id', $employee_id)
+                ->where('rw.requestStatus', 3)
                 ->orderByDesc('rdw.startDate')
                 ->select(
                     'rdw.id',
@@ -528,8 +529,8 @@ class WphcRequestController extends Controller
                     }
 
                     if (isset($approverMap[5])) {
-                        $Worksheet->Range("Q39")->Value = $approverMap[5]->apprname;
-                        $Worksheet->Range("Q40")->Value = $approverMap[5]->approvalDate;
+                        $Worksheet->Range("Q38")->Value = $approverMap[5]->apprname;
+                        $Worksheet->Range("Q39")->Value = $approverMap[5]->approvalDate;
                         addPictureToWorksheet($Worksheet, $picPath, 38, 17, 12, $excel, true);
                     }
                     $row += 3;

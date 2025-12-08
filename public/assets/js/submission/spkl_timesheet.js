@@ -112,6 +112,16 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             format: "dd-MM-yyyy",
         },
         {
+            caption: "Work Date",
+            dataField: "work_date",
+            dataType: "date",
+            format: "dd-MM-yyyy",
+        },
+        {
+            caption: "Remarks",
+            dataField: "remarks",
+        },
+        {
             caption: 'BU',
             dataField: 'bu',
             alignment: "left"
@@ -133,10 +143,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 ];
                 return arrText[e.value];
             },
-        },
+        },        
         {
-            dataField: "approveddoc",
-            caption: "Approval Doc",
+            dataField: "timesheetdoc",
+            caption: "Timesheet Doc",
             allowFiltering: false,
             allowSorting: false,
             formItem: {
@@ -156,8 +166,8 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         },
         {
-            dataField: "timesheetdoc",
-            caption: "Timesheet Doc",
+            dataField: "approveddoc",
+            caption: "Approval Doc",
             allowFiltering: false,
             allowSorting: false,
             formItem: {

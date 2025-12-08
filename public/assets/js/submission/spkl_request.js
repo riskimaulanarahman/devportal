@@ -131,6 +131,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             }
         },
         {
+            caption: "Creator",
+            dataField: 'user.fullname',
+            alignment: "left"
+        },
+        {
             caption: "Creation Date",
             dataField: "created_at",
             dataType: "date",
@@ -139,6 +144,11 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: 'BU',
             dataField: 'bu',
+            alignment: "left"
+        },
+        {
+            caption: 'Remarks',
+            dataField: 'remarks',
             alignment: "left"
         },
         {
@@ -731,7 +741,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 showNavigationButtons: true,
                             },
                             columns: [{
-                                    caption: 'Create for other:',
+                                    caption: 'Create for Employee:',
                                     dataField: 'employee_id',
                                     lookup: {
                                         dataSource: listOption('/list-spkl', 'id', 'fullname'),
