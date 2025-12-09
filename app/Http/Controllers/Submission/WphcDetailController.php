@@ -102,46 +102,75 @@ class WphcDetailController extends Controller
             $date = Carbon::parse($requestData['startDate'])->timezone('Asia/Makassar');
             $startDate = $date->copy()->setTime(8, 0, 0);
             $endDate   = $date->copy()->setTime(17, 0, 0);
-            $key = $startDate->format('Y-m-d');
+            $key       = $startDate->format('Y-m-d');
 
-             // Ambil requestStatus dari relasi wphc_request
-            $wphcRequest = Wphc::findOrFail($requestData['req_id']);
+            // Ambil requestStatus dari relasi wphc_request
+            $wphcRequest   = Wphc::findOrFail($requestData['req_id']);
+            $employeeId    = $wphcRequest->employee_id;
             $requestStatus = $wphcRequest->requestStatus;
+
             // Validasi: hanya boleh create kalau status 0 atau 2
             if (!in_array($requestStatus, [0, 2])) {
                 return response()->json([
-                    "status" => "error",
+                    "status"  => "error",
                     "message" => $this->getMessage()['nothaveaccess']
                 ]);
             }
-            
-            $existsSameDay = WphcDetail::where('req_id', $requestData['req_id'])
-                ->whereDate('startDate', $key)
+
+            // Validasi: employee_id + startDate
+            $existsSameDay = DB::table('request_wphc_detail as d')
+                ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                ->where('m.employee_id', $employeeId)
+                ->whereDate('d.startDate', $key)
                 ->exists();
+
             if ($existsSameDay) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal tersebut sudah diajukan."
+                    "message" => "Tanggal $key sudah diajukan oleh employee $employeeId"
                 ], 422);
             }
-            $existsCooldown = WphcDetail::where('req_id', $requestData['req_id'])
-                ->whereBetween('startDate', [
-                    $startDate->copy()->subDays(7)->startOfDay(),
-                    $startDate->copy()->addDays(7)->endOfDay()
+
+            // Cooldown mundur: cek apakah ada tanggal lain dalam 7 hari ke belakang
+            $existsBackward = DB::table('request_wphc_detail as d')
+                ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                ->where('m.employee_id', $employeeId)
+                ->whereBetween('d.startDate', [
+                    $startDate->copy()->subDays(7)->startOfDay(),   // 7 hari ke belakang
+                    $startDate->copy()->subDay()->endOfDay()        // sampai sehari sebelum tanggal diajukan
                 ])
                 ->exists();
 
-            if ($existsCooldown) {
+            if ($existsBackward) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal tidak tersedia (cooldown ±7 hari)."
+                    "message" => "Tanggal tidak tersedia (cooldown mundur ±7 hari)."
                 ], 422);
             }
 
-            if ($startDate->lt(Carbon::now('Asia/Makassar')->startOfDay())) {
+            // Cooldown maju: cek apakah ada tanggal lain dalam 7 hari ke depan
+            $existsForward = DB::table('request_wphc_detail as d')
+                ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                ->where('m.employee_id', $employeeId)
+                ->whereBetween('d.startDate', [
+                    $startDate->copy()->addDay()->startOfDay(),     // mulai besok
+                    $startDate->copy()->addDays(7)->endOfDay()      // sampai 7 hari ke depan
+                ])
+                ->exists();
+
+            if ($existsForward) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal tidak tersedia (backdate)."
+                    "message" => "Tanggal tidak tersedia (cooldown maju ±7 hari)."
+                ], 422);
+            }
+
+            // Validasi backdate absolut → ganti dengan toleransi 7 hari
+            $sevenDaysAgo = Carbon::now('Asia/Makassar')->subDays(7)->startOfDay();
+            if ($startDate->lt($sevenDaysAgo)) {
+                return response()->json([
+                    "status"  => "error",
+                    "message" => "Tanggal tidak tersedia (backdate lebih dari 7 hari)."
                 ], 422);
             }
 
@@ -175,7 +204,6 @@ class WphcDetailController extends Controller
                     }
                 }
             }
-
             $requestData['user_id']   = $this->getAuth()->id;
             $requestData['startDate'] = $startDate;
             $requestData['endDate']   = $endDate;

@@ -525,7 +525,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     width: 200,
                                     dataType: "date",
                                     editorOptions: {
-                                        min: new Date(new Date().setDate(new Date().getDate() + 1)) // besok
+                                        min: new Date()
                                     }
                                 },
                                 {

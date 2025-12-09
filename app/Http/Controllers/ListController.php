@@ -37,6 +37,7 @@ use App\Models\Ghm_room;
 use App\Models\Rfc;
 use App\Models\Submission\MemorandumDetail;
 use Auth;
+use DB;
 
 class ListController extends Controller
 {
@@ -66,28 +67,43 @@ class ListController extends Controller
                 ->where('employee.tbl_employee.isActive',1)
                 ->get();
     }
-    public function listspkl() { // not have account/loginName
-        return Employee::select(
-                'employee.tbl_employee.id',
-                'sapid',
-                'fullname',
-                'companycode',
-                'level_id',
-                'deptheadName',
-                'employee.tbl_department.departmentname',
-                'employee.tbl_department.departmentgroup',
-            )
-            ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
-            ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
-            // ->where(function($query) {
-                // $query->whereNull('LoginName')
-                    // ->orWhere('LoginName', '')
-                    // ->orWhereColumn('fullname', '=', 'deptheadName'); // pengecualian: tetap ambil DeptHead
-            // })
-            ->whereIn('employee.tbl_employee.level_id', [1, 7]) // ubah ke level 1 dan 7
-            ->where('employee.tbl_employee.isActive', 1)
-            ->get();
+
+    public function listspkl () {
+    // Ambil employee_id dari request_spkl
+    $employeeId = DB::table('request_spkl')
+        ->value('employee_id');
+
+    if (!$employeeId) {
+        return response()->json(["status" => "error", "message" => "Request SPKL tidak ditemukan"]);
     }
+
+    // Ambil departmentgroup dari employee terkait
+    $userDeptGroup = Employee::select('employee.tbl_department.departmentgroup')
+        ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+        ->where('employee.tbl_employee.id', $employeeId)
+        ->value('employee.tbl_department.departmentgroup');
+
+    // Ambil list employee sesuai departmentgroup
+    $employees = Employee::select(
+            'employee.tbl_employee.id',
+            'sapid',
+            'fullname',
+            'companycode',
+            'level_id',
+            'deptheadName',
+            'employee.tbl_department.departmentname',
+            'employee.tbl_department.departmentgroup',
+        )
+        ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+        ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
+        ->whereIn('employee.tbl_employee.level_id', [1, 7])
+        ->where('employee.tbl_employee.isActive', 1)
+        ->where('employee.tbl_department.departmentgroup', $userDeptGroup)
+        ->get();
+
+    return response()->json($employees);
+    }
+
 
     public function listEmployee() { // not have account/loginName
         return Employee::select('employee.tbl_employee.id', 'sapid', 'fullname', 'companycode', 'level_id', 'deptheadName', 'employee.tbl_department.departmentname', 'employee.tbl_department.departmentgroup')

@@ -137,4 +137,7 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('memorandum_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\MemorandumDetailController::class, 'getList']); //get list contract history by req_id of module     
     Route::get('wphc_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\WphcDetailController::class, 'getList']); //get list contract history by req_id of module     
     Route::get('spkl_detail/{reqid}/{modulename}',[App\Http\Controllers\Submission\SpklDetailController::class, 'getList']); //get list contract history by req_id of module     
+    Route::get('list-spkl',[App\Http\Controllers\ListController::class, 'listspkl']); //get list contract history by req_id of module     
+    // Route::post('list-spkl',[App\Http\Controllers\ListController::class, 'listspkl']);
+
 });

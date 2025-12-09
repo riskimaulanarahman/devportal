@@ -778,7 +778,7 @@ const popupContentTemplate = function (reqid, mode, options) {
 
                             // 1) Backdate: hanya disable 7 hari ke belakang
                             const sevenDaysAgo = new Date(today);
-                            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 8);
                             if (d < sevenDaysAgo) return false;
 
                             // 2) Holiday aktif
@@ -890,31 +890,28 @@ const popupContentTemplate = function (reqid, mode, options) {
                             e.popup.option("title", "Form Pengajuan Jadwal");
                             form.option("items", [
                                 {
-                                dataField: "text",
-                                label: { text: "Description" },
-                                editorType: "dxTextBox",
-                                editorOptions: { placeholder: "input Description work" }
+                                    dataField: "text",
+                                    label: { text: "Description" },
+                                    editorType: "dxTextBox",
+                                    editorOptions: { placeholder: "input Description work" }
                                 },
                                 {
-                                dataField: "startDate",
-                                label: { text: "Tanggal" },
-                                editorType: "dxDateBox",
-                                editorOptions: { 
-                                    type: "date",
-                                        disabledDates: function(data) {
-                                        const d = normalizeDate(data.date);
-                                        return !isEnabledDate(d); 
-                                        }
-                                    } 
+                                    dataField: "startDate",
+                                    label: { text: "Tanggal" },
+                                    editorType: "dxDateBox",
+                                    editorOptions: { 
+                                        type: "date",
+                                        disabled: true // field tidak bisa diubah sama sekali
+                                    }
                                 },
                                 {
-                                dataField: "remarks",
-                                label: { text: "Remarks" },
-                                editorType: "dxTextArea",
-                                editorOptions: {
-                                    placeholder: "Tambahkan catatan atau remarks",
-                                    height: 80
-                                }
+                                    dataField: "remarks",
+                                    label: { text: "Remarks" },
+                                    editorType: "dxTextArea",
+                                    editorOptions: {
+                                        placeholder: "Tambahkan catatan atau remarks",
+                                        height: 80
+                                    }
                                 }
                             ]);
                             },

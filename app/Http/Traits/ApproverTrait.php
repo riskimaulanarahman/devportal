@@ -738,7 +738,7 @@ trait ApproverTrait {
                 $approver->module = $moduleName;
                 $approver->user_id = $userID;
                 $approver->employee_id = $employeeID;
-                $approver->sequence = 2;
+                $approver->sequence = 1;
                 $approver->approvaltype_id = $getIDapprType->id;
                 $approver->save();
 
