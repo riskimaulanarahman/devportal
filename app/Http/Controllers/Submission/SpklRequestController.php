@@ -41,40 +41,22 @@ class SpklRequestController extends Controller
     {
         try {
             $user_id = $this->getAuth()->id;
+            $user = auth()->user(); 
             $module_id = $this->getModuleId($this->modulename);
 
             $dataquery = $this->model->query();
 
             // Subquery: apakah pending di user ini
-            $subqueryPending = "(SELECT TOP 1 
-                CASE WHEN a.user_id = '$user_id' THEN 1 ELSE 0 END
-                FROM tbl_approverListReq l
-                LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                LEFT JOIN tbl_approvaltype r ON a.approvaltype_id = r.id
-                WHERE l.ApprovalAction = '1'
-                AND l.req_id = request_spkl.id
-                AND l.module_id = '$module_id'
-                AND request_spkl.requestStatus = '1'
-                ORDER BY a.sequence)";
-
-            // Subquery: last approval date
-            $subqueryLastApproval = "(SELECT TOP 1 l.approvalDate
-                FROM tbl_approverListReq l
-                WHERE l.req_id = request_spkl.id 
-                AND l.module_id = '$module_id' 
-                AND l.approvalDate IS NOT NULL 
-                AND l.ApprovalAction != '1'
-                ORDER BY l.approvalDate DESC)";
-
-            // Subquery: next approver name
-            $subqueryNextApprover = "(SELECT TOP 1 e.FullName
-                FROM tbl_approverListReq l
-                JOIN tbl_approver a ON l.approver_id = a.id
-                JOIN employee.tbl_employee e ON a.employee_id = e.id
-                WHERE l.req_id = request_spkl.id 
-                AND l.module_id = '$module_id' 
-                AND l.ApprovalAction = '1'
-                ORDER BY a.sequence ASC)";
+            $subquery = "(select TOP 1 
+                        CASE WHEN a.user_id='".$user_id."' then 1 else 0 end
+                    from tbl_approverListReq l
+                    left join tbl_approver a on l.approver_id=a.id
+                    left join tbl_approvaltype r on a.approvaltype_id = r.id
+                    where l.ApprovalAction='1'
+                    and l.req_id = request_spkl.id 
+                    and l.module_id = '".$module_id."' 
+                    and request_spkl.requestStatus='1'
+                    order by a.sequence)";
 
             $data = $dataquery
                 ->selectRaw("
@@ -84,24 +66,28 @@ class SpklRequestController extends Controller
                     emp.SAPID,
                     designation.DesignationName,
                     CASE WHEN request_spkl.user_id = '$user_id' THEN 1 ELSE 0 END AS isMine,
-                    $subqueryPending AS isPendingOnMe,
-                    $subqueryLastApproval AS lastApprovalDate,
-                    $subqueryNextApprover AS nextApproverName
+                    $subquery AS isPendingOnMe
                 ")
                 ->leftJoin('codes', 'request_spkl.code_id', '=', 'codes.id')
                 ->leftJoin('employee.tbl_employee as emp', 'request_spkl.employee_id', '=', 'emp.id')
                 ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
                 ->with(['user', 'approverlist', 'spkl_detail'])
-                // ->where('request_spkl.tms', 0)
-                ->where(function ($query) use ($subqueryPending, $user_id) {
-                    $query->whereRaw("$subqueryPending = 1")
-                        ->orWhere(function ($query) use ($user_id) {
-                            $query->where('request_spkl.user_id', '!=', $user_id);
-                        })
-                        ->orWhere('request_spkl.user_id', $user_id);
+                ->where(function ($q) use ($user_id, $subquery, $user) {
+                    $q->where('request_spkl.user_id', $user_id)   // isMine = 1
+                    ->orWhere(function ($q2) use ($subquery) {
+                        // isPendingOnMe = 1, tapi hanya untuk requestStatus = 1
+                        $q2->whereRaw("$subquery = 1")
+                            ->where('request_spkl.requestStatus', 1);
+                    });
+
+                    if ($user->isAdmin) {
+                        $q->orWhere(function ($q3) {
+                            $q3->whereIn('request_spkl.requestStatus', [1, 3]);  // admin lihat pending & full approve
+                        });
+                    }
                 })
-                ->orderByDesc('request_spkl.created_at')
-                ->get();
+                ->orderBy(DB::raw($subquery), 'DESC')
+                ->get();  
  
             // dd($data);
 

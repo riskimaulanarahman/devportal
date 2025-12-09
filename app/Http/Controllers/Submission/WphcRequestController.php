@@ -137,21 +137,22 @@ class WphcRequestController extends Controller
         try {
             $id = $request->id;
             $user_id = $this->getAuth()->id;
+            $user = auth()->user(); 
             $module_id = $this->getModuleId($this->modulename);
 
             $dataquery = $this->model->query();
             $subquery = "(select TOP 1 
-                CASE WHEN a.user_id='".$user_id."' 
-                then 1 else 0 end
-                from tbl_approverListReq l
-                left join tbl_approver a on l.approver_id=a.id
-                left join tbl_approvaltype r on a.approvaltype_id = r.id
-                where l.ApprovalAction='1'
-                and l.req_id = request_wphc.id and l.module_id = '".$module_id."' 
-                and request_wphc.requestStatus='1'
-                order by a.sequence)";
+                            CASE WHEN a.user_id='".$user_id."' then 1 else 0 end
+                        from tbl_approverListReq l
+                        left join tbl_approver a on l.approver_id=a.id
+                        left join tbl_approvaltype r on a.approvaltype_id = r.id
+                        where l.ApprovalAction='1'
+                        and l.req_id = request_wphc.id 
+                        and l.module_id = '".$module_id."' 
+                        and request_wphc.requestStatus='1'
+                        order by a.sequence)";
             
-                // Subquery untuk lastApprovalDate
+            // Subquery untuk lastApprovalDate
             $lastApprovalDate = "(SELECT TOP 1 l.approvalDate
                 FROM tbl_approverListReq l
                 WHERE l.req_id = request_wphc.id 
@@ -171,37 +172,40 @@ class WphcRequestController extends Controller
                 ORDER BY a.sequence ASC)";
             
             $data = $dataquery
-    ->selectRaw("
-        request_wphc.*,
-        codes.code,
-        emp.FullName,
-        emp.SAPID,
-        designation.DesignationName,
-        CASE WHEN request_wphc.user_id = '$user_id' THEN 1 ELSE 0 END AS isMine,
-        $subquery AS isPendingOnMe,
-        $lastApprovalDate AS lastApprovalDate,
-        $nextApproverName AS nextApproverName
-    ")
-    ->leftJoin('codes', 'request_wphc.code_id', '=', 'codes.id')
-    ->leftJoin('employee.tbl_employee as emp', 'request_wphc.employee_id', '=', 'emp.id')
-    ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
-    ->with(['user', 'approverlist', 'wphc_detail'])
-    ->where(function ($query) use ($subquery, $user_id) {
-        $query->whereRaw("$subquery = 1")
-            ->orWhere(function ($query) use ($user_id) {
-                $query->where('request_wphc.user_id', '!=', $user_id)
-                      ->whereIn('request_wphc.requestStatus', [1, 2, 3, 4]);
-            })
-            ->orWhere('request_wphc.user_id', $user_id);
-    })
-    ->orderBy(DB::raw($subquery), 'DESC')
-    ->get();
+                ->selectRaw("
+                    request_wphc.*,
+                    codes.code,
+                    emp.FullName,
+                    emp.SAPID,
+                    designation.DesignationName,
+                    CASE WHEN request_wphc.user_id = '$user_id' THEN 1 ELSE 0 END AS isMine,
+                    $subquery AS isPendingOnMe,
+                    $lastApprovalDate AS lastApprovalDate,
+                    $nextApproverName AS nextApproverName
+                ")
+                ->leftJoin('codes', 'request_wphc.code_id', '=', 'codes.id')
+                ->leftJoin('employee.tbl_employee as emp', 'request_wphc.employee_id', '=', 'emp.id')
+                ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
+                ->with(['user', 'approverlist', 'wphc_detail'])
+                ->where(function ($q) use ($user_id, $subquery, $user) {
+                    $q->where('request_wphc.user_id', $user_id)   // isMine = 1
+                    ->orWhereRaw("$subquery = 1");              // isPendingOnMe = 1
 
-                
+                    if ($user->isAdmin) {
+                        $q->orWhere(function ($q2) {
+                            $q2->whereIn('request_wphc.requestStatus', [1, 3]);  
+                        });
+                    }
+
+                })
+                ->orderBy(DB::raw($subquery), 'DESC')
+                ->get();  
                 $data = $data->map(function ($item) {
 
                 return $item;
             });
+
+            // dd($data);
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
