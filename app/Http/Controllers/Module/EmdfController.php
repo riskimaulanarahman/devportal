@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Module;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-use App\Models\Ecatalog;
+use App\Models\PersonalData;
 
-class EcatalogController extends Controller
+class EmdfController extends Controller
 {
     private $model;
 
     public function __construct()
     {
-        $this->model = new Ecatalog();
+        $this->model = new PersonalData();
     }
 
     public function index()
@@ -87,13 +87,126 @@ class EcatalogController extends Controller
         }
     }
 
-    public function genPdfHcrfReq(Request $request, $id) {
-        $data =  $this->model->select('request_hris.*','users.username')
-                    ->leftJoin('users','request_hris.user_id','users.id')
-                    ->where('request_hris.id',$id)
-                    ->where('request_hris.category','Hcrf')
-                    ->with(['code','detailHcrf','approverHistory'])
-                    ->first(); // data submission
+    protected function detailRelations(): array
+    {
+        return [
+            'user:id,email',
+            'communications' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'type',
+                'number',
+            ]),
+            'addresses' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'address_type',
+                'street_and_house_number',
+                'city',
+                'postal_code',
+                'country',
+                'tel_number',
+                'name_contact_person',
+            ]),
+            'socialMedia' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'platform',
+                'username',
+            ]),
+            'families' => function ($query) {
+                $query->select($this->familySelectColumns());
+            },
+            'educations' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'education_establishment',
+                'institute_location',
+                'country',
+                'start_date',
+                'end_date',
+                'certificate',
+                'branch_of_study_major',
+                'branch_of_study_minor',
+            ]),
+            'experiences' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'last_position_held',
+                'company',
+                'industry_type',
+                'start_date',
+                'end_date',
+                'name_of_superior',
+                'designation_of_superior',
+                'last_drawn_salary',
+                'reason_for_leaving',
+            ]),
+            'languages' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'language',
+                'read',
+                'write',
+                'speak',
+            ]),
+            'skills' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'skill',
+            ]),
+            'sizes' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'height',
+                'weight',
+                'clothing_size',
+                'pants_size',
+                'shoe_size',
+            ]),
+            'banks' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'bank_name',
+                'account_number',
+                'payee',
+                'bank_country',
+                'branch_address',
+            ]),
+            'taxes' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'npwp',
+                'registered_date',
+                'npwp_address',
+                'married_for_tax_purpose',
+                'spouse_benefit',
+                'number_of_dependents',
+                'benefit_class',
+                'jamsostek_id',
+                'bpjs_id',
+            ]),
+            // 'documents' => fn ($query) => $query->select([
+            //     'id',
+            //     'personal_data_id',
+            //     'type_document_id',
+            //     'path',
+            // ])->with([
+            //     'typeDocument:id,name',
+            // ]),
+            'references' => fn ($query) => $query->select([
+                'id',
+                'personal_data_id',
+                'relation',
+                'name',
+                'number',
+            ]),
+        ];
+    }
+
+    public function genPdfEmdfReq(Request $request, $id) {
+        $data =  $this->model->with($this->detailRelations())->find($id); // data candidate
+        return $data;
 
         $originatorApproval = $data->approverHistory
             ->where('approvalType', 'Submitted')

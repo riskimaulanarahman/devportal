@@ -65,7 +65,7 @@ class SubmissionMail extends Mailable
     public function __construct($mailData,$modulename,$final)
     {
         $appEnv = env('APP_ENV');
-        $url = ($appEnv == 'production') ? 'http://172.18.83.38/' : 'http://localhost/';
+        $url = ($appEnv == 'production') ? 'http://172.18.83.38/' : 'http://localhost:8086/';
         $this->module = new Module();
         $this->mailData=$mailData;
         $this->modulename=$modulename;

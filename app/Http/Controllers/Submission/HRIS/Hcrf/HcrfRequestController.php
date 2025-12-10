@@ -362,7 +362,7 @@ class HcrfRequestController extends Controller
             $file = public_path("template/hris/hcrf/hcrf.xlsx");
 
 			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
-			$Worksheet = $Workbook->Worksheets(2);
+			$Worksheet = $Workbook->Worksheets(1);
 			$Worksheet->Activate;
 
 
@@ -399,10 +399,10 @@ class HcrfRequestController extends Controller
                 // $Worksheet->Range("A24")->Value = $trainingPlanCleaned;
                 // $Worksheet->Range("A28")->Value = $careerDevPlanCleaned;
 
-                $Worksheet->Range("B33")->Value = $data->detailHcrf->education;
-                $Worksheet->Range("H33")->Value = $data->detailHcrf->experienceLength;
-                $Worksheet->Range("B35")->Value = $data->detailHcrf->language;
-                $Worksheet->Range("H35")->Value = $specialSkillsCleaned;
+                $Worksheet->Range("B24")->Value = $data->detailHcrf->education;
+                $Worksheet->Range("H24")->Value = $data->detailHcrf->experienceLength;
+                $Worksheet->Range("B26")->Value = $data->detailHcrf->language;
+                $Worksheet->Range("H26")->Value = $specialSkillsCleaned;
 
 
                 // Format the text in cell E23
@@ -438,24 +438,24 @@ class HcrfRequestController extends Controller
             }
 
             // // signature originator
-            $Worksheet->Range("D46")->Value = $emp->FullName;
-            $Worksheet->Range("D47")->Value = $subimissionDate->format('Y-m-d');
-            addPictureToWorksheet($Worksheet, $picpath, 42, 4, 30, $excel);
+            $Worksheet->Range("D37")->Value = $emp->FullName;
+            $Worksheet->Range("D38")->Value = $subimissionDate->format('Y-m-d');
+            addPictureToWorksheet($Worksheet, $picpath, 33, 4, 30, $excel);
             
             // // signature approver
             foreach ($dataAppr as $appr) {
                 if($appr->sequence == 3) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("F46")->Value = $appr->apprname;
-                        $Worksheet->Range("F47")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 42, 6, 30, $excel);
+                        $Worksheet->Range("F37")->Value = $appr->apprname;
+                        $Worksheet->Range("F38")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 33, 6, 30, $excel);
                     }
                 }
                 if($appr->sequence == 4) {
                     if($appr->approvalAction == 3) {
-                        $Worksheet->Range("I46")->Value = $appr->apprname;
-                        $Worksheet->Range("I47")->Value = $appr->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picpath, 42, 9, 30, $excel);
+                        $Worksheet->Range("I37")->Value = $appr->apprname;
+                        $Worksheet->Range("I38")->Value = $appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 33, 9, 30, $excel);
                     }
                 }
             }

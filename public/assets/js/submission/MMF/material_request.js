@@ -402,10 +402,16 @@ const popupContentTemplate = function (reqid,mode,options) {
 
         var dataSector = [
             { bu: 'NKL', sector: 'HO' },
+            { bu: 'KPSI', sector: 'BPN' },
+            { bu: 'KPSI', sector: 'KALBAR' },
+            { bu: 'IHM', sector: 'NURSERY JEMBAYAN' },
+            { bu: 'IHM', sector: 'NURSERY SURING' },
             { bu: 'IHM', sector: 'TRN' },
             { bu: 'IHM', sector: 'SPU' },
             { bu: 'IHM', sector: 'SNI' },
             { bu: 'IHM', sector: 'HO' },
+            { bu: 'AHL', sector: 'NURSERY SSP' },
+            { bu: 'AHL', sector: 'NURSERY SBS' },
             { bu: 'AHL', sector: 'SBG' },
             { bu: 'AHL', sector: 'SBS' },
             { bu: 'AHL', sector: 'SSP' },

@@ -17,9 +17,9 @@ isHeadcount = [
 jobLevel = [
     { id: 1, name:"Non Staff"},
     { id: 2, name:"Mandor"},
-    { id: 3, name:"Asst"},
+    { id: 3, name:"Assistant"},
     { id: 4, name:"Askep"},
-    { id: 5, name:"Manager Up"},
+    { id: 5, name:"Manager"},
 ];
 statusContract = [
     { id: 1, name: "Contract" },
@@ -462,22 +462,48 @@ const popupContentTemplate = function (reqid,mode,options) {
                             { 
                                 caption: "Department",
                                 dataField: "detail_hcrf.department",
+                                lookup: {
+                                    dataSource: listOption('/list-department','id','DepartmentName'),  
+                                    valueExpr: 'DepartmentName',
+                                    displayExpr: function(item) {
+                                        return item ? item.DepartmentName + " (" + item.DepartmentGroup + ")" : "";
+                                    }
+                                }
                                 // validationRules: [{ type: "required" }]
                             },
                             { 
                                 caption: "Needed Employee",
                                 dataField: "detail_hcrf.neededEmp",
                                 dataType: "number",
+                                width: 100,
                                 // validationRules: [{ type: "required" }]
                             },
-                            { 
-                                caption: "Reporting to (Directly)",
-                                dataField: "detail_hcrf.reportDirectly",
-                                // validationRules: [{ type: "required" }]
+                            // { 
+                            //     caption: "Reporting to (Directly)",
+                            //     dataField: "detail_hcrf.reportDirectly",
+                            //     // validationRules: [{ type: "required" }]
+                            // },
+                            {
+                                caption: 'Reporting to (Directly)',
+                                dataField: 'detail_hcrf.reportDirectly',
+                                lookup: {
+                                    dataSource: listOption('/list-employeeall','id','fullname'),  
+                                    valueExpr: 'fullname',
+                                    displayExpr: function(item) {
+                                        return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                    }
+                                },
                             },
                             { 
                                 caption: "Reporting to (Indirectly)",
                                 dataField: "detail_hcrf.reportIndirectly",
+                                lookup: {
+                                    dataSource: listOption('/list-employeeall','id','fullname'),  
+                                    valueExpr: 'fullname',
+                                    displayExpr: function(item) {
+                                        return item ? item.fullname + " (" + item.sapid + ")" : "";
+                                    }
+                                },
                                 // validationRules: [{ type: "required" }]
                             },
                             {
@@ -589,6 +615,13 @@ const popupContentTemplate = function (reqid,mode,options) {
                             { 
                                 caption: "Location",
                                 dataField: "detail_hcrf.location",
+                                lookup: {
+                                    dataSource: listOption('/list-location','id','Location'),  
+                                    valueExpr: 'Location',
+                                    displayExpr: function(item) {
+                                        return item ? item.Location : "";
+                                    }
+                                },
                                 // validationRules: [{ type: "required" }]
                             },
                             { 
