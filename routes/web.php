@@ -52,4 +52,6 @@ Route::middleware(['session.check'])->group(function () {
     Route::get('/gen-pdf/memorandum/{id}', [App\Http\Controllers\Submission\MemorandumRequestController::class, 'genPdfMemorandumReq'])->name('gen-pdf-memorandum');
     Route::get('/gen-pdf/legal/{id}', [App\Http\Controllers\Submission\LegalRequestController::class, 'genPdfLegal'])->name('gen-pdf-legal');
     Route::get('/gen-pdf/emdf/{id}', [App\Http\Controllers\Module\DataCandidateController::class, 'genPdfEmdfReq'])->name('gen-pdf-emdf');
+    Route::get('/gen-pdf/Wphc/{id}', [App\Http\Controllers\Submission\WphcRequestController::class, 'genPdfWphc'])->name('gen-pdf-wphc');
+    Route::get('/gen-pdf/Spkl/{id}', [App\Http\Controllers\Submission\SpklRequestController::class, 'genPdfSpkl'])->name('gen-pdf-spkl');
 });

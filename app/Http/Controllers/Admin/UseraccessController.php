@@ -72,7 +72,6 @@ class UseraccessController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            
             // $requestData = $request->all();
     
             // $data = Useraccess::findOrFail($id);

@@ -132,6 +132,8 @@ trait ApproverTrait {
             'MaterialReq',
             'Legal',
             'Memorandum',
+            'Wphc',
+            'Spkl'
         ];
 
         if (in_array($moduleName, $exceptdel)) {
@@ -169,6 +171,8 @@ trait ApproverTrait {
             'ActiveDirectory',
             'Mmf',
             'MaterialReq',
+            'Wphc',
+            'Spkl'
         ];
         
         if (!in_array($moduleName, $except)) {
@@ -624,23 +628,13 @@ trait ApproverTrait {
 
     }
 
+    //Memorandum
     public function createApprSuperiorDepthead($employeeID, $moduleName, $reqID) {
         // if($moduleName == 'Memorandum') {
             $getemployee = Employee::find($employeeID);
             $getuser = $this->user->where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
             //START approver for Chairman
             $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Superior/Department Head')->first();
-            
-            // $getIDapprType = Approvaltype::where('Module', $moduleName)
-            //     ->where('ApprovalType', 'Superior/Department Head')
-            //     ->first();
-
-            // if (!$getIDapprType) {
-            //     return response()->json([
-            //         "status" => "error",
-            //         "message" => "Approval type untuk module '$moduleName' tidak ditemukan."
-            //     ]);
-            // }
             
             $checkExistAppr = Approvaluser::where('module',$moduleName)
                                         ->where('employee_id',$employeeID)
@@ -678,7 +672,6 @@ trait ApproverTrait {
                 $approver->approvaltype_id = $getIDapprType->id;
                 $approver->save();
 
-                // Mengambil ID dari $approver yang baru disimpan
                 $newApproverId = $approver->id;
             } else {
                 foreach($checkExistAppr as $item) {
@@ -704,6 +697,8 @@ trait ApproverTrait {
 
         // }
     }
+    
+    //WPHC/////////////////////////////////////////////////////////////////////////
     public function createApprSuperior($employeeID, $moduleName, $reqID) {
         // if($moduleName == 'Legal') {
             $getemployee = Employee::find($employeeID);
@@ -743,7 +738,133 @@ trait ApproverTrait {
                 $approver->module = $moduleName;
                 $approver->user_id = $userID;
                 $approver->employee_id = $employeeID;
+                $approver->sequence = 1;
+                $approver->approvaltype_id = $getIDapprType->id;
+                $approver->save();
+
+                // Mengambil ID dari $approver yang baru disimpan
+                $newApproverId = $approver->id;
+            } else {
+                foreach($checkExistAppr as $item) {
+                    $newApproverId = $item->id;
+                }
+            }
+
+            $approverList = new ApproverListReq();
+            $approverList->req_id = $reqID;
+            $approverList->module_id = $this->getModuleId($moduleName);
+            $approverList->approver_id = $newApproverId;
+            $approverList->approvalDate = null;
+            // $approverList->approvalAction = ($reqStatus !== 0) ? 1 : 0;
+            $approverList->save();
+
+        // }
+    }
+    public function createApprDeptHead($employeeID, $moduleName, $reqID) {
+        // if($moduleName == 'Legal') {
+            $getemployee = Employee::find($employeeID);
+            $getuser = $this->user->where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
+            //START approver for Chairman
+            $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Department Head')->first();
+
+            $checkExistAppr = Approvaluser::where('module',$moduleName)
+                                        ->where('employee_id',$employeeID)
+                                        ->where('approvaltype_id',$getIDapprType->id)
+                                        ->where('isActive',1)
+                                        ->get();
+
+            if(count($getuser) > 0) {
+                $userID = $this->getUser($getemployee->LoginName)->id;
+            } else {
+                $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+
+                if ($getldap) {
+                    $newUser = $this->user->create([
+                        "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
+                        "domain" => "default",
+                        "username" => $getldap['samaccountname'][0],
+                        "fullname" => $getldap['name'][0],
+                        "email" => $getldap['mail'][0]
+                    ]);
+
+                    $userID = $newUser->id;
+                } else {
+                    return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                }
+
+            }
+
+            if(count($checkExistAppr) < 1) {
+                $approver = new Approvaluser();
+                $approver->module = $moduleName;
+                $approver->user_id = $userID;
+                $approver->employee_id = $employeeID;
                 $approver->sequence = 2;
+                $approver->approvaltype_id = $getIDapprType->id;
+                $approver->save();
+
+                // Mengambil ID dari $approver yang baru disimpan
+                $newApproverId = $approver->id;
+            } else {
+                foreach($checkExistAppr as $item) {
+                    $newApproverId = $item->id;
+                }
+            }
+
+            $approverList = new ApproverListReq();
+            $approverList->req_id = $reqID;
+            $approverList->module_id = $this->getModuleId($moduleName);
+            $approverList->approver_id = $newApproverId;
+            $approverList->approvalDate = null;
+            // $approverList->approvalAction = ($reqStatus !== 0) ? 1 : 0;
+            $approverList->save();
+
+        // }
+    }
+
+    public function createApprDeptHeadx($employeeID, $moduleName, $reqID) {
+
+            $getemployee = Employee::find($employeeID);
+            // $getuser = User::where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
+            $getuser = $this->user->where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
+            //START approver for Chairman
+            $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','Department Head')->first();
+
+            $checkExistAppr = Approvaluser::where('module',$moduleName)
+                                        ->where('employee_id',$employeeID)
+                                        ->where('approvaltype_id',$getIDapprType->id)
+                                        ->where('isActive',1)
+                                        ->get();
+
+            if(count($getuser) > 0) {
+                $userID = $this->getUser($getemployee->LoginName)->id;
+            } else {
+                
+                $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+
+                if ($getldap) {
+                    $newUser = User::create([
+                        "guid" => $getldap->getConvertedGuid(),
+                        "domain" => "default",
+                        "username" => $getldap['samaccountname'][0],
+                        "fullname" => $getldap['name'][0],
+                        "email" => $getldap['mail'][0]
+                    ]);
+
+                    $userID = $newUser->id;
+
+                } else {
+                    return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
+                }
+
+            }
+
+            if(count($checkExistAppr) < 1) {
+                $approver = new Approvaluser();
+                $approver->module = $moduleName;
+                $approver->user_id = $userID;
+                $approver->employee_id = $employeeID;
+                $approver->sequence = 3;
                 $approver->approvaltype_id = $getIDapprType->id;
                 $approver->save();
 
@@ -760,7 +881,7 @@ trait ApproverTrait {
             ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
             ->where('tbl_approverListReq.module_id', $this->getModuleId($moduleName))
             ->where('req_id', $reqID)
-            ->where('tbl_approvaltype.ApprovalType','Superior')
+            ->where('tbl_approvaltype.ApprovalType','Department Head')
             ->delete();
 
             $approverList = new ApproverListReq();
@@ -768,11 +889,6 @@ trait ApproverTrait {
             $approverList->module_id = $this->getModuleId($moduleName);
             $approverList->approver_id = $newApproverId;
             $approverList->approvalDate = null;
-            // $approverList->approvalAction = ($reqStatus !== 0) ? 1 : 0;
             $approverList->save();
-
-        // }
     }
-
-
 }

@@ -21,9 +21,10 @@ use App\Models\Submission\MMF\Mmf30;
 use App\Models\Submission\Project;
 use App\Models\Submission\Ticket;
 use App\Models\Submission\Jdi;
-use App\Models\Submission\Legal;
-use App\Models\Submission\Memorandum;
 use App\Models\Submission\MMF\Mmf;
+use App\Models\Submission\Legal;
+use App\Models\Submission\Wphc;
+use App\Models\Submission\Memorandum;
 use App\Http\Controllers\Submission\JdiRequestController;
 use App\Http\Controllers\Submission\LegalRequestController;
 use App\Http\Controllers\Submission\IT\ADRequestController;
@@ -34,6 +35,8 @@ use App\Models\Submission\HRIS\Hris;
 use App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController;
 use App\Http\Controllers\Submission\Financial\Capex\CapexRequestController;
 use App\Http\Controllers\Submission\MemorandumRequestController;
+use App\Http\Controllers\Submission\WphcRequestController;
+use App\Http\Controllers\Submission\SpklRequestController;
 use Storage;
 use DB;
 use App\Http\Traits\HasGetModule;
@@ -323,32 +326,15 @@ class SubmissionMail extends Mailable
         // LEGAL MODULE
             if ($modulename == 'Legal') {
                 $request = new Request();
-                $legalController = new LegalRequestController();
-
-                // if ($final == 1) {
-                    $legal = DB::table('tbl_approverListReq')
-                        ->join('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
-                        ->join('users', 'tbl_approver.user_id', '=', 'users.id')
-                        ->select('tbl_approver.*', 'users.email')
-                        ->where('tbl_approverListReq.req_id', $mailData['submission']->id)
-                        ->where('tbl_approverListReq.module_id', $this->getModuleId($modulename))
-                        ->whereIn('tbl_approver.sequence', [3, 4]) 
-                        ->get();
-
-                    $this->developer = $legal;
-
-                    foreach ($legal as $devemail) {
-                        $this->cc($devemail->email);
-                    }
+                $wphcController = new WphcRequestController();
                     if ($final == 1) {
-                    $pdf = $legalController->genPdfLegal($request, $mailData['submission']->id);
+                    $pdf = $wphcController->genPdfLegal($request, $mailData['submission']->id);
                         $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
 
                         foreach ($Mailrecipient as $cc) {
                             $this->cc($cc->email); // CC ke penerima internal
                         }
                     }
-                // }
             }
 
         // LEGAL MODULE
@@ -504,6 +490,102 @@ class SubmissionMail extends Mailable
             }
         // Capex MODULE
 
+        // Wphc MODULE
+            if ($modulename == 'Wphc') {
+                $request = new Request();
+                $wphcController = new WphcRequestController();
+                $submission = $mailData['submission'];
+
+                // Ambil data WPHC dari database
+                $wphc = DB::table('request_wphc')
+                    ->leftJoin('employee.tbl_employee', 'request_wphc.employee_id', '=', 'employee.tbl_employee.id')
+                    ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+                    ->leftJoin('request_wphc_detail', 'request_wphc.id', '=', 'request_wphc_detail.req_id')
+                    ->select(
+                        'request_wphc.*',
+                        'request_wphc_detail.work_date',
+                        'request_wphc_detail.startDate',
+                        'request_wphc_detail.endDate',
+                        'request_wphc_detail.remarks',
+                        'request_wphc_detail.text',
+                        'employee.tbl_employee.FullName as emp_name',
+                        'employee.tbl_department.DepartmentName as department_name'
+                    )
+                    ->where('request_wphc.id', $submission->id)
+                    ->orderByDesc('request_wphc_detail.req_id')
+                    ->first();
+
+                if (!$wphc) {
+                    dd('Data WPHC tidak ditemukan untuk ID: ' . $submission->id);
+                }
+
+                // Inject data ke objek submission
+                $submission->emp_name      = $wphc->emp_name ?? '-';
+                $submission->text      = $wphc->text ?? '-';
+                $submission->work_date = $wphc->work_date ?? '-';
+                $submission->startDate = $wphc->startDate ?? '-';
+                $submission->endDate = $wphc->endDate ?? '-';
+                $submission->department_name   = $wphc->department_name ?? '-';
+                $submission->remarks       = $wphc->remarks ?? '-';
+
+                if ($final == 1) {
+                    // Generate PDF dan lampirkan
+                    $pdf = $wphcController->genPdfWphc($request, $submission->id);
+                    $this->attach($url . "devportal/" . $pdf);
+
+                    // Kirim CC ke semua Mailrecipient
+                    foreach ($Mailrecipient as $cc) {
+                        if (!empty($cc->email)) {
+                            $this->cc($cc->email);
+                        }
+                    }
+                }
+            }
+        // Wphc MODULE
+        // Spkl MODULE
+            if ($modulename == 'Spkl') {
+                $request = new Request();
+                $spklController = new SpklRequestController();
+                $submission = $mailData['submission'];
+
+                // Ambil data SPKL dari database
+                $spkl = DB::table('request_spkl')
+                    ->leftJoin('employee.tbl_employee', 'request_spkl.employee_id', '=', 'employee.tbl_employee.id')
+                    ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
+                    ->leftJoin('request_spkl_detail', 'request_spkl.id', '=', 'request_spkl_detail.req_id')
+                    ->select(
+                        'request_spkl.*',
+                        'request_spkl_detail.EstimateOvertimeHours',
+                        'request_spkl_detail.target',
+                        // 'employee.tbl_employee.FullName as emp_name',
+                        'employee.tbl_department.DepartmentName as department_name'
+                    )
+                    ->where('request_spkl.id', $submission->id)
+                    ->orderByDesc('request_spkl_detail.req_id')
+                    ->first();
+
+                if (!$spkl) {
+                    dd('Data SPKL tidak ditemukan untuk ID: ' . $submission->id);
+                }
+
+                // Inject data ke objek submission
+                $submission->emp_name           = $spkl->emp_name ?? '-';
+                $submission->text             = $spkl->text ?? '-';
+                $submission->work_date          = $spkl->work_date ?? '-';
+                $submission->department_name    = $spkl->department_name ?? '-';
+                $submission->remarks            = $spkl->remarks ?? '-';
+
+                    if ($final == 1) {
+                    $pdf = $spklController->genPdfSpkl($request, $mailData['submission']->id);
+                        $this->attach($url . "devportal/" . $pdf); 
+                        foreach ($Mailrecipient as $cc) {
+                            $this->cc($cc->email); 
+                        }
+                    }
+            }
+
+        // Spkl MODULE
+
     }
 
     public function build()
@@ -549,9 +631,18 @@ class SubmissionMail extends Mailable
             case 'Legal':
                 $viewblade = 'emails.legalrequestmail';
                 break;
+            case 'Wphc':
+                $viewblade = 'emails.wphcrequestmail';
+                break;
+            case 'Spkl':
+                $viewblade = 'emails.spklrequestmail';
+                break;
             case 'Memorandum':
                 $viewblade = 'emails.HRIS.memorandummail';
                 break;
+            // case 'Wphc':
+            //     $viewblade = 'emails.legalrequestmail';
+            //     break;
             default:
                 $viewblade = 'emails.defaultmail';
                 break;

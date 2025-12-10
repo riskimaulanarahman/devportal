@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Submission;
-
+	
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -35,7 +35,8 @@ class SubmissionController extends Controller
             'Advance' => "App\Models\Submission\Financial\Advance",
             'Hcrf' => "App\Models\Submission\HRIS\Hcrf",
             'Memorandum' => "App\Models\Submission\Memorandum",
-            // 'Legal' => "App\Models\Submission\Legal",
+            'Wphc' => "App\Models\Submission\Wphc",
+            'Spkl' => "App\Models\Submission\Spkl",
         ];
 
         $modulesUsingId = ['JDI'];
@@ -109,6 +110,8 @@ class SubmissionController extends Controller
                 'Capex' => "App\Models\Submission\Financial",
                 'Memorandum' => "App\Models\Submission\Memorandum",
                 'Legal' => "App\Models\Submission\Legal",
+                'Wphc' => "App\Models\Submission\Wphc",
+                'Spkl' => "App\Models\Submission\Spkl",
             ];
 
             $baseNamespace = "App\Models\Submission";
@@ -129,7 +132,7 @@ class SubmissionController extends Controller
             $getCreator = User::findOrFail($getSubmissionData->user_id); //  get creator  
             // dd($getCreator);          
             // dd($tableName, $id, $getSubmissionData);
-            
+
             $nullColumns = [];
 
             foreach ($columns as $column) {
@@ -144,7 +147,7 @@ class SubmissionController extends Controller
             }
 
             $module_id = $this->getModuleId($modulename);
-
+            // dd($module_id);
             // attachment
             $queryAttachement = DB::table('tbl_attachment')
                                 ->where('req_id',$id)
@@ -170,7 +173,7 @@ class SubmissionController extends Controller
                 ->where('req_id',$id)
                 ->where('module_id',$module_id)
                 ->get();
-
+            
             if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
                 $assignment = DB::table('tbl_assignment')
                 ->where('req_id',$id)
@@ -193,10 +196,37 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Detail not found. Please input the correct information."]);
                 }
             }
+
+            if($modulename == 'Spkl') {
+                $Spkldetail = DB::table('request_spkl_detail as d')
+                ->join('request_spkl as r', 'r.id', '=', 'd.req_id')
+                ->where('d.req_id', $id)
+                ->where('r.module_id', $module_id)
+                ->get();
+
+                if (count($Spkldetail) < 1) {
+                    return response()->json(["status" => "error",  "message" => "Error: Detail not found. Please input the correct information."]);
+                }
+            }
+
+            if ($modulename == 'Wphc') {
+                $wphcdetail = DB::table('request_wphc_detail')
+                    ->where('req_id', $id)
+                    ->get();
+
+                if (count($wphcdetail) < 1) {
+                    return response()->json([
+                        "status" => "error",
+                        "module" => $modulename,
+                        "message" => "Error: Detail not found. Please input the correct information."
+                    ]);
+                }
+            }
+
             if ($modulename == 'Jdi') {
                 $hasBefore = false;
                 $hasAfter = false;
-
+                
                 foreach ($attachement as $attc) {
                     if ($attc->remarks === 'Before') {
                         $hasBefore = true;
@@ -235,6 +265,7 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Surat Perjanjian' is required. Please attach it."]);
                 }
             } else {
+
                 // submission yang tidak perlu menambahkan supporting document
                 $except = [
                     'ActiveDirectory',
@@ -242,8 +273,11 @@ class SubmissionController extends Controller
                     'MaterialReq',
                     'Hris',
                     'Ghm',
-                    'Memorandum'
+                    'Memorandum',
+                    'Wphc',
+                    'Spkl'
                 ];
+
                 if (!in_array($modulename, $except)) {
                     if (count($attachement) < 1) {
                         return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document not found. Please attach it."]);
@@ -266,8 +300,24 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: ApproverList not found. Please ". ($modulename == 'Mom') ? "Select Chairman From Participant" : "add approver."]);
                 }
             }
-            if($modulename == 'Memorandum') {
-                
+            
+            if ($modulename == 'Wphc') {
+                $approverlist = DB::table('tbl_approverListReq')
+                    ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                    ->leftJoin('request_wphc', 'tbl_approverListReq.req_id', '=', 'request_wphc.id')
+                    ->leftJoin('tbl_category', 'request_wphc.category_id', '=', 'tbl_category.id')
+                    ->where('tbl_approverListReq.req_id', $id)
+                    ->where('tbl_approverListReq.module_id', $module_id)
+                    ->get();
+            }
+            if ($modulename == 'Spkl') {
+                $approverlist = DB::table('tbl_approverListReq')
+                    ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                    ->leftJoin('request_wphc', 'tbl_approverListReq.req_id', '=', 'request_wphc.id')
+                    ->leftJoin('tbl_category', 'request_wphc.category_id', '=', 'tbl_category.id')
+                    ->where('tbl_approverListReq.req_id', $id)
+                    ->where('tbl_approverListReq.module_id', $module_id)
+                    ->get();
             }
 
             $final = 0;
@@ -301,7 +351,6 @@ class SubmissionController extends Controller
                     $company = $bu;
                 }
                     $this->createApprover($modulename, $id, $company, $category);
-
             }
 
             $approverlist = ApproverListReq::where('req_id',$id)
@@ -370,7 +419,6 @@ class SubmissionController extends Controller
                     } else if($request->approvalAction == 3) {
 
                         foreach($approverlist as $data) {
-                            
                             if($data->isFinal == 0) {
                                 if ($getapproverlist == 1 || $dataapproversamecount == 1) {
                                     $final = 1;
@@ -385,7 +433,6 @@ class SubmissionController extends Controller
                                 $statusappr = 3;
                                 $requeststatus = 3;
                             }
-                            
                         }
 
                     }
@@ -394,13 +441,16 @@ class SubmissionController extends Controller
                 }
             }
 
-
             if($final == 1) {
                 if($modulename == 'Ticket' || $modulename == 'Hrsc') {
                     if (count($assignment) < 1) {
                         return response()->json(["status" => "error", "message" => $this->getMessage()['assignmentnotfound']]);
                     }
                 }
+
+                // if($modulename == 'Spkl' || $tms == 0) {
+                //     $requeststatus = 5;
+                // }
             }
 
             foreach($approverlist as $appr) {
@@ -419,18 +469,17 @@ class SubmissionController extends Controller
 
             // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate
             if ($modulename == 'Jdi' && $request->action == 'submission') {
-                $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+                $dataToUpdate["submitDate"] = Carbon::now(); 
             }
             // Cek jika modulename adalah 'Legal' dan tambahkan submitDate
             if ($modulename == 'Legal' && $request->action == 'submission') {
-                $dataToUpdate["submitDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
-                // $dataToUpdate["submissionDate"] = Carbon::now(); // Menggunakan Carbon untuk mendapatkan tanggal dan waktu saat ini
+                $dataToUpdate["submitDate"] = Carbon::now(); 
             }
 
             DB::table($tableName)
                 ->where('id', $id)
                 ->update($dataToUpdate);
-
+            // dd($approverlist);
             foreach($approverlist as $getappr) {
                 if($request->approvalAction == 0 && $getappr->approvalAction == 0) { // cancel pengajuan
                     $mailData = [
@@ -501,7 +550,6 @@ class SubmissionController extends Controller
                         // dd($mailData);
                         break;
                     }
-
                 }
                 if($request->approvalAction == 4 && $getappr->approvalAction == 4) { // rejected pengajuan
                     $mailData = [

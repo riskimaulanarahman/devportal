@@ -416,6 +416,7 @@ const popupContentTemplate = function (reqid,mode,options) {
             { bu: 'AHL', sector: 'SBS' },
             { bu: 'AHL', sector: 'SSP' },
             { bu: 'AHL', sector: 'HO' },
+            { bu: 'NKL', sector: 'NKL' },
         ];
 
         scrollView.append("<hr>"),

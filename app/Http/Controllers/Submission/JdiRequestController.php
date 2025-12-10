@@ -291,6 +291,7 @@ class JdiRequestController extends Controller
         $dataAppr = DB::table('jdiApprover')->select('*')->where('id',$id)->get(); // data approver
         $dataAtt = DB::table('jdiAttachment')->select('*')->where('id',$id)->get(); // data attachment
 
+        // dd($data);
         if($data->noRegistration == null || $data->noRegistration == '') {
             Jdi::where('id',$id)
             ->update(
@@ -304,7 +305,6 @@ class JdiRequestController extends Controller
         try {
 			$excel = new COM("Excel.Application") or die("ERROR: Unable to instantaniate COM!\r\n");
 			$excel->Visible = false;
-
             $file = public_path("template/jdi/jdi.xlsx");
 
 			$Workbook = $excel->Workbooks->Open($file, false, false) or die("ERROR: Unable to open " . $file . "!\r\n");

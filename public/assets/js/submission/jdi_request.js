@@ -100,11 +100,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             
             }
         },
-        {
-            caption: "Code",
-            dataField: 'code',
-            width: 180,
-        },
+          
         {
             dataField: 'noRegistration',
             width: 180,

@@ -24,7 +24,7 @@ class Employee extends Model
         'isNotHC' => 'integer',
         'isPIC' => 'integer',
     ];
-
+ 
     public $timestamps = false;
 
     protected $with = ['department','designation','location','level','company'];

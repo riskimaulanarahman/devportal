@@ -396,8 +396,8 @@ class HcrfRequestController extends Controller
                 $Worksheet->Range("A14")->Value = $jobDescCleaned;
 
                 $Worksheet->Range("D20")->Value = $data->detailHcrf->location;
-                // $Worksheet->Range("A24")->Value = $trainingPlanCleaned;
-                // $Worksheet->Range("A28")->Value = $careerDevPlanCleaned;
+                $Worksheet->Range("A24")->Value = $trainingPlanCleaned;
+                $Worksheet->Range("A28")->Value = $careerDevPlanCleaned;
 
                 $Worksheet->Range("B24")->Value = $data->detailHcrf->education;
                 $Worksheet->Range("H24")->Value = $data->detailHcrf->experienceLength;
