@@ -1,4 +1,4 @@
-<button class="btn btn-info" id="logHistoryButton">Log Report</button>
+{{-- <button class="btn btn-info" id="logHistoryButton">Log Report</button> --}}
 <button class="btn btn-primary" id="logIssue">Log Issue</button>
 
 <!-- Modal Bootstrap -->
@@ -63,10 +63,10 @@
 </div>
 
 <!-- Event Handler untuk Tombol -->
-<script>
+{{-- <script>
     document.getElementById('logHistoryButton').addEventListener('click', function() {
         var logHistoryModal = new bootstrap.Modal(document.getElementById('logHistoryModal'));
         logHistoryModal.show();
         dataGridlog.refresh();
     });
-</script>
+</script> --}}

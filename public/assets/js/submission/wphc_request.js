@@ -1588,100 +1588,100 @@ $('#filterCardNonAktif').on('click', function () {
 
 
 // let id = 1;
-var dataGridhistory = $("#loghistory").dxDataGrid({
-    dataSource: store('logreportwphc'),
-    allowColumnReordering: false,
-    allowColumnResizing: true,
-    columnsAutoWidth: true,
-    columnHidingEnabled: false,
-    rowAlternationEnabled: true,
-    wordWrapEnabled: false,
-    showBorders: true,
-    filterRow: {
-        visible: true
-    },
-    filterPanel: {
-        visible: true
-    },
-    headerFilter: {
-        visible: true
-    },
-    searchPanel: {
-        visible: true,
-        width: 240,
-        placeholder: 'Search...',
-    },
-    columnFixing: {
-        enabled: true,
-    },
-    editing: {
-        useIcons: true,
-        mode: "batch",
-        allowAdding: false,
-        allowUpdating: false,
-        allowDeleting: false,
-    },
-    scrolling: {
-        mode: "virtual"
-    },
-    sorting: {
-        mode: 'multiple',
-    },
-    pager: {
-        visible: true,
-        showInfo: true,
-    },
-    columns: [
-        {
-            caption: "#",
-            width: 60,
-            cellTemplate: function (container, options) {
-                container.text(options.rowIndex + 1);
-            }
-        },
-        {
-            dataField: 'work_date',
-            caption: "Work Date",
-        },
-        {
-            dataField: 'remarks',
-            caption: "Remarks",
-        },
-        {
-            dataField: 'text',
-            caption: "Objectives",
-        },
-        {
-            dataField: 'status_wphc_aktif',
-            caption: "Status",
-        },
-        {
-            dataField: 'aktif_sampai_dengan',
-            caption: "Issue Date",
-        },
-    ],
-    export: {
-        enabled: true,
-        fileName: 'log history',
-        excelFilterEnabled: true,
-        allowExportSelectedData: false
-    },
-    onContentReady: function (e) {
-        moveEditColumnToLeft(e.component);
-    },
-    onToolbarPreparing: function (e) {
-        dataGridlog = e.component;
+// var dataGridhistory = $("#loghistory").dxDataGrid({
+//     dataSource: store('logreportwphc'),
+//     allowColumnReordering: false,
+//     allowColumnResizing: true,
+//     columnsAutoWidth: true,
+//     columnHidingEnabled: false,
+//     rowAlternationEnabled: true,
+//     wordWrapEnabled: false,
+//     showBorders: true,
+//     filterRow: {
+//         visible: true
+//     },
+//     filterPanel: {
+//         visible: true
+//     },
+//     headerFilter: {
+//         visible: true
+//     },
+//     searchPanel: {
+//         visible: true,
+//         width: 240,
+//         placeholder: 'Search...',
+//     },
+//     columnFixing: {
+//         enabled: true,
+//     },
+//     editing: {
+//         useIcons: true,
+//         mode: "batch",
+//         allowAdding: false,
+//         allowUpdating: false,
+//         allowDeleting: false,
+//     },
+//     scrolling: {
+//         mode: "virtual"
+//     },
+//     sorting: {
+//         mode: 'multiple',
+//     },
+//     pager: {
+//         visible: true,
+//         showInfo: true,
+//     },
+//     columns: [
+//         {
+//             caption: "#",
+//             width: 60,
+//             cellTemplate: function (container, options) {
+//                 container.text(options.rowIndex + 1);
+//             }
+//         },
+//         {
+//             dataField: 'work_date',
+//             caption: "Work Date",
+//         },
+//         {
+//             dataField: 'remarks',
+//             caption: "Remarks",
+//         },
+//         {
+//             dataField: 'text',
+//             caption: "Objectives",
+//         },
+//         {
+//             dataField: 'status_wphc_aktif',
+//             caption: "Status",
+//         },
+//         {
+//             dataField: 'aktif_sampai_dengan',
+//             caption: "Issue Date",
+//         },
+//     ],
+//     export: {
+//         enabled: true,
+//         fileName: 'log history',
+//         excelFilterEnabled: true,
+//         allowExportSelectedData: false
+//     },
+//     onContentReady: function (e) {
+//         moveEditColumnToLeft(e.component);
+//     },
+//     onToolbarPreparing: function (e) {
+//         dataGridlog = e.component;
 
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function () {
-                    dataGridlog.refresh();
-                }
-            }
-        })
-    },
-}).dxDataGrid("instance");
+//         e.toolbarOptions.items.unshift({
+//             location: "after",
+//             widget: "dxButton",
+//             options: {
+//                 hint: "Refresh Data",
+//                 icon: "refresh",
+//                 onClick: function () {
+//                     dataGridlog.refresh();
+//                 }
+//             }
+//         })
+//     },
+// }).dxDataGrid("instance");

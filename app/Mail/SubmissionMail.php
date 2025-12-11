@@ -575,13 +575,26 @@ class SubmissionMail extends Mailable
                 $submission->department_name    = $spkl->department_name ?? '-';
                 $submission->remarks            = $spkl->remarks ?? '-';
 
-                    if ($final == 1) {
-                    $pdf = $spklController->genPdfSpkl($request, $mailData['submission']->id);
-                        $this->attach($url . "devportal/" . $pdf); 
-                        foreach ($Mailrecipient as $cc) {
-                            $this->cc($cc->email); 
+                    // if ($final == 1) {
+                    // $pdf = $spklController->genPdfSpkl($request, 
+                    // $mailData['submission']->id);
+                    //     $this->attach($url . "devportal/" . $pdf); 
+                    //     foreach ($Mailrecipient as $cc) {
+                    //         $this->cc($cc->email); 
+                    //     }
+                    // }
+                if ($final == 1) {
+                    // Generate PDF dan lampirkan
+                    $pdf = $spklController->genPdfSpkl($request, $submission->id);
+                    $this->attach($url . "devportal/" . $pdf);
+
+                    // Kirim CC ke semua Mailrecipient
+                    foreach ($Mailrecipient as $cc) {
+                        if (!empty($cc->email)) {
+                            $this->cc($cc->email);
                         }
                     }
+                }
             }
 
         // Spkl MODULE
