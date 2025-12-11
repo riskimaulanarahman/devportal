@@ -46,6 +46,37 @@ class SpklDetailController extends Controller
         DB::beginTransaction();
 
         try {
+            $master = DB::table('request_spkl')
+            ->select('id', 'work_date', 'requestStatus')
+            ->where('id', $request->req_id)
+            ->first();
+
+            if (!$master || !$master->work_date) {
+                return response()->json([
+                    "status"  => "error",
+                    "message" => "Master request not found or work_date is missing."
+                ]);
+            }
+
+            // 2) Normalisasi ke tanggal (tanpa jam)
+            $masterDate = \Carbon\Carbon::parse($master->work_date)->toDateString(); // Y-m-d
+
+            // 3) Validasi duplikasi employee + work_date di request lain
+            $exists = DB::table('request_spkl_detail as d')
+                ->join('request_spkl as m', 'm.id', '=', 'd.req_id')
+                ->where('d.employee_id', $request->employee_id)
+                ->whereDate('m.work_date', $masterDate)
+                ->where('m.id', '!=', $request->req_id)                 // beda request
+                // ->whereNull('d.deleted_at')                             // jika pakai soft delete
+                // ->whereIn('m.requestStatus', [0, 1, 2, 3])              // sesuaikan status aktif
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    "status"  => "error",
+                    "message" => "Duplicate SPKL for the same employee and work date on another request is not allowed."
+                ]);
+            }
 
             $requestData = $request->all();
             $requestData['user_id']   = $this->getAuth()->id;
