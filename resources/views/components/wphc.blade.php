@@ -1,5 +1,5 @@
 {{-- <button class="btn btn-info" id="logHistoryButton">Log Report</button> --}}
-<button class="btn btn-primary" id="logIssue">Log Issue</button>
+{{-- <button class="btn btn-primary" id="logIssue">Log Issue</button> --}}
 
 <!-- Modal Bootstrap -->
 <div class="modal fade" id="logHistoryModal" tabindex="-1" aria-labelledby="logHistoryModalLabel" aria-hidden="true">

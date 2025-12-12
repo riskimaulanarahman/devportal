@@ -24,7 +24,7 @@ class Wphc extends Model
     protected $fillable = [
         'requestStatus',
         'user_id',
-        'employee_id',
+        // 'employee_id',
         'bu',
         'sector',
         'Superior',

@@ -36,7 +36,7 @@ class WphcDetailController extends Controller
     public function index(Request $request)
     {
         $data = WphcDetail::get();
-
+        // dd($data);
         return response()->json([
             'status' => "show",
             'message' => $this->getMessage()['show'],
@@ -127,8 +127,8 @@ class WphcDetailController extends Controller
             if ($existsSameDay) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal $key sudah diajukan oleh employee $employeeId"
-                ], 422);
+                    "message" => "The date $key has already been filed in a different submission by the same employee."
+                ]);
             }
 
             // Cooldown mundur: cek apakah ada tanggal lain dalam 7 hari ke belakang
@@ -144,8 +144,8 @@ class WphcDetailController extends Controller
             if ($existsBackward) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal tidak tersedia (cooldown mundur ±7 hari)."
-                ], 422);
+                    "message" => "The selected date is not available due to a backward cooldown period of seven days by other submission with same employee."
+                ]);
             }
 
             // Cooldown maju: cek apakah ada tanggal lain dalam 7 hari ke depan
@@ -161,8 +161,8 @@ class WphcDetailController extends Controller
             if ($existsForward) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal tidak tersedia (cooldown maju ±7 hari)."
-                ], 422);
+                    "message" => "“The selected date is not available due to a forward cooldown period of seven days."
+                ]);
             }
 
             // Validasi backdate absolut → ganti dengan toleransi 7 hari
@@ -170,8 +170,8 @@ class WphcDetailController extends Controller
             if ($startDate->lt($sevenDaysAgo)) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "Tanggal tidak tersedia (backdate lebih dari 7 hari)."
-                ], 422);
+                    "message" => "“The selected date is unavailable because it is a backdate beyond the seven‑day limit."
+                ]);
             }
 
             $holidayDates = Holiday::pluck('HolidayDate')
@@ -184,7 +184,7 @@ class WphcDetailController extends Controller
                 if ($startDate->isWeekday()) {
                     return response()->json([
                         "status"  => "error",
-                        "message" => "Tanggal tidak tersedia (weekday)."
+                        "message" => "The selected date is unavailable because it falls on a weekday."
                     ], 422);
                 }
 
@@ -199,8 +199,8 @@ class WphcDetailController extends Controller
                     if ($hasPrevSunday) {
                         return response()->json([
                             "status"  => "error",
-                            "message" => "Tanggal tidak tersedia (Sunday berturut-turut)."
-                        ], 422);
+                            "message" => "“The selected date is not available because it falls on consecutive Sundays."
+                        ]);
                     }
                 }
             }
@@ -229,12 +229,23 @@ class WphcDetailController extends Controller
         }
     }
 
-public function getList($id, $modulename)
+    public function getList($id, $modulename)
     {
         try {
-            $data = WphcDetail::select('*')
-                ->where('req_id', $id)
-                ->get();
+            $data = WphcDetail::select(
+            'request_wphc_detail.*',
+            'request_wphc.employee_id as master_employee_id',
+            'employee.tbl_employee.fullname as employee_fullname',
+            'employee.tbl_department.DepartmentName as department_name'
+        )
+        ->join('request_wphc', 'request_wphc.id', '=', 'request_wphc_detail.req_id')
+        ->join('employee.tbl_employee', 'employee.tbl_employee.id', '=', 'request_wphc.employee_id')
+        ->join('employee.tbl_department', 'employee.tbl_department.id', '=', 'employee.tbl_employee.department_id')
+        ->where('request_wphc_detail.req_id', $id)
+        ->get();
+
+
+
 
             $data = $data->map(function ($row) {
                 $row->startDate = Carbon::parse($row->startDate)->toIso8601String();

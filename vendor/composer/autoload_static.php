@@ -649,6 +649,7 @@ class ComposerStaticInitc0ab960a98edb137ab2e98b6663cdd78
         'App\\Http\\Controllers\\Submission\\LegalRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/LegalRequestController.php',
         'App\\Http\\Controllers\\Submission\\WphcRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/WphcRequestController.php',
         'App\\Http\\Controllers\\Submission\\WphcDetailController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/WphcDetailController.php',
+        'App\\Http\\Controllers\\Submission\\WphcReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/WphcReportController.php',
         'App\\Http\\Controllers\\Submission\\SpklRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/SpklRequestController.php',
         'App\\Http\\Controllers\\Submission\\SpklTimesheetController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/SpklTimesheetController.php',
         'App\\Http\\Controllers\\Submission\\SpklDetailController' => __DIR__ . '/../..' . '/app/Http/Controllers/Submission/SpklDetailController.php',

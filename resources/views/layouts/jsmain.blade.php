@@ -210,6 +210,7 @@
         '/legal_request' : 'submission/legal_request.js',
         //Submission/wphc
         '/wphc_request' : 'submission/wphc_request.js',
+        '/wphc_report' : 'submission/wphc_report.js',
         //Submission/spkl
         '/spkl_request' : 'submission/spkl_request.js',
         '/spkl_timesheet' : 'submission/spkl_timesheet.js'

@@ -502,18 +502,21 @@ class SubmissionMail extends Mailable
                     ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
                     ->leftJoin('request_wphc_detail', 'request_wphc.id', '=', 'request_wphc_detail.req_id')
                     ->select(
-                        'request_wphc.*',
-                        'request_wphc_detail.work_date',
-                        'request_wphc_detail.startDate',
-                        'request_wphc_detail.endDate',
-                        'request_wphc_detail.remarks',
-                        'request_wphc_detail.text',
+                        'request_wphc.code_id',
+                        'request_wphc.bu',
                         'employee.tbl_employee.FullName as emp_name',
-                        'employee.tbl_department.DepartmentName as department_name'
+                        'employee.tbl_department.DepartmentName as department_name',
+                        DB::raw("STRING_AGG(CONVERT(varchar(10), request_wphc_detail.startDate, 105), ', ') as work_dates")
                     )
                     ->where('request_wphc.id', $submission->id)
-                    ->orderByDesc('request_wphc_detail.req_id')
+                    ->groupBy(
+                        'request_wphc.code_id',
+                        'request_wphc.bu',
+                        'employee.tbl_employee.FullName',
+                        'employee.tbl_department.DepartmentName'
+                    )
                     ->first();
+
 
                 if (!$wphc) {
                     dd('Data WPHC tidak ditemukan untuk ID: ' . $submission->id);
@@ -522,7 +525,7 @@ class SubmissionMail extends Mailable
                 // Inject data ke objek submission
                 $submission->emp_name      = $wphc->emp_name ?? '-';
                 $submission->text      = $wphc->text ?? '-';
-                $submission->work_date = $wphc->work_date ?? '-';
+                $submission->work_dates = $wphc->work_dates ?? '-';
                 $submission->startDate = $wphc->startDate ?? '-';
                 $submission->endDate = $wphc->endDate ?? '-';
                 $submission->department_name   = $wphc->department_name ?? '-';
@@ -548,41 +551,47 @@ class SubmissionMail extends Mailable
                 $spklController = new SpklRequestController();
                 $submission = $mailData['submission'];
 
-                // Ambil data SPKL dari database
+                // Ambil data master SPKL
                 $spkl = DB::table('request_spkl')
                     ->leftJoin('employee.tbl_employee', 'request_spkl.employee_id', '=', 'employee.tbl_employee.id')
                     ->leftJoin('employee.tbl_department', 'employee.tbl_employee.department_id', '=', 'employee.tbl_department.id')
-                    ->leftJoin('request_spkl_detail', 'request_spkl.id', '=', 'request_spkl_detail.req_id')
                     ->select(
                         'request_spkl.*',
-                        'request_spkl_detail.EstimateOvertimeHours',
-                        'request_spkl_detail.target',
-                        // 'employee.tbl_employee.FullName as emp_name',
+                        'employee.tbl_employee.FullName as originator_name',
                         'employee.tbl_department.DepartmentName as department_name'
                     )
                     ->where('request_spkl.id', $submission->id)
-                    ->orderByDesc('request_spkl_detail.req_id')
                     ->first();
 
                 if (!$spkl) {
                     dd('Data SPKL tidak ditemukan untuk ID: ' . $submission->id);
                 }
 
-                // Inject data ke objek submission
-                $submission->emp_name           = $spkl->emp_name ?? '-';
-                $submission->text             = $spkl->text ?? '-';
-                $submission->work_date          = $spkl->work_date ?? '-';
-                $submission->department_name    = $spkl->department_name ?? '-';
-                $submission->remarks            = $spkl->remarks ?? '-';
+                // Ambil semua detail SPKL
+                $details = DB::table('request_spkl_detail as d')
+                    ->leftJoin('employee.tbl_employee as e', 'd.employee_id', '=', 'e.id')
+                    ->select(
+                        'e.FullName as emp_name',
+                        'd.EstimateOvertimeHours',
+                        'd.target',
+                        'd.remarks'
+                    )
+                    ->where('d.req_id', $submission->id)
+                    ->get();
 
-                    // if ($final == 1) {
-                    // $pdf = $spklController->genPdfSpkl($request, 
-                    // $mailData['submission']->id);
-                    //     $this->attach($url . "devportal/" . $pdf); 
-                    //     foreach ($Mailrecipient as $cc) {
-                    //         $this->cc($cc->email); 
-                    //     }
-                    // }
+                // Inject data master ke submission
+                $submission->code_id        = $spkl->code_id ?? '-';
+                $submission->bu             = $spkl->bu ?? '-';
+                $submission->department_name= $spkl->department_name ?? '-';
+                $submission->work_date      = $spkl->work_date ?? '-';
+                $submission->remarks        = $spkl->remarks ?? '-';
+
+                // Inject detail langsung ke submission
+                $submission->details        = $details;
+
+                // Kirim ke mailData
+                $mailData['submission'] = $submission;
+
                 if ($final == 1) {
                     // Generate PDF dan lampirkan
                     $pdf = $spklController->genPdfSpkl($request, $submission->id);
@@ -596,8 +605,9 @@ class SubmissionMail extends Mailable
                     }
                 }
             }
+            // Spkl MODULE
 
-        // Spkl MODULE
+
 
     }
 

@@ -714,9 +714,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                         return container;
 
                     }
-                const infoContentcontract = $("<div id='infoContentcontract'>");
-
-                // Helper umum
+                     // Helper umum
                 const normalizeDate = (date) => {
                 const d = new Date(date);
                 d.setHours(0, 0, 0, 0);
@@ -749,8 +747,25 @@ const popupContentTemplate = function (reqid, mode, options) {
                 });
                 };
 
-                if (data.ID === 2) {
                 const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
+            if (data.ID === 2) { 
+                if (mode === 'approval') {
+                // Return approval grid inside the accordion item 2
+                return $("<div>").dxDataGrid({
+                    dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
+                    // dataSource: storedetail(modname, reqid),
+                    showBorders: true,
+                    columns: [
+                    { caption: "Employee", dataField: "employee_fullname" },
+                    { caption: "Department", dataField: "department_name" },
+                    { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
+                    { caption: "Description", dataField: "text" }
+                    ]
+                });
+                } else {
+                const infoContentcontract = $("<div id='infoContentcontract'>");
+
+               
 
                 // Ambil holiday dari API
                     $.getJSON("api/holiday", (response) => {
@@ -781,13 +796,18 @@ const popupContentTemplate = function (reqid, mode, options) {
                             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 8);
                             if (d < sevenDaysAgo) return false;
 
-                            // 2) Holiday aktif
+                            // 2) Forward date: disable setelah H+3week
+                            const threeDaysAhead = new Date(today);
+                            threeDaysAhead.setDate(threeDaysAhead.getDate() + 21);
+                            if (d > threeDaysAhead) return false;
+
+                            // 3) Holiday aktif
                             if (isHoliday) return true;
 
-                            // 3) Weekday non-holiday disable
+                            // 4) Weekday non-holiday disable
                             if (isWeekday(d)) return false;
 
-                            // 4) Cooldown ±7 hari dari setiap appointment
+                            // 5) Cooldown ±7 hari dari setiap appointment
                             const inCooldown = appointmentsNorm.some(a => {
                                 const start = normalizeDate(a.startDate);
 
@@ -804,7 +824,7 @@ const popupContentTemplate = function (reqid, mode, options) {
 
                             if (inCooldown) return false;
 
-                            // 5) Sunday berturut-turut
+                            // 6) Sunday berturut-turut
                             if (isSunday(d)) {
                                 const prevSunday = new Date(d);
                                 prevSunday.setDate(prevSunday.getDate() - 7);
@@ -1002,7 +1022,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                 });
 
                 return infoContentcontract;
-
+            }
+        
+            
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),

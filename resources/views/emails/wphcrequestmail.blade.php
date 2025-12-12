@@ -72,11 +72,7 @@
                 <tr>
                     <th>Code No</th>
                     <td>{{ $code }}</td>
-                </tr>                
-                {{-- <tr>
-                    <th>Submit Date</th>
-                    <td>{{ \Carbon\Carbon::parse($mailData['submission']->created_at)->format('j/F/Y') }}</td>
-                </tr> --}}
+                </tr>
                 <tr>
                     <th>BU</th>
                     <td>{{ $mailData['submission']->bu }}</td>
@@ -86,15 +82,8 @@
                     <td>{{ $mailData['submission']->emp_name }}</td>
                 </tr>
                 <tr>
-                    <th>workdate</th>
-                    <td>
-                        {{ \Carbon\Carbon::parse($mailData['submission']->startDate)->format('d M Y, H:i') }}
-                        –
-                        {{ \Carbon\Carbon::parse($mailData['submission']->endDate)->format('d M Y, H:i') }}
-                        ({{ \Carbon\Carbon::parse($mailData['submission']->startDate)->diffInDays(\Carbon\Carbon::parse($mailData['submission']->endDate)) + 1 }} hari)
-                    </td>
-
-                    {{-- <td>{{ $mailData['submission']->startDate }} - {{ $mailData['submission']->endDate }}</td> --}}
+                    <th>Workdate</th>
+                    <td>{{ $mailData['submission']->work_dates }}</td>
                 </tr>
                 <tr>
                     <th>Deparment</th>
