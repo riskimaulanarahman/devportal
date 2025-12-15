@@ -1,5 +1,5 @@
-var modname = 'wphc_report';
-var modelclass = 'Wphc';
+var modname = 'spkl_report';
+var modelclass = 'Spkl';
 var popupmode;
 
 function moveEditColumnToLeft(dataGrid) {
@@ -65,7 +65,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Name",
             dataField: "Name",
             // width: 200
-        },
+        },        
         {
             caption: "Department",
             dataField: "Department",
@@ -90,6 +90,60 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: "Dept Head",
             dataField: "DeptHeadName",
             // width: 180
+        },
+        {
+            caption: "Total Hours",
+            dataField: "ActualTotalHours",
+            // width: 180
+        },
+        {
+            caption: "Start Work",
+            dataField: "ActualStartWork",
+            customizeText: function(cellInfo) {
+                if (cellInfo.value) {
+                    const date = new Date(cellInfo.value);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                }
+                return "";
+            }
+        },
+        {
+            caption: "End Work",
+            dataField: "ActualEndWork",
+            customizeText: function(cellInfo) {
+                if (cellInfo.value) {
+                    const date = new Date(cellInfo.value);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                }
+                return "";
+            }
+        },
+        {
+            caption: "Normal Hours",
+            dataField: "ActualNormalHours",
+            // width: 180
+        },
+        {
+            caption: "Overtime Hours",
+            dataField: "ActualOvertimeHours",
+            // width: 180
+        },
+        {
+            caption: "Target",
+            dataField: "Target",
+            // width: 200
         }
     ],
     columnChooser: {

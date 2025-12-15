@@ -750,6 +750,14 @@ trait ApproverTrait {
                 }
             }
 
+            // Hapus data yang bersangkutan di tabel ApproverListReq
+            ApproverListReq::leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
+            ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+            ->where('tbl_approverListReq.module_id', $this->getModuleId($moduleName))
+            ->where('req_id', $reqID)
+            ->where('tbl_approvaltype.ApprovalType','Superior')
+            ->delete();
+
             $approverList = new ApproverListReq();
             $approverList->req_id = $reqID;
             $approverList->module_id = $this->getModuleId($moduleName);

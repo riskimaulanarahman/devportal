@@ -78,7 +78,7 @@ class Wphc extends Model
 
     public function wphc_detail()
     {
-        return $this->hasOne(WphcDetail::class, 'req_id', 'id');
+        return $this->hasMany(WphcDetail::class, 'req_id', 'id');
     }
     public function category()
     {

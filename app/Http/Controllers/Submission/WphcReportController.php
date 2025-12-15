@@ -45,7 +45,11 @@ class WphcReportController extends Controller
             ->select([
                 'd.startDate as WorkDate',
                 'd.id',
-                'd.endDate as FullApprovedDate',
+                DB::raw("(SELECT TOP 1 r.approvalDate
+                FROM tbl_approverListReq r
+                WHERE r.req_id = m.id
+                    AND r.approvalDate IS NOT NULL
+                ORDER BY r.approvalDate DESC) as FullApprovedDate"),
                 'e.SAPID',
                 'e.FullName as Name',
                 'dept.DepartmentName as Department',

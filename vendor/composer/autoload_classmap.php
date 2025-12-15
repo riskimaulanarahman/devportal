@@ -94,6 +94,7 @@ return array(
     'App\\Http\\Controllers\\Submission\\WphcDetailController' => $baseDir . '/app/Http/Controllers/Submission/WphcDetailController.php',
     'App\\Http\\Controllers\\Submission\\WphcReportController' => $baseDir . '/app/Http/Controllers/Submission/WphcReportController.php',
     'App\\Http\\Controllers\\Submission\\SpklRequestController' => $baseDir . '/app/Http/Controllers/Submission/SpklRequestController.php',
+    'App\\Http\\Controllers\\Submission\\SpklReportController' => $baseDir . '/app/Http/Controllers/Submission/SpklReportController.php',
     'App\\Http\\Controllers\\Submission\\SpklDetailController' => $baseDir . '/app/Http/Controllers/Submission/SpklDetailController.php',
     'App\\Http\\Controllers\\Submission\\SpklTimesheetController' => $baseDir . '/app/Http/Controllers/Submission/SpklTimesheetController.php',
     'App\\Http\\Controllers\\Submission\\MemorandumDetailController' => $baseDir . '/app/Http/Controllers/Submission/MemorandumDetailController.php',

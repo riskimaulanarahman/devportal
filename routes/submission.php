@@ -63,6 +63,7 @@ Route::group(['prefix' => 'api'], function () {
         'wphc_report' => App\Http\Controllers\Submission\WphcReportController::class,
         //spkl
         'spkl_request' => App\Http\Controllers\Submission\SpklRequestController::class,
+        'spkl_report' => App\Http\Controllers\Submission\SpklReportController::class,
         'spkl_timesheet' => App\Http\Controllers\Submission\SpklTimesheetController::class,
         'spkl_detail' => App\Http\Controllers\Submission\SpklDetailController::class,
 

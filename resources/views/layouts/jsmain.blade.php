@@ -213,6 +213,7 @@
         '/wphc_report' : 'submission/wphc_report.js',
         //Submission/spkl
         '/spkl_request' : 'submission/spkl_request.js',
+        '/spkl_report' : 'submission/spkl_report.js',
         '/spkl_timesheet' : 'submission/spkl_timesheet.js'
     }
     

@@ -111,18 +111,18 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             alignment: "left"
         },
         {
-            caption: "Work Date",
-            dataField: "wphc_detail.startDate",
+            caption: "Work Dates",
+            dataField: "work_dates",
             alignment: "left",
-            dataType: "date",
-            format: "dd-MM-yyyy",   // format tanggal d-m-y
+            dataType: "string",
             customizeText: function(cellInfo) {
                 if (cellInfo.value) {
-                    const date = new Date(cellInfo.value);
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    return `${day}-${month}-${year}`;
+                    return cellInfo.value.split(',').map(v => {
+                        v = v.trim();
+                        // parse manual karena format sudah d-m-Y
+                        const [day, month, year] = v.split('-');
+                        return `${day}-${month}-${year}`;
+                    }).join(', ');
                 }
                 return "";
             }
@@ -131,11 +131,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: 'BU',
             dataField: 'bu',
             alignment: "left"
-        },
-        {
-            caption: 'Description',
-            dataField: "wphc_detail.text",
-            alignment: "left",
         },
         {
             dataField: 'requestStatus',
