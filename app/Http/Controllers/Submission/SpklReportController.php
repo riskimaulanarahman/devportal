@@ -60,6 +60,7 @@ class SpklReportController extends Controller
         ->where('m.tms', 34)
         ->orderBy('m.work_date', 'desc')
         ->get();
+        // dd($data);
 
     return response()->json([
         "status"  => "show",

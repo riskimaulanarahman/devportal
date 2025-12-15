@@ -64,17 +64,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Name",
             dataField: "Name",
-            // width: 200
         },        
         {
             caption: "Department",
             dataField: "Department",
-            // width: 180
         },
         {
             caption: "Position",
             dataField: "Position",
-            // width: 150
         },
         {
             caption: "Business Group",
@@ -84,17 +81,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Superior",
             dataField: "SuperiorName",
-            // width: 180
         },
         {
             caption: "Dept Head",
             dataField: "DeptHeadName",
-            // width: 180
         },
         {
             caption: "Total Hours",
             dataField: "ActualTotalHours",
-            // width: 180
         },
         {
             caption: "Start Work",
@@ -133,17 +127,14 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         {
             caption: "Normal Hours",
             dataField: "ActualNormalHours",
-            // width: 180
         },
         {
             caption: "Overtime Hours",
             dataField: "ActualOvertimeHours",
-            // width: 180
         },
         {
             caption: "Target",
             dataField: "Target",
-            // width: 200
         }
     ],
     columnChooser: {
