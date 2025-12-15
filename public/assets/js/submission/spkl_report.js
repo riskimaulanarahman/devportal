@@ -87,10 +87,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: "DeptHeadName",
         },
         {
-            caption: "Total Hours",
-            dataField: "ActualTotalHours",
-        },
-        {
             caption: "Start Work",
             dataField: "ActualStartWork",
             customizeText: function(cellInfo) {
@@ -123,6 +119,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 }
                 return "";
             }
+        },
+        {
+            caption: "Total Hours",
+            dataField: "ActualTotalHours",
         },
         {
             caption: "Normal Hours",
