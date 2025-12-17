@@ -326,9 +326,9 @@ class SubmissionMail extends Mailable
         // LEGAL MODULE
             if ($modulename == 'Legal') {
                 $request = new Request();
-                $wphcController = new WphcRequestController();
+                $legalController = new LegalRequestController();
                     if ($final == 1) {
-                    $pdf = $wphcController->genPdfLegal($request, $mailData['submission']->id);
+                    $pdf = $legalController->genPdfLegal($request, $mailData['submission']->id);
                         $this->attach($url . "devportal/" . $pdf); //Lampiran PDF
 
                         foreach ($Mailrecipient as $cc) {

@@ -204,7 +204,7 @@ class SpklRequestController extends Controller
             // $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
 
-            $this->addOneDayToDate($requestData);
+            // $this->addOneDayToDate($requestData);
 
             $data = $this->model->findOrFail($id);
             if($request->DeptHead) {

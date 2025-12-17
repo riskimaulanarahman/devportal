@@ -313,8 +313,8 @@ class SubmissionController extends Controller
             if ($modulename == 'Spkl') {
                 $approverlist = DB::table('tbl_approverListReq')
                     ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
-                    ->leftJoin('request_wphc', 'tbl_approverListReq.req_id', '=', 'request_wphc.id')
-                    ->leftJoin('tbl_category', 'request_wphc.category_id', '=', 'tbl_category.id')
+                    ->leftJoin('request_spkl', 'tbl_approverListReq.req_id', '=', 'request_spkl.id')
+                    ->leftJoin('tbl_category', 'request_spkl.category_id', '=', 'tbl_category.id')
                     ->where('tbl_approverListReq.req_id', $id)
                     ->where('tbl_approverListReq.module_id', $module_id)
                     ->get();

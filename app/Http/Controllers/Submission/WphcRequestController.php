@@ -557,7 +557,7 @@ class WphcRequestController extends Controller
                     if (isset($approverMap[5])) {
                         $Worksheet->Range("Q38")->Value = $approverMap[5]->apprname;
                         $Worksheet->Range("Q39")->Value = $approverMap[5]->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picPath, 38, 17, 12, $excel, true);
+                        addPictureToWorksheet($Worksheet, $picPath, 37, 17, 12, $excel, true);
                     }
                     $row += 3;
                 }
