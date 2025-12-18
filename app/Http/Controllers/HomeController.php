@@ -198,9 +198,9 @@ class HomeController extends Controller
                             case 'timesheet_spkl':
                                 $url = 'spkl_timesheet';
                                 break;
-                            // case 'request_capex':
-                            //     $url = 'request_capex';
-                            //     break;
+                            case 'request_capex':
+                                $url = 'request_capex';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -300,9 +300,9 @@ class HomeController extends Controller
                             case 'timesheet_spkl':
                                 $url = 'spkl_timesheet';
                                 break;
-                            // case 'request_capex':
-                            //     $url = 'request_capex';
-                            //     break;
+                            case 'request_capex':
+                                $url = 'request_capex';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }

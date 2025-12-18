@@ -92,12 +92,12 @@ class DataCandidateController extends Controller
         $data = $this->service->getDetail($id);
         return $data;
 
-        $originatorApproval = $data->approverHistory
-            ->where('approvalType', 'Submitted')
-            ->sortByDesc('approvalDate')
-            ->first();
+        // $originatorApproval = $data->approverHistory
+        //     ->where('approvalType', 'Submitted')
+        //     ->sortByDesc('approvalDate')
+        //     ->first();
         
-        $subimissionDate = ($originatorApproval) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
+        // $subimissionDate = ($originatorApproval) ? $originatorApproval->created_at : $data->created_at; // time originator submitted submission
         
         $emp = Employee::select('*')->with(['location','company','department'])->where('LoginName',$data->username)->first(); // data employee
         $dataAppr = DB::table('HcrfreqApprover')->select('*')->where('id',$id)->get(); // data approver
@@ -106,7 +106,7 @@ class DataCandidateController extends Controller
 			$excel = new COM("Excel.Application") or die("ERROR: Unable to instantaniate COM!\r\n");
 			$excel->Visible = false;
 
-            $file = public_path("template/hris/hcrf/hcrf.xlsx");
+            $file = public_path("template/hris/emdf/emdf.xlsx");
 
 			$Workbook = $excel->Workbooks->Open($file, false, true) or die("ERROR: Unable to open " . $file . "!\r\n");
 			$Worksheet = $Workbook->Worksheets(1);

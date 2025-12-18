@@ -94,8 +94,8 @@
                                 </button>
 
                                 <!-- {{-- Tombol terpisah di kanan header --}} -->
-                                <button type="button" class="btn btn-sm btn-outline-primary me-3 btn-alert"
-                                    data-nik="{{ $personal->nik }}">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-3 btn-generate"
+                                    data-generate="{{ $personal->user_id }}">
                                     🔔
                                 </button>
                             </h2>
@@ -235,10 +235,10 @@
         });
 
         $(document).ready(function() {
-            $('.btn-alert').on('click', function(e) {
+            $('.btn-generate').on('click', function(e) {
                 e.stopPropagation(); // agar tidak ikut toggle accordion
-                const nik = $(this).data('nik') || 'NIK tidak tersedia';
-                alert('NIK kandidat: ' + nik);
+                const nik = $(this).data('generate') || 'User ID tidak tersedia';
+                alert('USER ID kandidat: ' + nik);
             });
         });
     </script>
