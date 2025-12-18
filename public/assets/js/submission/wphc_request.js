@@ -111,18 +111,18 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             alignment: "left"
         },
         {
-            caption: "Work Date",
-            dataField: "wphc_detail.startDate",
+            caption: "Work Dates",
+            dataField: "work_dates",
             alignment: "left",
-            dataType: "date",
-            format: "dd-MM-yyyy",   // format tanggal d-m-y
+            dataType: "string",
             customizeText: function(cellInfo) {
                 if (cellInfo.value) {
-                    const date = new Date(cellInfo.value);
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    return `${day}-${month}-${year}`;
+                    return cellInfo.value.split(',').map(v => {
+                        v = v.trim();
+                        // parse manual karena format sudah d-m-Y
+                        const [day, month, year] = v.split('-');
+                        return `${day}-${month}-${year}`;
+                    }).join(', ');
                 }
                 return "";
             }
@@ -131,11 +131,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             caption: 'BU',
             dataField: 'bu',
             alignment: "left"
-        },
-        {
-            caption: 'Description',
-            dataField: "wphc_detail.text",
-            alignment: "left",
         },
         {
             dataField: 'requestStatus',
@@ -714,9 +709,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                         return container;
 
                     }
-                const infoContentcontract = $("<div id='infoContentcontract'>");
-
-                // Helper umum
+                     // Helper umum
                 const normalizeDate = (date) => {
                 const d = new Date(date);
                 d.setHours(0, 0, 0, 0);
@@ -749,8 +742,25 @@ const popupContentTemplate = function (reqid, mode, options) {
                 });
                 };
 
-                if (data.ID === 2) {
                 const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
+            if (data.ID === 2) { 
+                if (mode === 'approval') {
+                // Return approval grid inside the accordion item 2
+                return $("<div>").dxDataGrid({
+                    dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
+                    // dataSource: storedetail(modname, reqid),
+                    showBorders: true,
+                    columns: [
+                    { caption: "Employee", dataField: "employee_fullname" },
+                    { caption: "Department", dataField: "department_name" },
+                    { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
+                    { caption: "Description", dataField: "text" }
+                    ]
+                });
+                } else {
+                const infoContentcontract = $("<div id='infoContentcontract'>");
+
+               
 
                 // Ambil holiday dari API
                     $.getJSON("api/holiday", (response) => {
@@ -781,13 +791,18 @@ const popupContentTemplate = function (reqid, mode, options) {
                             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 8);
                             if (d < sevenDaysAgo) return false;
 
-                            // 2) Holiday aktif
+                            // 2) Forward date: disable setelah H+3week
+                            const threeDaysAhead = new Date(today);
+                            threeDaysAhead.setDate(threeDaysAhead.getDate() + 21);
+                            if (d > threeDaysAhead) return false;
+
+                            // 3) Holiday aktif
                             if (isHoliday) return true;
 
-                            // 3) Weekday non-holiday disable
+                            // 4) Weekday non-holiday disable
                             if (isWeekday(d)) return false;
 
-                            // 4) Cooldown ±7 hari dari setiap appointment
+                            // 5) Cooldown ±7 hari dari setiap appointment
                             const inCooldown = appointmentsNorm.some(a => {
                                 const start = normalizeDate(a.startDate);
 
@@ -804,7 +819,7 @@ const popupContentTemplate = function (reqid, mode, options) {
 
                             if (inCooldown) return false;
 
-                            // 5) Sunday berturut-turut
+                            // 6) Sunday berturut-turut
                             if (isSunday(d)) {
                                 const prevSunday = new Date(d);
                                 prevSunday.setDate(prevSunday.getDate() - 7);
@@ -1002,7 +1017,9 @@ const popupContentTemplate = function (reqid, mode, options) {
                 });
 
                 return infoContentcontract;
-
+            }
+        
+            
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),
@@ -1588,100 +1605,100 @@ $('#filterCardNonAktif').on('click', function () {
 
 
 // let id = 1;
-var dataGridhistory = $("#loghistory").dxDataGrid({
-    dataSource: store('logreportwphc'),
-    allowColumnReordering: false,
-    allowColumnResizing: true,
-    columnsAutoWidth: true,
-    columnHidingEnabled: false,
-    rowAlternationEnabled: true,
-    wordWrapEnabled: false,
-    showBorders: true,
-    filterRow: {
-        visible: true
-    },
-    filterPanel: {
-        visible: true
-    },
-    headerFilter: {
-        visible: true
-    },
-    searchPanel: {
-        visible: true,
-        width: 240,
-        placeholder: 'Search...',
-    },
-    columnFixing: {
-        enabled: true,
-    },
-    editing: {
-        useIcons: true,
-        mode: "batch",
-        allowAdding: false,
-        allowUpdating: false,
-        allowDeleting: false,
-    },
-    scrolling: {
-        mode: "virtual"
-    },
-    sorting: {
-        mode: 'multiple',
-    },
-    pager: {
-        visible: true,
-        showInfo: true,
-    },
-    columns: [
-        {
-            caption: "#",
-            width: 60,
-            cellTemplate: function (container, options) {
-                container.text(options.rowIndex + 1);
-            }
-        },
-        {
-            dataField: 'work_date',
-            caption: "Work Date",
-        },
-        {
-            dataField: 'remarks',
-            caption: "Remarks",
-        },
-        {
-            dataField: 'text',
-            caption: "Objectives",
-        },
-        {
-            dataField: 'status_wphc_aktif',
-            caption: "Status",
-        },
-        {
-            dataField: 'aktif_sampai_dengan',
-            caption: "Issue Date",
-        },
-    ],
-    export: {
-        enabled: true,
-        fileName: 'log history',
-        excelFilterEnabled: true,
-        allowExportSelectedData: false
-    },
-    onContentReady: function (e) {
-        moveEditColumnToLeft(e.component);
-    },
-    onToolbarPreparing: function (e) {
-        dataGridlog = e.component;
+// var dataGridhistory = $("#loghistory").dxDataGrid({
+//     dataSource: store('logreportwphc'),
+//     allowColumnReordering: false,
+//     allowColumnResizing: true,
+//     columnsAutoWidth: true,
+//     columnHidingEnabled: false,
+//     rowAlternationEnabled: true,
+//     wordWrapEnabled: false,
+//     showBorders: true,
+//     filterRow: {
+//         visible: true
+//     },
+//     filterPanel: {
+//         visible: true
+//     },
+//     headerFilter: {
+//         visible: true
+//     },
+//     searchPanel: {
+//         visible: true,
+//         width: 240,
+//         placeholder: 'Search...',
+//     },
+//     columnFixing: {
+//         enabled: true,
+//     },
+//     editing: {
+//         useIcons: true,
+//         mode: "batch",
+//         allowAdding: false,
+//         allowUpdating: false,
+//         allowDeleting: false,
+//     },
+//     scrolling: {
+//         mode: "virtual"
+//     },
+//     sorting: {
+//         mode: 'multiple',
+//     },
+//     pager: {
+//         visible: true,
+//         showInfo: true,
+//     },
+//     columns: [
+//         {
+//             caption: "#",
+//             width: 60,
+//             cellTemplate: function (container, options) {
+//                 container.text(options.rowIndex + 1);
+//             }
+//         },
+//         {
+//             dataField: 'work_date',
+//             caption: "Work Date",
+//         },
+//         {
+//             dataField: 'remarks',
+//             caption: "Remarks",
+//         },
+//         {
+//             dataField: 'text',
+//             caption: "Objectives",
+//         },
+//         {
+//             dataField: 'status_wphc_aktif',
+//             caption: "Status",
+//         },
+//         {
+//             dataField: 'aktif_sampai_dengan',
+//             caption: "Issue Date",
+//         },
+//     ],
+//     export: {
+//         enabled: true,
+//         fileName: 'log history',
+//         excelFilterEnabled: true,
+//         allowExportSelectedData: false
+//     },
+//     onContentReady: function (e) {
+//         moveEditColumnToLeft(e.component);
+//     },
+//     onToolbarPreparing: function (e) {
+//         dataGridlog = e.component;
 
-        e.toolbarOptions.items.unshift({
-            location: "after",
-            widget: "dxButton",
-            options: {
-                hint: "Refresh Data",
-                icon: "refresh",
-                onClick: function () {
-                    dataGridlog.refresh();
-                }
-            }
-        })
-    },
-}).dxDataGrid("instance");
+//         e.toolbarOptions.items.unshift({
+//             location: "after",
+//             widget: "dxButton",
+//             options: {
+//                 hint: "Refresh Data",
+//                 icon: "refresh",
+//                 onClick: function () {
+//                     dataGridlog.refresh();
+//                 }
+//             }
+//         })
+//     },
+// }).dxDataGrid("instance");

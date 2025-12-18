@@ -822,7 +822,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     dataField: 'ActualTotalHours',
                                     dataType: 'number',
                                     allowEditing: false
-
                                 },
                                 {
                                     caption: 'Act Normal',

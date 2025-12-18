@@ -67,30 +67,42 @@
         <div class="message">
             {{ $mailData['message'] }}
         </div>
-        <table>
+        {{-- Tabel Master --}}
+        <table border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse; width: 100%;">
             <tbody>
-                <tr>
-                    <th>Code No</th>
-                    <td>{{ $code }}</td>
-                </tr>  
-                <tr>
-                    <th>BU</th>
-                    <td>{{ $mailData['submission']->bu }}</td>
-                </tr>
-                <tr>
-                    <th>Deparment</th>
-                    <td>{{ $mailData['submission']->department_name }}</td>
-                </tr>
-                <tr>
-                    <th>Work Date</th>
-                    <td>{{ $mailData['submission']->work_date }}</td>
-                </tr>
-                <tr>
-                    <th>Target</th>
-                    <td>{{ $mailData['submission']->remarks }}</td>
-                </tr>
+                <tr><th style="text-align:left;">Code No</th><td>{{ $mailData['submission']->code_id }}</td></tr>
+                <tr><th style="text-align:left;">BU</th><td>{{ $mailData['submission']->bu }}</td></tr>
+                <tr><th style="text-align:left;">Department</th><td>{{ $mailData['submission']->department_name }}</td></tr>
+                <tr><th style="text-align:left;">Work Date</th><td>{{ $mailData['submission']->work_date }}</td></tr>
+                <tr><th style="text-align:left;">Target</th><td>{{ $mailData['submission']->remarks }}</td></tr>
             </tbody>
         </table>
+
+        {{-- Tabel Detail --}}
+        @if(!empty($mailData['submission']->details) && count($mailData['submission']->details) > 0)
+            <br>
+            <table border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr style="background-color:#f2f2f2;">
+                        <th>Employee Name</th>
+                        <th>Estimate Overtime Hours</th>
+                        <th>Target</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($mailData['submission']->details as $detail)
+                        <tr>
+                            <td>{{ $detail->emp_name }}</td>
+                            <td>{{ $detail->EstimateOvertimeHours }}</td>
+                            <td>{{ $detail->target }}</td>
+                            {{-- <td>{{ $detail->remarks }}</td> --}}
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+
         @if (!empty($mailData['remarks']))
             <div class="remarks">
                 Remarks : {{ ucfirst($mailData['remarks']) }}

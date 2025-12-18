@@ -137,7 +137,7 @@ class WphcRequestController extends Controller
         try {
             $id = $request->id;
             $user_id = $this->getAuth()->id;
-            $user = auth()->user(); 
+            $user = auth()->user();
             $module_id = $this->getModuleId($this->modulename);
 
             $dataquery = $this->model->query();
@@ -200,10 +200,32 @@ class WphcRequestController extends Controller
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->get();  
-                $data = $data->map(function ($item) {
 
+            //     $data = $data->map(function ($item) {
+
+            //     return $item;
+            // });
+            // Map untuk menambahkan field work_dates (gabungan semua startDate dari detail)
+            $data = $data->map(function ($item) {
+                $dates = [];
+
+                foreach ($item->wphc_detail ?? [] as $detail) {
+                    // sesuaikan nama kolom di sini
+                    $raw = $detail->startDate ?? $detail->work_date ?? null;
+
+                    if (!empty($raw)) {
+                        try {
+                            $dates[] = \Carbon\Carbon::parse($raw)->format('d-m-Y');
+                        } catch (\Throwable $ex) {
+                            $dates[] = (string) $raw;
+                        }
+                    }
+                }
+
+                $item->work_dates = !empty($dates) ? implode(', ', $dates) : null;
                 return $item;
             });
+
 
             // dd($data);
             return response()->json([
@@ -535,7 +557,7 @@ class WphcRequestController extends Controller
                     if (isset($approverMap[5])) {
                         $Worksheet->Range("Q38")->Value = $approverMap[5]->apprname;
                         $Worksheet->Range("Q39")->Value = $approverMap[5]->approvalDate;
-                        addPictureToWorksheet($Worksheet, $picPath, 38, 17, 12, $excel, true);
+                        addPictureToWorksheet($Worksheet, $picPath, 37, 17, 12, $excel, true);
                     }
                     $row += 3;
                 }
