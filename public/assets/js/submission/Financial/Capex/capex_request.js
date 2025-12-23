@@ -1007,7 +1007,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'BU',
                                 dataField: 'bu',
                                 lookup: {
-                                    dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'},{bu:'KPSI'}],
+                                    dataSource: [{bu:'IHM'},{bu:'AHL'},{bu:'NKL'},{bu:'KPSI'},{bu:'MHS'}],
                                     valueExpr: 'bu',
                                     displayExpr: 'bu',
                                 },
@@ -1019,9 +1019,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                                         rowData.estate = "HO";
                                     } else if (value === "NKL") {
                                         rowData.estate = "NKL";
-                                    } else if (value === "KPSI") {
-                                        rowData.estate = "KPSI";
-                                    }
+                                    } else if (value === "MHS") {
+                                        rowData.estate = "MHS";
+                                    } 
                                 },
                                 editorOptions: { 
                                     readOnly: (mode == 'approval') ? true : false
