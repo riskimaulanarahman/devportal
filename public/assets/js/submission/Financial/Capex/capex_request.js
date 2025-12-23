@@ -857,6 +857,7 @@ const updateVisibleById = (itemId, visible) => {
         { bu: 'AHL', sector: 'HO' },
         { bu: 'NKL', sector: 'NKL' },
         { bu: 'KPSI', sector: 'KPSI' },
+        { bu: 'MHS', sector: 'MHS' },
     ];
 
     var categoryType = [
