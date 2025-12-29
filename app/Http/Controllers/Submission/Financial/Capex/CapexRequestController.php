@@ -79,8 +79,10 @@ class CapexRequestController extends Controller
                         })
                         ->orWhere("request_capex.user_id", $user_id);
                 })
+                // ->orderBy("request_capex.requestStatus","asc")
+                ->orderByRaw("CASE WHEN request_capex.user_id = '".$user_id."' THEN 0 ELSE 1 END")
                 ->orderBy(DB::raw($subquery), 'DESC')
-                ->orderByRaw("CASE WHEN request_capex.user_id = '".$user_id."' THEN 0 ELSE 1 END, request_capex.created_at desc")
+                ->orderByRaw("request_capex.requestStatus asc")
                 ->get();
 
             return response()->json([
