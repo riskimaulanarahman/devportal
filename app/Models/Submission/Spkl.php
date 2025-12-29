@@ -37,6 +37,11 @@ class Spkl extends Model
         'updated_at'
     ];
 
+    protected $casts = [
+    'ActualStartWork' => 'datetime:Y-m-d H:i:s',
+    'ActualEndWork'   => 'datetime:Y-m-d H:i:s',
+    ];
+
     public static function getFillableColumns()
     {
         $fillable = (new static)->fillable;

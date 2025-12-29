@@ -773,49 +773,38 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     },
                                 },                                
                                 {
-                                    caption: 'Start Work',
                                     dataField: 'ActualStartWork',
-                                    dataType: 'datetime',
+                                    width: 100,
+                                    caption: "Start Work",
+                                    format: 'dd/MM/yyyy HH:mm',
+                                    editorType: "dxDateBox",
+                                    dataType: "datetime",
                                     editorOptions: {
-                                        type: 'datetime',
-                                        displayFormat: 'yyyy-MM-dd HH:mm', 
-                                        value: (function() {
-                                            let date = new Date();   
-                                            date.setHours(0, 0, 0, 0); 
-                                            return date;
-                                        })(),
-                                        setCellValue: function(rowData, value) {
-                                        if (value) {
-                                            let date = new Date(value);
-                                            date.setMinutes(0, 0, 0);
-                                            rowData.ActualEndWork = date; 
-                                        }
+                                        displayFormat: "dd/MM/yyyy HH:mm",
+                                        type: "datetime",
                                     },
                                     validationRules: [{ type: "required" }]
-                                    },
                                 },
                                 {
-                                    caption: 'End Work',
                                     dataField: 'ActualEndWork',
-                                    dataType: 'datetime',
-                                    editorType: 'dxDateBox',
+                                    width: 100,
+                                    caption: "End Work",
+                                    format: 'dd/MM/yyyy HH:mm',
+                                    editorType: "dxDateBox",
+                                    dataType: "datetime",
                                     editorOptions: {
-                                        type: 'datetime',
-                                        displayFormat: 'yyyy-MM-dd HH:mm', 
-                                        value: (function() {
-                                            let date = new Date();   
-                                            date.setHours(0, 0, 0, 0); 
-                                            return date;
-                                        })(),
-                                        setCellValue: function(rowData, value) {
-                                            if (value) {
-                                                let date = new Date(value);
-                                                date.setMinutes(0, 0, 0);
-                                                rowData.ActualEndWork = date;   
-                                            }
-                                        },
+                                        displayFormat: "dd/MM/yyyy HH:mm",
+                                        type: "datetime",
                                     },
-                                    validationRules: [{ type: "required" }]
+                                    validationRules: [ { type: "required" }, 
+                                        { type: "custom", 
+                                            message: "End Work must be later than Start Work", 
+                                            validationCallback: function(e) { if (!e.value || !e.data.ActualStartWork) return true; 
+                                            return new Date(e.value) >= new Date(e.data.ActualStartWork); 
+                                            }
+                                        } 
+                                    ]
+                                    // validationRules: [{ type: "required" }]
                                 },
                                 {
                                     caption: 'Act Total',

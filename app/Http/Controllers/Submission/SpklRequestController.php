@@ -278,7 +278,7 @@ class SpklRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-public function genPdfSpkl(Request $request, $id) 
+    public function genPdfSpkl(Request $request, $id) 
     {
         $dataAppr = DB::table('spklApprover')->select('*')->where('id', $id)->get(); // Data approver
         // $requestspklDetail = DB::table('request_spkl_detail')->select('work_date', 'remarks', 'reason')->where('req_id', $id)->get();
@@ -529,7 +529,7 @@ public function genPdfSpkl(Request $request, $id)
                 foreach ($dataAppr as $appr) {
                 if ($appr->approvalAction != 3) continue;
 
-                // SPKL - BU Head
+                // SPKL - Dept Head
                 if ($appr->sequence == 3) {
                     $Worksheet->Range("G{$approverSpklRow}")->Value = $appr->apprname;
                     $Worksheet->Range("G" . ($approverSpklRow + 1))->Value = $appr->approvalDate;

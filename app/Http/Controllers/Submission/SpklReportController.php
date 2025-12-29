@@ -45,7 +45,9 @@ class SpklReportController extends Controller
             'd.*',
             DB::raw("(SELECT TOP 1 r.approvalDate
           FROM tbl_approverListReq r
+          JOIN reference.tbl_module mod ON r.module_id = mod.id
           WHERE r.req_id = m.id
+            AND mod.module = 'Spkl'
             AND r.approvalDate IS NOT NULL
           ORDER BY r.approvalDate DESC) as FullApprovedDate"),
             'e.SAPID',
@@ -68,9 +70,6 @@ class SpklReportController extends Controller
         "data"    => $data
     ]);
 }
-
-
-
 
     public function store(Request $request)
     {
