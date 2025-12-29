@@ -327,7 +327,7 @@ public function genPdfSpkl(Request $request, $id)
             return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
 
-        // dd($dataAppr);
+        // dd($dataAppr, $dataDetail, $data);
 
         try {
             $excel = new COM("Excel.Application");
