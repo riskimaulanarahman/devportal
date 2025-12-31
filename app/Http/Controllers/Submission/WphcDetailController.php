@@ -131,15 +131,130 @@ class WphcDetailController extends Controller
                 ]);
             }
 
-            // Cooldown mundur: cek apakah ada tanggal lain dalam 7 hari ke belakang
+            // Ambil daftar holiday (pastikan model Holiday -> $table = 'tbl_holiday')
+            $holidayDates = Holiday::pluck('HolidayDate')
+                ->map(fn($h) => Carbon::parse($h)->toDateString()) // "YYYY-MM-DD"
+                ->toArray();
+
+            $isHoliday = in_array($key, $holidayDates);
+
+            // --- DEBUG SNAPSHOT (sementara) ---
+            // return response()->json([
+            //     'payload'      => $requestData,
+            //     'key'          => $key,
+            //     'employeeId'   => $employeeId,
+            //     'holidayDates' => $holidayDates,
+            //     'isHoliday'    => $isHoliday,
+            // ], 200);
+
+            // Jalur khusus holiday: quota 2/bulan, bypass cooldown & consecutive Sunday
+            if ($isHoliday) {
+                $month = $startDate->month;
+                $year  = $startDate->year;
+
+                // $holidayCountMonth = DB::table('request_wphc_detail as d')
+                //     ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                //     ->where('m.employee_id', $employeeId)
+                //     ->whereMonth('d.startDate', $month)
+                //     ->whereYear('d.startDate', $year)
+                //     ->whereIn(DB::raw('DATE(d.startDate)'), $holidayDates)
+                //     ->count();
+
+                $holidayCountMonth = DB::table('request_wphc_detail as d')
+                    ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                    ->where('m.employee_id', $employeeId)
+                    ->whereMonth('d.startDate', $month)
+                    ->whereYear('d.startDate', $year)
+                    ->whereIn(DB::raw('CAST(d.startDate AS DATE)'), $holidayDates) // ⬅️ ganti DATE() dengan CAST
+                    ->count();
+
+                // --- DEBUG QUOTA (sementara) ---
+                // return response()->json([
+                //     'month' => $month,
+                //     'year'  => $year,
+                //     'holidayCountMonth' => $holidayCountMonth,
+                // ], 200);
+
+                if ($holidayCountMonth >= 2) {
+                    return response()->json([
+                        "status"  => "error",
+                        "message" => "You have reached maximum number of Holiday submissions (2) for " . $startDate->format('F Y')
+                    ]);
+                }
+
+                // Simpan data langsung
+                $requestData['user_id']   = $this->getAuth()->id;
+                $requestData['startDate'] = $startDate;
+                $requestData['endDate']   = $endDate;
+                $this->model->create($requestData);
+
+                DB::commit();
+
+                return response()->json([
+                    "status"  => "success",
+                    "message" => $this->getMessage()['store'],
+                    "data"    => [
+                        "startDate" => $startDate->toIso8601String(),
+                        "endDate"   => $endDate->toIso8601String(),
+                    ]
+                ]);
+            }
+
+            // Non-holiday → validasi biasa
+            if ($startDate->isWeekday()) {
+                return response()->json([
+                    "status"  => "error",
+                    "message" => "The selected date is unavailable because it falls on a weekday."
+                ], 422);
+            }
+
+            if ($startDate->isSunday()) {
+                $prevSundayKey = $startDate->copy()->subWeek()->toDateString();
+
+                // Consecutive Sunday check
+                $hasPrevSunday = DB::table('request_wphc_detail as d')
+                    ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                    ->leftJoin('tbl_holiday as h', DB::raw('CAST(h.HolidayDate AS DATE)'), '=', DB::raw('CAST(d.startDate AS DATE)'))
+                    ->where('m.employee_id', $employeeId)
+                    ->whereDate('d.startDate', $prevSundayKey)
+                    ->whereNull('h.HolidayDate')
+                    ->exists();
+
+
+                // --- DEBUG PREV SUNDAY (sementara) ---
+                // return response()->json([
+                //     'prevSundayKey' => $prevSundayKey,
+                //     'hasPrevSunday' => $hasPrevSunday,
+                // ], 200);
+
+                if ($hasPrevSunday) {
+                    return response()->json([
+                        "status"  => "error",
+                        "message" => "The selected date is not available because it falls on consecutive Sundays."
+                    ]);
+                }
+            }
+
             $existsBackward = DB::table('request_wphc_detail as d')
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                ->leftJoin('tbl_holiday as h', DB::raw('CAST(h.HolidayDate AS DATE)'), '=', DB::raw('CAST(d.startDate AS DATE)'))
                 ->where('m.employee_id', $employeeId)
                 ->whereBetween('d.startDate', [
-                    $startDate->copy()->subDays(7)->startOfDay(),   // 7 hari ke belakang
-                    $startDate->copy()->subDay()->endOfDay()        // sampai sehari sebelum tanggal diajukan
+                    $startDate->copy()->subDays(7)->startOfDay(),
+                    $startDate->copy()->subDay()->endOfDay()
                 ])
+                ->whereNull('h.HolidayDate')
                 ->exists();
+
+
+            // --- DEBUG BACKWARD (sementara) ---
+            // return response()->json([
+            //     'rangeBackward' => [
+            //         $startDate->copy()->subDays(7)->startOfDay()->toDateTimeString(),
+            //         $startDate->copy()->subDay()->endOfDay()->toDateTimeString()
+            //     ],
+            //     'existsBackward' => $existsBackward,
+            // ], 200);
 
             if ($existsBackward) {
                 return response()->json([
@@ -148,62 +263,45 @@ class WphcDetailController extends Controller
                 ]);
             }
 
-            // Cooldown maju: cek apakah ada tanggal lain dalam 7 hari ke depan
+            // Cooldown maju — exclude holiday
             $existsForward = DB::table('request_wphc_detail as d')
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
+                ->leftJoin('tbl_holiday as h', DB::raw('CAST(h.HolidayDate AS DATE)'), '=', DB::raw('CAST(d.startDate AS DATE)'))
                 ->where('m.employee_id', $employeeId)
                 ->whereBetween('d.startDate', [
-                    $startDate->copy()->addDay()->startOfDay(),     // mulai besok
-                    $startDate->copy()->addDays(7)->endOfDay()      // sampai 7 hari ke depan
+                    $startDate->copy()->addDay()->startOfDay(),
+                    $startDate->copy()->addDays(7)->endOfDay()
                 ])
+                ->whereNull('h.HolidayDate')
                 ->exists();
+
+
+            // --- DEBUG FORWARD (sementara) ---
+            // return response()->json([
+            //     'rangeForward' => [
+            //         $startDate->copy()->addDay()->startOfDay()->toDateTimeString(),
+            //         $startDate->copy()->addDays(7)->endOfDay()->toDateTimeString()
+            //     ],
+            //     'existsForward' => $existsForward,
+            // ], 200);
 
             if ($existsForward) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "“The selected date is not available due to a forward cooldown period of seven days."
+                    "message" => "The selected date is not available due to a forward cooldown period of seven days."
                 ]);
             }
 
-            // Validasi backdate absolut → ganti dengan toleransi 7 hari
+            // Validasi backdate absolut
             $sevenDaysAgo = Carbon::now('Asia/Makassar')->subDays(7)->startOfDay();
             if ($startDate->lt($sevenDaysAgo)) {
                 return response()->json([
                     "status"  => "error",
-                    "message" => "“The selected date is unavailable because it is a backdate beyond the seven‑day limit."
+                    "message" => "The selected date is unavailable because it is a backdate beyond the seven‑day limit."
                 ]);
             }
 
-            $holidayDates = Holiday::pluck('HolidayDate')
-                ->map(fn($h) => Carbon::parse($h)->format('Y-m-d'))
-                ->toArray();
-
-            $isHoliday = in_array($key, $holidayDates);
-
-            if (!$isHoliday) {
-                if ($startDate->isWeekday()) {
-                    return response()->json([
-                        "status"  => "error",
-                        "message" => "The selected date is unavailable because it falls on a weekday."
-                    ], 422);
-                }
-
-                if ($startDate->isSunday()) {
-                    $prevSunday = $startDate->copy()->subWeek();
-                    $prevKey    = $prevSunday->format('Y-m-d');
-
-                    $hasPrevSunday = WphcDetail::where('req_id', $requestData['req_id'])
-                        ->whereDate('startDate', $prevKey)
-                        ->exists();
-
-                    if ($hasPrevSunday) {
-                        return response()->json([
-                            "status"  => "error",
-                            "message" => "“The selected date is not available because it falls on consecutive Sundays."
-                        ]);
-                    }
-                }
-            }
+            // Simpan data untuk non-holiday
             $requestData['user_id']   = $this->getAuth()->id;
             $requestData['startDate'] = $startDate;
             $requestData['endDate']   = $endDate;
@@ -222,12 +320,16 @@ class WphcDetailController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
+            \Log::error('WPHC store error: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+        return response()->json([
                 "status"  => "error",
-                "message" => $e->getMessage()
+                "message" => $e->getMessage() // sementara tampilkan pesan asli
             ], 500);
         }
     }
+
 
     public function getList($id, $modulename)
     {

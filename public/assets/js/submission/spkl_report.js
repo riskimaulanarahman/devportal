@@ -32,10 +32,23 @@ var dataGrid = $("#gridContainer").dxDataGrid({
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    searchPanel: { visible: true, width: 240, placeholder: 'Search...' },
-    editing: { useIcons:true, mode: "popup", allowAdding: false, allowUpdating: false, allowDeleting: false },
+    searchPanel: { 
+        visible: true, 
+        width: 240, 
+        placeholder: 'Search...' 
+    },
+    editing: {
+        useIcons:true, 
+        mode: "popup", 
+        allowAdding: false, 
+        allowUpdating: false, 
+        allowDeleting: false 
+    },
     scrolling: { mode: "virtual" },
-    pager: { visible: false, showInfo: true },
+    pager: { 
+        visible: false, 
+        showInfo: true 
+    },
     columns: [
         { caption: "Work Date", dataField: "WorkDate", dataType: "date", width: 120 },
         { caption: "Full Approved Date", dataField: "FullApprovedDate", dataType: "date", width: 120 },
@@ -53,8 +66,15 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         { caption: "Overtime Hours", dataField: "ActualOvertimeHours" },
         { caption: "Target", dataField: "Target" }
     ],
-    columnChooser: { enabled: true },
-    export: { enabled: true, fileName: modname, excelFilterEnabled: true, allowExportSelectedData: true },
+    columnChooser: { 
+        enabled: true 
+    },
+    export: { 
+        enabled: true, 
+        fileName: modname, 
+        excelFilterEnabled: true, 
+        allowExportSelectedData: true 
+    },
     onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();

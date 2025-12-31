@@ -710,59 +710,59 @@ const popupContentTemplate = function (reqid, mode, options) {
 
                     }
                      // Helper umum
-                const normalizeDate = (date) => {
-                const d = new Date(date);
-                d.setHours(0, 0, 0, 0);
-                return d;
-                };
+                    const normalizeDate = (date) => {
+                    const d = new Date(date);
+                    d.setHours(0, 0, 0, 0);
+                    return d;
+                    };
 
-                const formatDateKey = (date) => {
-                const d = normalizeDate(date);
-                return (
-                    d.getFullYear() +
-                    "-" +
-                    String(d.getMonth() + 1).padStart(2, "0") +
-                    "-" +
-                    String(d.getDate()).padStart(2, "0")
-                );
-                };
+                    const formatDateKey = (date) => {
+                    const d = normalizeDate(date);
+                    return (
+                        d.getFullYear() +
+                        "-" +
+                        String(d.getMonth() + 1).padStart(2, "0") +
+                        "-" +
+                        String(d.getDate()).padStart(2, "0")
+                    );
+                    };
 
-                const isSunday = (date) => normalizeDate(date).getDay() === 0;
-                const isWeekday = (date) => {
-                const day = normalizeDate(date).getDay();
-                return day >= 1 && day <= 6;
-                };
+                    const isSunday = (date) => normalizeDate(date).getDay() === 0;
+                    const isWeekday = (date) => {
+                    const day = normalizeDate(date).getDay();
+                    return day >= 1 && day <= 6;
+                    };
 
-                const showError = (message) => {
-                DevExpress.ui.notify({
-                    message,
-                    type: "error",
-                    displayTime: 3000,
-                    position: { my: "top center", at: "top center" }
-                });
-                };
+                    const showError = (message) => {
+                    DevExpress.ui.notify({
+                        message,
+                        type: "error",
+                        displayTime: 3000,
+                        position: { my: "top center", at: "top center" }
+                    });
+                    };
 
-                const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
-            if (data.ID === 2) { 
-                if (mode === 'approval') {
-                // Return approval grid inside the accordion item 2
-                return $("<div>").dxDataGrid({
-                    dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
-                    // dataSource: storedetail(modname, reqid),
-                    showBorders: true,
-                    columns: [
-                    { caption: "Employee", dataField: "employee_fullname" },
-                    { caption: "Department", dataField: "department_name" },
-                    { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
-                    { caption: "Description", dataField: "text" }
-                    ]
-                });
-                } else {
-                const infoContentcontract = $("<div id='infoContentcontract'>");
+                    const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
+                    if (data.ID === 2) { 
+                        if (mode === 'approval') {
+                        // Return approval grid inside the accordion item 2
+                        return $("<div>").dxDataGrid({
+                            dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
+                            // dataSource: storedetail(modname, reqid),
+                            showBorders: true,
+                            columns: [
+                            { caption: "Employee", dataField: "employee_fullname" },
+                            { caption: "Department", dataField: "department_name" },
+                            { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
+                            { caption: "Description", dataField: "text" }
+                            ]
+                        });
+                        } else {
+                        const infoContentcontract = $("<div id='infoContentcontract'>");
 
                
 
-                // Ambil holiday dari API
+                    // Ambil holiday dari API
                     $.getJSON("api/holiday", (response) => {
                         const holidaysRaw = response?.data || [];
                         const holidayDates = holidaysRaw.map(h => h.HolidayDate);
@@ -780,61 +780,65 @@ const popupContentTemplate = function (reqid, mode, options) {
 
                         // === Aturan enabled (lintas bulan/tahun) ===
                             const isEnabledDate = (date) => {
-                            const d = normalizeDate(date);
-                            const key = formatDateKey(d);
-                            const isHoliday = holidayDates.includes(key);
+                        const d = normalizeDate(date);
+                        const key = formatDateKey(d);
+                        const isHoliday = holidayDates.includes(key);
 
-                            const today = normalizeDate(new Date());
+                        // Jalur khusus holiday
+                        if (isHoliday) {
+                            const dow = d.getDay();
+                            if (dow === 6) return false; // Sabtu holiday tidak aktif
+                            return true; // holiday aktif → cell akan diberi style enabled
+                        }
 
-                            // 1) Backdate: hanya disable 7 hari ke belakang
-                            const sevenDaysAgo = new Date(today);
-                            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 8);
-                            if (d < sevenDaysAgo) return false;
+                        // Non-holiday lanjut aturan lain
+                        const today = normalizeDate(new Date());
 
-                            // 2) Forward date: disable setelah H+3week
-                            const threeDaysAhead = new Date(today);
-                            threeDaysAhead.setDate(threeDaysAhead.getDate() + 21);
-                            if (d > threeDaysAhead) return false;
+                        // Backdate
+                        const sevenDaysAgo = new Date(today);
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                        if (d < sevenDaysAgo) return false;
 
-                            // 3) Holiday aktif
-                            if (isHoliday) return true;
+                        // Forward date
+                        const threeWeeksAhead = new Date(today);
+                        threeWeeksAhead.setDate(threeWeeksAhead.getDate() + 21);
+                        if (d > threeWeeksAhead) return false;
 
-                            // 4) Weekday non-holiday disable
-                            if (isWeekday(d)) return false;
+                        // Weekday non-holiday disable
+                        if (isWeekday(d)) return false;
 
-                            // 5) Cooldown ±7 hari dari setiap appointment
-                            const inCooldown = appointmentsNorm.some(a => {
-                                const start = normalizeDate(a.startDate);
+                        // Cooldown ±7 hari (holiday tidak dihitung)
+                        const inCooldown = appointmentsNorm.some(a => {
+                            const start = normalizeDate(a.startDate);
+                            const isStartHoliday = holidayDates.includes(formatDateKey(start));
+                            if (isStartHoliday) return false;
+                            if (d.getTime() === start.getTime()) return true;
+                            const cooldownStart = new Date(start);
+                            cooldownStart.setDate(cooldownStart.getDate() - 7);
+                            const cooldownEnd = new Date(start);
+                            cooldownEnd.setDate(cooldownEnd.getDate() + 7);
+                            return d >= cooldownStart && d <= cooldownEnd;
+                        });
+                        if (inCooldown) return false;
 
-                                // kalau persis sama dengan tanggal appointment → tetap aktif
-                                if (d.getTime() === start.getTime()) return true;
+                        // Sunday consecutive
+                        if (isSunday(d)) {
+                            const prevSunday = new Date(d);
+                            prevSunday.setDate(prevSunday.getDate() - 7);
+                            const prevKey = formatDateKey(prevSunday);
 
-                                const cooldownStart = new Date(start);
-                                cooldownStart.setDate(cooldownStart.getDate() - 7);
-                                const cooldownEnd = new Date(start);
-                                cooldownEnd.setDate(cooldownEnd.getDate() + 7);
-
-                                return d >= cooldownStart && d <= cooldownEnd;
+                            const hasDataPrevSunday = appointmentsNorm.some(a => {
+                                const startKey = formatDateKey(a.startDate);
+                                const isStartHoliday = holidayDates.includes(startKey);
+                                return !isStartHoliday && startKey === prevKey;
                             });
 
-                            if (inCooldown) return false;
+                            if (hasDataPrevSunday) return false;
+                            return true;
+                        }
 
-                            // 6) Sunday berturut-turut
-                            if (isSunday(d)) {
-                                const prevSunday = new Date(d);
-                                prevSunday.setDate(prevSunday.getDate() - 7);
-                                const prevKey = formatDateKey(prevSunday);
-
-                                const hasDataPrevSunday = appointmentsNorm.some(
-                                a => formatDateKey(a.startDate) === prevKey
-                                );
-                                if (hasDataPrevSunday) return false;
-                                return true;
-                            }
-
-                            return false;
-                            };
-
+                        return false;
+                    };
 
                         const schedulerElement = $("<div id='formcontract'>");
                         infoContentcontract.append(schedulerElement);

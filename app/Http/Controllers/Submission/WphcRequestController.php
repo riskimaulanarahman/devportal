@@ -54,84 +54,84 @@ class WphcRequestController extends Controller
             "data" => $data
         ]);
    }
-   public function logreportwphc()
-    {
-        try {
-            // Ambil user yang sedang login
-            $user = Auth::user();
+//    public function logreportwphc()
+//     {
+//         try {
+//             // Ambil user yang sedang login
+//             $user = Auth::user();
 
-            if (!$user) {
-                return response()->json([
-                    "status" => "error",
-                    "message" => "User belum login"
-                ], 401);
-            }
+//             if (!$user) {
+//                 return response()->json([
+//                     "status" => "error",
+//                     "message" => "User belum login"
+//                 ], 401);
+//             }
 
-            // Ambil employee_id berdasarkan LoginName
-            $employee = DB::table('employee.tbl_employee')
-                ->where('LoginName', $user->username)
-                ->select('id')
-                ->first();
+//             // Ambil employee_id berdasarkan LoginName
+//             $employee = DB::table('employee.tbl_employee')
+//                 ->where('LoginName', $user->username)
+//                 ->select('id')
+//                 ->first();
 
-            if (!$employee) {
-                return response()->json([
-                    "status" => "error",
-                    "message" => "Data employee tidak ditemukan untuk user: {$user->username}"
-                ], 404);
-            }
+//             if (!$employee) {
+//                 return response()->json([
+//                     "status" => "error",
+//                     "message" => "Data employee tidak ditemukan untuk user: {$user->username}"
+//                 ], 404);
+//             }
 
-            $employee_id = $employee->id;
+//             $employee_id = $employee->id;
 
-            // Ambil semua detail WPHC milik employee login
-            $rawData = DB::table('request_wphc_detail as rdw')
-                ->join('request_wphc as rw', 'rdw.req_id', '=', 'rw.id')
-                ->where('rw.employee_id', $employee_id)
-                ->where('rw.requestStatus', 3)
-                ->orderByDesc('rdw.startDate')
-                ->select(
-                    'rdw.id',
-                    'rdw.req_id',
-                    'rdw.startDate as work_date',
-                    'rdw.remarks',
-                    'rdw.text',
-                    'rdw.created_at',
-                    'rdw.updated_at',
-                    'rw.requestStatus',
-                    'rw.employee_id',
-                    'rw.created_at as request_created_at'
-                )
-                ->get();
+//             // Ambil semua detail WPHC milik employee login
+//             $rawData = DB::table('request_wphc_detail as rdw')
+//                 ->join('request_wphc as rw', 'rdw.req_id', '=', 'rw.id')
+//                 ->where('rw.employee_id', $employee_id)
+//                 ->where('rw.requestStatus', 3)
+//                 ->orderByDesc('rdw.startDate')
+//                 ->select(
+//                     'rdw.id',
+//                     'rdw.req_id',
+//                     'rdw.startDate as work_date',
+//                     'rdw.remarks',
+//                     'rdw.text',
+//                     'rdw.created_at',
+//                     'rdw.updated_at',
+//                     'rw.requestStatus',
+//                     'rw.employee_id',
+//                     'rw.created_at as request_created_at'
+//                 )
+//                 ->get();
 
-            $now = Carbon::now();
+//             $now = Carbon::now();
 
-            // Hitung status aktif berdasarkan work_date + 4 bulan >= hari ini
-            $data = $rawData->map(function ($item) use ($now) {
-                $work_date = Carbon::parse($item->work_date);
-                $aktifUntil = $work_date->copy()->addMonths(4);
-                $isAktif = $aktifUntil->greaterThanOrEqualTo($now);
+//             // Hitung status aktif berdasarkan work_date + 4 bulan >= hari ini
+//             $data = $rawData->map(function ($item) use ($now) {
+//                 $work_date = Carbon::parse($item->work_date);
+//                 $aktifUntil = $work_date->copy()->addMonths(4);
+//                 $isAktif = $aktifUntil->greaterThanOrEqualTo($now);
 
-                $itemArray = collect($item)->toArray();
+//                 $itemArray = collect($item)->toArray();
 
-                return array_merge($itemArray, [
-                    'status_wphc_aktif' => $isAktif ? 'aktif' : 'non-aktif',
-                    'aktif_sampai_dengan' => $aktifUntil->format('d-m-Y'), // selalu tampil
-                ]);
-            });
+//                 return array_merge($itemArray, [
+//                     'status_wphc_aktif' => $isAktif ? 'aktif' : 'non-aktif',
+//                     'aktif_sampai_dengan' => $aktifUntil->format('d-m-Y'), // selalu tampil
+//                 ]);
+//             });
 
 
-            return response()->json([
-                "status" => "show",
-                "message" => "Data WPHC milik user login berhasil ditampilkan",
-                "data" => $data
-            ]);
+//             return response()->json([
+//                 "status" => "show",
+//                 "message" => "Data WPHC milik user login berhasil ditampilkan",
+//                 "data" => $data
+//             ]);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                "status" => "error",
-                "message" => "Terjadi kesalahan: " . $e->getMessage()
-            ], 500);
-        }
-    }
+//         } catch (\Exception $e) {
+//             return response()->json([
+//                 "status" => "error",
+//                 "message" => "Terjadi kesalahan: " . $e->getMessage()
+//             ], 500);
+//         }
+//     }
     public function index(Request $request)
     {
         try {
@@ -906,207 +906,5 @@ class WphcRequestController extends Controller
             "message" => "Error di " . $e->getFile() . " baris " . $e->getLine() . ": " . $e->getMessage()
         ]);
     }
-
-
     }
-
-    // public function genPdfWphc(Request $request, $id) 
-    // {
-    //     $dataAppr = DB::table('wphcApprover')->select('*')->where('id', $id)->get(); // Data approver
-    //     $dataDetail = DB::table('request_wphc_detail')->where('req_id', $id)->get();
-
-
-    //     $data = $this->model->select(
-    //         'request_wphc.*',
-    //         'codes.code',
-    //         'users.fullname',
-    //         'emp.SAPID',
-    //         'emp.loginName',
-    //         'emp.FullName',
-    //         'designation.DesignationName',
-    //         'rwd.startDate',
-    //         'rwd.remarks',
-    //         'rwd.text',
-    //         'loc.Location',
-    //         'usr.email',
-    //         'sup.FullName as superior_name',
-    //         'sup_usr.email as superior_email',
-    //         'emp_usr.email as employee_email',
-    //         'emp_usr.fullname as employee_name',
-    //         'level.id as level',
-    //         'alh_sub.fullname as submitter_name',
-    //         'alh_sub.approvalDate as submit_date'
-    //     )
-    //     ->leftJoin('codes', 'request_wphc.code_id', '=', 'codes.id')
-    //     ->leftJoin('users', 'request_wphc.user_id', '=', 'users.id')
-    //     ->leftJoin('employee.tbl_employee as emp', 'request_wphc.employee_id', '=', 'emp.id')
-    //     ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
-    //     ->leftJoin('request_wphc_detail as rwd', 'request_wphc.id', '=', 'rwd.req_id')
-    //     ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
-    //     ->leftJoin('employee.tbl_location as loc', 'emp.location_id', '=', 'loc.id')
-    //     ->leftJoin('employee.tbl_employee as sup', 'request_wphc.Superior', '=', 'sup.id')
-    //     ->leftJoin('users as emp_usr', 'emp.LoginName', '=', 'emp_usr.username')
-    //     ->leftJoin('users as sup_usr', 'sup.LoginName', '=', 'sup_usr.username')
-    //     ->leftJoin('employee.tbl_level as level', 'emp.level_id', '=', 'level.id')
-    //     ->leftJoin(DB::raw("(
-    //         SELECT req_id, fullname, approvalType, approvalDate
-    //         FROM (
-    //             SELECT *,
-    //                 ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY approvalDate DESC) AS rn
-    //             FROM tbl_approverlistHistory
-    //             WHERE approvalType = 'Submitted'
-    //         ) AS filtered
-    //         WHERE rn = 1
-    //     ) as alh_sub"), 'alh_sub.req_id', '=', 'request_wphc.id')
-    //     ->where('request_wphc.id', $id)
-    //     ->first();
-
-    //     if (!$data || !$dataAppr) {
-    //         return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
-    //     }
-
-    //     // dd($data, $dataAppr, $dataDetail);
-    
-
-    //     try {
-    //         $excel = new COM("Excel.Application");
-    //         $excel->Visible = false;
-
-    //         $file = public_path("template/wphc/wphc.xlsx");
-
-    //         if (!file_exists($file)) {
-    //             throw new \Exception("File tidak ditemukan: " . $file);
-    //         }
-
-    //         $Workbook = $excel->Workbooks->Open($file, false, true);
-    //         $Worksheet = $Workbook->Worksheets(1);
-    //         $Worksheet->Activate();
-
-    //         $row = 37;
-    //         foreach ($dataDetail as $detail) {
-    //             $Worksheet->Range("B{$row}")->Value = date('Y-m-d', strtotime($detail->startDate));
-    //             $Worksheet->Range("D{$row}")->Value = (string) $detail->remarks;
-    //             $Worksheet->Range("K{$row}")->Value = (string) $detail->text;
-    //             $row += 3;
-    //         }
-
-    //         // Isi Form Data
-    //         $Worksheet->Range("F14")->Value = $data->SAPID;
-    //         $Worksheet->Range("F16")->Value = $data->FullName;
-    //         $Worksheet->Range("F18")->Value = $data->DesignationName;
-    //         $Worksheet->Range("F20")->Value = $data->grade;
-    //         $Worksheet->Range("F22")->Value = $data->bu;
-    //         $Worksheet->Range("F24")->Value = $data->sector;
-    //         $Worksheet->Range("F26")->Value = $data->employee_email;
-    //         // $Worksheet->Range("F30")->Value = $data->code;
-    //         $Worksheet->Range("M14")->Value = $data->superior_name;
-    //         $Worksheet->Range("M16")->Value = $data->superior_email;
-    //         $Worksheet->Range("B58")->Value = $data->FullName;
-    //         // $Worksheet->Range("F58")->Value = $data->submit_date;
-    //         $Worksheet->Range("F58")->Value = Carbon::parse($data->submit_date)->format('d/m/Y');
-    //         $Worksheet->Range("F24")->Value = $data->Location;
-    //         $Worksheet->Range("C64")->Value = $data->code;
-
-    //         $picPath = public_path("assets/images/approved.png");
-
-    //         if (file_exists($picPath)) {
-    //             function addPictureToWorksheet($Worksheet, $picPath, $row, $column, $height, $excel, $center = false)
-    //             {
-    //                 $pic = $Worksheet->Shapes->AddPicture($picPath, false, true, 0, 0, -1, -1);
-    //                 $pic->Height = $height;
-
-    //                 $cell = $excel->Cells($row, $column);
-    //                 $pic->Top  = $cell->Top;
-    //                 $pic->Left = $cell->Left;
-
-    //                 if ($center) {
-    //                     $pic->Left = $cell->Left + (($cell->Width - $pic->Width) / 2);
-    //                     $pic->Top  = $cell->Top  + (($cell->Height - $pic->Height) / 2);
-    //                 }
-    //             }
-    //             $approverMap = [];
-                
-    //             foreach ($dataAppr as $appr) {
-    //                 if ($appr->approvalAction= 3) {
-    //                     $approverMap[$appr->sequence] = $appr;
-    //                 }
-    //             }
-
-    //             $row = 37;
-    //             foreach ($dataDetail as $detail) {
-    //                 $Worksheet->Range("B{$row}")->Value = date('Y-m-d', strtotime($detail->startDate));
-    //                 $Worksheet->Range("D{$row}")->Value = (string) $detail->remarks;
-    //                 $Worksheet->Range("K{$row}")->Value = (string) $detail->text;
-
-    //                 if (isset($approverMap[3])) {
-    //                     $Worksheet->Range("O" . ($row + 1))->Value = $approverMap[3]->apprname;
-    //                     $Worksheet->Range("O" . ($row + 2))->Value = $approverMap[3]->approvalDate;
-    //                     addPictureToWorksheet($Worksheet, $picPath, $row, 15, 12, $excel, true);
-    //                 }
-
-    //                 if (isset($approverMap[4])) {
-    //                     $Worksheet->Range("P" . ($row + 1))->Value = $approverMap[4]->apprname;
-    //                     $Worksheet->Range("P" . ($row + 2))->Value = $approverMap[4]->approvalDate;
-    //                     addPictureToWorksheet($Worksheet, $picPath, $row, 16, 12, $excel, true);
-    //                 }
-
-    //                 if (isset($approverMap[5])) {
-    //                     $Worksheet->Range("Q38")->Value = $approverMap[5]->apprname;
-    //                     $Worksheet->Range("Q39")->Value = $approverMap[5]->approvalDate;
-    //                     addPictureToWorksheet($Worksheet, $picPath, 37, 17, 12, $excel, true);
-    //                 }
-    //                 $row += 3;
-    //             }
-
-    //             addPictureToWorksheet($Worksheet, $picPath, 55, 2, 36, $excel);
-                    
-
-    //             if (isset($approverMap[2])) {
-    //                     $Worksheet->Range("I58")->Value = $approverMap[2]->apprname;
-    //                     $Worksheet->Range("M58")->Value = $approverMap[2]->approvalDate;
-    //                     addPictureToWorksheet($Worksheet, $picPath, 55, 9, 36, $excel);
-    //                 }
-
-    //             if (isset($approverMap[6])) {
-    //                     $Worksheet->Range("O58")->Value = $approverMap[6]->apprname;
-    //                     $Worksheet->Range("Q58")->Value = $approverMap[6]->approvalDate;
-    //                     addPictureToWorksheet($Worksheet, $picPath, 55, 15, 36, $excel);
-    //                 }
-    //             }
-    //             // dd($approverMap);
-
-    //         // Ekspor ke PDF
-    //         $xlTypePDF = 0;
-    //         $xlQualityStandard = 0;
-    //         $code_sanitized = str_replace('/', '_', $data->code);
-	// 		$fileName = $data->id . '_' . $code_sanitized . '_' . date("Ymd") . '.pdf';
-	// 		$fileName =  preg_replace("/[^a-z0-9\_\-\.]/i", '', $fileName);
-    //         $filePath = public_path('template/wphc/pdf/' . $fileName);
-	// 		if (file_exists($filePath)) {
-	// 			unlink($filePath);
-	// 		}
-	// 		$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);
-			
-	// 		$excel->CutCopyMode = false;
-    //         $Workbook->Close(false);
-	// 		unset($Worksheet);
-	// 		unset($Workbook);
-	// 		$excel->Workbooks->Close();
-	// 		$excel->Quit();
-	// 		unset($excel);
-    //         $pathfilename = 'public/template/wphc/pdf/' . $fileName;
-    //         DB::table('request_wphc')
-    //         ->where('id', $id)
-    //         ->update(['approveddoc' => $pathfilename]);
-    //         $this->processcopy($pathfilename);
-	// 		return $pathfilename;
-    //     } catch (\Exception $e) {
-    //         // Logging error
-    //         $this->logerror($request->ip(), $request->url(), 'gen-pdf-wphc', $e->getMessage());
-    //         return response()->json([
-    //             "status" => "error",
-    //             "message" => "Error di " . $e->getFile() . " baris " . $e->getLine() . ": " . $e->getMessage()
-    //         ]);
-    //     }
-    // }
 }

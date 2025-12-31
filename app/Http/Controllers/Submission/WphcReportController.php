@@ -47,7 +47,9 @@ class WphcReportController extends Controller
                 'd.id',
                 DB::raw("(SELECT TOP 1 r.approvalDate
                 FROM tbl_approverListReq r
+                JOIN reference.tbl_module mod ON r.module_id = mod.id
                 WHERE r.req_id = m.id
+                    AND mod.module = 'Wphc'
                     AND r.approvalDate IS NOT NULL
                 ORDER BY r.approvalDate DESC) as FullApprovedDate"),
                 'e.SAPID',

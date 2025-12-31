@@ -9,9 +9,21 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
+// Default awal & akhir bulan berjalan
+var today = new Date();
+var startApprovedDate = new Date(today.getFullYear(), today.getMonth(), 1);
+var endApprovedDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-var startApprovedDate = null;
-var endApprovedDate = null;
+function filterApprovedData() {
+    if (startApprovedDate && endApprovedDate) {
+        dataGrid.filter([
+            ["FullApprovedDate", ">=", startApprovedDate],
+            "and",
+            ["FullApprovedDate", "<=", endApprovedDate]
+        ]);
+    }
+}
+
 var dataGrid = $("#gridContainer").dxDataGrid({    
     dataSource: store(modname),
     allowColumnReordering: true,
@@ -101,91 +113,31 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         excelFilterEnabled: true,
         allowExportSelectedData: true
     },
-    onContentReady: function(e){
+   onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();
-    },
-    onCellPrepared: function (e) {
-        if (e.rowType == "data") {
-            if(e.data.isParent === 1) {
-                e.cellElement.css('background','rgba(128, 128, 0,0.1)')
-            }
-        }
+        filterApprovedData(); // default bulan berjalan
     },
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
         let endDateBox;
 
-        // Tambahkan filter FullApprovedDate
         e.toolbarOptions.items.unshift(
-            {
-                location: "after",
-                widget: "dxTextBox",
-                options: {
-                    width: 100,
-                    value: "Approved From :",
-                    readOnly: true,
-                }
-            },
-            {
-                location: "after",
-                widget: "dxDateBox",
-                options: {
-                    hint: "startApprovedDate",
-                    displayFormat: "dd/MM/yyyy",
-                    width: 120,
-                    onValueChanged: function(ev) {
-                        startApprovedDate = ev.value;
-                        endApprovedDate = null;
-                        endDateBox.option("value", endApprovedDate);
-                        filterApprovedData();
-                    }
-                }
-            },
-            {
-                location: "after",
-                widget: "dxTextBox",
-                options: {
-                    value: "Approved To :",
-                    width: 100,
-                    readOnly: true,
-                }
-            },
-            {
-                location: "after",
-                widget: "dxDateBox",
-                options: {
-                    hint: "endApprovedDate",
-                    displayFormat: "dd/MM/yyyy",
-                    width: 120,
-                    onValueChanged: function(ev) {
-                        endApprovedDate = ev.value;
-                        filterApprovedData();
-                    },
-                    onInitialized: function(ev) {
-                        endDateBox = ev.component;
-                    }
-                }
-            },
-            {                       
-                location: "after",
-                widget: "dxButton",
-                options: {
-                    hint: "Refresh Data",
-                    icon: "refresh",
-                    onClick: function() {
-                        dataGrid.refresh();
-                    }
-                }
-            }
+            { location: "after", widget: "dxTextBox", options: { width: 100, value: "Approved From :", readOnly: true } },
+            { location: "after", widget: "dxDateBox", options: {
+                hint: "startApprovedDate", displayFormat: "dd/MM/yyyy", width: 120,
+                value: startApprovedDate,
+                onValueChanged: function(ev) { startApprovedDate = ev.value; filterApprovedData(); }
+            }},
+            { location: "after", widget: "dxTextBox", options: { value: "Approved To :", width: 100, readOnly: true } },
+            { location: "after", widget: "dxDateBox", options: {
+                hint: "endApprovedDate", displayFormat: "dd/MM/yyyy", width: 120,
+                value: endApprovedDate,
+                onValueChanged: function(ev) { endApprovedDate = ev.value; filterApprovedData(); },
+                onInitialized: function(ev) { endDateBox = ev.component; }
+            }},
+            { location: "after", widget: "dxButton", options: { hint: "Refresh Data", icon: "refresh", onClick: function() { dataGrid.refresh(); } } }
         )
-    },
-    onDataErrorOccurred: function(e) {
-        // Menampilkan pesan kesalahan
-        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-        // Memuat ulang Page
-        // location.reload();
     }
 }).dxDataGrid("instance");
 
