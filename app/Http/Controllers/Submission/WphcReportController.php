@@ -61,6 +61,7 @@ class WphcReportController extends Controller
                 'head.FullName as DeptHeadName'
             ])
             ->Where('requestStatus', 3)
+            ->Where('d.isApproved', 1)
             ->orderBy('d.startDate', 'desc')
             ->get();
 // dd($data);

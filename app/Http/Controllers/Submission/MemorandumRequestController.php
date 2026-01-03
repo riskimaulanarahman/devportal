@@ -355,6 +355,7 @@ class MemorandumRequestController extends Controller
             $excel->Visible = false;
             $file = public_path("template/memo/template.xlsx");
             $bu = strtoupper(trim($data->bu));
+            // dd($bu);
             $statusRaw = $data->contract_status;
             $status = strtoupper(trim($statusRaw));
 
@@ -547,14 +548,14 @@ class MemorandumRequestController extends Controller
                     }
                 }
                 if ($appr->sequence == 4) {
-                    if ($appr->approvalAction == 3) {
+                    if ($appr->approvalAction == 3 && $appr->bu != 'GMS' && $appr->bu != 'KPS') {
                         $Worksheet->Range("E53")->Value = $appr->apprname;
                         $Worksheet->Range("E54")->Value = $appr->apprtype;
                         addPictureToWorksheet($Worksheet, $picpath, 52, 5, 40, $excel, 25);
                     }
                 }
                 if ($appr->sequence == 5) {
-                    if ($appr->approvalAction == 3 && $appr->bu != 'GMS' && $appr->bu != 'KPS') {
+                    if ($appr->approvalAction == 3) {
                         $Worksheet->Range("H53")->Value = $appr->apprname;
                         $Worksheet->Range("H54")->Value = $appr->apprtype;
                         addPictureToWorksheet($Worksheet, $picpath, 52, 8, 40, $excel, 25);

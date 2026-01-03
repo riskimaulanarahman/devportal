@@ -250,6 +250,11 @@ const accordionItems = [{
         visible: true
     },
     {
+        ID: 5,
+        Title: '<i class="fas fa-list-ul"> Supporting Document </i>',
+        visible: true
+    },
+    {
         ID: 3,
         Title: '<i class="fas fa-list-ul"> Approver List </i>',
         visible: true
@@ -745,17 +750,61 @@ const popupContentTemplate = function (reqid, mode, options) {
                     const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
                     if (data.ID === 2) { 
                         if (mode === 'approval') {
-                        // Return approval grid inside the accordion item 2
                         return $("<div>").dxDataGrid({
                             dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
-                            // dataSource: storedetail(modname, reqid),
+                            editing: {
+                                mode: "cell",        // atau "row"
+                                allowUpdating: true
+                            },
                             showBorders: true,
                             columns: [
                             { caption: "Employee", dataField: "employee_fullname" },
                             { caption: "Department", dataField: "department_name" },
                             { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
-                            { caption: "Description", dataField: "text" }
-                            ]
+                            { caption: "Description", dataField: "text" },
+                            {
+                                dataField: "isApproved",  
+                                caption: "Approved",
+                                dataType: "number",
+                                alignment: "left",
+                                showEditorAlways: true,
+                                onValueChanged: function(e) {
+                                // console.log("radio changed:", e.value);
+                                cellInfo.setValue(e.value.value); 
+                                console.log("editCellTemplate value (after):", cellInfo.value);
+                                },
+                                editCellTemplate: function(cellElement, cellInfo) {
+                                console.log("editCellTemplate value (before):", cellInfo.value);
+
+                                $("<div>").dxRadioGroup({
+                                    layout: "horizontal",
+                                    items: [
+                                    { text: "Yes", value: 1 },
+                                    { text: "No",  value: 0 }
+                                    ],
+                                    valueExpr: "value",
+                                    displayExpr: "text",
+                                    value: cellInfo.value,
+                                    onValueChanged: function(e) {
+                                    console.log("radio changed:", e.value);
+                                    cellInfo.setValue(e.value);
+                                    console.log("editCellTemplate value (after):", cellInfo.value);
+                                    }
+                                }).appendTo(cellElement);
+                                }
+                                ,
+                                cellTemplate: function(cellElement, cellInfo) {
+                                $("<div>").dxRadioGroup({
+                                    layout: "horizontal",
+                                    items: [
+                                    { text: "Yes", value: 1 },
+                                    { text: "No",  value: 0 }
+                                    ],
+                                    value: Number(cellInfo.value),
+                                    disabled: true
+                                }).appendTo(cellElement);
+                                }
+                            }]
                         });
                         } else {
                         const infoContentcontract = $("<div id='infoContentcontract'>");
@@ -779,7 +828,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                             : [];
 
                         // === Aturan enabled (lintas bulan/tahun) ===
-                            const isEnabledDate = (date) => {
+                        const isEnabledDate = (date) => {
                         const d = normalizeDate(date);
                         const key = formatDateKey(d);
                         const isHoliday = holidayDates.includes(key);
@@ -788,7 +837,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                         if (isHoliday) {
                             const dow = d.getDay();
                             if (dow === 6) return false; // Sabtu holiday tidak aktif
-                            return true; // holiday aktif → cell akan diberi style enabled
+                            return true; // holiday aktif 
                         }
 
                         // Non-holiday lanjut aturan lain
@@ -1021,8 +1070,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                 });
 
                 return infoContentcontract;
-            }
-        
+                        }
+                    
             
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
@@ -1306,6 +1355,85 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 dataGridApproverHistory.refresh();
                             }
                         })
+                    } else if (data.ID == 5) {
+                    var supporting = $("<div id='formattachment'>").dxDataGrid({    
+                        dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "popup",
+                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                        },
+                        paging: { enabled: true, pageSize: 10 },
+                        columns: [
+                            { 
+                                caption: 'Attachment',
+                                dataField: "path",
+                                allowFiltering: false,
+                                allowSorting: false,
+                                cellTemplate: cellTemplate,
+                                editCellTemplate: editCellTemplate,
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: "remarks",
+                                editorType: "dxTextBox",
+                                validationRules: [{ type: "required" }]
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridAttachment = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridAttachment.refresh();
+                                    }
+                                }
+                            })
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (2):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridAttachment.refresh();
+                        }
+                    })
+
+                    return supporting;
+                
                     }
                 }
             })
@@ -1320,6 +1448,72 @@ const popupContentTemplate = function (reqid, mode, options) {
     return scrollView;
 
 };
+function cellTemplate(container, options) {
+    container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
+}
+
+function editCellTemplate(cellElement, cellInfo) {
+    let buttonElement = document.createElement("div");
+    buttonElement.classList.add("retryButton");
+    let retryButton = $(buttonElement).dxButton({
+      text: "Retry",
+      visible: false,
+      onClick: function() {
+        // The retry UI/API is not implemented. Use a private API as shown at T611719.
+        for (var i = 0; i < fileUploader._files.length; i++) {
+          delete fileUploader._files[i].uploadStarted;
+        }
+        fileUploader.upload();
+      }
+    }).dxButton("instance");
+
+    $path = "";
+    $adafile = "";
+    let fileUploaderElement = document.createElement("div");
+    let fileUploader = $(fileUploaderElement).dxFileUploader({
+      multiple: false,
+      accept: ".pptx,.ppt,.docx,.doc,.pdf,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
+      uploadMode: "instantly",
+      name: "myFile",
+      uploadUrl: apiurl + "/upload-berkas/"+modname,
+      onValueChanged: function(e) {
+        let reader = new FileReader();
+        reader.onload = function(args) {
+          imageElement.setAttribute('src', args.target.result);
+        }
+        reader.readAsDataURL(e.value[0]); // convert to base64 string
+      },
+      onUploaded: function(e){
+       
+        let path = e.request.response;
+
+        const unsafeCharacters = /[#"%<>\\^`{|}]/g;
+        let unsafeFound = path.match(unsafeCharacters);
+
+        if (unsafeFound) {
+            let unsafeCharactersString = unsafeFound.join(', ');
+            DevExpress.ui.dialog.alert(
+                `The file name contains these unsafe characters: ${unsafeCharactersString}. Please rename the file to continue.`,
+                "error"
+            );
+        
+            path = "";
+            retryButton.option("visible", true);
+        } else {
+            cellInfo.setValue(e.request.responseText);
+            retryButton.option("visible", false);
+        }
+
+      },
+      onUploadError: function(e){
+          $path = "";
+          DevExpress.ui.notify(e.request.response,"error");
+      }
+    }).dxFileUploader("instance");
+        cellElement.append(fileUploaderElement);
+        cellElement.append(buttonElement);
+  
+  }
 
 function btnreqsubmit(reqid, mode) {
     console.log('reqidbtn', reqid);
