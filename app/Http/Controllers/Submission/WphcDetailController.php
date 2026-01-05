@@ -115,7 +115,12 @@ class WphcDetailController extends Controller
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
                 ->where('m.employee_id', $employeeId)
                 ->whereDate('d.startDate', $key)
+                ->where(function($q) {
+                    $q->where('d.isApproved', 1)             
+                    ->orWhere('m.requestStatus', '!=', 0); 
+                })
                 ->exists();
+
 
             if ($existsSameDay) {
                 return response()->json([

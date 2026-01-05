@@ -809,15 +809,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                         } else {
                         const infoContentcontract = $("<div id='infoContentcontract'>");
 
-               
-
-                    // Ambil holiday dari API
                     $.getJSON("api/holiday", (response) => {
                         const holidaysRaw = response?.data || [];
                         const holidayDates = holidaysRaw.map(h => h.HolidayDate);
 
                         detailsStore.load().done((items) => {
-                        // Normalisasi data appointment
                         let appointmentsNorm = Array.isArray(items)
                             ? items.map(a => ({
                                 ...a,
@@ -827,13 +823,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                             }))
                             : [];
 
-                        // === Aturan enabled (lintas bulan/tahun) ===
                         const isEnabledDate = (date) => {
                         const d = normalizeDate(date);
                         const key = formatDateKey(d);
                         const isHoliday = holidayDates.includes(key);
 
-                        // Jalur khusus holiday
                         if (isHoliday) {
                             const dow = d.getDay();
                             if (dow === 6) return false; 
@@ -1556,7 +1550,7 @@ function btnreqsubmit(reqid, mode) {
             Swal.fire({
                 icon: 'error',
                 title: 'Cancelled',
-                text: 'The submission has been cancelled.',
+                text: 'The submission has been cancelled.', 
                 confirmButtonColor: '#3085d6'
             });
             hideLoadingScreen();
