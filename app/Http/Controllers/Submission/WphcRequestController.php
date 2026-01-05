@@ -188,29 +188,22 @@ class WphcRequestController extends Controller
                 ->leftJoin('employee.tbl_designation as designation', 'emp.designation_id', '=', 'designation.id')
                 ->with(['user', 'approverlist', 'wphc_detail'])
                 ->where(function ($q) use ($user_id, $subquery, $user) {
-                    $q->where('request_wphc.user_id', $user_id)   // isMine = 1
-                    ->orWhereRaw("$subquery = 1");              // isPendingOnMe = 1
+                    $q->where('request_wphc.user_id', $user_id)   
+                    ->orWhereRaw("$subquery = 1");             
 
                     if ($user->isAdmin) {
                         $q->orWhere(function ($q2) {
                             $q2->whereIn('request_wphc.requestStatus', [1, 3]);  
                         });
                     }
-
                 })
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->get();  
 
-            //     $data = $data->map(function ($item) {
-
-            //     return $item;
-            // });
-            // Map untuk menambahkan field work_dates (gabungan semua startDate dari detail)
             $data = $data->map(function ($item) {
                 $dates = [];
 
                 foreach ($item->wphc_detail ?? [] as $detail) {
-                    // sesuaikan nama kolom di sini
                     $raw = $detail->startDate ?? $detail->work_date ?? null;
 
                     if (!empty($raw)) {
@@ -226,8 +219,6 @@ class WphcRequestController extends Controller
                 return $item;
             });
 
-
-            // dd($data);
             return response()->json([
                 'status' => "show",
                 'message' => $this->getMessage()['show'],
@@ -247,7 +238,6 @@ class WphcRequestController extends Controller
             $user = $this->getAuth();
             $requestData = $request->all();
 
-            // Ambil employee berdasarkan LoginName
             $employee = DB::table('employee.tbl_employee as emp')
                 ->leftJoin('users as usr', 'emp.LoginName', '=', 'usr.username')
                 ->where('usr.id', $user->id)
@@ -259,7 +249,6 @@ class WphcRequestController extends Controller
                 $requestData['bu'] = $employee->companycode;
                 $requestData['level'] = $employee->level_id;
 
-                // Tentukan DeptHead ID
                 $deptHead = DB::table('employee.tbl_employee')
                     ->whereRaw('LOWER(fullname) = ?', [strtolower($employee->deptheadName)])
                     ->select('id')
@@ -267,13 +256,10 @@ class WphcRequestController extends Controller
 
                 $requestData['DeptHead'] = $deptHead ? $deptHead->id : null;
 
-                // Tentukan sector
                 $requestData['sector'] = in_array($employee->companycode, ['IHM', 'AHL', 'KPSI', 'NKL']) ? 'HO' : $employee->companycode;
 
-                // Ambil semua kategori WPHC (module_id = 92)
                 $categories = CategoryForm::all()->keyBy('nameCategory');
 
-                // Tentukan category_id berdasarkan level
                 $level = (int) $employee->level_id;
                 if (in_array($level, [1, 2, 3], true)) {
                     $requestData['category_id'] = $categories['Asst - Askep']->id ?? null;
@@ -287,10 +273,8 @@ class WphcRequestController extends Controller
             $requestData['user_id'] = $user->id;
 
             $newData = $this->model->create($requestData);
-            // dd($newData);
             $id = $newData->id;
             DB::commit();
-            // Inject approval DeptHead jika tersedia
             if (in_array($employee->level_id, [2, 5]) && $requestData['DeptHead']) {
                 $this->createApprDeptHead($requestData['DeptHead'], $this->modulename, $id);
             }
@@ -333,21 +317,14 @@ class WphcRequestController extends Controller
 
             $module_id = $this->getModuleId($this->modulename);
             $requestData = $request->all();
-
-            // $this->addOneDayToDate($requestData);
-
             $data = $this->model->findOrFail($id);
-
             if($request->Superior) {
                 $this->createApprSuperior($request->Superior, $this->modulename, $id);
             }
             if($request->DeptHead) {
                 $this->createApprDeptHead($request->DeptHead, $this->modulename, $id);
             }
-            
             $data->update($requestData);
-            //end save history perubahan
-
             if(isset($request->ticketStatus) && $data->requestStatus == 3) {
                 $getSubmissionData = $data;
 
@@ -362,8 +339,6 @@ class WphcRequestController extends Controller
                 ];
                 Mail::to($mailData['email'])->send(new SubmissionMail($mailData,$this->modulename,1));
             }
-
-            // Mengembalikan data dalam bentuk JSON dengan memberikan status, pesan dan data
             return response()->json([
                 'status' => "success",
                 'message' => $this->getMessage()['update']

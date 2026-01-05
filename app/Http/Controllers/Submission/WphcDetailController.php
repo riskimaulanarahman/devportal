@@ -36,7 +36,6 @@ class WphcDetailController extends Controller
     public function index(Request $request)
     {
         $data = WphcDetail::get();
-        // dd($data);
         return response()->json([
             'status' => "show",
             'message' => $this->getMessage()['show'],
@@ -47,7 +46,6 @@ class WphcDetailController extends Controller
     public function checkworkdateemployee()
     {
         try {
-            // Ambil user_id dari user login
             $userId = Auth::id();
 
             if (!$userId) {
@@ -57,7 +55,6 @@ class WphcDetailController extends Controller
                 ], 401);
             }
 
-            // Ambil semua workdate milik user login
             $workdates = DB::table('request_wphc_detail as d')
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
                 ->where('m.user_id', $userId)
@@ -103,13 +100,10 @@ class WphcDetailController extends Controller
             $startDate = $date->copy()->setTime(8, 0, 0);
             $endDate   = $date->copy()->setTime(17, 0, 0);
             $key       = $startDate->format('Y-m-d');
-
-            // Ambil requestStatus dari relasi wphc_request
             $wphcRequest   = Wphc::findOrFail($requestData['req_id']);
             $employeeId    = $wphcRequest->employee_id;
             $requestStatus = $wphcRequest->requestStatus;
 
-            // Validasi: hanya boleh create kalau status 0 atau 2
             if (!in_array($requestStatus, [0, 2])) {
                 return response()->json([
                     "status"  => "error",
@@ -117,7 +111,6 @@ class WphcDetailController extends Controller
                 ]);
             }
 
-            // Validasi: employee_id + startDate
             $existsSameDay = DB::table('request_wphc_detail as d')
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
                 ->where('m.employee_id', $employeeId)
@@ -134,7 +127,6 @@ class WphcDetailController extends Controller
             if ($startDate->isSunday()) {
                 $prevSundayKey = $startDate->copy()->subWeek()->toDateString();
 
-                // Consecutive Sunday check
                 $hasPrevSunday = DB::table('request_wphc_detail as d')
                     ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
                     ->where('m.employee_id', $employeeId)
@@ -148,7 +140,6 @@ class WphcDetailController extends Controller
                     ]);
                 }
 
-            // Cooldown maju — exclude holiday
             $existsForward = DB::table('request_wphc_detail as d')
                 ->join('request_wphc as m', 'd.req_id', '=', 'm.id')
                 ->where('m.employee_id', $employeeId)
@@ -164,7 +155,6 @@ class WphcDetailController extends Controller
                     "message" => "The selected date is not available due to a forward cooldown period of seven days."
                 ]);
             }
-            // Simpan data langsung
                 $requestData['user_id']   = $this->getAuth()->id;
                 $requestData['startDate'] = $startDate;
                 $requestData['endDate']   = $endDate;
@@ -182,14 +172,10 @@ class WphcDetailController extends Controller
                 ]);
             }
 
-            // Ambil daftar holiday (pastikan model Holiday -> $table = 'tbl_holiday')
             $holidayDates = Holiday::pluck('HolidayDate')
                 ->map(fn($h) => Carbon::parse($h)->toDateString()) // "YYYY-MM-DD"
                 ->toArray();
-
             $isHoliday = in_array($key, $holidayDates);
-
-            // Jalur khusus holiday: quota 2/bulan, bypass cooldown & consecutive Sunday
             if ($isHoliday) {
                 $month = $startDate->month;
                 $year  = $startDate->year;
@@ -211,7 +197,6 @@ class WphcDetailController extends Controller
                     ]);
                 }
 
-                // Simpan data langsung
                 $requestData['user_id']   = $this->getAuth()->id;
                 $requestData['startDate'] = $startDate;
                 $requestData['endDate']   = $endDate;
@@ -229,7 +214,6 @@ class WphcDetailController extends Controller
                 ]);
             }
 
-            // Non-holiday → validasi biasa
             if ($startDate->isWeekday()) {
                 return response()->json([
                     "status"  => "error",
@@ -237,7 +221,6 @@ class WphcDetailController extends Controller
                 ], 422);
             }
 
-            // Validasi backdate absolut
             $sevenDaysAgo = Carbon::now('Asia/Makassar')->subDays(7)->startOfDay();
             if ($startDate->lt($sevenDaysAgo)) {
                 return response()->json([
@@ -246,7 +229,6 @@ class WphcDetailController extends Controller
                 ]);
             }
 
-            // Simpan data untuk non-holiday
             $requestData['user_id']   = $this->getAuth()->id;
             $requestData['startDate'] = $startDate;
             $requestData['endDate']   = $endDate;
@@ -284,15 +266,12 @@ class WphcDetailController extends Controller
             'request_wphc.employee_id as master_employee_id',
             'employee.tbl_employee.fullname as employee_fullname',
             'employee.tbl_department.DepartmentName as department_name'
-        )
-        ->join('request_wphc', 'request_wphc.id', '=', 'request_wphc_detail.req_id')
-        ->join('employee.tbl_employee', 'employee.tbl_employee.id', '=', 'request_wphc.employee_id')
-        ->join('employee.tbl_department', 'employee.tbl_department.id', '=', 'employee.tbl_employee.department_id')
-        ->where('request_wphc_detail.req_id', $id)
-        ->get();
-
-
-
+            )
+            ->join('request_wphc', 'request_wphc.id', '=', 'request_wphc_detail.req_id')
+            ->join('employee.tbl_employee', 'employee.tbl_employee.id', '=', 'request_wphc.employee_id')
+            ->join('employee.tbl_department', 'employee.tbl_department.id', '=', 'employee.tbl_employee.department_id')
+            ->where('request_wphc_detail.req_id', $id)
+            ->get();
 
             $data = $data->map(function ($row) {
                 $row->startDate = Carbon::parse($row->startDate)->toIso8601String();

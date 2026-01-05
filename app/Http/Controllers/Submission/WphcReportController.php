@@ -38,9 +38,7 @@ class WphcReportController extends Controller
             ->join('employee.tbl_employee as e', 'm.employee_id', '=', 'e.id')
             ->leftJoin('employee.tbl_department as dept', 'e.department_id', '=', 'dept.id')
             ->leftJoin('employee.tbl_designation as pos', 'e.designation_id', '=', 'pos.id')
-            // join untuk Superior
             ->leftJoin('employee.tbl_employee as sup', 'm.Superior', '=', 'sup.id')
-            // join untuk DeptHead
             ->leftJoin('employee.tbl_employee as head', 'm.DeptHead', '=', 'head.id')
             ->select([
                 'd.startDate as WorkDate',
@@ -64,7 +62,6 @@ class WphcReportController extends Controller
             ->Where('d.isApproved', 1)
             ->orderBy('d.startDate', 'desc')
             ->get();
-// dd($data);
 
         return response()->json([
             "status"  => "show",

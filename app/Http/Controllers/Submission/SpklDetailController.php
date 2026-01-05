@@ -58,7 +58,6 @@ class SpklDetailController extends Controller
                 ]);
             }
 
-            // Konversi tanggal ke format SQL standar 
             if (!empty($request->ActualStartWork)) { 
                 $requestData['ActualStartWork'] = Carbon::parse($request->ActualStartWork) 
                 ->format('Y-m-d H:i:s'); 
@@ -66,17 +65,13 @@ class SpklDetailController extends Controller
                 $requestData['ActualEndWork'] = Carbon::parse($request->ActualEndWork) 
                 ->format('Y-m-d H:i:s'); }
 
-            // 2) Normalisasi ke tanggal (tanpa jam)
             $masterDate = \Carbon\Carbon::parse($master->work_date)->toDateString(); // Y-m-d
 
-            // 3) Validasi duplikasi employee + work_date di request lain
             $exists = DB::table('request_spkl_detail as d')
                 ->join('request_spkl as m', 'm.id', '=', 'd.req_id')
                 ->where('d.employee_id', $request->employee_id)
                 ->whereDate('m.work_date', $masterDate)
-                ->where('m.id', '!=', $request->req_id)                 // beda request
-                // ->whereNull('d.deleted_at')                             // jika pakai soft delete
-                // ->whereIn('m.requestStatus', [0, 1, 2, 3])              // sesuaikan status aktif
+                ->where('m.id', '!=', $request->req_id)
                 ->exists();
 
             if ($exists) {
@@ -88,8 +83,6 @@ class SpklDetailController extends Controller
 
             $requestData = $request->all();
             $requestData['user_id']   = $this->getAuth()->id;
-                // Hitung flag moreThanTwoHours
-            // $EstimateOvertimeHours = 0;
             $EstimateOvertimeHours = $request->EstimateOvertimeHours ?? 0;
             if ($EstimateOvertimeHours > 2) {
                 $requestData['moreThanTwoHours'] = 1;
@@ -104,7 +97,6 @@ class SpklDetailController extends Controller
             }
 
             $this->model->create($requestData);
-            // Cari category sesuai nameCategory
             if ($requestData['moreThanTwoHours'] == 1) {
                 $categoryId = $catappr->firstWhere('nameCategory', 'moreThanTwoHours')->id ?? null;
             } else {
@@ -124,7 +116,7 @@ class SpklDetailController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Tambahkan rollback agar transaksi aman
+            DB::rollBack(); 
             return response()->json([
                 "status"  => "error",
                 "message" => $e->getMessage()
@@ -146,7 +138,6 @@ class SpklDetailController extends Controller
                 ]);
             }
             if ($data->code_id == null) {
-            // Buat kode manual tanpa generateCode()
             $data->save();
             }
 
@@ -198,27 +189,23 @@ class SpklDetailController extends Controller
             $data = $this->model->findOrFail($id);
             $requestData['user_id'] = $this->getAuth()->id;
 
-            // Konversi tanggal ke format SQL standar 
             if (!empty($request->ActualStartWork)) {
                 $requestData['ActualStartWork'] = Carbon::parse($request->ActualStartWork)
-                    ->setTimezone('Asia/Makassar')   // paksa ke WITA
+                    ->setTimezone('Asia/Makassar')  
                     ->format('Y-m-d H:i:s');
             }
             if (!empty($request->ActualEndWork)) {
                 $requestData['ActualEndWork'] = Carbon::parse($request->ActualEndWork)
-                    ->setTimezone('Asia/Makassar')   // paksa ke WITA
+                    ->setTimezone('Asia/Makassar')   
                     ->format('Y-m-d H:i:s');
             }
 
-            // Ambil nilai dari request jika ada
             $EstimateOvertimeHours = isset($requestData['EstimateOvertimeHours'])
                 ? floatval(trim((string) $requestData['EstimateOvertimeHours']))
                 : floatval($data->EstimateOvertimeHours ?? 0);
 
-            // Hitung flag moreThanTwoHours
             $requestData['moreThanTwoHours'] = ($EstimateOvertimeHours > 2) ? 1 : 0;
 
-            // Validasi status SPKL
             $requestStatus = optional($data->Spkl)->requestStatus;
             if (!empty($data->approveddoc) || !in_array($requestStatus, [0, 2])) {
                 return response()->json([
@@ -234,7 +221,6 @@ class SpklDetailController extends Controller
             $EOHs = floatval($updated->EstimateOvertimeHours ?? 0);
             $AOHs = floatval($updated->ActualOvertimeHours ?? 0);
             $isExceedPlan = ($AOHs > $EOHs) ? 1 : 0;
-            // dd($isExceedPlan);
             $moreThanTwoHours = ($EOHs > 2) ? 1 : 0;
 
             DB::table('request_spkl_detail')

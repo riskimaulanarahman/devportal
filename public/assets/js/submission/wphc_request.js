@@ -836,27 +836,17 @@ const popupContentTemplate = function (reqid, mode, options) {
                         // Jalur khusus holiday
                         if (isHoliday) {
                             const dow = d.getDay();
-                            if (dow === 6) return false; // Sabtu holiday tidak aktif
-                            return true; // holiday aktif 
+                            if (dow === 6) return false; 
+                            return true; 
                         }
-
-                        // Non-holiday lanjut aturan lain
                         const today = normalizeDate(new Date());
-
-                        // Backdate
                         const sevenDaysAgo = new Date(today);
                         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                         if (d < sevenDaysAgo) return false;
-
-                        // Forward date
                         const threeWeeksAhead = new Date(today);
                         threeWeeksAhead.setDate(threeWeeksAhead.getDate() + 21);
                         if (d > threeWeeksAhead) return false;
-
-                        // Weekday non-holiday disable
                         if (isWeekday(d)) return false;
-
-                        // Cooldown ±7 hari (holiday tidak dihitung)
                         const inCooldown = appointmentsNorm.some(a => {
                             const start = normalizeDate(a.startDate);
                             const isStartHoliday = holidayDates.includes(formatDateKey(start));
@@ -869,29 +859,23 @@ const popupContentTemplate = function (reqid, mode, options) {
                             return d >= cooldownStart && d <= cooldownEnd;
                         });
                         if (inCooldown) return false;
-
-                        // Sunday consecutive
                         if (isSunday(d)) {
                             const prevSunday = new Date(d);
                             prevSunday.setDate(prevSunday.getDate() - 7);
                             const prevKey = formatDateKey(prevSunday);
-
                             const hasDataPrevSunday = appointmentsNorm.some(a => {
                                 const startKey = formatDateKey(a.startDate);
                                 const isStartHoliday = holidayDates.includes(startKey);
                                 return !isStartHoliday && startKey === prevKey;
                             });
-
                             if (hasDataPrevSunday) return false;
                             return true;
                         }
-
                         return false;
                     };
 
                         const schedulerElement = $("<div id='formcontract'>");
                         infoContentcontract.append(schedulerElement);
-
                         schedulerElement.dxScheduler({
                             dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
                             timeZone: "Asia/Makassar",
@@ -914,17 +898,13 @@ const popupContentTemplate = function (reqid, mode, options) {
                             showCurrentTimeIndicator: true,
                             shadeUntilCurrentTime: true,
                             maxAppointmentsPerCell: "unlimited",
-
-                            // === Template cell kalender (visual) ===
                             dataCellTemplate(cellData, cellIndex, cellElement) {
                             const cellDate = normalizeDate(cellData.startDate);
                             const enabled = isEnabledDate(cellDate);
-
                             const element = $("<div>")
                                 .addClass("dx-scheduler-date-table-cell-text")
                                 .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
                                 .text(cellDate.getDate());
-
                             if (!enabled) {
                                 element.css({
                                 backgroundColor: "#f0f0f0",
@@ -941,7 +921,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 fontWeight: "bold"
                                 });
                             }
-
                             return cellElement.append(element);
                             },
                             onCellClick: function(e) {
@@ -951,8 +930,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     showError("Tanggal ini tidak tersedia.");
                                 }
                             },
-
-                            // === Form input sederhana ===
                             onAppointmentFormOpening(e) {
                             const form = e.form;
                             e.popup.option("title", "Form Pengajuan Jadwal");
@@ -969,7 +946,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     editorType: "dxDateBox",
                                     editorOptions: { 
                                         type: "date",
-                                        disabled: true // field tidak bisa diubah sama sekali
+                                        disabled: true
                                     }
                                 },
                                 {
@@ -983,8 +960,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 }
                             ]);
                             },
-
-                            // === Tangani error dari backend ===
                             onAppointmentAdding(e) {
                             $.ajax({
                                 url: "api/wphc_detail",
@@ -1042,7 +1017,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                             });
                         },
                             onAppointmentAdded: function(e) {
-                                // reload store untuk update appointmentsNorm
                                 detailsStore.load().done((items) => {
                                     appointmentsNorm = items.map(a => ({
                                     ...a,
@@ -1054,7 +1028,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 });
                                 },
                             onAppointmentDeleted: function(e) {
-                                // reload store untuk update appointmentsNorm
                                 detailsStore.load().done((items) => {
                                     appointmentsNorm = items.map(a => ({
                                     ...a,
@@ -1068,11 +1041,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                         });
                     });
                 });
-
                 return infoContentcontract;
-                        }
-                    
-            
+            }
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),

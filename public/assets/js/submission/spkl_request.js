@@ -61,11 +61,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                 const reqid = data.id;
                 const reqstatus = data.requestStatus;
                 const tms = data.tms;
-
-                // Mode default: view
                 let mode = 'view';
-
-                // Jika masih di fase 1 (tms == 0), gunakan logika requestStatus
                 if (tms === 33) {
                     if ((reqstatus === 0 || reqstatus === 2) && isMine === 1) {
                         mode = 'edit';
@@ -74,16 +70,13 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     }
                 }
 
-                // Warna tombol berdasarkan mode dan status
                 let buttonColor = "btn-primary";
                 let buttonIcon = "fa-search";
 
                 if (tms === 34) {
-                    // Fase 2 → SPKL sudah full approve → tombol tetap hijau dan view
                     buttonColor = "btn-success";
                     buttonIcon = "fa-search";
                 } else {
-                    // Fase 1 → warna berdasarkan status
                     const arrColor = [
                         "btn-secondary", // Draft
                         (mode === 'approval' && reqstatus === 1) ? "btn-danger" : "btn-primary", // Waiting
@@ -95,7 +88,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     buttonIcon = (mode === 'approval' && reqstatus === 1) ? "fa-check" : "fa-search";
                 }
 
-                // Tombol utama (selalu ada)
                 $('<button class="btn ' + buttonColor + '" id="btnreqid' + reqid + '"><i class="fa ' + buttonIcon + '"></i></button>')
                     .on('dxclick', function (evt) {
                         evt.stopPropagation();
@@ -106,7 +98,6 @@ var dataGrid = $("#gridContainer").dxDataGrid({
                     })
                     .appendTo(container);
 
-                // Tombol Cancel hanya muncul di fase 1 (tms == 0) dan status 1 atau 2, milik sendiri, dan bukan pending
                 if (tms === 33 && (reqstatus === 1 || reqstatus === 2) && isMine === 1 && (!isPendingOnMe || isPendingOnMe === 0)) {
                     $('<button class="btn btn-danger" id="btnreqid' + reqid + '" style="margin-left: 3px;">Cancel</button>')
                         .on('dxclick', function (evt) {
@@ -459,7 +450,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                         if (mode == 'add' || mode == 'edit') {
                             $("<span style='color:red;font-size:11pt'>").html('Silahkan lengkapi <b><i class="far fa-newspaper tips"> Form Data </i></b> dan lampirkan <i class="fas fa-file tips"> Supporting Document </i> sebelum klik tombol <span class="tips"><i class="bx bx-check-double label-icon"></i> Submit Submission</span>').appendTo(container);
                         }
-                        // console.log(storedetail);
                         var formData = $("<div id='formdata'>").dxDataGrid({
                             dataSource: storedetail(modname, reqid),
                             allowColumnReordering: true,
@@ -639,11 +629,10 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 const hasSelection = keys.length;
 
                                 if (hasSelection !== 0) {
-                                    const selectedData = selectedItems.selectedRowsData[0]; // ambil data lengkap dari row
-                                    args.component.option('value', selectedData.id); // set employee_id
+                                    const selectedData = selectedItems.selectedRowsData[0]; 
+                                    args.component.option('value', selectedData.id); 
                                     console.log("Selected:", selectedItems.selectedRowsData[0]);
 
-                                    // Inject companycode ke request_spkl.bu
                                     if (e.row && e.row.data) {
                                         e.row.data.request_spkl = e.row.data.request_spkl || {};
                                         e.row.data.request_spkl.bu = selectedData.companycode;

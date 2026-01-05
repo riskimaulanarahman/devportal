@@ -565,15 +565,15 @@ class MemorandumRequestController extends Controller
 
             $xlTypePDF = 0;
             $xlQualityStandard = 0;
-            $code_sanitized = str_replace('/', '_', $data->code_id); // Ubah pemisah menjadi underscore
-            $todayDate = date('Ymd'); // Format tanggal hari ini: 20250717
+            $code_sanitized = str_replace('/', '_', $data->code_id); 
+            $todayDate = date('Ymd'); 
 
             $fileName = "{$data->id}_Memorandum_{$code_sanitized}_{$todayDate}-{$lss}.pdf";
-            $fileName = preg_replace("/[^a-z0-9_\-\.]/i", '', $fileName); // Bersihkan karakter tidak aman
+            $fileName = preg_replace("/[^a-z0-9_\-\.]/i", '', $fileName); 
             $filePath = public_path("template/memo/pdf/{$fileName}");
 
             if (file_exists($filePath)) {
-                unlink($filePath); // Hapus jika file sudah ada
+                unlink($filePath);
             }
 			$Worksheet->ExportAsFixedFormat($xlTypePDF, $filePath, $xlQualityStandard);			
 			$excel->CutCopyMode = false;
