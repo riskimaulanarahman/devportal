@@ -41,19 +41,19 @@ class SpklRequestController extends Controller
     {
         try {
             $user_id = $this->getAuth()->id;
-            $user = auth()->user(); 
+            $user = auth()->user();
             $module_id = $this->getModuleId($this->modulename);
 
             $dataquery = $this->model->query();
 
             // Subquery: apakah pending di user ini
-            $subquery = "(select TOP 1 
+            $subquery = "(select TOP 1
                         CASE WHEN a.user_id='".$user_id."' then 1 else 0 end
                     from tbl_approverListReq l
                     left join tbl_approver a on l.approver_id=a.id
                     left join tbl_approvaltype r on a.approvaltype_id = r.id
                     where l.ApprovalAction='1'
-                    and l.req_id = request_spkl.id 
+                    and l.req_id = request_spkl.id
                     and l.module_id = '".$module_id."' 
                     and request_spkl.requestStatus='1'
                     order by a.sequence)";
