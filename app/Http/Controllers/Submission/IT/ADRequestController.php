@@ -57,7 +57,7 @@ class ADRequestController extends Controller
             $getIT = "(select max(CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end)
             from tbl_approver a
             left join tbl_approvaltype r on a.approvaltype_id = r.id 
-            where a.module = 'ActiveDirectory' and r.ApprovalType='IT' and a.isactive='1')"; // show for all IT for update username&password
+            where a.module = 'ActiveDirectory' and r.ApprovalType IN ('IT','IT Lead') and a.isactive='1')"; // show for all IT for update username&password
 
             $data = $dataquery
                 ->selectRaw("request_it_activedirectory.*,codes.code,
