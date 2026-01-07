@@ -250,6 +250,11 @@ const accordionItems = [{
         visible: true
     },
     {
+        ID: 5,
+        Title: '<i class="fas fa-list-ul"> Supporting Document </i>',
+        visible: true
+    },
+    {
         ID: 3,
         Title: '<i class="fas fa-list-ul"> Approver List </i>',
         visible: true
@@ -710,65 +715,105 @@ const popupContentTemplate = function (reqid, mode, options) {
 
                     }
                      // Helper umum
-                const normalizeDate = (date) => {
-                const d = new Date(date);
-                d.setHours(0, 0, 0, 0);
-                return d;
-                };
+                    const normalizeDate = (date) => {
+                    const d = new Date(date);
+                    d.setHours(0, 0, 0, 0);
+                    return d;
+                    };
 
-                const formatDateKey = (date) => {
-                const d = normalizeDate(date);
-                return (
-                    d.getFullYear() +
-                    "-" +
-                    String(d.getMonth() + 1).padStart(2, "0") +
-                    "-" +
-                    String(d.getDate()).padStart(2, "0")
-                );
-                };
+                    const formatDateKey = (date) => {
+                    const d = normalizeDate(date);
+                    return (
+                        d.getFullYear() +
+                        "-" +
+                        String(d.getMonth() + 1).padStart(2, "0") +
+                        "-" +
+                        String(d.getDate()).padStart(2, "0")
+                    );
+                    };
 
-                const isSunday = (date) => normalizeDate(date).getDay() === 0;
-                const isWeekday = (date) => {
-                const day = normalizeDate(date).getDay();
-                return day >= 1 && day <= 6;
-                };
+                    const isSunday = (date) => normalizeDate(date).getDay() === 0;
+                    const isWeekday = (date) => {
+                    const day = normalizeDate(date).getDay();
+                    return day >= 1 && day <= 6;
+                    };
 
-                const showError = (message) => {
-                DevExpress.ui.notify({
-                    message,
-                    type: "error",
-                    displayTime: 3000,
-                    position: { my: "top center", at: "top center" }
-                });
-                };
+                    const showError = (message) => {
+                    DevExpress.ui.notify({
+                        message,
+                        type: "error",
+                        displayTime: 3000,
+                        position: { my: "top center", at: "top center" }
+                    });
+                    };
 
-                const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
-            if (data.ID === 2) { 
-                if (mode === 'approval') {
-                // Return approval grid inside the accordion item 2
-                return $("<div>").dxDataGrid({
-                    dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
-                    // dataSource: storedetail(modname, reqid),
-                    showBorders: true,
-                    columns: [
-                    { caption: "Employee", dataField: "employee_fullname" },
-                    { caption: "Department", dataField: "department_name" },
-                    { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
-                    { caption: "Description", dataField: "text" }
-                    ]
-                });
-                } else {
-                const infoContentcontract = $("<div id='infoContentcontract'>");
+                    const detailsStore = storewithmodule("wphc_detail", modelclass, reqid);
+                    if (data.ID === 2) { 
+                        if (mode === 'approval') {
+                        return $("<div>").dxDataGrid({
+                            dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
+                            editing: {
+                                mode: "cell",        // atau "row"
+                                allowUpdating: true
+                            },
+                            showBorders: true,
+                            columns: [
+                            { caption: "Employee", dataField: "employee_fullname" },
+                            { caption: "Department", dataField: "department_name" },
+                            { caption: "Work Date", dataField: "startDate", dataType: "date", format: "dd-MM-yyyy" },
+                            { caption: "Description", dataField: "text" },
+                            {
+                                dataField: "isApproved",  
+                                caption: "Approved",
+                                dataType: "number",
+                                alignment: "left",
+                                showEditorAlways: true,
+                                onValueChanged: function(e) {
+                                // console.log("radio changed:", e.value);
+                                cellInfo.setValue(e.value.value); 
+                                console.log("editCellTemplate value (after):", cellInfo.value);
+                                },
+                                editCellTemplate: function(cellElement, cellInfo) {
+                                console.log("editCellTemplate value (before):", cellInfo.value);
 
-               
+                                $("<div>").dxRadioGroup({
+                                    layout: "horizontal",
+                                    items: [
+                                    { text: "Yes", value: 1 },
+                                    { text: "No",  value: 0 }
+                                    ],
+                                    valueExpr: "value",
+                                    displayExpr: "text",
+                                    value: cellInfo.value,
+                                    onValueChanged: function(e) {
+                                    console.log("radio changed:", e.value);
+                                    cellInfo.setValue(e.value);
+                                    console.log("editCellTemplate value (after):", cellInfo.value);
+                                    }
+                                }).appendTo(cellElement);
+                                }
+                                ,
+                                cellTemplate: function(cellElement, cellInfo) {
+                                $("<div>").dxRadioGroup({
+                                    layout: "horizontal",
+                                    items: [
+                                    { text: "Yes", value: 1 },
+                                    { text: "No",  value: 0 }
+                                    ],
+                                    value: Number(cellInfo.value),
+                                    disabled: true
+                                }).appendTo(cellElement);
+                                }
+                            }]
+                        });
+                        } else {
+                        const infoContentcontract = $("<div id='infoContentcontract'>");
 
-                // Ambil holiday dari API
                     $.getJSON("api/holiday", (response) => {
                         const holidaysRaw = response?.data || [];
                         const holidayDates = holidaysRaw.map(h => h.HolidayDate);
 
                         detailsStore.load().done((items) => {
-                        // Normalisasi data appointment
                         let appointmentsNorm = Array.isArray(items)
                             ? items.map(a => ({
                                 ...a,
@@ -778,67 +823,53 @@ const popupContentTemplate = function (reqid, mode, options) {
                             }))
                             : [];
 
-                        // === Aturan enabled (lintas bulan/tahun) ===
-                            const isEnabledDate = (date) => {
-                            const d = normalizeDate(date);
-                            const key = formatDateKey(d);
-                            const isHoliday = holidayDates.includes(key);
+                        const isEnabledDate = (date) => {
+                        const d = normalizeDate(date);
+                        const key = formatDateKey(d);
+                        const isHoliday = holidayDates.includes(key);
 
-                            const today = normalizeDate(new Date());
-
-                            // 1) Backdate: hanya disable 7 hari ke belakang
-                            const sevenDaysAgo = new Date(today);
-                            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 8);
-                            if (d < sevenDaysAgo) return false;
-
-                            // 2) Forward date: disable setelah H+3week
-                            const threeDaysAhead = new Date(today);
-                            threeDaysAhead.setDate(threeDaysAhead.getDate() + 21);
-                            if (d > threeDaysAhead) return false;
-
-                            // 3) Holiday aktif
-                            if (isHoliday) return true;
-
-                            // 4) Weekday non-holiday disable
-                            if (isWeekday(d)) return false;
-
-                            // 5) Cooldown ±7 hari dari setiap appointment
-                            const inCooldown = appointmentsNorm.some(a => {
-                                const start = normalizeDate(a.startDate);
-
-                                // kalau persis sama dengan tanggal appointment → tetap aktif
-                                if (d.getTime() === start.getTime()) return true;
-
-                                const cooldownStart = new Date(start);
-                                cooldownStart.setDate(cooldownStart.getDate() - 7);
-                                const cooldownEnd = new Date(start);
-                                cooldownEnd.setDate(cooldownEnd.getDate() + 7);
-
-                                return d >= cooldownStart && d <= cooldownEnd;
+                        if (isHoliday) {
+                            const dow = d.getDay();
+                            if (dow === 6) return false; 
+                            return true; 
+                        }
+                        const today = normalizeDate(new Date());
+                        const sevenDaysAgo = new Date(today);
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                        if (d < sevenDaysAgo) return false;
+                        const threeWeeksAhead = new Date(today);
+                        threeWeeksAhead.setDate(threeWeeksAhead.getDate() + 21);
+                        if (d > threeWeeksAhead) return false;
+                        if (isWeekday(d)) return false;
+                        const inCooldown = appointmentsNorm.some(a => {
+                            const start = normalizeDate(a.startDate);
+                            const isStartHoliday = holidayDates.includes(formatDateKey(start));
+                            if (isStartHoliday) return false;
+                            if (d.getTime() === start.getTime()) return true;
+                            const cooldownStart = new Date(start);
+                            cooldownStart.setDate(cooldownStart.getDate() - 7);
+                            const cooldownEnd = new Date(start);
+                            cooldownEnd.setDate(cooldownEnd.getDate() + 7);
+                            return d >= cooldownStart && d <= cooldownEnd;
+                        });
+                        if (inCooldown) return false;
+                        if (isSunday(d)) {
+                            const prevSunday = new Date(d);
+                            prevSunday.setDate(prevSunday.getDate() - 7);
+                            const prevKey = formatDateKey(prevSunday);
+                            const hasDataPrevSunday = appointmentsNorm.some(a => {
+                                const startKey = formatDateKey(a.startDate);
+                                const isStartHoliday = holidayDates.includes(startKey);
+                                return !isStartHoliday && startKey === prevKey;
                             });
-
-                            if (inCooldown) return false;
-
-                            // 6) Sunday berturut-turut
-                            if (isSunday(d)) {
-                                const prevSunday = new Date(d);
-                                prevSunday.setDate(prevSunday.getDate() - 7);
-                                const prevKey = formatDateKey(prevSunday);
-
-                                const hasDataPrevSunday = appointmentsNorm.some(
-                                a => formatDateKey(a.startDate) === prevKey
-                                );
-                                if (hasDataPrevSunday) return false;
-                                return true;
-                            }
-
-                            return false;
-                            };
-
+                            if (hasDataPrevSunday) return false;
+                            return true;
+                        }
+                        return false;
+                    };
 
                         const schedulerElement = $("<div id='formcontract'>");
                         infoContentcontract.append(schedulerElement);
-
                         schedulerElement.dxScheduler({
                             dataSource: new DevExpress.data.DataSource({ store: detailsStore }),
                             timeZone: "Asia/Makassar",
@@ -861,17 +892,13 @@ const popupContentTemplate = function (reqid, mode, options) {
                             showCurrentTimeIndicator: true,
                             shadeUntilCurrentTime: true,
                             maxAppointmentsPerCell: "unlimited",
-
-                            // === Template cell kalender (visual) ===
                             dataCellTemplate(cellData, cellIndex, cellElement) {
                             const cellDate = normalizeDate(cellData.startDate);
                             const enabled = isEnabledDate(cellDate);
-
                             const element = $("<div>")
                                 .addClass("dx-scheduler-date-table-cell-text")
                                 .css({ fontSize: "10px", padding: "2px", fontWeight: 600 })
                                 .text(cellDate.getDate());
-
                             if (!enabled) {
                                 element.css({
                                 backgroundColor: "#f0f0f0",
@@ -888,7 +915,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 fontWeight: "bold"
                                 });
                             }
-
                             return cellElement.append(element);
                             },
                             onCellClick: function(e) {
@@ -898,8 +924,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     showError("Tanggal ini tidak tersedia.");
                                 }
                             },
-
-                            // === Form input sederhana ===
                             onAppointmentFormOpening(e) {
                             const form = e.form;
                             e.popup.option("title", "Form Pengajuan Jadwal");
@@ -916,7 +940,7 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     editorType: "dxDateBox",
                                     editorOptions: { 
                                         type: "date",
-                                        disabled: true // field tidak bisa diubah sama sekali
+                                        disabled: true
                                     }
                                 },
                                 {
@@ -930,8 +954,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 }
                             ]);
                             },
-
-                            // === Tangani error dari backend ===
                             onAppointmentAdding(e) {
                             $.ajax({
                                 url: "api/wphc_detail",
@@ -989,7 +1011,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                             });
                         },
                             onAppointmentAdded: function(e) {
-                                // reload store untuk update appointmentsNorm
                                 detailsStore.load().done((items) => {
                                     appointmentsNorm = items.map(a => ({
                                     ...a,
@@ -1001,7 +1022,6 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 });
                                 },
                             onAppointmentDeleted: function(e) {
-                                // reload store untuk update appointmentsNorm
                                 detailsStore.load().done((items) => {
                                     appointmentsNorm = items.map(a => ({
                                     ...a,
@@ -1015,11 +1035,8 @@ const popupContentTemplate = function (reqid, mode, options) {
                         });
                     });
                 });
-
                 return infoContentcontract;
             }
-        
-            
                     } else if (data.ID == 3) {
                         return $("<div id='formapproverlist'>").dxDataGrid({
                             dataSource: storewithmodule('approverlistrequest', modelclass, reqid),
@@ -1302,6 +1319,85 @@ const popupContentTemplate = function (reqid, mode, options) {
                                 dataGridApproverHistory.refresh();
                             }
                         })
+                    } else if (data.ID == 5) {
+                    var supporting = $("<div id='formattachment'>").dxDataGrid({    
+                        dataSource: storewithmodule('attachmentrequest',modelclass,reqid),
+                        allowColumnReordering: true,
+                        allowColumnResizing: true,
+                        columnsAutoWidth: true,
+                        rowAlternationEnabled: true,
+                        wordWrapEnabled: true,
+                        showBorders: true,
+                        filterRow: { visible: false },
+                        filterPanel: { visible: false },
+                        headerFilter: { visible: false },
+                        searchPanel: {
+                            visible: true,
+                            width: 240,
+                            placeholder: 'Search...',
+                        },
+                        editing: {
+                            useIcons:true,
+                            mode: "popup",
+                            allowAdding: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                            allowUpdating: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                            allowDeleting: ((isMine == 1 && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBCIDv ? true : false),
+                        },
+                        paging: { enabled: true, pageSize: 10 },
+                        columns: [
+                            { 
+                                caption: 'Attachment',
+                                dataField: "path",
+                                allowFiltering: false,
+                                allowSorting: false,
+                                cellTemplate: cellTemplate,
+                                editCellTemplate: editCellTemplate,
+                                validationRules: [{ type: "required" }]
+                            },
+                            {
+                                dataField: "remarks",
+                                editorType: "dxTextBox",
+                                validationRules: [{ type: "required" }]
+                            },
+                        ],
+                        export: {
+                            enabled: false,
+                            fileName: modname,
+                            excelFilterEnabled: true,
+                            allowExportSelectedData: true
+                        },
+                        onInitialized: function(e) {
+                            dataGridAttachment = e.component;
+                        },
+                        onContentReady: function(e){
+                            moveEditColumnToLeft(e.component);
+                        },
+                        onInitNewRow : function(e) {
+                        },
+                        onToolbarPreparing: function(e) {
+                            e.toolbarOptions.items.unshift({						
+                                location: "after",
+                                widget: "dxButton",
+                                options: {
+                                    hint: "Refresh Data",
+                                    icon: "refresh",
+                                    onClick: function() {
+                                        dataGridAttachment.refresh();
+                                    }
+                                }
+                            })
+                        },
+                        onDataErrorOccurred: function(e) {
+                            // Menampilkan pesan kesalahan
+                            console.log("Terjadi kesalahan saat memuat data (2):", e.error.message);
+                    
+                            // Memuat ulang DataGrid
+                            dataGridAttachment.refresh();
+                        }
+                    })
+
+                    return supporting;
+                
                     }
                 }
             })
@@ -1316,6 +1412,72 @@ const popupContentTemplate = function (reqid, mode, options) {
     return scrollView;
 
 };
+function cellTemplate(container, options) {
+    container.append('<a href="public/upload/'+options.value+'" target="_blank"><img src="public/assets/images/showfile.png" height="50" width="70"></a>');
+}
+
+function editCellTemplate(cellElement, cellInfo) {
+    let buttonElement = document.createElement("div");
+    buttonElement.classList.add("retryButton");
+    let retryButton = $(buttonElement).dxButton({
+      text: "Retry",
+      visible: false,
+      onClick: function() {
+        // The retry UI/API is not implemented. Use a private API as shown at T611719.
+        for (var i = 0; i < fileUploader._files.length; i++) {
+          delete fileUploader._files[i].uploadStarted;
+        }
+        fileUploader.upload();
+      }
+    }).dxButton("instance");
+
+    $path = "";
+    $adafile = "";
+    let fileUploaderElement = document.createElement("div");
+    let fileUploader = $(fileUploaderElement).dxFileUploader({
+      multiple: false,
+      accept: ".pptx,.ppt,.docx,.doc,.pdf,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.zip",
+      uploadMode: "instantly",
+      name: "myFile",
+      uploadUrl: apiurl + "/upload-berkas/"+modname,
+      onValueChanged: function(e) {
+        let reader = new FileReader();
+        reader.onload = function(args) {
+          imageElement.setAttribute('src', args.target.result);
+        }
+        reader.readAsDataURL(e.value[0]); // convert to base64 string
+      },
+      onUploaded: function(e){
+       
+        let path = e.request.response;
+
+        const unsafeCharacters = /[#"%<>\\^`{|}]/g;
+        let unsafeFound = path.match(unsafeCharacters);
+
+        if (unsafeFound) {
+            let unsafeCharactersString = unsafeFound.join(', ');
+            DevExpress.ui.dialog.alert(
+                `The file name contains these unsafe characters: ${unsafeCharactersString}. Please rename the file to continue.`,
+                "error"
+            );
+        
+            path = "";
+            retryButton.option("visible", true);
+        } else {
+            cellInfo.setValue(e.request.responseText);
+            retryButton.option("visible", false);
+        }
+
+      },
+      onUploadError: function(e){
+          $path = "";
+          DevExpress.ui.notify(e.request.response,"error");
+      }
+    }).dxFileUploader("instance");
+        cellElement.append(fileUploaderElement);
+        cellElement.append(buttonElement);
+  
+  }
 
 function btnreqsubmit(reqid, mode) {
     console.log('reqidbtn', reqid);
@@ -1388,7 +1550,7 @@ function btnreqsubmit(reqid, mode) {
             Swal.fire({
                 icon: 'error',
                 title: 'Cancelled',
-                text: 'The submission has been cancelled.',
+                text: 'The submission has been cancelled.', 
                 confirmButtonColor: '#3085d6'
             });
             hideLoadingScreen();

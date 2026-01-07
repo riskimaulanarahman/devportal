@@ -41,19 +41,19 @@ class SpklRequestController extends Controller
     {
         try {
             $user_id = $this->getAuth()->id;
-            $user = auth()->user(); 
+            $user = auth()->user();
             $module_id = $this->getModuleId($this->modulename);
 
             $dataquery = $this->model->query();
 
             // Subquery: apakah pending di user ini
-            $subquery = "(select TOP 1 
+            $subquery = "(select TOP 1
                         CASE WHEN a.user_id='".$user_id."' then 1 else 0 end
                     from tbl_approverListReq l
                     left join tbl_approver a on l.approver_id=a.id
                     left join tbl_approvaltype r on a.approvaltype_id = r.id
                     where l.ApprovalAction='1'
-                    and l.req_id = request_spkl.id 
+                    and l.req_id = request_spkl.id
                     and l.module_id = '".$module_id."' 
                     and request_spkl.requestStatus='1'
                     order by a.sequence)";
@@ -278,7 +278,7 @@ class SpklRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
-public function genPdfSpkl(Request $request, $id) 
+    public function genPdfSpkl(Request $request, $id) 
     {
         $dataAppr = DB::table('spklApprover')->select('*')->where('id', $id)->get(); // Data approver
         // $requestspklDetail = DB::table('request_spkl_detail')->select('work_date', 'remarks', 'reason')->where('req_id', $id)->get();
@@ -327,7 +327,7 @@ public function genPdfSpkl(Request $request, $id)
             return response()->json(["status" => "error", "message" => "Data or dataappr not found"]);
         }
 
-        // dd($dataAppr);
+        // dd($dataAppr, $dataDetail, $data);
 
         try {
             $excel = new COM("Excel.Application");
@@ -529,7 +529,7 @@ public function genPdfSpkl(Request $request, $id)
                 foreach ($dataAppr as $appr) {
                 if ($appr->approvalAction != 3) continue;
 
-                // SPKL - BU Head
+                // SPKL - Dept Head
                 if ($appr->sequence == 3) {
                     $Worksheet->Range("G{$approverSpklRow}")->Value = $appr->apprname;
                     $Worksheet->Range("G" . ($approverSpklRow + 1))->Value = $appr->approvalDate;

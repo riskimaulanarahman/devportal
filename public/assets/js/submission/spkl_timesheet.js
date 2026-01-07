@@ -401,13 +401,11 @@ const popupContentTemplate = function (reqid, mode, options) {
         updateVisibleById(7, false);
     }
     
-    // Di luar definisi grid, saat page load
     let employeeCache = [];
 
     fetch('/devportal/api/list-getemployee')
         .then(res => res.json())
         .then(data => {
-            // Pastikan 'data' adalah array objek { id, fullname, sapid, companycode, … }
             employeeCache = data;
         })
         .catch(err => console.error('Gagal preload employee list:', err));
@@ -773,49 +771,37 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     },
                                 },                                
                                 {
-                                    caption: 'Start Work',
                                     dataField: 'ActualStartWork',
-                                    dataType: 'datetime',
+                                    width: 100,
+                                    caption: "Start Work",
+                                    format: 'dd/MM/yyyy HH:mm',
+                                    editorType: "dxDateBox",
+                                    dataType: "datetime",
                                     editorOptions: {
-                                        type: 'datetime',
-                                        displayFormat: 'yyyy-MM-dd HH:mm', 
-                                        value: (function() {
-                                            let date = new Date();   
-                                            date.setHours(0, 0, 0, 0); 
-                                            return date;
-                                        })(),
-                                        setCellValue: function(rowData, value) {
-                                        if (value) {
-                                            let date = new Date(value);
-                                            date.setMinutes(0, 0, 0);
-                                            rowData.ActualEndWork = date; 
-                                        }
+                                        displayFormat: "dd/MM/yyyy HH:mm",
+                                        type: "datetime",
                                     },
                                     validationRules: [{ type: "required" }]
-                                    },
                                 },
                                 {
-                                    caption: 'End Work',
                                     dataField: 'ActualEndWork',
-                                    dataType: 'datetime',
-                                    editorType: 'dxDateBox',
+                                    width: 100,
+                                    caption: "End Work",
+                                    format: 'dd/MM/yyyy HH:mm',
+                                    editorType: "dxDateBox",
+                                    dataType: "datetime",
                                     editorOptions: {
-                                        type: 'datetime',
-                                        displayFormat: 'yyyy-MM-dd HH:mm', 
-                                        value: (function() {
-                                            let date = new Date();   
-                                            date.setHours(0, 0, 0, 0); 
-                                            return date;
-                                        })(),
-                                        setCellValue: function(rowData, value) {
-                                            if (value) {
-                                                let date = new Date(value);
-                                                date.setMinutes(0, 0, 0);
-                                                rowData.ActualEndWork = date;   
-                                            }
-                                        },
+                                        displayFormat: "dd/MM/yyyy HH:mm",
+                                        type: "datetime",
                                     },
-                                    validationRules: [{ type: "required" }]
+                                    validationRules: [ { type: "required" }, 
+                                        { type: "custom", 
+                                            message: "End Work must be later than Start Work", 
+                                            validationCallback: function(e) { if (!e.value || !e.data.ActualStartWork) return true; 
+                                            return new Date(e.value) >= new Date(e.data.ActualStartWork); 
+                                            }
+                                        } 
+                                    ]
                                 },
                                 {
                                     caption: 'Act Total',
@@ -864,14 +850,11 @@ const popupContentTemplate = function (reqid, mode, options) {
                                     if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
                                         const totalHours = parseFloat((end - start) / (1000 * 60 * 60)).toFixed(2);
                                         e.newData.ActualTotalHours = Number(totalHours);
-
-                                        // Tidak ada perhitungan otomatis, gunakan nilai manual dari user
                                         if (normalRaw !== undefined && normalRaw !== null && normalRaw !== '') {
                                             const normal = Number(normalRaw);
                                             e.newData.ActualNormalHours = normal;
                                             e.newData.ActualOvertimeHours = Math.max(0, Math.floor(totalHours - normal));
                                         } else {
-                                            // Kalau user tidak isi, biarkan kosong
                                             e.newData.ActualNormalHours = null;
                                             e.newData.ActualOvertimeHours = 0;
                                         }

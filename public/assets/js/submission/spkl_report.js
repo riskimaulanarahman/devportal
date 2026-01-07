@@ -9,230 +9,114 @@ function moveEditColumnToLeft(dataGrid) {
     });
 }
 
+// Default awal & akhir bulan berjalan
+var today = new Date();
+var startApprovedDate = new Date(today.getFullYear(), today.getMonth(), 1);
+var endApprovedDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-var startApprovedDate = null;
-var endApprovedDate = null;
-var dataGrid = $("#gridContainer").dxDataGrid({    
+function filterApprovedData() {
+    if (startApprovedDate && endApprovedDate) {
+        dataGrid.filter([
+            ["FullApprovedDate", ">=", startApprovedDate],
+            "and",
+            ["FullApprovedDate", "<=", endApprovedDate]
+        ]);
+    }
+}
+
+var dataGrid = $("#gridContainer").dxDataGrid({
     dataSource: store(modname),
     allowColumnReordering: true,
     allowColumnResizing: true,
-    columnHidingEnabled: false,
-    rowAlternationEnabled: false,
-    wordWrapEnabled: false,
     showBorders: true,
     filterRow: { visible: true },
     filterPanel: { visible: true },
     headerFilter: { visible: true },
-    selection: { mode: "multiple" },
-    searchPanel: {
-        visible: true,
-        width: 240,
-        placeholder: 'Search...',
+    searchPanel: { 
+        visible: true, 
+        width: 240, 
+        placeholder: 'Search...' 
     },
     editing: {
-        useIcons:true,
-        mode: "popup",
-        allowAdding: false,
-        allowUpdating: false,
-        allowDeleting: false,
+        useIcons:true, 
+        mode: "popup", 
+        allowAdding: false, 
+        allowUpdating: false, 
+        allowDeleting: false 
     },
-    scrolling: {
-        mode: "virtual"
-    },
-    pager: {
-        visible: false,
-        showInfo: true,
+    scrolling: { mode: "virtual" },
+    pager: { 
+        visible: false, 
+        showInfo: true 
     },
     columns: [
-        {
-            caption: "Work Date",
-            dataField: "WorkDate",
-            dataType: "date",
-            width: 120
-        },
-        {
-            caption: "Full Approved Date",
-            dataField: "FullApprovedDate",
-            dataType: "date",
-            width: 120
-        },
-        {
-            caption: "SAP ID",
-            dataField: "SAPID",
-            width: 120
-        },
-        {
-            caption: "Name",
-            dataField: "Name",
-        },        
-        {
-            caption: "Department",
-            dataField: "Department",
-        },
-        {
-            caption: "Position",
-            dataField: "Position",
-        },
-        {
-            caption: "Business Group",
-            dataField: "BusinessGroup",
-            width: 60
-        },
-        {
-            caption: "Superior",
-            dataField: "SuperiorName",
-        },
-        {
-            caption: "Dept Head",
-            dataField: "DeptHeadName",
-        },
-        {
-            caption: "Start Work",
-            dataField: "ActualStartWork",
-            customizeText: function(cellInfo) {
-                if (cellInfo.value) {
-                    const date = new Date(cellInfo.value);
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-                }
-                return "";
-            }
-        },
-        {
-            caption: "End Work",
-            dataField: "ActualEndWork",
-            customizeText: function(cellInfo) {
-                if (cellInfo.value) {
-                    const date = new Date(cellInfo.value);
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-                }
-                return "";
-            }
-        },
-        {
-            caption: "Total Hours",
-            dataField: "ActualTotalHours",
-        },
-        {
-            caption: "Normal Hours",
-            dataField: "ActualNormalHours",
-        },
-        {
-            caption: "Overtime Hours",
-            dataField: "ActualOvertimeHours",
-        },
-        {
-            caption: "Target",
-            dataField: "Target",
-        }
+        { caption: "Work Date", dataField: "WorkDate", dataType: "date", width: 120 },
+        { caption: "Full Approved Date", dataField: "FullApprovedDate", dataType: "date", width: 120 },
+        { caption: "SAP ID", dataField: "SAPID", width: 120 },
+        { caption: "Name", dataField: "Name" },
+        { caption: "Department", dataField: "Department" },
+        { caption: "Position", dataField: "Position" },
+        { caption: "Business Group", dataField: "BusinessGroup", width: 60 },
+        { caption: "Superior", dataField: "SuperiorName" },
+        { caption: "Dept Head", dataField: "DeptHeadName" },
+        { caption: "Start Work", dataField: "ActualStartWork", customizeText: formatDateTime },
+        { caption: "End Work", dataField: "ActualEndWork", customizeText: formatDateTime },
+        { caption: "Total Hours", dataField: "ActualTotalHours" },
+        { caption: "Normal Hours", dataField: "ActualNormalHours" },
+        { caption: "Overtime Hours", dataField: "ActualOvertimeHours" },
+        { caption: "Target", dataField: "Target" }
     ],
-    columnChooser: {
-      enabled: true,
+    columnChooser: { 
+        enabled: true 
     },
-    export: {
-        enabled: true,
-        fileName: modname,
-        excelFilterEnabled: true,
-        allowExportSelectedData: true
+    export: { 
+        enabled: true, 
+        fileName: modname, 
+        excelFilterEnabled: true, 
+        allowExportSelectedData: true 
     },
     onContentReady: function(e){
         moveEditColumnToLeft(e.component);
         runpopup();
-    },
-    onCellPrepared: function (e) {
-        if (e.rowType == "data") {
-            if(e.data.isParent === 1) {
-                e.cellElement.css('background','rgba(128, 128, 0,0.1)')
-            }
-        }
+        filterApprovedData(); // default bulan berjalan
     },
     onToolbarPreparing: function(e) {
         dataGrid = e.component;
         let endDateBox;
 
-        // Tambahkan filter FullApprovedDate
         e.toolbarOptions.items.unshift(
-            {
-                location: "after",
-                widget: "dxTextBox",
-                options: {
-                    width: 100,
-                    value: "Approved From :",
-                    readOnly: true,
-                }
-            },
-            {
-                location: "after",
-                widget: "dxDateBox",
-                options: {
-                    hint: "startApprovedDate",
-                    displayFormat: "dd/MM/yyyy",
-                    width: 120,
-                    onValueChanged: function(ev) {
-                        startApprovedDate = ev.value;
-                        endApprovedDate = null;
-                        endDateBox.option("value", endApprovedDate);
-                        filterApprovedData();
-                    }
-                }
-            },
-            {
-                location: "after",
-                widget: "dxTextBox",
-                options: {
-                    value: "Approved To :",
-                    width: 100,
-                    readOnly: true,
-                }
-            },
-            {
-                location: "after",
-                widget: "dxDateBox",
-                options: {
-                    hint: "endApprovedDate",
-                    displayFormat: "dd/MM/yyyy",
-                    width: 120,
-                    onValueChanged: function(ev) {
-                        endApprovedDate = ev.value;
-                        filterApprovedData();
-                    },
-                    onInitialized: function(ev) {
-                        endDateBox = ev.component;
-                    }
-                }
-            },
-            {                       
-                location: "after",
-                widget: "dxButton",
-                options: {
-                    hint: "Refresh Data",
-                    icon: "refresh",
-                    onClick: function() {
-                        dataGrid.refresh();
-                    }
-                }
-            }
+            { location: "after", widget: "dxTextBox", options: { width: 100, value: "Approved From :", readOnly: true } },
+            { location: "after", widget: "dxDateBox", options: {
+                hint: "startApprovedDate", displayFormat: "dd/MM/yyyy", width: 120,
+                value: startApprovedDate,
+                onValueChanged: function(ev) { startApprovedDate = ev.value; filterApprovedData(); }
+            }},
+            { location: "after", widget: "dxTextBox", options: { value: "Approved To :", width: 100, readOnly: true } },
+            { location: "after", widget: "dxDateBox", options: {
+                hint: "endApprovedDate", displayFormat: "dd/MM/yyyy", width: 120,
+                value: endApprovedDate,
+                onValueChanged: function(ev) { endApprovedDate = ev.value; filterApprovedData(); },
+                onInitialized: function(ev) { endDateBox = ev.component; }
+            }},
+            { location: "after", widget: "dxButton", options: { hint: "Refresh Data", icon: "refresh", onClick: function() { dataGrid.refresh(); } } }
         )
-    },
-    onDataErrorOccurred: function(e) {
-        // Menampilkan pesan kesalahan
-        console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
-
-        // Memuat ulang Page
-        // location.reload();
     }
 }).dxDataGrid("instance");
+
+
+function formatDateTime(cellInfo) {
+    if (cellInfo.value) {
+        const date = new Date(cellInfo.value);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+    }
+    return "";
+}
 
 // Fungsi filter berdasarkan FullApprovedDate
 function filterApprovedData() {

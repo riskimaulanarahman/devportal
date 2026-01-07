@@ -22,6 +22,8 @@
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/Mom Online.pdf', '_blank')">MoM Online</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/SKYMAP System.pdf', '_blank')">SKYMAP</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/DevPortal Panduan.pdf', '_blank')">Project Management & Ticket Request</button></li>
+                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/SPKL.pdf', '_blank')">SPKL</button></li>
+                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/WPHC.pdf', '_blank')">WPHC</button></li>
                 </ul>
             </div>
         </div><!-- /.modal-content -->
