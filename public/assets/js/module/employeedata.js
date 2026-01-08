@@ -288,7 +288,7 @@ checkUserAccess(modname, usersid).then(permissions => {
             {
                 dataField: 'isActive',
                 dataType: 'boolean',
-                visible: (admin == 1) ? true : false,
+                // visible: (admin == 1) ? true : false,
                 formItem: {
                     visible: (admin == 1) ? true : false
                 },
