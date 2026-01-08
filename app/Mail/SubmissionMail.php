@@ -57,6 +57,7 @@ class SubmissionMail extends Mailable
     public $category;
     public $assignment;
     public $detailmomtask;
+    public $submitDate;
     // public $text;
     // public $final;
     // public $file;
@@ -68,7 +69,7 @@ class SubmissionMail extends Mailable
     public function __construct($mailData,$modulename,$final)
     {
         $appEnv = env('APP_ENV');
-        $url = ($appEnv == 'production') ? 'http://172.18.83.38/' : 'http://localhost/';
+        $url = ($appEnv == 'production') ? 'http://172.18.83.38/' : 'http://localhost:8086/';
         $this->module = new Module();
         $this->mailData=$mailData;
         $this->modulename=$modulename;
@@ -480,6 +481,7 @@ class SubmissionMail extends Mailable
             if($modulename == 'Capex') {
                 $request = new Request();
                 $capexController = new CapexRequestController();
+                $this->submitDate = $capexController->submitDate($mailData['submission']->id);
                 if($final == 1) {
                     $pdf = $capexController->genPdfCapex($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
@@ -662,6 +664,9 @@ class SubmissionMail extends Mailable
                 break;
             case 'Memorandum':
                 $viewblade = 'emails.HRIS.memorandummail';
+                break;
+            case 'Capex':
+                $viewblade = 'emails.capexrequestmail';
                 break;
             // case 'Wphc':
             //     $viewblade = 'emails.legalrequestmail';

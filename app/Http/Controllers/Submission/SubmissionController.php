@@ -467,12 +467,16 @@ class SubmissionController extends Controller
                 "requestStatus" => $requeststatus
             ];
 
-            // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate
-            if ($modulename == 'Jdi' && $request->action == 'submission') {
-                $dataToUpdate["submitDate"] = Carbon::now(); 
-            }
-            // Cek jika modulename adalah 'Legal' dan tambahkan submitDate
-            if ($modulename == 'Legal' && $request->action == 'submission') {
+            // // Cek jika modulename adalah 'Jdi' dan tambahkan submitDate
+            // if ($modulename == 'Jdi' && $request->action == 'submission') {
+            //     $dataToUpdate["submitDate"] = Carbon::now(); 
+            // }
+            // // Cek jika modulename adalah 'Legal' dan tambahkan submitDate
+            // if ($modulename == 'Legal' && $request->action == 'submission') {
+            //     $dataToUpdate["submitDate"] = Carbon::now(); 
+            // }
+
+            if (in_array($modulename, ['Jdi', 'Legal']) && $request->action == 'submission') { 
                 $dataToUpdate["submitDate"] = Carbon::now(); 
             }
 

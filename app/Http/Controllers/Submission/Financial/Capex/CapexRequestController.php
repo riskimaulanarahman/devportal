@@ -479,6 +479,23 @@ class CapexRequestController extends Controller
         }
     }
 
+    public function submitDate($id) {
+       $data =  $this->model->select('request_capex.*','users.username')
+                    ->leftJoin('users','request_capex.user_id','users.id')
+                    ->where('request_capex.id',$id)
+                    ->with(['code','approverHistory'])
+                    ->first(); // data submission
+
+        $originatorApproval = $data->approverHistory
+            ->where('approvalType', 'Submitted')
+            ->sortByDesc('approvalDate')
+            ->first();
+        
+        $subimissionDate = $originatorApproval->created_at; // time originator submitted submission
+        
+        return $subimissionDate;
+    }
+
     public function genPdfCapex(Request $request, $id) {
         $data =  $this->model->select('request_capex.*','users.username')
                     ->leftJoin('users','request_capex.user_id','users.id')
