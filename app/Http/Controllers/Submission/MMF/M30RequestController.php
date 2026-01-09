@@ -320,6 +320,13 @@ class M30RequestController extends Controller
                             $detail->RequisitionOther = null;
                         }
                     }
+                    if(isset($detailData['PRType'])) {
+                        if($detailData['PRType'] == 2) {
+                            $this->createApprBuHead($this->modulename, $id, $data->bu, $detailData['PRType']);
+                        } else {
+                            $this->createApprBuHead($this->modulename, $id, $data->bu, $detailData['PRType']);
+                        }
+                    }
                     $detail->update($detailData);
                 } else {
                     // Jika detail tidak ditemukan, tambahkan data baru
