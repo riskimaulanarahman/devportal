@@ -143,6 +143,7 @@ trait ApproverTrait {
                         'Department Head',
                         'Superior/Department Head',
                         'Superior',
+                        'BU Head',
                         'BCID Manager','Finance' // for JDI savingCost
                     ]);
         }

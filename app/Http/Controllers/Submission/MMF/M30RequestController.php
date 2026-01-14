@@ -504,13 +504,19 @@ class M30RequestController extends Controller
                         addPictureToWorksheet($Worksheet, $picpath, 25, 3, 30, $excel);
                     }
                 }
-                if($appr->sequence == 3) {
+                if($appr->sequence == 4) {
                     if($appr->approvalAction == 3) {
                         $Worksheet->Range("C30")->Value = $appr->apprname.' / '.$appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 30, 3, 30, $excel);
                     }
                 }
-                if($appr->sequence == 4) {
+                if($appr->sequence == 3) {
+                    if($appr->approvalAction == 3) {
+                        $Worksheet->Range("F25")->Value = $appr->apprname.' / '.$appr->approvalDate;
+                        addPictureToWorksheet($Worksheet, $picpath, 25, 7, 30, $excel);
+                    }
+                }
+                if($appr->sequence == 5) {
                     if($appr->approvalAction == 3) {
                         $Worksheet->Range("E30")->Value = $appr->apprname.' / '.$appr->approvalDate;
                         addPictureToWorksheet($Worksheet, $picpath, 30, 5, 30, $excel);
