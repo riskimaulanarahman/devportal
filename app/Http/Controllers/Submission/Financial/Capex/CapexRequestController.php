@@ -69,17 +69,34 @@ class CapexRequestController extends Controller
                 ")
                 ->leftJoin('codes','request_capex.code_id','codes.id')
                 ->with(['user','approverlist'])
-                ->where(function ($query) use ($subquery, $user_id, $isAdmin, $checker) {
-                    $query->whereRaw($subquery . " = 1")
-                        ->orWhere(function ($query) use ($user_id, $isAdmin, $checker) {
-                            if ($isAdmin || $checker) {
-                                $query->where("request_capex.user_id", "!=", $user_id)
-                                    ->whereIn("request_capex.requestStatus", [1,3,4]);
-                            }
-                        })
-                        ->orWhere("request_capex.user_id", $user_id);
+                // ->where(function ($query) use ($subquery, $user_id, $isAdmin, $checker) {
+                //     $query->whereRaw($subquery . " = 1")
+                //         ->orWhere(function ($query) use ($user_id, $isAdmin, $checker) {
+                //             if ($isAdmin || $checker) {
+                //                 $query->where("request_capex.user_id", "!=", $user_id)
+                //                     ->whereIn("request_capex.requestStatus", [1,3,4]);
+                //             } else {
+                //                 $query->where("request_capex.user_id", $user_id);
+                //             }
+                //         });
+                //         // ->orWhere("request_capex.user_id", $user_id);
+                // })
+                ->where(function ($q) use ($isAdmin, $user_id, $subquery, $checker) {
+                    if ($isAdmin) {
+                        // Admin: lihat semua request dengan status 1,3,4
+                        $q->whereIn('request_capex.requestStatus', [1, 3, 4]);
+                    } else {
+                        // Non-admin: boleh lihat jika:
+                        // - pemilik request, atau
+                        // - subquery isPendingOnMe = 1, atau
+                        // - subquery isChecker = 1
+                        $q->where(function($qq) use ($user_id, $subquery, $checker) {
+                            $qq->where('request_capex.user_id', $user_id)
+                            ->orWhereRaw($subquery . " = 1")
+                            ->orWhereRaw($checker . " = 1");
+                        });
+                    }
                 })
-                // ->orderBy("request_capex.requestStatus","asc")
                 ->orderByRaw("CASE WHEN request_capex.user_id = '".$user_id."' THEN 0 ELSE 1 END")
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("request_capex.requestStatus asc")
