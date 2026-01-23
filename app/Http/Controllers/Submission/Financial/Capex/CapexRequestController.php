@@ -560,12 +560,12 @@ class CapexRequestController extends Controller
         $emp = Employee::select('*')->with(['location','company'])->where('LoginName',$data->username)->first(); // data employee
         $exchangeRate = DB::table('reference.tbl_exchangeRate')->select('*')->first(); // data exchange Rate
         $dataAppr = DB::table('vwCapexApprover')->select('*')->where('id',$id)->orderBy('sequence')->get(); // data approver
-        $getApprExt = DB::table('reference.capex_apprExt')->select('*')->where('amount','>=',0)->where('amount','<=',$amountSumDetail)->where('category',$data->form_type.' - '.$data->request_type)->orderBy('sequence')->get();
+        // $getApprExt = DB::table('reference.capex_apprExt')->select('*')->where('amount','>=',0)->where('amount','<=',$amountSumDetail)->where('category',$data->form_type.' - '.$data->request_type)->orderBy('sequence')->get();
         // Gabungkan kedua collection dan urutkan berdasarkan sequence
-        $mergedApprovers = $dataAppr->merge($getApprExt)->sortBy('sequence');
+        // $mergedApprovers = $dataAppr->merge($getApprExt)->sortBy('sequence');
 
         // Jika Anda perlu mengubahnya kembali menjadi array
-        $resultApprovers = $mergedApprovers->values()->all();
+        // $resultApprovers = $mergedApprovers->values()->all();
         
         // dd($resultApprovers);
         // dd($data->form_type.' - '.$data->request_type);
@@ -767,13 +767,13 @@ class CapexRequestController extends Controller
                     $pic->Left = $excel->Cells($row, $column)->Left;
                 }
 
-                for ($a=3;$a<3+count($resultApprovers);$a++){
+                for ($a=3;$a<3+count($dataAppr);$a++){
 					$Worksheet3->Rows($a+1)->Copy();
 					$Worksheet3->Rows($a+1)->Insert($xlShiftDown);
-					$Worksheet3->Range("B".$a)->Value = $resultApprovers[$a-3]->apprname;
-					$Worksheet3->Range("C".$a)->Value = $resultApprovers[$a-3]->apprtype;
-					$Worksheet3->Range("D".$a)->Value = $resultApprovers[$a-3]->approvalDate;
-                    if($resultApprovers[$a-3]->approvalAction == 3) {
+					$Worksheet3->Range("B".$a)->Value = $dataAppr[$a-3]->apprname;
+					$Worksheet3->Range("C".$a)->Value = $dataAppr[$a-3]->apprtype;
+					$Worksheet3->Range("D".$a)->Value = $dataAppr[$a-3]->approvalDate;
+                    if($dataAppr[$a-3]->approvalAction == 3) {
                         addPictureToWorksheet($Worksheet3, $picpath, $a, 5, 35, $excel);
                     }
 				}
