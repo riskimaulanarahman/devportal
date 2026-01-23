@@ -5,6 +5,7 @@
         'employeedata' => 'employeedata',
         'mmf_30_request' => 'mmf30',
         'wphc_request' => 'wphc',
+        'request_capex' => 'capexhistory',
         // Tambahkan mapping lainnya di sini
     ];
 

@@ -69,18 +69,6 @@ class CapexRequestController extends Controller
                 ")
                 ->leftJoin('codes','request_capex.code_id','codes.id')
                 ->with(['user','approverlist'])
-                // ->where(function ($query) use ($subquery, $user_id, $isAdmin, $checker) {
-                //     $query->whereRaw($subquery . " = 1")
-                //         ->orWhere(function ($query) use ($user_id, $isAdmin, $checker) {
-                //             if ($isAdmin || $checker) {
-                //                 $query->where("request_capex.user_id", "!=", $user_id)
-                //                     ->whereIn("request_capex.requestStatus", [1,3,4]);
-                //             } else {
-                //                 $query->where("request_capex.user_id", $user_id);
-                //             }
-                //         });
-                //         // ->orWhere("request_capex.user_id", $user_id);
-                // })
                 ->where(function ($q) use ($isAdmin, $user_id, $subquery, $checker) {
                     if ($isAdmin) {
                         // Admin: lihat semua request dengan status 1,3,4
@@ -101,6 +89,43 @@ class CapexRequestController extends Controller
                 ->orderBy(DB::raw($subquery), 'DESC')
                 ->orderByRaw("request_capex.requestStatus asc")
                 ->get();
+
+            return response()->json([
+                'status' => "show",
+                'message' => $this->getMessage()['show'],
+                'data' => $data
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+
+        } catch (\Exception $e) {
+
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+
+    public function historyApprover(Request $request)
+    {
+        try {
+            
+            $id = $request->id;
+            $user_id = $this->getAuth()->id;
+            $employee_id = $this->getEmployeeID()->id;
+            $module_id = $this->getModuleId($this->modulename);
+            
+            $allData = collect();
+            $this->model
+                ->selectRaw("codes.code,request_capex.id,request_capex.user_id,request_capex.requestStatus,request_capex.bu,request_capex.estate,request_capex.title,request_capex.form_type,request_capex.request_type,request_capex.approveddoc")
+                ->leftJoin('codes','request_capex.code_id','codes.id')
+                ->leftJoin('tbl_approverListReq', 'request_capex.id', '=', 'tbl_approverListReq.req_id')
+                ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
+                ->where('request_capex.requestStatus', 3)
+                ->where('tbl_approverListReq.module_id', $module_id)
+                ->where('tbl_approver.employee_id', $employee_id)
+                ->chunk(2000, function ($chunk) use (&$allData) {
+                    $chunk->load(['user']);
+                    $allData = $allData->merge($chunk);
+                });
+
+            $data = $allData;
 
             return response()->json([
                 'status' => "show",

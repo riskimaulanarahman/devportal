@@ -118,6 +118,7 @@ Route::group(['prefix' => 'api'], function () {
     Route::get('capexquestion/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestQuestionController::class, 'getList']); //get list capex by req_id of module
     Route::get('capexquestioncf/{id}/{modulename}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestQuestionCFController::class, 'getList']); //get list capex by req_id of module
     Route::post('capexcheck/{id}',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class, 'checkData']); // check balance ccm with detail
+    Route::get('capexhistoryApp',[App\Http\Controllers\Submission\Financial\Capex\CapexRequestController::class, 'historyApprover']); //get list mmf30historyApp of module
 
     //Ghm
     Route::post('checkattachmentghm',[App\Http\Controllers\Submission\GhmRequestController::class, 'checkattachmentghm']); //get ghm checkattachmentghm
