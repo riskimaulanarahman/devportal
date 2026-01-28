@@ -4,5 +4,6 @@
 storage
 upload/*
 public/upload/*
+public/doc/*
 public/template/*
 public\assets\js\module\arsip
