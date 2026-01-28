@@ -434,22 +434,6 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 }
                             },
                             {
-                                dataField: 'objective',
-                                lookup: {
-                                    dataSource: [
-                                        'Cost',
-                                        'Environment',
-                                        'Moral',
-                                        'Productivity',
-                                        'Quality',
-                                        'Safety',
-                                        'Visual Control and 6S',
-                                        'Inventory turns',
-                                    ],
-                                    searchEnabled: false
-                                },
-                            },
-                            {
                                 caption: 'Category',
                                 dataField: 'ranking',
                                 lookup: {
@@ -873,6 +857,25 @@ const popupContentTemplate = function (reqid,mode,options) {
                         },
                         columns: [
                             {
+                                dataField: 'objective',
+                                lookup: {
+                                    dataSource: [
+                                        'Cost',
+                                        'Environment',
+                                        'Moral',
+                                        'Productivity',
+                                        'Quality',
+                                        'Safety',
+                                        'Visual Control and 6S',
+                                        'Inventory turns',
+                                    ],
+                                    searchEnabled: false
+                                },
+                                editorOptions: { 
+                                    readOnly: ((isMine == 1) && mode == 'edit' || mode == 'add' ) || (mode == 'approval' && isBCIDv) || (admin == 1) ? false : true,
+                                }
+                            },
+                            {
                                 caption: 'Hambatan/Tantangan/Ketidaksesuaian',
                                 dataField: 'htk',
                                 editorType: 'dxTextArea',
@@ -1041,7 +1044,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                         onEditorPreparing: function (e) {
                         },
                         onCellPrepared: function (e) {
-                            if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<3)) {
+                            if ( e.rowType == "data" && (e.column.index>=0 && e.column.index<=3 || e.column.index>=5 && e.column.index<=6)) {
                                 if (e.value === "" || e.value === null || e.value === undefined || /^\s*$/.test(e.value)) {
                                     e.cellElement.css({
                                         "backgroundColor": "#ffe6e6",
@@ -1099,7 +1102,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: "remarks",
                                 lookup: {
-                                    dataSource: ['Before','After','Supporting Document'],
+                                    dataSource: ['Before','After','Supporting Document','Impact JDI'],
                                     searchEnabled: false
                                 },
                                 validationRules: [{ type: "required" }]
@@ -1141,18 +1144,18 @@ const popupContentTemplate = function (reqid,mode,options) {
                         }
                     })
 
-                    // var downloadButton = $("<button>")
-                    //     .text("Download Proposal Guide Template")
-                    //     .addClass("btn btn-danger btn-xs")
-                    //     .appendTo(supporting);
+                    var downloadButton = $("<button>")
+                        .text("Download Table Perhitungan Impact")
+                        .addClass("btn btn-danger btn-xs")
+                        .appendTo(supporting);
 
-                    // downloadButton.click(function() {
-                    //     var fileUrl = "public/doc/Proposal Pengajuan System.pptx";
-                    //     var link = document.createElement("a");
-                    //     link.href = fileUrl;
-                    //     link.download = "Proposal Pengajuan System.pptx";
-                    //     link.click();
-                    // });
+                    downloadButton.click(function() {
+                        var fileUrl = "public/doc/perhitungan_impact.xlsx";
+                        var link = document.createElement("a");
+                        link.href = fileUrl;
+                        link.download = "perhitungan_impact.xlsx";
+                        link.click();
+                    });
 
                     return supporting;
                 }

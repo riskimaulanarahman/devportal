@@ -226,6 +226,7 @@ class SubmissionController extends Controller
             if ($modulename == 'Jdi') {
                 $hasBefore = false;
                 $hasAfter = false;
+                $hasImpact = false;
                 
                 foreach ($attachement as $attc) {
                     if ($attc->remarks === 'Before') {
@@ -235,6 +236,21 @@ class SubmissionController extends Controller
                         $hasAfter = true;
                     }
                 }
+                if(in_array($getSubmissionData->objective, ['Cost', 'Productivity','Safety','Quality'])) {
+                    foreach ($attachement as $attc) {
+                        if ($attc->remarks === 'Impact JDI') {
+                            $hasImpact = true;
+                        }
+                    }
+
+                    if (!$hasImpact) {
+                        return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Impact JDI' is required when selecting an objective from Cost, Productivity, Safety, or Quality. Please attach it."]);
+                    }
+                }
+
+                if ($getSubmissionData->sevenWaste == null) {
+                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Please select 7 Waste."]);
+                }
 
                 if (!$hasBefore) {
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Before' is required. Please attach it."]);
@@ -243,6 +259,7 @@ class SubmissionController extends Controller
                 if (!$hasAfter) {
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'After' is required. Please attach it."]);
                 }
+                
             } 
             if ($modulename == 'Legal') {
                 $hasRfc = false;

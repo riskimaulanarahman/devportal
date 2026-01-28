@@ -194,13 +194,14 @@ class JdiRequestController extends Controller
             if($request->depthead_id) {
                 $this->createApprManager($request->depthead_id, $this->modulename, $id);
             }
-
+            
             if (is_array($request->sevenWaste) && !empty($request->sevenWaste)) {
                 $requestData['sevenWaste'] = implode(",", $request->sevenWaste);
-            } else {
-                // Handle the case where it's not an array or is empty
-                $requestData['sevenWaste'] = null; // or however you want to default it
-            }
+            } 
+            // else {
+            //     // Handle the case where it's not an array or is empty
+            //     $requestData['sevenWaste'] = null; // or however you want to default it
+            // }
             
             // Mencari data berdasarkan id dan mengupdate data dengan nilai dari $requestData
             $this->addOneDayToDate($requestData);
