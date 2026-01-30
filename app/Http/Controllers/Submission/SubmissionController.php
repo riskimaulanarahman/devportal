@@ -237,8 +237,9 @@ class SubmissionController extends Controller
                     }
                 }
                 if(in_array($getSubmissionData->objective, ['Cost', 'Productivity','Safety','Quality'])) {
+                    $remarksimpact = trim(strtolower($attc->remarks));
                     foreach ($attachement as $attc) {
-                        if ($attc->remarks == 'Impact JDI') {
+                        if ($remarksimpact === 'impact jdi') {
                             $hasImpact = true;
                         }
                     }
