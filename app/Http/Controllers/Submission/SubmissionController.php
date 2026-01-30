@@ -223,7 +223,7 @@ class SubmissionController extends Controller
                 }
             }
 
-            if ($modulename == 'Jdi') {
+            if ($modulename == 'Jdi' && $getSubmissionData->requestStatus == 0) {
                 $hasBefore = false;
                 $hasAfter = false;
                 $hasImpact = false;
