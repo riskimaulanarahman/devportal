@@ -226,7 +226,7 @@ class SubmissionController extends Controller
             if ($modulename == 'Jdi' && $getSubmissionData->requestStatus == 0) {
                 $hasBefore = false;
                 $hasAfter = false;
-                $hasImpact = false;
+                // $hasImpact = false;
                 
                 foreach ($attachement as $attc) {
                     if ($attc->remarks === 'Before') {
@@ -235,11 +235,11 @@ class SubmissionController extends Controller
                     if ($attc->remarks === 'After') {
                         $hasAfter = true;
                     }
-                    if(in_array($getSubmissionData->objective, ['Cost', 'Productivity','Safety','Quality'])) {
-                        if ($attc->remarks === 'Impact JDI') {
-                            $hasImpact = true;
-                        }
-                    }
+                    // if(in_array($getSubmissionData->objective, ['Cost', 'Productivity','Safety','Quality'])) {
+                    //     if ($attc->remarks === 'Impact JDI') {
+                    //         $hasImpact = true;
+                    //     }
+                    // }
 
                 }
                 
@@ -260,9 +260,9 @@ class SubmissionController extends Controller
                     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'After' is required. Please attach it."]);
                 }
 
-                if (!$hasImpact) {
-                    return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Impact JDI' is required when selecting an objective from Cost, Productivity, Safety, or Quality. Please attach it."]);
-                }
+                // if (!$hasImpact) {
+                //     return response()->json(["status" => "error", "module" => $modulename, "message" => "Error: Supporting document 'Impact JDI' is required when selecting an objective from Cost, Productivity, Safety, or Quality. Please attach it."]);
+                // }
                 
             } 
             if ($modulename == 'Legal') {
