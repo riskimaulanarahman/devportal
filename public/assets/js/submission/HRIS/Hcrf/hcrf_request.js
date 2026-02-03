@@ -229,7 +229,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         console.log("Terjadi kesalahan saat memuat data (0):", e.error.message);
 
         // Memuat ulang Page
-        location.reload();
+        // location.reload();
     }
 }).dxDataGrid("instance");
 

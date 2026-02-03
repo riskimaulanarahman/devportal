@@ -107,6 +107,7 @@ class HomeController extends Controller
             'request_legal' => $this->getModuleId('Legal'),
             'request_wphc' => $this->getModuleId('Wphc'),
             'request_spkl' => $this->getModuleId('Spkl'),
+            'request_hris' => $this->getModuleId('Hris'),
         ]; 
         // masukan nama table dan module_id dari table tersebut
         
@@ -119,7 +120,7 @@ class HomeController extends Controller
 
         // list pending submissions
         foreach ($tables as $table => $module_id) {
-            if($table == 'request_mmf') {
+            if($table == 'request_mmf' || $table == 'request_hris') {
                 $mmfSelect = ',category';
             } else {
                 $mmfSelect = '';
@@ -140,6 +141,7 @@ class HomeController extends Controller
                 ->where($table.'.user_id', $this->getAuth()->id)
                 ->orderBy('tbl_approver.sequence','desc')
                 ->get();
+
             $count = count($results);
 
             if ($count > 0) {
@@ -201,6 +203,9 @@ class HomeController extends Controller
                             case 'request_capex':
                                 $url = 'request_capex';
                                 break;
+                            case 'request_hris_hcrf':
+                                $url = 'hcrf_request';
+                                break;
                             // Tambahkan case sesuai dengan url module
                         }
                     }
@@ -221,10 +226,10 @@ class HomeController extends Controller
 
         // list need your approval
         foreach ($tables as $table => $module_id) {
-            if($table == 'request_mmf') {
-                $mmfSelect = ',category';
+            if($table == 'request_mmf' || $table == 'request_hris') {
+                $cSelect = ',category';
             } else {
-                $mmfSelect = '';
+                $cSelect = '';
             }
 
             $subquery = "(select TOP 1 CASE WHEN a.user_id='".$user_id."'  then 1 else 0 end 
@@ -235,7 +240,7 @@ class HomeController extends Controller
                 order by a.sequence)";
 
             $results2 = DB::table($table)
-                ->selectRaw("users.fullname as creator,codes.code,".$subquery." as isPendingOnMe".$mmfSelect."
+                ->selectRaw("users.fullname as creator,codes.code,".$subquery." as isPendingOnMe".$cSelect."
                 ")
                 ->leftJoin('codes',$table.'.code_id','codes.id')
                 ->leftJoin('users', $table.'.user_id', '=', 'users.id')
@@ -248,6 +253,9 @@ class HomeController extends Controller
                 foreach ($results2 as $result2) {
                     if($table == 'request_mmf') {
                         $mmftype = ($result2->category == 'MMF30') ? '30' : '28';
+                    }
+                    if($table == 'request_hris') {
+                        $hristype = ($result2->category == 'Hcrf') ? 'Hcrf' : null;
                     }
                     $url = '';
                     if ($table) {
@@ -302,6 +310,10 @@ class HomeController extends Controller
                                 break;
                             case 'request_capex':
                                 $url = 'request_capex';
+                                break;
+                            case 'request_hris':
+                                // $url = 'hcrf_request';
+                                $url = ($hristype == 'Hcrf') ? 'hcrf_request' : null;
                                 break;
                             // Tambahkan case sesuai dengan url module
                         }

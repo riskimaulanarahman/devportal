@@ -39,8 +39,8 @@ Route::group(['prefix' => 'api'], function () {
         'advancerequest' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestController::class,
         'advancedetail' => App\Http\Controllers\Submission\Financial\Advance\AdvanceRequestDetailController::class,
         // HRIS - hcrf
-        // 'hcrfrequest' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class,
-        // 'hcrfdetail' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestDetailController::class,
+        'hcrfrequest' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestController::class,
+        'hcrfdetail' => App\Http\Controllers\Submission\HRIS\Hcrf\HcrfRequestDetailController::class,
         // financial - CCM
         'ccmrequest' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestController::class,
         'ccmdetail' => App\Http\Controllers\Submission\Financial\Ccm\CcmRequestDetailController::class,
