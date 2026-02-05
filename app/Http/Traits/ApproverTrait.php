@@ -322,77 +322,98 @@ trait ApproverTrait {
             'chairman_userid' => $userID
         ]);
     }
-    // MOM ===============================================================
+    // END MOM ===============================================================
 
     public function createApprBuHead($moduleName, $reqID, $company, $prType) { // for MMF Module urgent PR
-            // $getemployee = Employee::find($employeeID);
-            // $getuser = $this->user->where('username',$getemployee->LoginName)->whereNotNull('guid')->get();
-            $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','BU Head')->first();
 
-            $checkExistAppr = Approvaluser::where('module',$moduleName)
-                                        // ->where('employee_id',$employeeID)
-                                        ->where('approvaltype_id',$getIDapprType->id)
-                                        ->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
-                                        ->where('isActive',1)
-                                        ->get();
+        $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','BU Head')->first();
 
-            // if(count($getuser) > 0) {
-            //     $userID = $this->getUser($getemployee->LoginName)->id;
-            // } else {
-            //     $getldap = LdapUser::findBy('samaccountname',$getemployee->LoginName);
+        $checkExistAppr = Approvaluser::where('module',$moduleName)
+                                    // ->where('employee_id',$employeeID)
+                                    ->where('approvaltype_id',$getIDapprType->id)
+                                    ->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
+                                    ->where('isActive',1)
+                                    ->get();
 
-            //     if ($getldap) {
-            //         $newUser = $this->user->create([
-            //             "guid" => $getldap->getConvertedGuid(), // Add the "guid" attribute here
-            //             "domain" => "default",
-            //             "username" => $getldap['samaccountname'][0],
-            //             "fullname" => $getldap['name'][0],
-            //             "email" => $getldap['mail'][0]
-            //         ]);
+        if(count($checkExistAppr) < 1) {
+            $approver = new Approvaluser();
+            $approver->module = $moduleName;
+            $approver->user_id = $userID;
+            $approver->employee_id = $employeeID;
+            $approver->sequence = 6;
+            $approver->approvaltype_id = $getIDapprType->id;
+            $approver->save();
 
-            //         $userID = $newUser->id;
-            //     } else {
-            //         return response()->json(["status" => "error", "message" => $this->getMessage()['usernotregistered']]);
-            //     }
-
-            // }
-
-            if(count($checkExistAppr) < 1) {
-                $approver = new Approvaluser();
-                $approver->module = $moduleName;
-                $approver->user_id = $userID;
-                $approver->employee_id = $employeeID;
-                $approver->sequence = 6;
-                $approver->approvaltype_id = $getIDapprType->id;
-                $approver->save();
-
-                // Mengambil ID dari $approver yang baru disimpan
-                $newApproverId = $approver->id;
-            } else {
-                foreach($checkExistAppr as $item) {
-                    $newApproverId = $item->id;
-                }
+            // Mengambil ID dari $approver yang baru disimpan
+            $newApproverId = $approver->id;
+        } else {
+            foreach($checkExistAppr as $item) {
+                $newApproverId = $item->id;
             }
+        }
 
-            // Hapus data yang bersangkutan di tabel ApproverListReq
-            ApproverListReq::leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
-            ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
-            ->where('tbl_approverListReq.module_id', $this->getModuleId($moduleName))
-            ->where('req_id', $reqID)
-            ->where('tbl_approvaltype.ApprovalType','BU Head')
-            ->delete();
+        // Hapus data yang bersangkutan di tabel ApproverListReq
+        ApproverListReq::leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
+        ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+        ->where('tbl_approverListReq.module_id', $this->getModuleId($moduleName))
+        ->where('req_id', $reqID)
+        ->where('tbl_approvaltype.ApprovalType','BU Head')
+        ->delete();
 
-            if($prType == 2) {
-                $approverList = new ApproverListReq();
-                $approverList->req_id = $reqID;
-                $approverList->module_id = $this->getModuleId($moduleName);
-                $approverList->approver_id = $newApproverId;
-                $approverList->approvalDate = null;
-                $approverList->save();
+        if($prType == 2) {
+            $approverList = new ApproverListReq();
+            $approverList->req_id = $reqID;
+            $approverList->module_id = $this->getModuleId($moduleName);
+            $approverList->approver_id = $newApproverId;
+            $approverList->approvalDate = null;
+            $approverList->save();
+        }
+
+    }
+
+    public function createApprGMKF($moduleName, $reqID, $option) {
+
+        $getIDapprType = Approvaltype::where('Module',$moduleName)->where('ApprovalType','GM KF')->first();
+
+        $checkExistAppr = Approvaluser::where('module',$moduleName)
+                                    ->where('approvaltype_id',$getIDapprType->id)
+                                    ->where('isActive',1)
+                                    ->get();
+
+        if(count($checkExistAppr) < 1) {
+            $approver = new Approvaluser();
+            $approver->module = $moduleName;
+            $approver->user_id = $userID;
+            $approver->employee_id = $employeeID;
+            $approver->sequence = $sequence;
+            $approver->approvaltype_id = $getIDapprType->id;
+            $approver->save();
+
+            // Mengambil ID dari $approver yang baru disimpan
+            $newApproverId = $approver->id;
+        } else {
+            foreach($checkExistAppr as $item) {
+                $newApproverId = $item->id;
             }
+        }
 
+        // Hapus data yang bersangkutan di tabel ApproverListReq
+        ApproverListReq::leftJoin('tbl_approver','tbl_approverListReq.approver_id','tbl_approver.id')
+        ->leftJoin('tbl_approvaltype','tbl_approver.approvaltype_id','tbl_approvaltype.id')
+        ->where('tbl_approverListReq.module_id', $this->getModuleId($moduleName))
+        ->where('req_id', $reqID)
+        ->where('tbl_approvaltype.ApprovalType','GM KF')
+        ->delete();
 
-        // }
+        if($option == 1) {
+            $approverList = new ApproverListReq();
+            $approverList->req_id = $reqID;
+            $approverList->module_id = $this->getModuleId($moduleName);
+            $approverList->approver_id = $newApproverId;
+            $approverList->approvalDate = null;
+            $approverList->save();
+        }
+
     }
 
     // JDI ===============================================================
