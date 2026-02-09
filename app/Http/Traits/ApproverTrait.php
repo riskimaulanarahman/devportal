@@ -91,7 +91,6 @@ trait ApproverTrait {
 
     public function createApprover($moduleName, $req_id, $company, $cat_id)
     {
-        // dd($company);
         $module = Module::select('id', 'module')->where('module', $moduleName)->first();
 
         // Periksa apakah modul ada dan bukan 'Mom'
@@ -106,19 +105,26 @@ trait ApproverTrait {
             ->where('tbl_approver.isActive', 1)
             ->where('tbl_approver.autoAdd', 1);
 
-        if ($company !== null && $cat_id === null) {
-            $getApprover->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company]);
-        } elseif ($company === null && $cat_id !== null) {
-            $getApprover->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id]);
-        } 
-        elseif ($company !== null && $cat_id !== null) {
-            $getApprover->whereRaw("',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$company])
-                        ->whereRaw("',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'", [$cat_id]);
-        } else {
+        if ($company !== null) {
+            $getApprover->whereRaw(
+                "',' + companyList + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'",
+                [$company]
+            );
+        }
+
+        if ($cat_id !== null) {
+            $getApprover->whereRaw(
+                "',' + category_id + ',' LIKE '%,' + CAST(? AS NVARCHAR) + ',%'",
+                [$cat_id]
+            );
+        }
+
+        if ($company === null && $cat_id === null) {
             $checkApprNull = 0;
         }
 
-        $results = $getApprover->get();
+        $results = $getApprover->toSql();
+
 
         // Hapus data yang bersangkutan di tabel ApproverListReq
         $apprList = ApproverListReq::select('tbl_approverListReq.*')
@@ -133,7 +139,8 @@ trait ApproverTrait {
             'Legal',
             'Memorandum',
             'Wphc',
-            'Spkl'
+            'Spkl',
+            'Hris',
         ];
 
         if (in_array($moduleName, $exceptdel)) {
@@ -144,7 +151,8 @@ trait ApproverTrait {
                         'Superior/Department Head',
                         'Superior',
                         'BU Head',
-                        'BCID Manager','Finance' // for JDI savingCost
+                        'BCID Manager','Finance', // for JDI savingCost
+                        'GM KF'
                     ]);
         }
 

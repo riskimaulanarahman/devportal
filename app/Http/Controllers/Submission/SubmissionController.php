@@ -173,6 +173,8 @@ class SubmissionController extends Controller
                 ->where('req_id',$id)
                 ->where('module_id',$module_id)
                 ->get();
+
+                // dd($checkAppr);
             
             if($modulename == 'Ticket' || $modulename == 'UavMission' || $modulename == 'Hrsc') {
                 $assignment = DB::table('tbl_assignment')
@@ -345,7 +347,6 @@ class SubmissionController extends Controller
             $mailData = [];
 
             // get and update approver list
-            // dd($getSubmissionData);
             if($getSubmissionData->requestStatus == 0 || $getSubmissionData->requestStatus == 2) {
                 $company = null;
                 $category = null;

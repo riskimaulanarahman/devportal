@@ -262,9 +262,9 @@ class HcrfRequestController extends Controller
                     //         $detail->OpsCategory = null;
                     //     }
                     // }
-                    if($request->depthead_id) {
-                        $this->createApprGMKF($request->depthead_id, $this->modulename, $id);
-                    }
+                    // if($request->depthead_id) {
+                    //     $this->createApprGMKF($request->depthead_id, $this->modulename, $id);
+                    // }
                     if(isset($detailData['level'])) {
                         if($detailData['level'] == 'Manager') {
                             $this->createApprGMKF($this->modulename, $id, 1);
