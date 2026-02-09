@@ -123,7 +123,7 @@ trait ApproverTrait {
             $checkApprNull = 0;
         }
 
-        $results = $getApprover->toSql();
+        $results = $getApprover->get();
 
 
         // Hapus data yang bersangkutan di tabel ApproverListReq
