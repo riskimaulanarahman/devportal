@@ -24,7 +24,7 @@
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/DevPortal Panduan.pdf', '_blank')">Project Management & Ticket Request</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/SPKL.pdf', '_blank')">SPKL</button></li>
                     <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/WPHC.pdf', '_blank')">WPHC</button></li>
-                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/HCRF.pdf', '_blank')">WPHC</button></li>
+                    <li class="mb-1"><button class="btn btn-primary" onclick="window.open('{{ env('APP_URL') }}/public/upload/panduan/HCRF.pdf', '_blank')">HCRF</button></li>
                 </ul>
             </div>
         </div><!-- /.modal-content -->
