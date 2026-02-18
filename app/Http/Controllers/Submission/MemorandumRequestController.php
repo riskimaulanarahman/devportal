@@ -117,10 +117,10 @@ class MemorandumRequestController extends Controller
                     ->orderByDesc('r.id')
                     ->get();
             //iki ketika data sudah banyak
-            $data = $data->filter(function ($item) {
-                return is_null($item->dayToExp) || 
-                    (is_numeric($item->dayToExp) && $item->dayToExp < 60);
-            })->values();
+            // $data = $data->filter(function ($item) {
+            //     return is_null($item->dayToExp) || 
+            //         (is_numeric($item->dayToExp) && $item->dayToExp < 60);
+            // })->values();
 
             if ($data->isEmpty()) {
                 return response()->json([
