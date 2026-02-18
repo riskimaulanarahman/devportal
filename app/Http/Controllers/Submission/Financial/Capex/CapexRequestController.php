@@ -117,7 +117,7 @@ class CapexRequestController extends Controller
                 ->leftJoin('codes','request_capex.code_id','codes.id')
                 ->leftJoin('tbl_approverListReq', 'request_capex.id', '=', 'tbl_approverListReq.req_id')
                 ->leftJoin('tbl_approver', 'tbl_approverListReq.approver_id', '=', 'tbl_approver.id')
-                ->where('request_capex.requestStatus', 3)
+                ->whereIn('request_capex.requestStatus', [1,3,4])
                 ->where('tbl_approverListReq.module_id', $module_id)
                 ->where('tbl_approver.employee_id', $employee_id)
                 ->chunk(2000, function ($chunk) use (&$allData) {
