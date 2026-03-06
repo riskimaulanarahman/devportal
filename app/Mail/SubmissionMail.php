@@ -485,7 +485,7 @@ class SubmissionMail extends Mailable
                 if($final == 1) {
                     $pdf = $capexController->genPdfCapex($request,$mailData['submission']->id);
                     $this->attach($url."devportal/".$pdf); // add attachment to mail
-                    foreach ($Mailrecipient as $cc) {
+                    foreach ($MailrecipientNoBu as $cc) {
                         $this->cc($cc->email); // cc
                     }
                 }

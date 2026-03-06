@@ -70,11 +70,17 @@ class JdiRequestController extends Controller
                             if ($isAdmin) {
                                 $query->where("request_jdi.user_id", "!=", $user_id)
                                     ->whereIn("request_jdi.requestStatus", [1,3,4]);
-                            } else {
-                                $query->where("request_jdi.user_id", "!=", $user_id)
-                                    ->whereIn("request_jdi.requestStatus", [3])
-                                    ->where("bu",$this->getEmployeeID()->companycode);
-                            }
+                            } 
+                            //  else {
+                            //     $query->where("request_jdi.user_id", "!=", $user_id)
+                            //         ->whereIn("request_jdi.requestStatus", [3])
+                            //         ->where("bu",$this->getEmployeeID()->companycode);
+                            // }
+                            // else {
+                            //     $query->where("request_jdi.user_id", "!=", $user_id)
+                            //         ->whereIn("request_jdi.requestStatus", [3])
+                            //         ->where("bu",$this->getEmployeeID()->companycode);
+                            // }
                         })             
                         ->orWhere("request_jdi.user_id", $user_id);
                 })
