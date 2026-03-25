@@ -64,10 +64,10 @@ class JdiRequestController extends Controller
                 ")
                 ->leftJoin('codes','request_jdi.code_id','codes.id')
                 ->with(['user','approverlist'])
-                ->where(function ($query) use ($subquery, $user_id, $isAdmin) {
+                ->where(function ($query) use ($subquery, $user_id, $isAdmin, $getbcidv) {
                     $query->whereRaw($subquery . " = 1")
-                        ->orWhere(function ($query) use ($user_id, $isAdmin) {
-                            if ($isAdmin) {
+                        ->orWhere(function ($query) use ($user_id, $isAdmin, $getbcidv) {
+                            if ($isAdmin || $getbcidv) {
                                 $query->where("request_jdi.user_id", "!=", $user_id)
                                     ->whereIn("request_jdi.requestStatus", [1,3,4]);
                             } 
