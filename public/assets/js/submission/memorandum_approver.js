@@ -128,7 +128,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             dataField: "JoinDate",
             alignment: "left",
             dataType: "date",
-            format: "dd-MM-yyyy"
+            format: "dd MMMM yyyy"
         },       
         { 
             caption: 'Retirement Date',
@@ -136,7 +136,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             // width: 180,
             alignment: "left",
             dataType: "date",
-            format: "dd-MM-yyyy"
+            format: "dd MMMM yyyy"
         },
         { 
             caption: 'End Contract',
@@ -144,7 +144,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             // width: 180,
             alignment: "left",
             dataType: "date",
-            format: "dd-MM-yyyy"
+            format: "dd MMMM yyyy"
         },
         {
             dataField: 'requestStatus',
@@ -408,7 +408,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Birth of Date',                                    
                                 dataField: 'BirthOfDate',
                                 dataType: 'date',
-                                format: "dd-MM-yyyy",
+                                format: "dd MMMM yyyy",
                                 editorOptions: { 
                                     readOnly: true
                                 },
@@ -417,7 +417,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Date of Hire',
                                 dataField: 'JoinDate',
                                 dataType: 'date',
-                                format: "dd-MM-yyyy",
+                                format: "dd MMMM yyyy",
                                 editorOptions: { 
                                     readOnly: true
                                 },
@@ -452,7 +452,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: "created_at",
                                 dataType: "date",
-                                format: "dd-MM-yyyy",
+                                format: "dd MMMM yyyy",
                                 editorOptions: { 
                                     readOnly: true
                                 }
@@ -647,13 +647,15 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Start Contract',
                                 dataField: 'startContract',
                                 dataType: "date",
-                                validationRules: [{ type: "required" }]
+                                validationRules: [{ type: "required" }],
+                                format: "dd MMMM yyyy",
                             },
                             {
                                 caption: 'End Contract',
                                 dataField: 'endContract',
                                 dataType: "date",
-                                validationRules: [{ type: "required" }]
+                                validationRules: [{ type: "required" }],
+                                format: "dd MMMM yyyy",
                             },
                             {
                                 caption: 'Comments',
@@ -841,7 +843,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                             {
                                 dataField: "approvalDate",
                                 dataType: "datetime",
-                                format: "dd-MM-yyyy hh:mm:ss",
+                                format: "dd MMMM yyyy hh:mm:ss",
                             },
                             {
                                 caption: "Approval Status",
@@ -995,7 +997,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: "Date",
                                 dataField: "approvalDate",
                                 dataType: "datetime",
-                                format: "dd-MM-yyyy hh:mm:ss",
+                                format: "dd MMMM yyyy hh:mm:ss",
                             },
                             {
                                 caption: "Action",

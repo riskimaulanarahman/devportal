@@ -63,7 +63,7 @@ $.getJSON(apiurl + "/" + modname, function(res) {
         dataField: "BirthOfDate",
         caption: "Birth Date",
         dataType: "date",
-        format: "dd MMM yyyy"
+        format: "dd MMMM yyyy"
       }
     ],
 
