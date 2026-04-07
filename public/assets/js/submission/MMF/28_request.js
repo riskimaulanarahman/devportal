@@ -404,7 +404,8 @@ const popupContentTemplate = function (reqid,mode,options) {
                             useIcons:true,
                             mode: "cell",
                             allowAdding: false,
-                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            // allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowUpdating: ((isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isBuyer == 1 ? true : false),
                             allowDeleting: false,
                         },
                         scrolling: {
@@ -437,16 +438,25 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 caption: 'Work Order No',
                                 dataField: 'detail28.WONumber',
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
                                 caption: 'Charge Code',
                                 dataField: 'detail28.ChargeCode',
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
                                 caption: 'Material Dispatch No',
                                 dataField: 'detail28.MaterialDispatch',
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
                                 caption: 'Required By (Date)',
@@ -454,21 +464,36 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 dataType: "date",
                                 format: "dd-MM-yyyy", 
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    readOnly: true
+                                }
                             },
                             {
                                 caption: 'Material Code',
                                 dataField: 'detail28.MaterialCode',
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    height: 50,
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
+                                }
                             },
                             {
                                 caption: 'Material Description',
                                 dataField: 'detail28.MaterialDescr',
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    height: 50,
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
+                                }
                             },
                             {
                                 caption: 'Symptoms (Problem)',
                                 dataField: 'detail28.Symptomps',
                                 validationRules: [{ type: "required" }],
+                                editorOptions: { 
+                                    height: 50,
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
+                                }
                             },
                             {
                                 caption: 'Telp No',
@@ -607,7 +632,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                     dataGrid11.columnOption('detail28.RequiredOther', 'visible', visibleRequiredType);
                                 },
                                 editorOptions: { 
-                                    readOnly: (mode == 'approval') ? true : false
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
                                 },
                                 validationRules: [{ type: "required" }]
                             },
@@ -617,7 +642,7 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorType: 'dxTextArea',
                                 editorOptions: { 
                                     height: 50,
-                                    readOnly: (mode == 'approval') ? true : false
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
                                 },
                                 visible: visibleRequiredType,
                                 validationRules: validationRequiredType,
@@ -628,7 +653,34 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorType: 'dxTextArea',
                                 editorOptions: { 
                                     height: 50,
-                                    readOnly: (mode == 'approval') ? true : false
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
+                                }
+                            },                            
+                            {
+                                caption: 'Unit Spesifications',
+                                dataField: 'detail28.unitSpesifications',
+                                editorType: 'dxTextArea',
+                                editorOptions: { 
+                                    height: 50,
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
+                                }
+                            },
+                            {
+                                caption: 'Unit Positions',
+                                dataField: 'detail28.unitPositions',
+                                editorType: 'dxTextArea',
+                                editorOptions: { 
+                                    height: 50,
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
+                                }
+                            },
+                            {
+                                caption: 'Damage Identifications',
+                                dataField: 'detail28.demageIdentifications',
+                                editorType: 'dxTextArea',
+                                editorOptions: { 
+                                    height: 50,
+                                    readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
                                 }
                             },
                             {
