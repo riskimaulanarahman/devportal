@@ -548,6 +548,77 @@ $('#HistoryButton').on('click',function(){
                 dataField: 'code',
                 width: 180,
             },
+            {
+                caption: 'Action',
+                width: 140,
+                cellTemplate: function(container, options) {
+
+                    var isMine = options.data.isMine;
+                    var isPendingOnMe = options.data.isPendingOnMe;
+                    var reqid = options.data.id;
+                    var reqstatus = options.data.requestStatus;
+                    var mode = (reqstatus == 0 || reqstatus == 2 && (isMine == 1)) ? 'edit' : (reqstatus == 1 && ((isMine == 0 && isPendingOnMe == 1) || (isMine == 1 && isPendingOnMe == 1)) ? 'approval' : 'view') ;
+                    var arrColor = [
+                        "btn-secondary",
+                        (mode == 'approval' && reqstatus == 1) ? "btn-danger" : "btn-primary",
+                        "btn-warning",
+                        "btn-success",
+                        "btn-danger",
+                    ];
+
+                    var viewIcon = (mode == 'approval' && reqstatus == 1) ? "fa-check" : "fa-search";
+        
+                    $('<button class="btn '+arrColor[reqstatus]+'" id="btnreqid'+reqid+'"><i class="fa '+viewIcon+'"></i></button>').on('dxclick', function(evt) {
+                        evt.stopPropagation();
+                    
+                                popup.option({
+                                    contentTemplate: () => popupContentTemplate(reqid,mode,options),
+                                });
+                                popup.show();
+
+                    }).appendTo(container);
+                    if((reqstatus == 1 || reqstatus == 2) && ((isMine == 1 && (isPendingOnMe == 0 || isPendingOnMe == null)))) {
+                        $('<button class="btn btn-danger" id="btnreqid'+reqid+'" style="margin-left: 3px;">Cancel</button>').on('dxclick', function(evt) {
+                            evt.stopPropagation();
+
+                            Swal.fire({
+                                title: 'Are you sure?',
+                                text: "Are you sure you want to cancel this submission?",
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#d33',
+                                cancelButtonColor: '#3085d6',
+                                confirmButtonText: 'Yes, cancel it'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                sendRequest(apiurl + "/submissionrequest/"+reqid+"/"+modelclass, "POST", {
+                                    requestStatus:0,
+                                    action:'submission',
+                                    approvalAction: 0
+                                }).then(function(response){
+                                    if(response.status != 'error') {
+                                        dataGrid.refresh();
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Saved',
+                                            text: 'The submission has been cancelled.',
+                                        });
+                                    }
+                                });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Cancelled',
+                                        text: 'The submission cancellation has been cancelled.'
+                                    });
+                                }
+                            });
+        
+                        }).appendTo(container); 
+                    }
+                
+                }
+            },
             { 
                 caption: 'BU',
                 dataField: "bu",
@@ -2090,9 +2161,9 @@ const popupContentTemplate = function (reqid,mode,options) {
                         editing: {
                             useIcons:true,
                             mode: "popup",
-                            allowAdding: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowUpdating: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
-                            allowDeleting: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 ? true : false),
+                            allowAdding: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isPendingOnMe == 1 ? true : false),
+                            allowUpdating: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isPendingOnMe == 1 ? true : false),
+                            allowDeleting: (((isMine == 1) && mode == 'view') ? true : (isMine == 1) && mode == 'edit' || mode == 'add' ) ? true : (admin == 1 || isPendingOnMe == 1 ? true : false),
                         },
                         paging: { enabled: true, pageSize: 10 },
                         columns: [
