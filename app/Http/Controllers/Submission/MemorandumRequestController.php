@@ -156,7 +156,6 @@ class MemorandumRequestController extends Controller
                         ->first();
 
                     if ($getSubmissionData) {
-                        // Ambil semua user yang punya akses ke modul Memorandum
                         $getCreators = DB::table(DB::raw('[authorization].[tbl_useraccess] as ua'))
                             ->join(DB::raw('[users]'), 'ua.employee_id', '=', 'users.id')
                             ->join(DB::raw('[reference].[tbl_module] as m'), 'ua.module_id', '=', 'm.id')
@@ -170,10 +169,9 @@ class MemorandumRequestController extends Controller
                             ->first();
 
                         foreach ($getCreators as $creator) {
-                            if (isset($creator->email)) {
+                            if (!empty($creator->email)) {
                                 $email = $creator->email;
 
-                                // Simpan data per email
                                 $grouped[$email]['getCreator'] = $creator;
                                 $grouped[$email]['submissions'][] = (object)[
                                     'bu'              => $r->bu ?? '-',
@@ -209,6 +207,7 @@ class MemorandumRequestController extends Controller
             }
         }
     }
+
 
     public function show($id)
         {
