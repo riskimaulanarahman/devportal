@@ -144,71 +144,71 @@ class MemorandumRequestController extends Controller
 
 
     public function reminderNotificationMessage($mode)
-{
-    if ($mode == 'reminder') {
-        $getReminderMemo = DB::table('memoExp')->get();
-        $grouped = [];
+    {
+        if ($mode == 'reminder') {
+            $getReminderMemo = DB::table('memoExp')->get();
+            $grouped = [];
 
-        foreach ($getReminderMemo as $r) {
-            if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= -30) {
-                $getSubmissionData = DB::table('request_memorandum')
-                    ->where('employee_id', $r->id)
-                    ->first();
-
-                if ($getSubmissionData) {
-                    // Ambil semua user yang punya akses ke modul Memorandum
-                    $getCreators = DB::table(DB::raw('[authorization].[tbl_useraccess] as ua'))
-                        ->join(DB::raw('[users]'), 'ua.employee_id', '=', 'users.id')
-                        ->join(DB::raw('[reference].[tbl_module] as m'), 'ua.module_id', '=', 'm.id')
-                        ->select('users.email', 'users.fullname', 'm.module')
-                        ->where('m.module', 'Memorandum')
-                        ->where('ua.allowView', 1)
-                        ->get();
-
-                    $getDetailData = DB::table('request_memorandum_detail')
-                        ->where('req_id', $getSubmissionData->id)
+            foreach ($getReminderMemo as $r) {
+                if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= -30) {
+                    $getSubmissionData = DB::table('request_memorandum')
+                        ->where('employee_id', $r->id)
                         ->first();
 
-                    foreach ($getCreators as $creator) {
-                        if (isset($creator->email)) {
-                            $email = $creator->email;
+                    if ($getSubmissionData) {
+                        // Ambil semua user yang punya akses ke modul Memorandum
+                        $getCreators = DB::table(DB::raw('[authorization].[tbl_useraccess] as ua'))
+                            ->join(DB::raw('[users]'), 'ua.employee_id', '=', 'users.id')
+                            ->join(DB::raw('[reference].[tbl_module] as m'), 'ua.module_id', '=', 'm.id')
+                            ->select('users.email', 'users.fullname', 'm.module')
+                            ->where('m.module', 'Memorandum')
+                            ->where('ua.allowView', 1)
+                            ->get();
 
-                            $grouped[$email]['getCreator'] = $creator;
-                            $grouped[$email]['submissions'][] = (object)[
-                                'bu'              => $r->bu ?? '-',
-                                'emp_name'        => $r->FullName ?? '-',
-                                'dayToExp'        => $r->dayToExp ?? '-',
-                                'contract_status' => $r->contract_status ?? '-',
-                                'retirement_date' => $r->retirement_date ?? '-',
-                                'sequence'        => $getDetailData->sequence ?? '-',
-                                'startContract'   => $getDetailData->startContract ?? '-',
-                                'endContract'     => $getDetailData->endContract ?? '-',
-                                'remarks'         => $getDetailData->remarks ?? '-',
-                            ];
+                        $getDetailData = DB::table('request_memorandum_detail')
+                            ->where('req_id', $getSubmissionData->id)
+                            ->first();
+
+                        foreach ($getCreators as $creator) {
+                            if (isset($creator->email)) {
+                                $email = $creator->email;
+
+                                // Simpan data per email
+                                $grouped[$email]['getCreator'] = $creator;
+                                $grouped[$email]['submissions'][] = (object)[
+                                    'bu'              => $r->bu ?? '-',
+                                    'emp_name'        => $r->FullName ?? '-',
+                                    'dayToExp'        => $r->dayToExp ?? '-',
+                                    'contract_status' => $r->contract_status ?? '-',
+                                    'retirement_date' => $r->retirement_date ?? '-',
+                                    'sequence'        => $getDetailData->sequence ?? '-',
+                                    'startContract'   => $getDetailData->startContract ?? '-',
+                                    'endContract'     => $getDetailData->endContract ?? '-',
+                                    'remarks'         => $getDetailData->remarks ?? '-',
+                                ];
+                            }
                         }
                     }
                 }
             }
-        }
-
-        foreach ($grouped as $email => $payload) {
+            $allRecipients = array_keys($grouped);
+            $allSubmissions = collect($grouped)->pluck('submissions')->flatten()->toArray();
             $mailData = [
                 "all"         => 1,
                 "action_id"   => 0,
                 "submission"  => null,
-                "submissions" => $payload['submissions'],
-                "email"       => $email,
-                "fullname"    => $payload['getCreator']->fullname ?? '-',
+                "submissions" => $allSubmissions,
+                "email"       => implode(',', $allRecipients), // hanya untuk info
+                "fullname"    => 'All Recipients',
                 "message"     => $this->mailMessage()['deadlineTaskReminder'],
                 "mailType"    => "reminder",
             ];
 
-            // Kirim email ke masing-masing recipient
-            Mail::to($email)->send(new ReminderMail($mailData, $this->modulename, 1));
+            if (!empty($allRecipients)) {
+                Mail::to($allRecipients)->send(new ReminderMail($mailData, $this->modulename, 1));
+            }
         }
     }
-}
-
 
     public function show($id)
         {
