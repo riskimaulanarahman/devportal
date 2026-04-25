@@ -147,8 +147,21 @@ class MemorandumRequestController extends Controller
     {
         if ($mode == 'reminder') {
             $getReminderMemo = DB::table('memoExp')->get();
-            $grouped = [];
 
+            // Ambil semua user yang punya akses ke modul Memorandum (sekali saja)
+            $getCreators = DB::table(DB::raw('[authorization].[tbl_useraccess] as ua'))
+                ->join(DB::raw('[users]'), 'ua.employee_id', '=', 'users.id')
+                ->join(DB::raw('[reference].[tbl_module] as m'), 'ua.module_id', '=', 'm.id')
+                ->select('users.email', 'users.fullname', 'm.module')
+                ->where('m.module', 'Memorandum')
+                ->where('ua.allowView', 1)
+                ->get();
+
+            // Ambil semua email penerima unik
+            $allRecipients = $getCreators->pluck('email')->filter()->unique()->toArray();
+
+            // Kumpulkan semua submissions dari memo
+            $allSubmissions = [];
             foreach ($getReminderMemo as $r) {
                 if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= -30) {
                     $getSubmissionData = DB::table('request_memorandum')
@@ -156,41 +169,26 @@ class MemorandumRequestController extends Controller
                         ->first();
 
                     if ($getSubmissionData) {
-                        $getCreators = DB::table(DB::raw('[authorization].[tbl_useraccess] as ua'))
-                            ->join(DB::raw('[users]'), 'ua.employee_id', '=', 'users.id')
-                            ->join(DB::raw('[reference].[tbl_module] as m'), 'ua.module_id', '=', 'm.id')
-                            ->select('users.email', 'users.fullname', 'm.module')
-                            ->where('m.module', 'Memorandum')
-                            ->where('ua.allowView', 1)
-                            ->get();
-
                         $getDetailData = DB::table('request_memorandum_detail')
                             ->where('req_id', $getSubmissionData->id)
                             ->first();
 
-                        foreach ($getCreators as $creator) {
-                            if (!empty($creator->email)) {
-                                $email = $creator->email;
-
-                                $grouped[$email]['getCreator'] = $creator;
-                                $grouped[$email]['submissions'][] = (object)[
-                                    'bu'              => $r->bu ?? '-',
-                                    'emp_name'        => $r->FullName ?? '-',
-                                    'dayToExp'        => $r->dayToExp ?? '-',
-                                    'contract_status' => $r->contract_status ?? '-',
-                                    'retirement_date' => $r->retirement_date ?? '-',
-                                    'sequence'        => $getDetailData->sequence ?? '-',
-                                    'startContract'   => $getDetailData->startContract ?? '-',
-                                    'endContract'     => $getDetailData->endContract ?? '-',
-                                    'remarks'         => $getDetailData->remarks ?? '-',
-                                ];
-                            }
-                        }
+                        $allSubmissions[] = (object)[
+                            'bu'              => $r->bu ?? '-',
+                            'emp_name'        => $r->FullName ?? '-',
+                            'dayToExp'        => $r->dayToExp ?? '-',
+                            'contract_status' => $r->contract_status ?? '-',
+                            'retirement_date' => $r->retirement_date ?? '-',
+                            'sequence'        => $getDetailData->sequence ?? '-',
+                            'startContract'   => $getDetailData->startContract ?? '-',
+                            'endContract'     => $getDetailData->endContract ?? '-',
+                            'remarks'         => $getDetailData->remarks ?? '-',
+                        ];
                     }
                 }
             }
-            $allRecipients = array_keys($grouped);
-            $allSubmissions = collect($grouped)->pluck('submissions')->flatten()->toArray();
+
+            // Susun data email sekali saja
             $mailData = [
                 "all"         => 1,
                 "action_id"   => 0,
@@ -202,11 +200,13 @@ class MemorandumRequestController extends Controller
                 "mailType"    => "reminder",
             ];
 
+            // Kirim sekali ke semua penerima
             if (!empty($allRecipients)) {
                 Mail::to($allRecipients)->send(new ReminderMail($mailData, $this->modulename, 1));
             }
         }
     }
+
 
 
     public function show($id)
