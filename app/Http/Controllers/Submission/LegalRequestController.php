@@ -79,7 +79,7 @@ class LegalRequestController extends Controller
                     ".$nextApproverName." as nextApproverName
                 ")
                 ->leftJoin('codes','request_legal.code_id','codes.id')
-                ->with(['user','approverlist'])
+                ->with(['user','approverlist', 'Rfc'])
                 ->where(function ($query) use ($subquery, $user_id) {
                     $query->whereRaw($subquery . " = 1")
                         ->orWhere(function ($query) use ($user_id) {
