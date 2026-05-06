@@ -131,6 +131,22 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             alignment: "left",
         },
         {
+            caption: 'RFC Number',
+            dataField: 'rfcNumber',
+        },
+        {
+            caption: 'Contract No',
+            dataField: 'contractNumber',
+        },
+        {
+            caption: 'Start Contract',
+            dataField: 'rfc.PeriodStart',
+        },
+        {
+            caption: 'End Contract',
+            dataField: 'rfc.PeriodEnd',
+        },
+        {
             dataField: 'requestStatus',
             encodeHtml: false,
             allowFiltering: false,

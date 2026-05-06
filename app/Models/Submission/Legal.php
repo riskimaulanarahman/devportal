@@ -82,9 +82,10 @@ class Legal extends Model
     {
         return $this->belongsTo(Code::class);
     }
-    // public function Rfc()
-    // {
-    //     return $this->belongsTo(Rfc::class);
-    // }
+    
+    public function Rfc()
+    {
+        return $this->belongsTo(Rfc::class, 'rfcNumber');
+    }
 
 }
