@@ -132,7 +132,7 @@ var dataGrid = $("#gridContainer").dxDataGrid({
         },
         {
             caption: 'RFC Number',
-            dataField: 'rfcNumber',
+            dataField: 'rfc.RFCNo',
         },
         {
             caption: 'Contract No',
