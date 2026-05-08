@@ -35,69 +35,70 @@ class MemorandumDetailController extends Controller
     }
 
     public function store(Request $request)
-    {
-        
-        DB::beginTransaction();
+{
+    DB::beginTransaction();
 
-        try {
-            $request->validate([
-                'superior_id'    => 'required|integer',
-                'startContract'  => 'required|date',
-                'endContract'    => 'required|date|after_or_equal:startContract',
+    try {
+        $request->validate([
+            'superior_id'    => 'required|integer',
+            'startContract'  => 'required|date',
+            'endContract'    => 'required|date|after_or_equal:startContract',
+        ]);
+
+        $now = Carbon::now();
+        $year = $now->year;
+        $month = $now->format('m');
+        $count = MemorandumDetail::whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->count();
+        $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        $code_id = "ContractEmp/{$year}/{$month}/{$sequence}";
+
+        $requestData = $request->all();
+        $requestData['code_id'] = $code_id;
+
+        // 🔹 Ambil sysid dari parent request_memorandum, bukan dari memoExp
+        $parent = DB::table('request_memorandum')
+            ->where('id', $requestData['req_id'])
+            ->select('sysid','bu','employee_id')
+            ->first();
+
+        $requestData['sysid'] = $parent->sysid;
+        $requestData['bu']    = $parent->bu;
+        $requestData['user_id'] = $this->getAuth()->id;
+
+        $getMaxSequence = MemorandumDetail::where('req_id', $requestData['req_id'])
+            ->orderBy('sequence', 'desc')
+            ->value('sequence');
+
+        $requestData['sequence'] = $getMaxSequence + 1;
+
+        if ($request->superior_id) {
+            $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $request->req_id);
+        }
+
+        $checkdata = $this->model
+            ->where('req_id', $request->req_id)
+            ->whereNull('approveddoc')
+            ->count();
+
+        if ($checkdata > 0) {
+            return response()->json([
+                "status"  => "error",
+                "message" => $this->getMessage()['contractexist']
             ]);
+        }
 
-            $now = Carbon::now();
-            $year = $now->year;
-            $month = $now->format('m');
-            $count = MemorandumDetail::whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->count();
-            $sequence = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-            $code_id = "ContractEmp/{$year}/{$month}/{$sequence}";
-            $requestData = $request->all();
-            $requestData['code_id'] = $code_id;
+        $this->model->create($requestData);
 
-            $getme = DB::table('memoExp')
-                ->where('id', $requestData['req_id'])
-                ->select('sys_id', 'bu')
-                ->first();
-
-            $getMaxSequence = MemorandumDetail::where('req_id', $requestData['req_id'])
-                ->orderBy('sequence', 'desc')
-                ->value('sequence');
-
-            $requestData['user_id']   = $this->getAuth()->id;
-            $requestData['sequence']  = $getMaxSequence + 1;
-            $requestData['code_id']   = $code_id;
-
-            if ($request->superior_id) {
-                $this->createApprSuperiorDepthead($request->superior_id, $this->modulename, $request->req_id);
-            }
-
-            $checkdata = $this->model
-                ->where('req_id', $request->req_id)
-                ->whereNull('approveddoc')
-                ->count();
-
-            if ($checkdata > 0) {
-                return response()->json([
-                    "status"  => "error",
-                    "message" => $this->getMessage()['contractexist']
-                ]);
-            }
-
-            $this->model->create($requestData);
-
-            // 🔹 Cek dan ubah contract_status karyawan jadi 'CONTRACT'
-            if ($requestData['sequence'] == 2) {
-            $employeeId = DB::table('request_memorandum')
-                ->where('id', $requestData['req_id'])
-                ->value('employee_id');
+        // 🔹 Update contract_status jika sequence = 2
+        if ($requestData['sequence'] == 2) {
+            $employeeId = $parent->employee_id;
 
             if ($employeeId) {
                 $currentStatus = DB::table('employee.tbl_employee')
-                ->where('id', $employeeId)
-                ->value('contract_status');
+                    ->where('id', $employeeId)
+                    ->value('contract_status');
 
                 if (strtoupper($currentStatus) === 'PERMANENT') {
                     DB::table('employee.tbl_employee')
@@ -124,49 +125,49 @@ class MemorandumDetailController extends Controller
     }
 
 
-    public function show($id)
-    {
-        try {
-            $data = $this->model
-                ->select('request_memorandum_detail.*')                
-                // ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
-                ->where('request_memorandum_detail.id', $id)
-                ->with(['user'])
-                ->first();
+    // public function show($id)
+    // {
+    //     try {
+    //         $data = $this->model
+    //             ->select('request_memorandum_detail.*')                
+    //             // ->leftJoin('codes', 'request_memorandum_detail.code_id', '=', 'codes.id')
+    //             ->where('request_memorandum_detail.id', $id)
+    //             ->with(['user'])
+    //             ->first();
 
-            if (!$data) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Data tidak ditemukan untuk ID: ' . $id
-                ]);
-            }
+    //         if (!$data) {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'Data tidak ditemukan untuk ID: ' . $id
+    //             ]);
+    //         }
 
-            // if ($data->code_id == null) {
-            //     $data->code_id = $this->generateCode($this->modulename);
-            //     $data->save();
-            // }
-            if ($data->code_id == null) {
-            // Buat kode manual tanpa generateCode()
-            $datePart = now()->format('Ymd');
-            $sequence = str_pad($data->sequence ?? 1, 3, '0', STR_PAD_LEFT); // default ke 001 kalau sequence belum ada
+    //         // if ($data->code_id == null) {
+    //         //     $data->code_id = $this->generateCode($this->modulename);
+    //         //     $data->save();
+    //         // }
+    //         if ($data->code_id == null) {
+    //         // Buat kode manual tanpa generateCode()
+    //         $datePart = now()->format('Ymd');
+    //         $sequence = str_pad($data->sequence ?? 1, 3, '0', STR_PAD_LEFT); // default ke 001 kalau sequence belum ada
 
-            $data->code_id = "Memo-{$datePart}-{$sequence}";
-            $data->save();
-            }
+    //         $data->code_id = "Memo-{$datePart}-{$sequence}";
+    //         $data->save();
+    //         }
 
-            return response()->json([
-                'status' => 'show',
-                'message' => $this->getMessage()['show'],
-                'data' => $data
-            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
+    //         return response()->json([
+    //             'status' => 'show',
+    //             'message' => $this->getMessage()['show'],
+    //             'data' => $data
+    //         ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ]);
+    //     }
+    // }
 
 
     public function getList($id, $modulename)

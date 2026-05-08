@@ -54,7 +54,8 @@ Route::group(['prefix' => 'api'], function () {
         'memorandum_request' => App\Http\Controllers\Submission\MemorandumRequestController::class,
         'memorandum_detail' => App\Http\Controllers\Submission\MemorandumDetailController::class,        
         'memorandum_approver' => App\Http\Controllers\Submission\MemorandumApproverController::class,
-        'memorandum_report' => App\Http\Controllers\MemorandumReportController::class,        
+        'memorandum_report' => App\Http\Controllers\MemorandumReportController::class,
+        'memorandum-import' => App\Http\Controllers\Submission\MemorandumImportController::class,        
         //legal
         'legalrequest' => App\Http\Controllers\Submission\LegalRequestController::class,
         //wphc

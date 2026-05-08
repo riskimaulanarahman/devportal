@@ -45,94 +45,60 @@ class MemorandumRequestController extends Controller
     public function index()
     {
         try {
-            $user_id = $this->getAuth()->id;
+            $user_id   = $this->getAuth()->id;
             $module_id = $this->getModuleId($this->modulename);
 
-            // $memos = DB::table('memoExp')->get();
             $memos = DB::table('memoExp')->get();
 
             foreach ($memos as $memo) {
                 $exists = DB::table('request_memorandum')
-                            ->where('employee_id', $memo->id)
+                            ->where('employee_id', $memo->source_id)
+                            ->where('sysid', $memo->sys_id)
                             ->exists();
 
                 if (!$exists) {
                     DB::table('request_memorandum')->insert([
-                        'employee_id' => $memo->id,
+                        'employee_id'   => $memo->source_id,
+                        'sysid'         => $memo->sys_id,
                         'requestStatus' => 0,
-                        'bu' => $memo->bu ?? null,
-                        'sysid' => $memo->sys_id ?? null,
-                        'code_id' => $this->generateCode($this->modulename),
-                        'user_id' => $user_id,
-                        'created_at' => now(),
-                        'updated_at' => now()
+                        'bu'            => $memo->bu ?? null,
+                        'code_id'       => $this->generateCode($this->modulename),
+                        'user_id'       => $user_id,
+                        'created_at'    => now(),
+                        'updated_at'    => now()
                     ]);
                 }
             }
-            $getAccess = "(
-                            SELECT CASE 
-                                WHEN EXISTS (
-                                    SELECT 1 
-                                    FROM [authorization].tbl_useraccess l 
-                                    WHERE l.module_id = '".$module_id."'
-                                    AND l.allowView = '1'
-                                    AND l.employee_id = '".$user_id."'
-                                ) THEN 1 ELSE 0 
-                            END
-                        )";
 
-            // Sekarang data sudah sinkron, tinggal ambil view gabungannya
             $data = DB::table('request_memorandum AS r')
                 ->leftJoin('codes','r.code_id','codes.id')
                 ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
-                ->leftjoin('memoExp AS m', 'r.employee_id', '=', 'm.id')
-                ->whereIn('employee_id', DB::table('memoExp')->pluck('id'))
-                ->selectRaw("
-                        r.*, 
-                        codes.code,
-                        m.FullName,
-                        m.JoinDate,
-                        m.BirthOfDate,
-                        m.contract_status,
-                        m.sys_id,
-                        m.SAPID,
-                        m.Location,
-                        m.DesignationName,
-                        m.bu,
-                        m.end_contract_date,
-                        m.retirement_date,
-                        m.dayToExp,
-                        ".$getAccess." as isMine,
-                        (
-                            SELECT TOP 1 CASE WHEN a.user_id = ? THEN 1 ELSE 0 END
-                            FROM tbl_approverListReq l
-                            LEFT JOIN tbl_approver a ON l.approver_id = a.id
-                            LEFT JOIN tbl_approvaltype t ON a.approvaltype_id = t.id 
-                            WHERE l.ApprovalAction = '1' 
-                            AND l.req_id = r.id 
-                            AND l.module_id = ? 
-                            ORDER BY a.sequence
-                        ) AS isPendingOnMe
-                    ", [$user_id, $module_id])
-                    ->orderByDesc('r.id')
-                    ->get();
-            //iki ketika data sudah banyak
-            // $data = $data->filter(function ($item) {
-            //     return is_null($item->dayToExp) || 
-            //         (is_numeric($item->dayToExp) && $item->dayToExp < 60);
-            // })->values();
+                ->leftJoin('memoExp AS m', 'r.sysid', '=', 'm.sys_id')
+                ->select(
+                    'r.id',
+                    'r.code_id',
+                    'r.user_id',
+                    'r.employee_id',
+                    'r.sysid',
+                    'r.requestStatus',
+                    'r.bu',
+                    'r.created_at',
+                    'r.updated_at',
+                    'codes.code',
+                    'm.FullName',
+                    'm.JoinDate',
+                    'm.BirthOfDate',
+                    'm.end_contract_date',
+                    'm.retirement_date',
+                    'm.contract_status',
+                    'm.source_id as employee_source_id',
+                    'm.source_type'
+                )
+                ->orderByDesc('r.id')
+                ->get();
 
-            if ($data->isEmpty()) {
-                return response()->json([
-                    'status' => "empty",
-                    'message' => "Data tidak ditemukan, silakan tambahkan data baru",
-                    'data' => []
-                ])->setEncodingOptions(JSON_NUMERIC_CHECK);
-            }
-            
-            // dd($data);  
             return response()->json([
-                'status' => "show",
+                'status' => $data->isEmpty() ? "empty" : "show",
                 'message' => $this->getMessage()['show'],
                 'data' => $data
             ])->setEncodingOptions(JSON_NUMERIC_CHECK);
@@ -141,6 +107,7 @@ class MemorandumRequestController extends Controller
             return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
 
 
     public function reminderNotificationMessage($mode)
@@ -207,36 +174,50 @@ class MemorandumRequestController extends Controller
         }
     }
 
-
-
     public function show($id)
-        {
-            try {
+    {
+        try {
+            $data = $this->model->select(
+                'request_memorandum.id',
+                'request_memorandum.code_id',
+                'request_memorandum.user_id',
+                'request_memorandum.employee_id',
+                'request_memorandum.sysid',
+                'request_memorandum.requestStatus',
+                'request_memorandum.bu',
+                'request_memorandum.created_at',
+                'request_memorandum.updated_at',
+                'codes.code',
+                'm.FullName',
+                'm.JoinDate',
+                'm.BirthOfDate',
+                'm.contract_status',
+                'm.sys_id',
+                'm.SAPID',
+                'm.Location',
+                'm.DesignationName',
+                'm.bu',
+                'm.source_id as employee_source_id',
+                'm.source_type'
+            )
+            ->leftJoin('codes','request_memorandum.code_id','codes.id')
+            ->leftJoin('memoExp AS m', 'request_memorandum.sysid', '=', 'm.sys_id')
+            ->where('request_memorandum.id',$id)
+            ->with(['user','approverlist','request_memorandum_detail'])
+            ->first();
 
-                $data = $this->model->select('request_memorandum.*',
-                 'm.FullName',
-                 'codes.code',
-                 'm.JoinDate',
-                 'm.BirthOfDate',
-                 'm.contract_status',
-                 'm.sys_id',
-                 'm.SAPID',
-                 'm.Location',
-                 'm.DesignationName',
-                 'm.bu')
-                ->leftJoin('codes','request_memorandum.code_id','codes.id')
-                ->leftjoin('memoExp AS m', 'request_memorandum.employee_id', '=', 'm.id')                
-                ->where('request_memorandum.id',$id)
-                ->with(['user', 'approverlist', 'request_memorandum_detail'])
-                ->first();
+            return response()->json([
+                'status'  => "show",
+                'message' => $this->getMessage()['show'],
+                'data'    => $data
+            ])->setEncodingOptions(JSON_NUMERIC_CHECK);
 
-                return response()->json(['status' => "show", "message" => $this->getMessage()['show'] , 'data' => $data])->setEncodingOptions(JSON_NUMERIC_CHECK);
-
-            } catch (\Exception $e) {
-
-                return response()->json(["status" => "error", "message" => $e->getMessage()]);
-            }
+        } catch (\Exception $e) {
+            return response()->json(["status" => "error", "message" => $e->getMessage()]);
         }
+    }
+
+
 
     public function destroy($id)
     {
