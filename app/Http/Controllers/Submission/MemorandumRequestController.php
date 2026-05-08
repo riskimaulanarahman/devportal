@@ -69,17 +69,6 @@ class MemorandumRequestController extends Controller
                     ]);
                 }
             }
-            $getAccess = "(
-                            SELECT CASE 
-                                WHEN EXISTS (
-                                    SELECT 1 
-                                    FROM [authorization].tbl_useraccess l 
-                                    WHERE l.module_id = '".$module_id."'
-                                    AND l.allowView = '1'
-                                    AND l.employee_id = '".$user_id."'
-                                ) THEN 1 ELSE 0 
-                            END
-                        )";
 
             $data = DB::table('request_memorandum AS r')
                 ->leftJoin('codes','r.code_id','codes.id')
