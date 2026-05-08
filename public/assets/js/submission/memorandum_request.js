@@ -133,11 +133,10 @@ var dataGrid = $("#gridContainer").dxDataGrid({
             alignment: "left",
             dataType: "date",
             format: "dd MMMM yyyy"
-        },       
+        },   
         { 
             caption: 'Retirement Date',
-            dataField: "retirement_date",
-            // width: 180,
+            dataField: " ",
             alignment: "left",
             dataType: "date",
             format: "dd MMMM yyyy"
@@ -387,20 +386,23 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorOptions: { 
                                     readOnly: true
                                 },
-                            },     
+                            },  
                             {
                                 caption: "Employee",
                                 dataField: "employee_id",
                                 lookup: {
-                                    dataSource: listOption('/list-employeeall','id', 'sys_id','fullname'),
+                                    dataSource: listOption('/list-employeeall','id','sys_id','fullname'),
                                     valueExpr: 'id',
-                                    displayExpr: 'fullname',
+                                    displayExpr: 'fullname'
+                                },
+                                cellTemplate: function(container, options) {
+                                    let name = options.data.FullName || options.value;
+                                    container.text(name);
                                 },
                                 editorOptions: { 
                                     readOnly: true
-                                },
-                                // validationRules: [{ type: "required" }]
-                            },                            
+                                }
+                            },                         
                             { 
                                 dataField: "bu",
                                 caption: "BU",
