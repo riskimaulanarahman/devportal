@@ -69,6 +69,17 @@ class MemorandumRequestController extends Controller
                     ]);
                 }
             }
+            $getAccess = "(
+                            SELECT CASE 
+                                WHEN EXISTS (
+                                    SELECT 1 
+                                    FROM [authorization].tbl_useraccess l 
+                                    WHERE l.module_id = '".$module_id."'
+                                    AND l.allowView = '1'
+                                    AND l.employee_id = '".$user_id."'
+                                ) THEN 1 ELSE 0 
+                            END
+                        )";
 
             $data = DB::table('request_memorandum AS r')
                 ->leftJoin('codes','r.code_id','codes.id')
@@ -92,7 +103,25 @@ class MemorandumRequestController extends Controller
                     'm.retirement_date',
                     'm.contract_status',
                     'm.source_id as employee_source_id',
-                    'm.source_type'
+                    'm.source_type',
+                    DB::raw("CASE 
+                            WHEN EXISTS (
+                                SELECT 1 
+                                FROM [authorization].tbl_useraccess l 
+                                WHERE l.module_id = {$module_id}
+                                  AND l.allowView = 1
+                                  AND l.employee_id = {$user_id}
+                            ) THEN 1 ELSE 0 
+                         END AS isMine"),
+                    // isPendingOnMe: apakah ada approval pending di user ini
+                    DB::raw("(SELECT TOP 1 CASE WHEN a.user_id = {$user_id} THEN 1 ELSE 0 END
+                            FROM tbl_approverListReq l
+                            LEFT JOIN tbl_approver a ON l.approver_id = a.id
+                            LEFT JOIN tbl_approvaltype t ON a.approvaltype_id = t.id 
+                            WHERE l.ApprovalAction = 1
+                                AND l.req_id = r.id
+                                AND l.module_id = {$module_id}
+                            ORDER BY a.sequence) AS isPendingOnMe")
                 )
                 ->orderByDesc('r.id')
                 ->get();
