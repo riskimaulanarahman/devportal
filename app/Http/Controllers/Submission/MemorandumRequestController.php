@@ -150,7 +150,8 @@ class MemorandumRequestController extends Controller
             foreach ($getReminderMemo as $r) {
                 if (is_numeric($r->dayToExp) && (int)$r->dayToExp < 60 && (int)$r->dayToExp >= -30) {
                     $getSubmissionData = DB::table('request_memorandum')
-                        ->where('employee_id', $r->id)
+                        ->where('employee_id', $r->source_id)
+                        // ->where('sysid', $r->sys_id)
                         ->first();
 
                     if ($getSubmissionData) {
