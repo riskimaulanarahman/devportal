@@ -49,9 +49,9 @@
                         </ul>
                     </div>
                     <button type="submit" id="btn-submit" class="btn btn-primary">Import</button>
-                    <a href="{{ route('export.memorandum.csv') }}" class="btn btn-success">
+                    {{-- <a href="{{ route('export.memorandum.csv') }}" class="btn btn-success">
                         Export CSV
-                    </a>
+                    </a> --}}
                 </form>
             </div>
         </div>

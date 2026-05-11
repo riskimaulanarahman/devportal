@@ -145,54 +145,14 @@ class MemorandumImportController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Data holiday berhasil diimpor!');
+            return redirect()->back()->with('success', 'Data kontraktor berhasil diimpor!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-    public function exportHolidayCsv()
-    {
-        $columns = ['employeeId','fullname','position','estate','bu','joinDate','birthOfDate','gender','religion','nik','kk','npwp','bpjsKes','bpjsTk','noHp','address','maritalStatus','bank','noRekening'];
-        $selects = [];
-        foreach ($columns as $col) {
-            $alias = str_replace('.', '_', $col);
-            $selects[] = "$col as $alias";
-        }
-
-        $allData = DB::table('employee.tbl_pkwt')
-            ->selectRaw(implode(', ', $selects))
-            ->get();
-
-        $filename = 'memorandum_export' . now()->format('Ymd_His') . '.csv';
-        $header = ['employeeId','fullname','position','estate','bu','joinDate','birthOfDate','gender','religion','nik','kk','npwp','bpjsKes','bpjsTk','noHp','address','maritalStatus','bank','noRekening'];
-
-        $callback = function() use ($allData, $columns, $header) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, $header);
-
-            foreach ($allData as $row) {
-                $data = [];
-                foreach ($columns as $col) {
-                    $alias = str_replace('.', '_', $col);
-                    $raw = $row->$alias ?? '';
-                    $data[] = html_entity_decode($raw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                }
-                fputcsv($handle, $data);
-            }
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename={$filename}",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ]);
-    }
-
+    
     /**
      * Show the form for creating a new resource.
      *

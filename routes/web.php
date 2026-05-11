@@ -30,6 +30,7 @@ Route::middleware(['session.check'])->group(function () {
     Route::get('import-memorandum',[App\Http\Controllers\Submission\MemorandumImportController::class, 'import'])->name('import-memorandum');
     Route::get('export-complex-csv', [App\Http\Controllers\Submission\MemorandumImportController::class, 'exportmemorandumCsv'])->name('export.memorandum.csv');
     Route::post('import-memorandum-csv', [App\Http\Controllers\Submission\MemorandumImportController::class, 'importCsv'])->name('import.memorandumcsv');
+    
     if(Schema::hasTable('reference.side_menus')) {
         $sidemenu = SideMenu::select('route')->where('route','!=','api')->get();
         foreach ($sidemenu as $menu_item) {
