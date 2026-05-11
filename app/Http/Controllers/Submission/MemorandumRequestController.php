@@ -282,27 +282,39 @@ class MemorandumRequestController extends Controller
     {
         $dataAppr = DB::table('memoApprover')->select('*')->where('id',$id)->get(); 
         $data = $this->model->select(
-                'request_memorandum.*',
-                'employee.tbl_employee.FullName as FullName', 
-                'employee.tbl_employee.sys_id as sys_id', 
-                'employee.tbl_employee.SAPID as SAPID',
-                'employee.tbl_employee.JoinDate as JoinDate', 
-                'employee.tbl_employee.deptheadName as deptheadName',
-                'employee.tbl_employee.contract_status as contract_status',
-                'employee.tbl_employee.BirthOfDate as BirthOfDate',
-                'employee.tbl_level.Level as Level',  
-                'employee.tbl_designation.DesignationName as DesignationName',
-            )
-            ->leftJoin('users', 'request_memorandum.user_id', 'users.id')
-            ->leftJoin('employee.tbl_employee', 'request_memorandum.employee_id', '=', 'employee.tbl_employee.id')
-            ->leftJoin('employee.tbl_location', 'employee.tbl_employee.location_id', '=', 'employee.tbl_location.id')
-            ->leftJoin('employee.tbl_level', 'employee.tbl_employee.level_id', '=', 'employee.tbl_level.id')
-            ->leftJoin('employee.tbl_designation', 'employee.tbl_employee.designation_id', '=', 'employee.tbl_designation.id')
-            ->where('request_memorandum.id', $id)
-            ->first();
+            'request_memorandum.id',
+            'request_memorandum.code_id',
+            'request_memorandum.user_id',
+            'request_memorandum.employee_id',
+            'request_memorandum.sysid',
+            'request_memorandum.requestStatus',
+            'request_memorandum.bu',
+            'request_memorandum.created_at',
+            'request_memorandum.updated_at',
+            'codes.code',
+            'm.FullName',
+            'm.sys_id',
+            'm.SAPID',
+            'm.JoinDate',
+            'm.deptheadName',
+            'm.contract_status',
+            'm.BirthOfDate',
+            'm.DesignationName',
+            'm.Location',
+            'm.source_id as employee_source_id',
+            'm.source_type'
+        )
+        ->leftJoin('codes','request_memorandum.code_id','codes.id')
+        ->leftJoin('users', 'request_memorandum.user_id', '=', 'users.id')
+        ->leftJoin('memoExp AS m', 'request_memorandum.sysid', '=', 'm.sys_id')
+        ->where('request_memorandum.id', $id)
+        ->with(['user','approverlist','request_memorandum_detail'])
+        ->first();
         if (!$data || !$data->approverHistory) {
             return response()->json(["status" => "error", "message" => "Data or approver history not found"]);
         }
+        // dd($dataAppr);
+        // dd($data);
 
         $contracts = DB::table('request_memorandum_detail')
             ->select('request_memorandum_detail.*')
@@ -360,7 +372,8 @@ class MemorandumRequestController extends Controller
 
             $statusMap = [
                 'CONTRACT' => 'KONTRAK',
-                'PERMANENT' => 'PENSIUN'
+                'PERMANENT' => 'PENSIUN',
+                'OL' => 'KONTRAK'
             ];
 
             if (!array_key_exists($status, $statusMap)) {
@@ -438,7 +451,16 @@ class MemorandumRequestController extends Controller
             addKopSuratStatis($Worksheet, $bu, $excel); 
 
             $Worksheet->Range("A53")->Value = $data->superiorName ?? '';
-            $Worksheet->Range("B8")->Value = $data->deptheadName ?? '';
+            // $Worksheet->Range("B8")->Value = $data->deptheadName ?? '';
+            if ($data->source_type === 'pkwt' && strtoupper($data->contract_status) === 'OL') {
+                $deptHeadApprover = $dataAppr->first(function($appr) {
+                    return $appr->sequence == 2 || ($appr->apprtype) === 'Superior/Department Head';
+                });
+                if ($deptHeadApprover) {
+                    $deptHeadName = $deptHeadApprover->apprname;
+                }
+            }
+            $Worksheet->Range("B8")->Value = $deptHeadName ?? '';
             $Worksheet->Range("D34")->Value = $lastRemarks ?? '';      
             $Worksheet->Range("C59")->Value = $data->Pendidikan ?? '-'; 
             $Worksheet->Range("C58")->Value = $data->DesignationName ?? ''; 
@@ -477,10 +499,33 @@ class MemorandumRequestController extends Controller
                 $column = $index < 4 ? "D" : "E";
                 $Worksheet->Range("{$column}{$row}")->Value = $label;
             }
-            $Worksheet->Range("E13")->Value = $data->deptheadName ?? ''; 
-            $Worksheet->Range("E16")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' '); 
+            // $Worksheet->Range("E13")->Value = $data->deptheadName ?? ''; 
+            if ($data->source_type === 'pkwt' && strtoupper($data->contract_status) === 'OL') {
+                $deptHeadApprover = $dataAppr->first(function($appr) {
+                    return $appr->sequence == 2 || ($appr->apprtype) === 'Superior/Department Head';
+                });
+                if ($deptHeadApprover) {
+                    $deptHeadName = $deptHeadApprover->apprname;
+                }
+            }
+            $Worksheet->Range("E13")->Value = $deptHeadName ?? '';
+            if ($data->source_type === 'pkwt' && strtoupper($data->contract_status) === 'OL') {
+                $Worksheet->Range("E16")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->sys_id ?? ' ');
+            } else {
+                $Worksheet->Range("E16")->Value = ($data->FullName ?? ' ') . ' / ' . ($data->SAPID ?? ' ');
+            }
             $Worksheet->Range("E19")->Value = $data->DesignationName ?? '-'; 
-            $Worksheet->Range("E37")->Value = $data->deptheadName ?? ''; 
+            if ($data->source_type === 'pkwt' && strtoupper($data->contract_status) === 'OL') {
+                $deptHeadApprover = $dataAppr->first(function($appr) {
+                    return $appr->sequence == 2 || ($appr->apprtype) === 'Superior/Department Head';
+                });
+                if ($deptHeadApprover) {
+                    $deptHeadName = $deptHeadApprover->apprname;
+                }
+            }
+            $Worksheet->Range("E37")->Value = $deptHeadName ?? '';
+
+            // $Worksheet->Range("E37")->Value = $data->deptheadName ?? ''; 
             $joinDateRaw = $data->JoinDate ?? null;
             if ($joinDateRaw) {
                 $joinDate = Carbon::parse($joinDateRaw)->locale('id');
@@ -512,6 +557,20 @@ class MemorandumRequestController extends Controller
                 if ($lastendcontract) {
                     $formattedEndContract = $lastendcontract->locale('id')->translatedFormat('j F Y');
                     $Worksheet->Range("E25")->Value = "{$formattedEndContract} ( Habis Kontrak ke {$lastminones} )";
+                } else {
+                    $Worksheet->Range("E25")->Value = '-';
+                }
+            
+            } elseif ($status === 'OL') {
+                // Ambil endContract dari detail terakhir (sequence max)
+                $lastDetail = $contracts->last();
+                $lastendcontract = $lastDetail && $lastDetail->endContract
+                    ? Carbon::parse($lastDetail->endContract)
+                    : null;
+
+                if ($lastendcontract) {
+                    $formattedEndContract = $lastendcontract->locale('id')->translatedFormat('j F Y');
+                    $Worksheet->Range("E25")->Value = "{$formattedEndContract} ( Habis Kontrak OL )";
                 } else {
                     $Worksheet->Range("E25")->Value = '-';
                 }
@@ -593,10 +652,12 @@ class MemorandumRequestController extends Controller
                 if ($lastDetail->sequence == 1) {
                     $req = DB::table('request_memorandum')->where('id', $id)->first();
 
-                    DB::table('employee.tbl_employee')
-                        ->where('id', $req->employee_id)
-                        ->where('contract_status', 'Permanent')
-                        ->update(['contract_status' => 'Contract']);
+                    if ($data->source_type === 'employee' && $data->contract_status === 'Permanent') {
+                        DB::table('employee.tbl_employee')
+                            ->where('id', $req->employee_id)
+                            ->where('contract_status', 'Permanent')
+                            ->update(['contract_status' => 'Contract']);
+                    }
                 }
             $this->processcopy($pathfilename);
             return $pathfilename;
