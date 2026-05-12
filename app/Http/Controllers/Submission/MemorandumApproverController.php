@@ -85,7 +85,7 @@ class MemorandumApproverController extends Controller
             $data = DB::table('request_memorandum AS r')
                 ->leftJoin('codes','r.code_id','codes.id')
                 ->leftJoin('users AS u', 'r.user_id', '=', 'u.id')
-                ->join('memoExp AS m', 'r.employee_id', '=', 'm.id')
+                ->Join('memoExp AS m', 'r.sysid', '=', 'm.sys_id')               
                 ->select([
                     'r.id',
                     'r.user_id',
@@ -163,7 +163,7 @@ class MemorandumApproverController extends Controller
                  'm.DesignationName',
                  'm.bu')
                 ->leftJoin('codes','request_memorandum.code_id','codes.id')
-                ->leftjoin('memoExp AS m', 'request_memorandum.employee_id', '=', 'm.id')                
+                ->leftjoin('memoExp AS m', 'request_memorandum.sysid', '=', 'm.sys_id')
                 ->where('request_memorandum.id',$id)
                 ->with(['user', 'approverlist', 'request_memorandum_detail'])
                 ->first();
