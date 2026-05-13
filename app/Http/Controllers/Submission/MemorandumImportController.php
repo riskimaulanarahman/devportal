@@ -112,31 +112,36 @@ class MemorandumImportController extends Controller
                                 $joinDate = $data['joinDate']; // fallback
                             }
                         }
-
-                        DB::table('employee.tbl_pkwt')->updateOrInsert(
-                            ['employeeId' => $data['employeeId']], // kondisi
-                            [   // data yang diupdate/insert
-                                'fullname'       => $data['fullname'],
-                                'position'       => $data['position'],
-                                'estate'         => $data['estate'],
-                                'bu'             => $data['bu'],
-                                'joinDate'       => $joinDate,
-                                'birthOfDate'    => $data['birthOfDate'],
-                                'gender'         => $data['gender'],
-                                'religion'       => $data['religion'],
-                                'nik'            => $data['nik'],
-                                'kk'             => $data['kk'],
-                                'npwp'           => $data['npwp'],
-                                'bpjsKes'        => $data['bpjsKes'],
-                                'bpjsTk'         => $data['bpjsTk'],
-                                'noHp'           => $data['noHp'],
-                                'address'        => $data['address'],
-                                'maritalStatus'  => $data['maritalStatus'],
-                                'bank'           => $data['bank'],
-                                'noRekening'     => $data['noRekening'],
-                            ]
-                        );
-
+                        $rowIndexGlobal = 1; 
+                            foreach ($records as $record) {
+                                $data = array_combine($header, $record);
+                                $baseId = (int) $data['employeeId'];
+                                $uniqueId = ($baseId * 100000) + $rowIndexGlobal;
+                                DB::table('employee.tbl_pkwt')->updateOrInsert(
+                                    ['employeeId' => $uniqueId], 
+                                    [   
+                                        'fullname'       => $data['fullname'],
+                                        'position'       => $data['position'],
+                                        'estate'         => $data['estate'],
+                                        'bu'             => $data['bu'],
+                                        'joinDate'       => $joinDate,
+                                        'birthOfDate'    => $data['birthOfDate'],
+                                        'gender'         => $data['gender'],
+                                        'religion'       => $data['religion'],
+                                        'nik'            => $data['nik'],
+                                        'kk'             => $data['kk'],
+                                        'npwp'           => $data['npwp'],
+                                        'bpjsKes'        => $data['bpjsKes'],
+                                        'bpjsTk'         => $data['bpjsTk'],
+                                        'noHp'           => $data['noHp'],
+                                        'address'        => $data['address'],
+                                        'maritalStatus'  => $data['maritalStatus'],
+                                        'bank'           => $data['bank'],
+                                        'noRekening'     => $data['noRekening'],
+                                    ]
+                                );
+                                 $rowIndexGlobal++;
+                            }
                     } catch (\Exception $e) {
                         Log::error("Error pada baris: " . implode(',', $record) . " - " . $e->getMessage());
                         throw $e;
