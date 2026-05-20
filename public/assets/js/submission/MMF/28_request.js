@@ -287,6 +287,9 @@ const popupContentTemplate = function (reqid,mode,options) {
     var validationRequiredType = [];
     var visibleRequiredType = false;
 
+    var validationUrgentRemarks = [];
+    var visibleUrgentRemarks = false;
+
     var validationHazardous = [];
     var visibleHazardous = false;
     var visibleNContaminated = false;
@@ -636,12 +639,39 @@ const popupContentTemplate = function (reqid,mode,options) {
                                 editorType: 'dxTextArea',
                             },
                             {
+                                caption: 'Urgent PR',
+                                dataField: 'detail28.isUrgentPR',
+                                dataType: 'boolean',
+                                setCellValue: function (rowData, value) {
+                                    rowData.detail28 = rowData.detail28 || {};
+                                    rowData.detail28.isUrgentPR = value;
+
+                                    if (value) {
+                                        validationUrgentRemarks.length = 0;
+                                        validationUrgentRemarks.push({ type: "required", message: "Urgent PR Remarks wajib diisi" });
+                                        visibleUrgentRemarks = true;
+                                    } else {
+                                        validationUrgentRemarks.length = 0;
+                                        visibleUrgentRemarks = false;
+                                    }
+                                    dataGrid11.columnOption('detail28.urgentPRRemarks', 'visible', visibleUrgentRemarks);
+                                    dataGrid11.columnOption('detail28.urgentPRRemarks', 'validationRules', validationUrgentRemarks);
+                                },
+                            },
+                            {
+                                caption: 'Urgent PR Remarks',
+                                dataField: 'detail28.urgentPRRemarks',
+                                editorType: 'dxTextArea',
+                                visible: false,
+                                validationRules: [],
+                            },
+                            {
                                 caption: 'Estimation Cost',
                                 dataField: 'detail28.EstimateCost',
                                 dataType: "number",
                                 format: "fixedPoint",
                                 visible: (mode == 'approval' && isBuyer == 1) ? true : false,
-                                editorOptions: { 
+                                editorOptions: {
                                     format: "fixedPoint",
                                     readOnly: (mode == 'approval' && isBuyer == 1) ? false : true
                                 }
@@ -695,6 +725,12 @@ const popupContentTemplate = function (reqid,mode,options) {
                             if (e.column.index == 0 && e.rowType == "data") {
                                 if(e.value === 4) {
                                     dataGrid11.columnOption('detail28.RequiredOther', 'visible', true);
+                                }
+                            }
+                            if (e.column.dataField === 'detail28.isUrgentPR' && e.rowType === "data") {
+                                if (e.value === 1 || e.value === true) {
+                                    visibleUrgentRemarks = true;
+                                    dataGrid11.columnOption('detail28.urgentPRRemarks', 'visible', true);
                                 }
                             }
                         },
@@ -1502,6 +1538,19 @@ function btnreqsubmit(reqid,mode) {
                 { field: 'Symptomps', name: 'Symptoms (Problem)' },
                 { field: 'RequiredType', name: 'Required' },
             ];
+        }
+    }
+
+    if (mode !== 'approval') {
+        var urgentRows = dataGrid11.getVisibleRows();
+        if (urgentRows.length > 0 && urgentRows[0].data.detail28) {
+            var d28 = urgentRows[0].data.detail28;
+            if ((d28.isUrgentPR == 1 || d28.isUrgentPR === true) &&
+                (!d28.urgentPRRemarks || d28.urgentPRRemarks.trim() === '')) {
+                alert('Urgent PR Remarks wajib diisi ketika Urgent PR dicentang.');
+                btnSubmit.prop('disabled', false);
+                return false;
+            }
         }
     }
 

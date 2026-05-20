@@ -264,7 +264,21 @@ class M28RequestController extends Controller
                             $detail->NonHazChemicalName = null;
                         }
                     }
-                    
+                    if(isset($detailData['isUrgentPR'])) {
+                        if(!$detailData['isUrgentPR'] || $detailData['isUrgentPR'] == 0) {
+                            $detail->urgentPRRemarks = null;
+                            unset($detailData['urgentPRRemarks']);
+                        } else {
+                            $remarks = $detailData['urgentPRRemarks'] ?? $detail->urgentPRRemarks;
+                            if(empty(trim($remarks ?? ''))) {
+                                DB::rollBack();
+                                return response()->json(['status' => 'error', 'message' => 'Urgent PR Remarks wajib diisi ketika Urgent PR dicentang.']);
+                            }
+                        }
+                        $prType = ($detailData['isUrgentPR'] == 1) ? 2 : 1;
+                        $this->createApprBuHead($this->modulename, $id, $data->bu, $prType);
+                    }
+
                     $detail->update($detailData);
                 } else {
                     // Jika detail tidak ditemukan, tambahkan data baru
